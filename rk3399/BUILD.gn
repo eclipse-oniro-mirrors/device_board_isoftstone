@@ -12,6 +12,6 @@ group("rk3399_group") {
     "kernel:kernel",
     "build/rootfs:init_configs",
     "bootanimation:bootanimation",
-    "//device/soc/rockchip/hardware:hardware_group",
+    "//device/soc/rockchip/rk3399/hardware:hardware_group",
   ]
 }

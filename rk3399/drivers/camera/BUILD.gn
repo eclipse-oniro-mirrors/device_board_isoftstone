@@ -14,6 +14,7 @@ import("//build/ohos.gni")
 import("//drivers/adapter/uhdf2/uhdf.gni")
 import("//drivers/peripheral/camera/hal/camera.gni")
 import("$hdf_framework_path/tools/hc-gen/hc_gen.gni")
+import("camera.gni")
 
 hc_gen("build_camera_host_config") {
   sources = [ rebase_path(
