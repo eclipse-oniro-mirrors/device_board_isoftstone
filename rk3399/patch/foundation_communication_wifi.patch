@@ -1,0 +1,52 @@
+diff --git a/wifi/services/wifi_standard/wifi_framework/wifi_manage/BUILD.gn b/wifi/services/wifi_standard/wifi_framework/wifi_manage/BUILD.gn
+index 0315886..2421b92 100644
+--- a/wifi/services/wifi_standard/wifi_framework/wifi_manage/BUILD.gn
++++ b/wifi/services/wifi_standard/wifi_framework/wifi_manage/BUILD.gn
+@@ -194,7 +194,7 @@ if (defined(ohos_lite)) {
+       cflags += [ "-DBINDER_IPC_32BIT" ]
+     }
+ 
+-    if (product_name == "rk3568") {
++    if (product_name == "rk3568" || product_name == "rk3399") {
+       defines = [ "PRODUCT_RK" ]
+     }
+   }
+diff --git a/wifi/services/wifi_standard/wifi_framework/wifi_manage/wifi_p2p/BUILD.gn b/wifi/services/wifi_standard/wifi_framework/wifi_manage/wifi_p2p/BUILD.gn
+index 18701f1..dda31c1 100644
+--- a/wifi/services/wifi_standard/wifi_framework/wifi_manage/wifi_p2p/BUILD.gn
++++ b/wifi/services/wifi_standard/wifi_framework/wifi_manage/wifi_p2p/BUILD.gn
+@@ -97,7 +97,7 @@ ohos_shared_library("wifi_p2p_service") {
+   ]
+ 
+   defines = [ "AP_NOT_DIRECT_USE_DHCP" ]
+-  if (product_name == "rk3568") {
++  if (product_name == "rk3568" || product_name == "rk3399") {
+     defines += [ "PRODUCT_RK" ]
+   }
+ 
+diff --git a/wifi/services/wifi_standard/wifi_hal/BUILD.gn b/wifi/services/wifi_standard/wifi_hal/BUILD.gn
+index 411a9b6..81d7d61 100644
+--- a/wifi/services/wifi_standard/wifi_hal/BUILD.gn
++++ b/wifi/services/wifi_standard/wifi_hal/BUILD.gn
+@@ -116,7 +116,7 @@ if (defined(ohos_lite)) {
+ 
+     cflags_cc = [ "-fno-rtti" ]
+     defines = [ "AP_INTF=\"$wifi_feature_with_ap_intf\"" ]
+-    if (product_name == "rk3568") {
++    if (product_name == "rk3568" || product_name == "rk3399") {
+       defines += [ "PRODUCT_RK" ]
+     }
+ 
+diff --git a/wifi/services/wifi_standard/wifi_hal/etc/init/BUILD.gn b/wifi/services/wifi_standard/wifi_hal/etc/init/BUILD.gn
+index 93992ff..fefff31 100644
+--- a/wifi/services/wifi_standard/wifi_hal/etc/init/BUILD.gn
++++ b/wifi/services/wifi_standard/wifi_hal/etc/init/BUILD.gn
+@@ -50,7 +50,7 @@ if (defined(ohos_lite)) {
+ 
+   ohos_prebuilt_etc("hostapd.conf") {
+     source = "hostapd.conf"
+-    if (product_name == "rk3568") {
++    if (product_name == "rk3568" || product_name == "rk3399") {
+       source = "default_conf/hostapd.conf"
+     }
+     relative_install_dir = "wifi"

@@ -1,0 +1,14 @@
+diff --git a/services/etc/init.without_two_stages.cfg b/services/etc/init.without_two_stages.cfg
+index e044545..4e9717a 100755
+--- a/services/etc/init.without_two_stages.cfg
++++ b/services/etc/init.without_two_stages.cfg
+@@ -61,7 +61,8 @@
+                 "chmod 0660 /sys/power/state",
+                 "ifup lo",
+                 "hostname localhost",
+-                "domainname localdomain"
++                "domainname localdomain",
++                "insmod /vendor/etc/modules/bcmdhd.ko"
+             ]
+         },  {
+             "name" : "post-init",
