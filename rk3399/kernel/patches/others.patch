@@ -1,0 +1,1192 @@
+From 0e355d90cf98bc8dfc1439668d6154cb879a2fc7 Mon Sep 17 00:00:00 2001
+From: jiewangdp <jiewangdp@isoftstone.com>
+Date: Mon, 20 Jun 2022 14:44:08 +0800
+Subject: [PATCH] others
+
+Change-Id: I96d3e68fc955c1d58ec2d68408010c2160e2086d
+---
+ Makefile                                      |   8 +-
+ fs/proc/base.c                                | 181 ++----------------
+ fs/ubifs/recovery.c                           |  41 +++-
+ fs/xfs/xfs_inode.c                            |  14 +-
+ init/Kconfig                                  |   8 +-
+ init/initramfs.c                              |  23 +++
+ init/main.c                                   |   8 +
+ ipc/msg.c                                     |   2 +-
+ ipc/sem.c                                     |   9 +-
+ ipc/shm.c                                     |   2 +-
+ ipc/util.c                                    |  16 +-
+ make-boot.sh                                  |  32 ++++
+ make-ohos.sh                                  | 131 +++++++++++++
+ mm/hugetlb.c                                  |  23 +--
+ mm/memblock.c                                 |  51 +++++
+ mm/page_alloc.c                               |  23 ++-
+ .../multibuff/device_app/aio_multibuff.c      |  68 ++++++-
+ .../simple/device_app/aio_simple.c            |  68 ++++++-
+ 18 files changed, 490 insertions(+), 218 deletions(-)
+ create mode 100755 make-boot.sh
+ create mode 100755 make-ohos.sh
+
+diff --git a/Makefile b/Makefile
+index dce02fbb7..412d80a2c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -494,7 +494,7 @@ LINUXINCLUDE    := \
+ 		$(USERINCLUDE)
+ 
+ KBUILD_AFLAGS   := -D__ASSEMBLY__ -fno-PIE
+-KBUILD_CFLAGS   := -Wall -Wundef -Werror=strict-prototypes -Wno-trigraphs \
++KBUILD_CFLAGS   := -Wall -Wundef -Wno-trigraphs \
+ 		   -fno-strict-aliasing -fno-common -fshort-wchar -fno-PIE \
+ 		   -Werror=implicit-function-declaration -Werror=implicit-int \
+ 		   -Werror=return-type -Wno-format-security \
+@@ -818,7 +818,7 @@ endif
+ DEBUG_CFLAGS	:=
+ 
+ # Workaround for GCC versions < 5.0
+-# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=61801
++# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=618101
+ ifdef CONFIG_CC_IS_GCC
+ DEBUG_CFLAGS	+= $(call cc-ifversion, -lt, 0500, $(call cc-option, -fno-var-tracking-assignments))
+ endif
+@@ -851,7 +851,7 @@ KBUILD_LDFLAGS	+= --compress-debug-sections=zlib
+ endif
+ 
+ endif # CONFIG_DEBUG_INFO
+-
++KBUILD_CFLAGS += -Wno-unused-function
+ KBUILD_CFLAGS += $(DEBUG_CFLAGS)
+ export DEBUG_CFLAGS
+ 
+@@ -945,7 +945,7 @@ KBUILD_CFLAGS   += $(call cc-option,-fconserve-stack)
+ KBUILD_CFLAGS   += -Werror=date-time
+ 
+ # enforce correct pointer usage
+-KBUILD_CFLAGS   += $(call cc-option,-Werror=incompatible-pointer-types)
++#KBUILD_CFLAGS   += $(call cc-option,-Werror=incompatible-pointer-types)
+ 
+ # Require designated initializers for all marked structures
+ KBUILD_CFLAGS   += $(call cc-option,-Werror=designated-init)
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index 27145778c..313029f27 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -88,7 +88,6 @@
+ #include <linux/user_namespace.h>
+ #include <linux/fs_struct.h>
+ #include <linux/slab.h>
+-#include <linux/sched.h>
+ #ifdef CONFIG_SCHED_RTG
+ #include <linux/sched/rtg_ctrl.h>
+ #endif
+@@ -100,6 +99,7 @@
+ #include <linux/posix-timers.h>
+ #include <linux/time_namespace.h>
+ #include <linux/resctrl.h>
++#include <linux/cpufreq_times.h>
+ #include <trace/events/oom.h>
+ #include "internal.h"
+ #include "fd.h"
+@@ -905,34 +905,18 @@ static ssize_t mem_write(struct file *file, const char __user *buf,
+ 
+ loff_t mem_lseek(struct file *file, loff_t offset, int orig)
+ {
+-	loff_t ret = 0;
+-
+-	spin_lock(&file->f_lock);
+ 	switch (orig) {
+-	case SEEK_CUR:
+-		offset += file->f_pos;
+-		/* fall through */
+-	case SEEK_SET:
+-		/* to avoid userland mistaking f_pos=-9 as -EBADF=-9 */
+-		if ((unsigned long long)offset >= -MAX_ERRNO)
+-			ret = -EOVERFLOW;
++	case 0:
++		file->f_pos = offset;
++		break;
++	case 1:
++		file->f_pos += offset;
+ 		break;
+ 	default:
+-		ret = -EINVAL;
+-	}
+-
+-	if (!ret) {
+-		if (offset < 0 && !(unsigned_offsets(file))) {
+-			ret = -EINVAL;
+-		} else {
+-			file->f_pos = offset;
+-			ret = file->f_pos;
+-			force_successful_syscall_return();
+-		}
++		return -EINVAL;
+ 	}
+-
+-	spin_unlock(&file->f_lock);
+-	return ret;
++	force_successful_syscall_return();
++	return file->f_pos;
+ }
+ 
+ static int mem_release(struct inode *inode, struct file *file)
+@@ -1512,70 +1496,6 @@ static const struct file_operations proc_rtg_operations = {
+ };
+ #endif
+ 
+-#ifdef CONFIG_SCHED_RTG_DEBUG
+-static int sched_group_id_show(struct seq_file *m, void *v)
+-{
+-	struct inode *inode = m->private;
+-	struct task_struct *p;
+-
+-	p = get_proc_task(inode);
+-	if (!p)
+-		return -ESRCH;
+-
+-	seq_printf(m, "%d\n", sched_get_group_id(p));
+-
+-	put_task_struct(p);
+-
+-	return 0;
+-}
+-
+-static ssize_t
+-sched_group_id_write(struct file *file, const char __user *buf,
+-	    size_t count, loff_t *offset)
+-{
+-	struct inode *inode = file_inode(file);
+-	struct task_struct *p;
+-	char buffer[PROC_NUMBUF];
+-	int group_id, err;
+-
+-	memset(buffer, 0, sizeof(buffer));
+-	if (count > sizeof(buffer) - 1)
+-		count = sizeof(buffer) - 1;
+-	if (copy_from_user(buffer, buf, count)) {
+-		err = -EFAULT;
+-		goto out;
+-	}
+-
+-	err = kstrtoint(strstrip(buffer), 0, &group_id);
+-	if (err)
+-		goto out;
+-
+-	p = get_proc_task(inode);
+-	if (!p)
+-		return -ESRCH;
+-
+-	err = sched_set_group_id(p, group_id);
+-
+-	put_task_struct(p);
+-
+-out:
+-	return err < 0 ? err : count;
+-}
+-
+-static int sched_group_id_open(struct inode *inode, struct file *filp)
+-{
+-	return single_open(filp, sched_group_id_show, inode);
+-}
+-
+-static const struct file_operations proc_pid_sched_group_id_operations = {
+-	.open		= sched_group_id_open,
+-	.read		= seq_read,
+-	.write		= sched_group_id_write,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-#endif	/* CONFIG_SCHED_RTG_DEBUG */
+-
+ #ifdef CONFIG_SCHED_AUTOGROUP
+ /*
+  * Print out autogroup related information:
+@@ -1651,70 +1571,6 @@ static const struct file_operations proc_pid_sched_autogroup_operations = {
+ 
+ #endif /* CONFIG_SCHED_AUTOGROUP */
+ 
+-#ifdef CONFIG_SCHED_WALT
+-static int sched_init_task_load_show(struct seq_file *m, void *v)
+-{
+-	struct inode *inode = m->private;
+-	struct task_struct *p;
+-
+-	p = get_proc_task(inode);
+-	if (!p)
+-		return -ESRCH;
+-
+-	seq_printf(m, "%d\n", sched_get_init_task_load(p));
+-
+-	put_task_struct(p);
+-
+-	return 0;
+-}
+-
+-static ssize_t
+-sched_init_task_load_write(struct file *file, const char __user *buf,
+-	    size_t count, loff_t *offset)
+-{
+-	struct inode *inode = file_inode(file);
+-	struct task_struct *p;
+-	char buffer[PROC_NUMBUF];
+-	int init_task_load, err;
+-
+-	memset(buffer, 0, sizeof(buffer));
+-	if (count > sizeof(buffer) - 1)
+-		count = sizeof(buffer) - 1;
+-	if (copy_from_user(buffer, buf, count)) {
+-		err = -EFAULT;
+-		goto out;
+-	}
+-
+-	err = kstrtoint(strstrip(buffer), 0, &init_task_load);
+-	if (err)
+-		goto out;
+-
+-	p = get_proc_task(inode);
+-	if (!p)
+-		return -ESRCH;
+-
+-	err = sched_set_init_task_load(p, init_task_load);
+-
+-	put_task_struct(p);
+-
+-out:
+-	return err < 0 ? err : count;
+-}
+-
+-static int sched_init_task_load_open(struct inode *inode, struct file *filp)
+-{
+-	return single_open(filp, sched_init_task_load_show, inode);
+-}
+-
+-static const struct file_operations proc_pid_sched_init_task_load_operations = {
+-	.open		= sched_init_task_load_open,
+-	.read		= seq_read,
+-	.write		= sched_init_task_load_write,
+-	.llseek		= seq_lseek,
+-	.release	= single_release,
+-};
+-#endif	/* CONFIG_SCHED_WALT */
+-
+ #ifdef CONFIG_TIME_NS
+ static int timens_offsets_show(struct seq_file *m, void *v)
+ {
+@@ -3340,7 +3196,7 @@ static const struct pid_entry tgid_base_stuff[] = {
+ 	DIR("task",       S_IRUGO|S_IXUGO, proc_task_inode_operations, proc_task_operations),
+ 	DIR("fd",         S_IRUSR|S_IXUSR, proc_fd_inode_operations, proc_fd_operations),
+ 	DIR("map_files",  S_IRUSR|S_IXUSR, proc_map_files_inode_operations, proc_map_files_operations),
+-	DIR("fdinfo",     S_IRUSR|S_IXUSR, proc_fdinfo_inode_operations, proc_fdinfo_operations),
++	DIR("fdinfo",     S_IRUGO|S_IXUGO, proc_fdinfo_inode_operations, proc_fdinfo_operations),
+ 	DIR("ns",	  S_IRUSR|S_IXUGO, proc_ns_dir_inode_operations, proc_ns_dir_operations),
+ #ifdef CONFIG_NET
+ 	DIR("net",        S_IRUGO|S_IXUGO, proc_net_inode_operations, proc_net_operations),
+@@ -3350,9 +3206,6 @@ static const struct pid_entry tgid_base_stuff[] = {
+ 	ONE("status",     S_IRUGO, proc_pid_status),
+ 	ONE("personality", S_IRUSR, proc_pid_personality),
+ 	ONE("limits",	  S_IRUGO, proc_pid_limits),
+-#ifdef CONFIG_SCHED_WALT
+-	REG("sched_init_task_load", 00644, proc_pid_sched_init_task_load_operations),
+-#endif
+ #ifdef CONFIG_SCHED_DEBUG
+ 	REG("sched",      S_IRUGO|S_IWUSR, proc_pid_sched_operations),
+ #endif
+@@ -3444,6 +3297,9 @@ static const struct pid_entry tgid_base_stuff[] = {
+ #ifdef CONFIG_LIVEPATCH
+ 	ONE("patch_state",  S_IRUSR, proc_pid_patch_state),
+ #endif
++#ifdef CONFIG_CPU_FREQ_TIMES
++	ONE("time_in_state", 0444, proc_time_in_state_show),
++#endif
+ #ifdef CONFIG_STACKLEAK_METRICS
+ 	ONE("stack_depth", S_IRUGO, proc_stack_depth),
+ #endif
+@@ -3456,9 +3312,6 @@ static const struct pid_entry tgid_base_stuff[] = {
+ #ifdef CONFIG_SCHED_RTG
+ 	REG("sched_rtg_ctrl", S_IRUGO|S_IWUGO, proc_rtg_operations),
+ #endif
+-#ifdef CONFIG_SCHED_RTG_DEBUG
+-	REG("sched_group_id", S_IRUGO|S_IWUGO, proc_pid_sched_group_id_operations),
+-#endif
+ };
+ 
+ static int proc_tgid_base_readdir(struct file *file, struct dir_context *ctx)
+@@ -3697,7 +3550,7 @@ static const struct inode_operations proc_tid_comm_inode_operations = {
+  */
+ static const struct pid_entry tid_base_stuff[] = {
+ 	DIR("fd",        S_IRUSR|S_IXUSR, proc_fd_inode_operations, proc_fd_operations),
+-	DIR("fdinfo",    S_IRUSR|S_IXUSR, proc_fdinfo_inode_operations, proc_fdinfo_operations),
++	DIR("fdinfo",    S_IRUGO|S_IXUGO, proc_fdinfo_inode_operations, proc_fdinfo_operations),
+ 	DIR("ns",	 S_IRUSR|S_IXUGO, proc_ns_dir_inode_operations, proc_ns_dir_operations),
+ #ifdef CONFIG_NET
+ 	DIR("net",        S_IRUGO|S_IXUGO, proc_net_inode_operations, proc_net_operations),
+@@ -3788,12 +3641,12 @@ static const struct pid_entry tid_base_stuff[] = {
+ #ifdef CONFIG_PROC_PID_ARCH_STATUS
+ 	ONE("arch_status", S_IRUGO, proc_pid_arch_status),
+ #endif
++#ifdef CONFIG_CPU_FREQ_TIMES
++	ONE("time_in_state", 0444, proc_time_in_state_show),
++#endif
+ #ifdef CONFIG_ACCESS_TOKENID
+ 	ONE("tokenid", S_IRUSR, proc_token_operations),
+ #endif
+-#ifdef CONFIG_SCHED_RTG_DEBUG
+-	REG("sched_group_id", S_IRUGO|S_IWUGO, proc_pid_sched_group_id_operations),
+-#endif
+ };
+ 
+ static int proc_tid_base_readdir(struct file *file, struct dir_context *ctx)
+diff --git a/fs/ubifs/recovery.c b/fs/ubifs/recovery.c
+index f0d51dd21..c81fbe355 100644
+--- a/fs/ubifs/recovery.c
++++ b/fs/ubifs/recovery.c
+@@ -662,10 +662,43 @@ struct ubifs_scan_leb *ubifs_recover_leb(struct ubifs_info *c, int lnum,
+ 			offs += ret;
+ 			buf += ret;
+ 			len -= ret;
+-		} else if (ret == SCANNED_EMPTY_SPACE ||
+-			   ret == SCANNED_GARBAGE     ||
+-			   ret == SCANNED_A_BAD_PAD_NODE ||
+-			   ret == SCANNED_A_CORRUPT_NODE) {
++		} else if (ret == SCANNED_A_CORRUPT_NODE) {
++			dbg_rcvry("found corruption (%d) at %d:%d",
++				  ret, lnum, offs);
++			if (ubifs_check_node(c, buf, len, lnum, offs, 1, 1) == -EUCLEAN &&
++			    !no_more_nodes(c, buf, len, lnum, offs)) {
++				int skip;
++				struct ubifs_ch *ch = buf;
++
++				/*
++				 * If the flash voltage power down suddenly in the programming
++				 * process, it may lead to abnormal data written by the flash
++				 * in the low-voltage operation process, and the last data
++				 * should be discarded.
++				 */
++				ubifs_msg(c, "recovery corrupt node\n");
++				skip = ALIGN(offs + le32_to_cpu(ch->len), c->max_write_size) - offs;
++				memset(buf + skip, 0xff, len - skip);
++			}
++
++			break;
++		} else if (ret == SCANNED_EMPTY_SPACE) {
++			dbg_rcvry("found corruption (%d) at %d:%d",
++				  ret, lnum, offs);
++			if (!is_empty(buf, len) && !is_last_write(c, buf, offs)) {
++				/*
++				 * If the flash voltage power down suddenly in the programming
++				 * process, it may lead to the data was programmed to the wroge
++				 * page written by the flash in the low-voltage operation process,
++				 * and the data should be discarded.
++				 */
++				ubifs_msg(c, "recovery empty space\n");
++				memset(buf, 0xff, len);
++			}
++
++			break;
++		} else if (ret == SCANNED_GARBAGE     ||
++			   ret == SCANNED_A_BAD_PAD_NODE) {
+ 			dbg_rcvry("found corruption (%d) at %d:%d",
+ 				  ret, lnum, offs);
+ 			break;
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 511c9363e..2bfbcf28b 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -802,7 +802,6 @@ xfs_ialloc(
+ 	xfs_buf_t	**ialloc_context,
+ 	xfs_inode_t	**ipp)
+ {
+-	struct inode *dir = pip ? VFS_I(pip) : NULL;
+ 	struct xfs_mount *mp = tp->t_mountp;
+ 	xfs_ino_t	ino;
+ 	xfs_inode_t	*ip;
+@@ -848,17 +847,18 @@ xfs_ialloc(
+ 		return error;
+ 	ASSERT(ip != NULL);
+ 	inode = VFS_I(ip);
++	inode->i_mode = mode;
+ 	set_nlink(inode, nlink);
++	inode->i_uid = current_fsuid();
+ 	inode->i_rdev = rdev;
+ 	ip->i_d.di_projid = prid;
+ 
+-	if (dir && !(dir->i_mode & S_ISGID) &&
+-			(mp->m_flags & XFS_MOUNT_GRPID)) {
+-		inode->i_uid = current_fsuid();
+-		inode->i_gid = dir->i_gid;
+-		inode->i_mode = mode;
++	if (pip && XFS_INHERIT_GID(pip)) {
++		inode->i_gid = VFS_I(pip)->i_gid;
++		if ((VFS_I(pip)->i_mode & S_ISGID) && S_ISDIR(mode))
++			inode->i_mode |= S_ISGID;
+ 	} else {
+-		inode_init_owner(inode, dir, mode);
++		inode->i_gid = current_fsgid();
+ 	}
+ 
+ 	/*
+diff --git a/init/Kconfig b/init/Kconfig
+index 2e5b92880..4e4be500d 100644
+--- a/init/Kconfig
++++ b/init/Kconfig
+@@ -858,7 +858,7 @@ config UCLAMP_BUCKETS_COUNT
+ 
+ 	  If in doubt, use the default value.
+ 
+-source "kernel/sched/rtg/Kconfig"
++#source "kernel/sched/rtg/Kconfig"
+ 
+ config SCHED_EAS
+ 	bool "EAS scheduler optimization"
+@@ -1341,6 +1341,12 @@ if BLK_DEV_INITRD
+ 
+ source "usr/Kconfig"
+ 
++config INITRD_ASYNC
++	bool "Initrd async"
++	depends on NO_GKI
++	help
++	  Init ramdisk async, can reduce kernel init time.
++
+ endif
+ 
+ config BOOT_CONFIG
+diff --git a/init/initramfs.c b/init/initramfs.c
+index 55b74d7e5..f4c4e2404 100644
+--- a/init/initramfs.c
++++ b/init/initramfs.c
+@@ -12,6 +12,7 @@
+ #include <linux/file.h>
+ #include <linux/memblock.h>
+ #include <linux/namei.h>
++#include <linux/initramfs.h>
+ #include <linux/init_syscalls.h>
+ 
+ static ssize_t __init xwrite(struct file *file, const char *p, size_t count,
+@@ -465,6 +466,9 @@ static char * __init unpack_to_rootfs(char *buf, unsigned long len)
+ 	state = Start;
+ 	this_header = 0;
+ 	message = NULL;
++#if defined(CONFIG_ROCKCHIP_THUNDER_BOOT) && defined(CONFIG_ROCKCHIP_HW_DECOMPRESS) && defined(CONFIG_INITRD_ASYNC)
++	wait_initrd_hw_decom_done();
++#endif
+ 	while (!message && len) {
+ 		loff_t saved_offset = this_header;
+ 		if (*buf == '0' && !(this_header & 3)) {
+@@ -639,4 +643,23 @@ static int __init populate_rootfs(void)
+ 	flush_delayed_fput();
+ 	return 0;
+ }
++
++#if IS_BUILTIN(CONFIG_INITRD_ASYNC)
++#include <linux/kthread.h>
++#include <linux/async.h>
++
++static void __init unpack_rootfs_async(void *unused, async_cookie_t cookie)
++{
++	populate_rootfs();
++}
++
++static int __init populate_rootfs_async(void)
++{
++	async_schedule(unpack_rootfs_async, NULL);
++	return 0;
++}
++
++pure_initcall(populate_rootfs_async);
++#else
+ rootfs_initcall(populate_rootfs);
++#endif
+diff --git a/init/main.c b/init/main.c
+index 93364d974..2c19266da 100644
+--- a/init/main.c
++++ b/init/main.c
+@@ -1524,6 +1524,10 @@ static noinline void __init kernel_init_freeable(void)
+ 	smp_init();
+ 	sched_init_smp();
+ 
++#ifdef CONFIG_ROCKCHIP_THUNDER_BOOT
++	kthread_run(defer_free_memblock, NULL, "defer_mem");
++#endif
++
+ 	padata_init();
+ 	page_alloc_init_late();
+ 	/* Initialize page ext after all struct pages are initialized. */
+@@ -1533,6 +1537,10 @@ static noinline void __init kernel_init_freeable(void)
+ 
+ 	kunit_run_all_tests();
+ 
++#if IS_BUILTIN(CONFIG_INITRD_ASYNC)
++	async_synchronize_full();
++#endif
++
+ 	console_on_rootfs();
+ 
+ 	/*
+diff --git a/ipc/msg.c b/ipc/msg.c
+index 8ded6b8f1..6e6c8e0c9 100644
+--- a/ipc/msg.c
++++ b/ipc/msg.c
+@@ -147,7 +147,7 @@ static int newque(struct ipc_namespace *ns, struct ipc_params *params)
+ 	key_t key = params->key;
+ 	int msgflg = params->flg;
+ 
+-	msq = kvmalloc(sizeof(*msq), GFP_KERNEL_ACCOUNT);
++	msq = kvmalloc(sizeof(*msq), GFP_KERNEL);
+ 	if (unlikely(!msq))
+ 		return -ENOMEM;
+ 
+diff --git a/ipc/sem.c b/ipc/sem.c
+index d3b9b73cd..7d9c06b0a 100644
+--- a/ipc/sem.c
++++ b/ipc/sem.c
+@@ -511,7 +511,7 @@ static struct sem_array *sem_alloc(size_t nsems)
+ 	if (nsems > (INT_MAX - sizeof(*sma)) / sizeof(sma->sems[0]))
+ 		return NULL;
+ 
+-	sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL_ACCOUNT);
++	sma = kvzalloc(struct_size(sma, sems, nsems), GFP_KERNEL);
+ 	if (unlikely(!sma))
+ 		return NULL;
+ 
+@@ -1852,7 +1852,7 @@ static inline int get_undo_list(struct sem_undo_list **undo_listp)
+ 
+ 	undo_list = current->sysvsem.undo_list;
+ 	if (!undo_list) {
+-		undo_list = kzalloc(sizeof(*undo_list), GFP_KERNEL_ACCOUNT);
++		undo_list = kzalloc(sizeof(*undo_list), GFP_KERNEL);
+ 		if (undo_list == NULL)
+ 			return -ENOMEM;
+ 		spin_lock_init(&undo_list->lock);
+@@ -1937,7 +1937,7 @@ static struct sem_undo *find_alloc_undo(struct ipc_namespace *ns, int semid)
+ 	rcu_read_unlock();
+ 
+ 	/* step 2: allocate new undo structure */
+-	new = kzalloc(sizeof(struct sem_undo) + sizeof(short)*nsems, GFP_KERNEL_ACCOUNT);
++	new = kzalloc(sizeof(struct sem_undo) + sizeof(short)*nsems, GFP_KERNEL);
+ 	if (!new) {
+ 		ipc_rcu_putref(&sma->sem_perm, sem_rcu_free);
+ 		return ERR_PTR(-ENOMEM);
+@@ -2001,8 +2001,7 @@ static long do_semtimedop(int semid, struct sembuf __user *tsops,
+ 	if (nsops > ns->sc_semopm)
+ 		return -E2BIG;
+ 	if (nsops > SEMOPM_FAST) {
+-		sops = kvmalloc_array(nsops, sizeof(*sops),
+-				      GFP_KERNEL_ACCOUNT);
++		sops = kvmalloc_array(nsops, sizeof(*sops), GFP_KERNEL);
+ 		if (sops == NULL)
+ 			return -ENOMEM;
+ 	}
+diff --git a/ipc/shm.c b/ipc/shm.c
+index fce0b7b12..e25c7c610 100644
+--- a/ipc/shm.c
++++ b/ipc/shm.c
+@@ -619,7 +619,7 @@ static int newseg(struct ipc_namespace *ns, struct ipc_params *params)
+ 			ns->shm_tot + numpages > ns->shm_ctlall)
+ 		return -ENOSPC;
+ 
+-	shp = kvmalloc(sizeof(*shp), GFP_KERNEL_ACCOUNT);
++	shp = kvmalloc(sizeof(*shp), GFP_KERNEL);
+ 	if (unlikely(!shp))
+ 		return -ENOMEM;
+ 
+diff --git a/ipc/util.c b/ipc/util.c
+index cc46cfa06..cfa0045e7 100644
+--- a/ipc/util.c
++++ b/ipc/util.c
+@@ -754,13 +754,21 @@ struct pid_namespace *ipc_seq_pid_ns(struct seq_file *s)
+ static struct kern_ipc_perm *sysvipc_find_ipc(struct ipc_ids *ids, loff_t pos,
+ 					      loff_t *new_pos)
+ {
+-	struct kern_ipc_perm *ipc = NULL;
+-	int max_idx = ipc_get_maxidx(ids);
++	struct kern_ipc_perm *ipc;
++	int total, id;
++
++	total = 0;
++	for (id = 0; id < pos && total < ids->in_use; id++) {
++		ipc = idr_find(&ids->ipcs_idr, id);
++		if (ipc != NULL)
++			total++;
++	}
+ 
+-	if (max_idx == -1 || pos > max_idx)
++	ipc = NULL;
++	if (total >= ids->in_use)
+ 		goto out;
+ 
+-	for (; pos <= max_idx; pos++) {
++	for (; pos < ipc_mni; pos++) {
+ 		ipc = idr_find(&ids->ipcs_idr, pos);
+ 		if (ipc != NULL) {
+ 			rcu_read_lock();
+diff --git a/make-boot.sh b/make-boot.sh
+new file mode 100755
+index 000000000..820ff9957
+--- /dev/null
++++ b/make-boot.sh
+@@ -0,0 +1,32 @@
++#!/bin/bash
++
++set -e
++BOOT_LINUX=${1}/kernel/src_tmp/linux-5.10
++OUT_IMAGE=${1}/rk3568/packages/phone/images/
++IMAGE_SIZE=64  # 64M
++IMAGE_BLOCKS=4096
++
++BUILD_PATH=boot_linux
++EXTLINUX_PATH=${BUILD_PATH}/extlinux
++EXTLINUX_CONF=${EXTLINUX_PATH}/extlinux.conf
++TOYBRICK_DTB=toybrick.dtb
++
++function make_boot_image()
++{
++        blocks=${IMAGE_BLOCKS}
++        block_size=$((${IMAGE_SIZE} * 1024 * 1024 / ${blocks}))
++        echo "blocks = ${blocks}  block_size ${block_size}"
++        if [ "`uname -m`" == "aarch64" ]; then
++                echo y | sudo mke2fs -b ${block_size} -d boot_linux -i 8192 -t ext2 boot_linux.img ${blocks}
++        else
++                genext2fs -B ${blocks} -b ${block_size} -d boot_linux -i 8192 -U boot_linux.img
++        fi
++
++        return $?
++}
++
++cp ${1}/rk3568/ramdisk.img ${BOOT_LINUX}/boot_linux/extlinux -f
++cd ${BOOT_LINUX}
++make_boot_image
++cd -
++cp ${BOOT_LINUX}/boot_linux.img ${OUT_IMAGE}
+diff --git a/make-ohos.sh b/make-ohos.sh
+new file mode 100755
+index 000000000..0eb1457b5
+--- /dev/null
++++ b/make-ohos.sh
+@@ -0,0 +1,131 @@
++#!/bin/bash
++
++set -e
++
++export PATH=../../../../prebuilts/clang/ohos/linux-x86_64/llvm/bin/:$PATH
++export PRODUCT_PATH=vendor/isoftstone/rk3399
++IMAGE_SIZE=64  # 64M
++IMAGE_BLOCKS=4096
++
++CPUs=`sed -n "N;/processor/p" /proc/cpuinfo|wc -l`
++MAKE="make CROSS_COMPILE=../../../../prebuilts/gcc/linux-x86/aarch64/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-"
++BUILD_PATH=boot_linux
++EXTLINUX_PATH=${BUILD_PATH}/extlinux
++EXTLINUX_CONF=${EXTLINUX_PATH}/extlinux.conf
++TOYBRICK_DTB=toybrick.dtb
++
++ID_MODEL=1
++ID_ARCH=2
++ID_UART=3
++ID_DTB=4
++ID_IMAGE=5
++ID_CONF=6
++model_list=(
++	"TB-RK3568X0   arm64 0xfe660000 rk3568-toybrick-x0-linux  Image rockchip_linux_defconfig"
++	"sapphire-rk3399 arm64 0xff1a0000 rk3399-sapphire-excavator-linux  Image rockchip_linux_defconfig"
++	"sapphire-rk3399T arm64 0xff1a0000 rk3399-sapphire-excavator-linux-3399t  Image rockchip_linux_defconfig"
++)
++
++
++function help()
++{
++	echo "Usage: ./make-ohos.sh {BOARD_NAME}"
++	echo "e.g."
++	for i in "${model_list[@]}"; do
++		echo "  ./make-ohos.sh $(echo $i | awk '{print $1}')"
++	done
++}
++
++
++function make_extlinux_conf()
++{
++	dtb_path=$1
++	uart=$2
++	image=$3
++
++	echo "label rockchip-kernel-5.10" > ${EXTLINUX_CONF}
++	echo "	kernel /extlinux/${image}" >> ${EXTLINUX_CONF}
++	echo "	fdt /extlinux/${TOYBRICK_DTB}" >> ${EXTLINUX_CONF}
++	if [ "enable_ramdisk" == "${ramdisk_flag}" ]; then
++		echo "	initrd /extlinux/ramdisk.img" >> ${EXTLINUX_CONF}
++	fi
++	cmdline="append earlycon=uart8250,mmio32,${uart} root=PARTUUID=614e0000-0000-4b53-8000-1d28000054a9 rw rootwait rootfstype=ext4"
++	echo "  ${cmdline}" >> ${EXTLINUX_CONF}
++}
++
++function make_kernel_image()
++{
++	arch=$1
++	conf=$2
++	dtb=$3
++
++	${MAKE} ARCH=${arch} ${conf}
++	if [ $? -ne 0 ]; then
++		echo "FAIL: ${MAKE} ARCH=${arch} ${conf}"
++		return -1
++	fi
++
++	${MAKE} ARCH=${arch} ${dtb}.img -j${CPUs}
++	if [ $? -ne 0 ]; then
++		echo "FAIL: ${MAKE} ARCH=${arch} ${dtb}.img"
++		return -2
++	fi
++
++	return 0
++}
++
++function make_ext2_image()
++{
++	blocks=${IMAGE_BLOCKS}
++	block_size=$((${IMAGE_SIZE} * 1024 * 1024 / ${blocks}))
++
++	if [ "`uname -m`" == "aarch64" ]; then
++		echo y | sudo mke2fs -b ${block_size} -d boot_linux -i 8192 -t ext2 boot_linux.img ${blocks}
++	else
++		genext2fs -B ${blocks} -b ${block_size} -d boot_linux -i 8192 -U boot_linux.img
++	fi
++
++	return $?
++}
++
++function make_boot_linux()
++{
++	arch=${!ID_ARCH}
++	uart=${!ID_UART}
++	dtb=${!ID_DTB}
++	image=${!ID_IMAGE}
++	conf=${!ID_CONF}
++	if [ ${arch} == "arm" ]; then
++		dtb_path=arch/arm/boot/dts
++	else
++		dtb_path=arch/arm64/boot/dts/rockchip
++	fi
++
++	rm -rf ${BUILD_PATH}
++	mkdir -p ${EXTLINUX_PATH}
++
++	make_kernel_image ${arch} ${conf} ${dtb}
++	if [ $? -ne 0 ]; then
++		exit 1
++	fi
++	make_extlinux_conf ${dtb_path} ${uart} ${image}
++	cp -f arch/${arch}/boot/${image} ${EXTLINUX_PATH}/
++	cp -f ${dtb_path}/${dtb}.dtb ${EXTLINUX_PATH}/${TOYBRICK_DTB}
++	cp -f logo*.bmp ${BUILD_PATH}/
++	if [ "enable_ramdisk" != "${ramdisk_flag}" ]; then
++		make_ext2_image
++	fi
++}
++
++ramdisk_flag=$2
++found=0
++for i in "${model_list[@]}"; do
++	if [ "$(echo $i | awk '{print $1}')" == "$1" ]; then
++		make_boot_linux $i
++		found=1
++	fi
++done
++
++if [ ${found} -eq 0 ]; then
++	help
++fi
+diff --git a/mm/hugetlb.c b/mm/hugetlb.c
+index 4ecf9a062..20277864c 100644
+--- a/mm/hugetlb.c
++++ b/mm/hugetlb.c
+@@ -3932,7 +3932,6 @@ void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *vma,
+ 	struct hstate *h = hstate_vma(vma);
+ 	unsigned long sz = huge_page_size(h);
+ 	struct mmu_notifier_range range;
+-	bool force_flush = false;
+ 
+ 	WARN_ON(!is_vm_hugetlb_page(vma));
+ 	BUG_ON(start & ~huge_page_mask(h));
+@@ -3961,8 +3960,10 @@ void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *vma,
+ 		ptl = huge_pte_lock(h, mm, ptep);
+ 		if (huge_pmd_unshare(mm, vma, &address, ptep)) {
+ 			spin_unlock(ptl);
+-			tlb_flush_pmd_range(tlb, address & PUD_MASK, PUD_SIZE);
+-			force_flush = true;
++			/*
++			 * We just unmapped a page of PMDs by clearing a PUD.
++			 * The caller's TLB flush range should cover this area.
++			 */
+ 			continue;
+ 		}
+ 
+@@ -4019,22 +4020,6 @@ void __unmap_hugepage_range(struct mmu_gather *tlb, struct vm_area_struct *vma,
+ 	}
+ 	mmu_notifier_invalidate_range_end(&range);
+ 	tlb_end_vma(tlb, vma);
+-
+-	/*
+-	 * If we unshared PMDs, the TLB flush was not recorded in mmu_gather. We
+-	 * could defer the flush until now, since by holding i_mmap_rwsem we
+-	 * guaranteed that the last refernece would not be dropped. But we must
+-	 * do the flushing before we return, as otherwise i_mmap_rwsem will be
+-	 * dropped and the last reference to the shared PMDs page might be
+-	 * dropped as well.
+-	 *
+-	 * In theory we could defer the freeing of the PMD pages as well, but
+-	 * huge_pmd_unshare() relies on the exact page_count for the PMD page to
+-	 * detect sharing, so we cannot defer the release of the page either.
+-	 * Instead, do flush now.
+-	 */
+-	if (force_flush)
+-		tlb_flush_mmu_tlbonly(tlb);
+ }
+ 
+ void __unmap_hugepage_range_final(struct mmu_gather *tlb,
+diff --git a/mm/memblock.c b/mm/memblock.c
+index c337df03b..3b9d75e55 100644
+--- a/mm/memblock.c
++++ b/mm/memblock.c
+@@ -97,6 +97,26 @@ struct pglist_data __refdata contig_page_data;
+ EXPORT_SYMBOL(contig_page_data);
+ #endif
+ 
++#ifdef CONFIG_ROCKCHIP_THUNDER_BOOT
++static unsigned long defer_start __initdata;
++static unsigned long defer_end __initdata;
++
++#define DEFAULT_DEFER_FREE_BLOCK_SIZE SZ_256M
++static unsigned long defer_free_block_size __initdata =
++	DEFAULT_DEFER_FREE_BLOCK_SIZE;
++
++static int __init early_defer_free_block_size(char *p)
++{
++	defer_free_block_size = memparse(p, &p);
++
++	pr_debug("defer_free_block_size = 0x%lx\n", defer_free_block_size);
++
++	return 0;
++}
++
++early_param("defer_free_block_size", early_defer_free_block_size);
++#endif
++
+ unsigned long max_low_pfn;
+ unsigned long min_low_pfn;
+ unsigned long max_pfn;
+@@ -1906,6 +1926,28 @@ static void __init __free_pages_memory(unsigned long start, unsigned long end)
+ 	}
+ }
+ 
++#ifdef CONFIG_ROCKCHIP_THUNDER_BOOT
++int __init defer_free_memblock(void *unused)
++{
++	if (defer_start == 0)
++		return 0;
++
++	pr_debug("start = %ld, end = %ld\n", defer_start, defer_end);
++
++	__free_pages_memory(defer_start, defer_end);
++
++	totalram_pages_add(defer_end - defer_start);
++
++	pr_info("%s: size %luM free %luM [%luM - %luM] total %luM\n", __func__,
++		defer_free_block_size >> 20,
++		(defer_end - defer_start) >> (20 - PAGE_SHIFT),
++		defer_end >> (20 - PAGE_SHIFT),
++		defer_start >> (20 - PAGE_SHIFT),
++		totalram_pages() >> (20 - PAGE_SHIFT));
++	return 0;
++}
++#endif
++
+ static unsigned long __init __free_memory_core(phys_addr_t start,
+ 				 phys_addr_t end)
+ {
+@@ -1916,6 +1958,15 @@ static unsigned long __init __free_memory_core(phys_addr_t start,
+ 	if (start_pfn >= end_pfn)
+ 		return 0;
+ 
++#ifdef CONFIG_ROCKCHIP_THUNDER_BOOT
++	if ((end - start) > defer_free_block_size) {
++		defer_start = start_pfn;
++		defer_end = end_pfn;
++
++		return 0;
++	}
++#endif
++
+ 	__free_pages_memory(start_pfn, end_pfn);
+ 
+ 	return end_pfn - start_pfn;
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index 6842f539c..61095d5d0 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -1445,9 +1445,15 @@ static void free_one_page(struct zone *zone,
+ }
+ 
+ static void __meminit __init_single_page(struct page *page, unsigned long pfn,
+-				unsigned long zone, int nid)
++				unsigned long zone, int nid,
++				bool zero_page_struct __maybe_unused)
+ {
++#ifdef CONFIG_ROCKCHIP_THUNDER_BOOT
++	if (zero_page_struct)
++		mm_zero_struct_page(page);
++#else
+ 	mm_zero_struct_page(page);
++#endif
+ 	set_page_links(page, zone, nid, pfn);
+ 	init_page_count(page);
+ 	page_mapcount_reset(page);
+@@ -1480,7 +1486,7 @@ static void __meminit init_reserved_page(unsigned long pfn)
+ 		if (pfn >= zone->zone_start_pfn && pfn < zone_end_pfn(zone))
+ 			break;
+ 	}
+-	__init_single_page(pfn_to_page(pfn), pfn, zid, nid);
++	__init_single_page(pfn_to_page(pfn), pfn, zid, nid, true);
+ }
+ #else
+ static inline void init_reserved_page(unsigned long pfn)
+@@ -1794,7 +1800,7 @@ static unsigned long  __init deferred_init_pages(struct zone *zone,
+ 		} else {
+ 			page++;
+ 		}
+-		__init_single_page(page, pfn, zid, nid);
++		__init_single_page(page, pfn, zid, nid, true);
+ 		nr_pages++;
+ 	}
+ 	return (nr_pages);
+@@ -6167,6 +6173,11 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
+ 	}
+ #endif
+ 
++#ifdef CONFIG_ROCKCHIP_THUNDER_BOOT
++	/* Zero all page struct in advance */
++	memset(pfn_to_page(start_pfn), 0, sizeof(struct page) * size);
++#endif
++
+ 	for (pfn = start_pfn; pfn < end_pfn; ) {
+ 		/*
+ 		 * There can be holes in boot-time mem_map[]s handed to this
+@@ -6180,7 +6191,7 @@ void __meminit memmap_init_zone(unsigned long size, int nid, unsigned long zone,
+ 		}
+ 
+ 		page = pfn_to_page(pfn);
+-		__init_single_page(page, pfn, zone, nid);
++		__init_single_page(page, pfn, zone, nid, false);
+ 		if (context == MEMINIT_HOTPLUG)
+ 			__SetPageReserved(page);
+ 
+@@ -6226,7 +6237,7 @@ void __ref memmap_init_zone_device(struct zone *zone,
+ 	for (pfn = start_pfn; pfn < end_pfn; pfn++) {
+ 		struct page *page = pfn_to_page(pfn);
+ 
+-		__init_single_page(page, pfn, zone_idx, nid);
++		__init_single_page(page, pfn, zone_idx, nid, true);
+ 
+ 		/*
+ 		 * Mark page reserved as it will need to wait for onlining
+@@ -6311,7 +6322,7 @@ static void __init init_unavailable_range(unsigned long spfn,
+ 				+ pageblock_nr_pages - 1;
+ 			continue;
+ 		}
+-		__init_single_page(pfn_to_page(pfn), pfn, zone, node);
++		__init_single_page(pfn_to_page(pfn), pfn, zone, node, true);
+ 		__SetPageReserved(pfn_to_page(pfn));
+ 		pgcnt++;
+ 	}
+diff --git a/tools/usb/ffs-aio-example/multibuff/device_app/aio_multibuff.c b/tools/usb/ffs-aio-example/multibuff/device_app/aio_multibuff.c
+index aaca1f44e..8643beaf2 100644
+--- a/tools/usb/ffs-aio-example/multibuff/device_app/aio_multibuff.c
++++ b/tools/usb/ffs-aio-example/multibuff/device_app/aio_multibuff.c
+@@ -57,16 +57,30 @@ static const struct {
+ 	struct usb_functionfs_descs_head_v2 header;
+ 	__le32 fs_count;
+ 	__le32 hs_count;
++	__le32 ss_count;
++	__le32 os_count;
+ 	struct {
+ 		struct usb_interface_descriptor intf;
+ 		struct usb_endpoint_descriptor_no_audio bulk_sink;
+ 		struct usb_endpoint_descriptor_no_audio bulk_source;
+ 	} __attribute__ ((__packed__)) fs_descs, hs_descs;
++	struct {
++		struct usb_interface_descriptor intf;
++		struct usb_endpoint_descriptor_no_audio sink;
++		struct usb_ss_ep_comp_descriptor sink_comp;
++		struct usb_endpoint_descriptor_no_audio source;
++		struct usb_ss_ep_comp_descriptor source_comp;
++	} __attribute__ ((__packed__)) ss_descs;
++	struct usb_os_desc_header os_header;
++	struct usb_ext_compat_desc os_desc;
++
+ } __attribute__ ((__packed__)) descriptors = {
+ 	.header = {
+ 		.magic = htole32(FUNCTIONFS_DESCRIPTORS_MAGIC_V2),
+ 		.flags = htole32(FUNCTIONFS_HAS_FS_DESC |
+-				     FUNCTIONFS_HAS_HS_DESC),
++				 FUNCTIONFS_HAS_HS_DESC |
++				 FUNCTIONFS_HAS_SS_DESC |
++				 FUNCTIONFS_HAS_MS_OS_DESC),
+ 		.length = htole32(sizeof(descriptors)),
+ 	},
+ 	.fs_count = htole32(3),
+@@ -115,6 +129,58 @@ static const struct {
+ 			.wMaxPacketSize = htole16(512),
+ 		},
+ 	},
++	.ss_count = htole32(5),
++	.ss_descs = {
++		.intf = {
++			.bLength = sizeof(descriptors.ss_descs.intf),
++			.bDescriptorType = USB_DT_INTERFACE,
++			.bInterfaceNumber = 0,
++			.bNumEndpoints = 2,
++			.bInterfaceClass = USB_CLASS_VENDOR_SPEC,
++			.iInterface = 1,
++		},
++		.sink = {
++			.bLength = sizeof(descriptors.ss_descs.sink),
++			.bDescriptorType = USB_DT_ENDPOINT,
++			.bEndpointAddress = 1 | USB_DIR_IN,
++			.bmAttributes = USB_ENDPOINT_XFER_BULK,
++			.wMaxPacketSize = htole16(1024),
++		},
++		.sink_comp = {
++			.bLength = sizeof(descriptors.ss_descs.sink_comp),
++			.bDescriptorType = USB_DT_SS_ENDPOINT_COMP,
++			.bMaxBurst = 4,
++		},
++		.source = {
++			.bLength = sizeof(descriptors.ss_descs.source),
++			.bDescriptorType = USB_DT_ENDPOINT,
++			.bEndpointAddress = 2 | USB_DIR_OUT,
++			.bmAttributes = USB_ENDPOINT_XFER_BULK,
++			.wMaxPacketSize = htole16(1024),
++		},
++		.source_comp = {
++			.bLength = sizeof(descriptors.ss_descs.source_comp),
++			.bDescriptorType = USB_DT_SS_ENDPOINT_COMP,
++			.bMaxBurst = 4,
++		},
++	},
++	.os_count = htole32(1),
++	.os_header = {
++		.interface = htole32(1),
++		.dwLength = htole32(sizeof(descriptors.os_header) +
++			    sizeof(descriptors.os_desc)),
++		.bcdVersion = htole32(1),
++		.wIndex = htole32(4),
++		.bCount = htole32(1),
++		.Reserved = htole32(0),
++	},
++	.os_desc = {
++		.bFirstInterfaceNumber = 0,
++		.Reserved1 = htole32(1),
++		.CompatibleID = {0},
++		.SubCompatibleID = {0},
++		.Reserved2 = {0},
++	},
+ };
+ 
+ #define STR_INTERFACE "AIO Test"
+diff --git a/tools/usb/ffs-aio-example/simple/device_app/aio_simple.c b/tools/usb/ffs-aio-example/simple/device_app/aio_simple.c
+index 1f44a2981..51574379f 100644
+--- a/tools/usb/ffs-aio-example/simple/device_app/aio_simple.c
++++ b/tools/usb/ffs-aio-example/simple/device_app/aio_simple.c
+@@ -55,16 +55,30 @@ static const struct {
+ 	struct usb_functionfs_descs_head_v2 header;
+ 	__le32 fs_count;
+ 	__le32 hs_count;
++	__le32 ss_count;
++	__le32 os_count;
+ 	struct {
+ 		struct usb_interface_descriptor intf;
+ 		struct usb_endpoint_descriptor_no_audio bulk_sink;
+ 		struct usb_endpoint_descriptor_no_audio bulk_source;
+ 	} __attribute__ ((__packed__)) fs_descs, hs_descs;
++	struct {
++		struct usb_interface_descriptor intf;
++		struct usb_endpoint_descriptor_no_audio sink;
++		struct usb_ss_ep_comp_descriptor sink_comp;
++		struct usb_endpoint_descriptor_no_audio source;
++		struct usb_ss_ep_comp_descriptor source_comp;
++	} __attribute__ ((__packed__)) ss_descs;
++	struct usb_os_desc_header os_header;
++	struct usb_ext_compat_desc os_desc;
++
+ } __attribute__ ((__packed__)) descriptors = {
+ 	.header = {
+ 		.magic = htole32(FUNCTIONFS_DESCRIPTORS_MAGIC_V2),
+ 		.flags = htole32(FUNCTIONFS_HAS_FS_DESC |
+-				     FUNCTIONFS_HAS_HS_DESC),
++				 FUNCTIONFS_HAS_HS_DESC |
++				 FUNCTIONFS_HAS_SS_DESC |
++				 FUNCTIONFS_HAS_MS_OS_DESC),
+ 		.length = htole32(sizeof(descriptors)),
+ 	},
+ 	.fs_count = htole32(3),
+@@ -113,6 +127,58 @@ static const struct {
+ 			.wMaxPacketSize = htole16(512),
+ 		},
+ 	},
++	.ss_count = htole32(5),
++	.ss_descs = {
++		.intf = {
++			.bLength = sizeof(descriptors.ss_descs.intf),
++			.bDescriptorType = USB_DT_INTERFACE,
++			.bInterfaceNumber = 0,
++			.bNumEndpoints = 2,
++			.bInterfaceClass = USB_CLASS_VENDOR_SPEC,
++			.iInterface = 1,
++		},
++		.sink = {
++			.bLength = sizeof(descriptors.ss_descs.sink),
++			.bDescriptorType = USB_DT_ENDPOINT,
++			.bEndpointAddress = 1 | USB_DIR_IN,
++			.bmAttributes = USB_ENDPOINT_XFER_BULK,
++			.wMaxPacketSize = htole16(1024),
++		},
++		.sink_comp = {
++			.bLength = sizeof(descriptors.ss_descs.sink_comp),
++			.bDescriptorType = USB_DT_SS_ENDPOINT_COMP,
++			.bMaxBurst = 4,
++		},
++		.source = {
++			.bLength = sizeof(descriptors.ss_descs.source),
++			.bDescriptorType = USB_DT_ENDPOINT,
++			.bEndpointAddress = 2 | USB_DIR_OUT,
++			.bmAttributes = USB_ENDPOINT_XFER_BULK,
++			.wMaxPacketSize = htole16(1024),
++		},
++		.source_comp = {
++			.bLength = sizeof(descriptors.ss_descs.source_comp),
++			.bDescriptorType = USB_DT_SS_ENDPOINT_COMP,
++			.bMaxBurst = 4,
++		},
++	},
++	.os_count = htole32(1),
++	.os_header = {
++		.interface = htole32(1),
++		.dwLength = htole32(sizeof(descriptors.os_header) +
++			    sizeof(descriptors.os_desc)),
++		.bcdVersion = htole32(1),
++		.wIndex = htole32(4),
++		.bCount = htole32(1),
++		.Reserved = htole32(0),
++	},
++	.os_desc = {
++		.bFirstInterfaceNumber = 0,
++		.Reserved1 = htole32(1),
++		.CompatibleID = {0},
++		.SubCompatibleID = {0},
++		.Reserved2 = {0},
++	},
+ };
+ 
+ #define STR_INTERFACE "AIO Test"
+-- 
+2.25.1
+
