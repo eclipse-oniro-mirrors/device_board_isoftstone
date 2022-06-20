@@ -16,7 +16,7 @@ if (!defined(defines)) {
 }
 
 camera_product_name_path = "//vendor/${product_company}/${product_name}"
-camera_device_name_path = "//device/board/${product_company}/${device_name}"
+camera_device_name_path = "//device/board/${product_company}/${device_name}/drivers"
 is_support_v4l2 = true
 if (is_support_v4l2) {
   is_support_mpi = false

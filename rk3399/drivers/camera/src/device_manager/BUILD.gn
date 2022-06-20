@@ -12,6 +12,7 @@
 # limitations under the License.
 import("//build/ohos.gni")
 import("//drivers/peripheral/camera/hal/camera.gni")
+import("../../camera.gni")
 
 config("device_manager_config") {
   visibility = [ ":*" ]
