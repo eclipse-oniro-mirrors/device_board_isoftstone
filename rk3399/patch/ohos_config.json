@@ -3,14 +3,14 @@
   "board": "rk3399",
   "kernel": null,
   "product": "rk3399",
-  "product_path": "/home/weipanga/share/openharmony_3399_master/vendor/hihope/rk3568",
-  "device_path": "/home/weipanga/share/openharmony_3399_master/device/board/rockchip/rk3568",
+  "product_path": "/home/weipanga/share/openharmony_3399_master/vendor/isoftstone/rk3399",
+  "device_path": "/home/weipanga/share/openharmony_3399_master/device/board/isoftstone/rockchip/rk3399",
   "device_company": "rockchip",
   "os_level": "standard",
   "version": "3.0",
   "patch_cache": null,
-  "product_json": "/home/weipanga/share/openharmony_3399_master/vendor/hihope/rk3568/config.json",
-  "target_cpu": "arm64",
+  "product_json": "/home/weipanga/share/openharmony_3399_master/vendor/isoftstone/rk3399/config.json",
+  "target_cpu": "arm",
   "target_os": null,
   "out_path": "/home/weipanga/share/openharmony_3399_master/out/rk3399"
 }
