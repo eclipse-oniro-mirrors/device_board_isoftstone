@@ -104,11 +104,11 @@ bash build/prebuilts_download.sh
 先将tools目录拷贝到windows下
 ### 安装驱动
 解压DriverAssitant_v5.1.1.zip，然后运行DriverInstall.exe
-![驱动安装](./rk3399/tools/pictures/DriverAssitant.png)
+![驱动安装](./tools/pictures/DriverAssitant.png)
 ### 安装烧录工具
 解压RKDevTool_Release.zip，双击运行RKDevTool.exe
-![](./rk3399/tools/pictures/FlashTool.png)
+![](./tools/pictures/FlashTool.png)
 ### 烧录
 运行RKDevTool.exe后，选在对应的镜像，按reset后然后长按uboot键，软件底部出现**发现一个LOADER设备**后点击执行，然后等待烧录完成
-![](./rk3399/tools/pictures/Dowanload.png)
+![](./tools/pictures/Dowanload.png)
 
