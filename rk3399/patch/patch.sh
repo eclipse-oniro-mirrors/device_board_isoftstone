@@ -20,7 +20,7 @@ echo $@
 
 copy_list=(
     #device/rockchip/product/device_rk3399.json          productdefine/common/device/rk3399.json
-	device/board/isoftstone/rk3399/patch/ohos_config.json  .
+    #device/board/isoftstone/rk3399/patch/ohos_config.json  .
 )
 function cooy_rk3399_files()
 {
@@ -45,7 +45,7 @@ function apply_rk3399_patch()
     done
 }
 
-cooy_rk3399_files
+#cooy_rk3399_files
 apply_rk3399_patch
 
 #ln -s device/rockchip/rk3399/kernel/make_kernel.sh make_kernel+hdf.sh
