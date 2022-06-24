@@ -30,5 +30,4 @@ rk3399参考:
 
 * [vendor/isoftstone](https://gitee.com/openharmony-sig/vendor_isoftstone)
 * [device/soc/rockchip](https://gitee.com/openharmony-sig/device_soc_rockchip)
-* [device/board/isoftston](https://gitee.com/openharmony-sig/device_soc_isoftstone)
 
