@@ -19,12 +19,11 @@ pushd ${1}
 ROOT_DIR=${5}
 export PRODUCT_PATH=${4}
 
-KERNEL_PATCH_PATH=${3}/kernel/patches
-HDF_PATCH=${3}/kernel/patches/hdf.patch
 KERNEL_SOURCE=${ROOT_DIR}/kernel/linux/linux-5.10
 KERNEL_SRC_TMP_PATH=${ROOT_DIR}/out/kernel/src_tmp/linux-5.10
-KERNEL_CONFIG_FILE=${3}/kernel/patches/rk3399_standard_defconfig
-
+HDF_PATCH=${ROOT_DIR}/kernel/linux/patches/linux-5.10/rk3399_patch/hdf.patch
+KERNEL_PATCH_PATH=${ROOT_DIR}/kernel/linux/patches/linux-5.10/rk3399_patch
+KERNEL_CONFIG_FILE=${ROOT_DIR}/kernel/linux/config/linux-5.10/arch/arm64/configs/rk3399_standard_defconfig
 
 rm -rf ${KERNEL_SRC_TMP_PATH}
 mkdir -p ${KERNEL_SRC_TMP_PATH}
@@ -37,7 +36,7 @@ cd ${KERNEL_SRC_TMP_PATH}
 bash ${ROOT_DIR}/drivers/hdf_core/adapter/khdf/linux/patch_hdf.sh ${ROOT_DIR} ${KERNEL_SRC_TMP_PATH} ${HDF_PATCH}
 
 #合入kernel patch
-bash ${3}/kernel/patches/kernel-patch.sh ${KERNEL_SRC_TMP_PATH} ${KERNEL_PATCH_PATH}
+bash ${3}/kernel/src/kernel-patch.sh ${3}/kernel/src ${KERNEL_PATCH_PATH}
 
 cp -rf ${3}/kernel/logo* ${KERNEL_SRC_TMP_PATH}/
 
@@ -55,9 +54,9 @@ mkdir -p ${2}
 
 if [ "enable_ramdisk" != "${6}" ]; then
     cp boot_linux.img ${2}/boot_linux.img
-    cp resource.img ${2}/resource.img
 fi
 
+cp resource.img ${2}/resource.img
 cp ${3}/loader/parameter.txt ${2}/parameter.txt
 cp ${3}/loader/MiniLoaderAll.bin ${2}/MiniLoaderAll.bin
 cp ${3}/loader/uboot.img ${2}/uboot.img
