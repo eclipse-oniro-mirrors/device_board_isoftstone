@@ -3,7 +3,9 @@
     "parts": {
         "rockchip_products": {
             "module_list": [
-                "//device/board/isoftstone/rk3399:rk3399_group"
+                "//device/board/isoftstone/rk3399:rk3399_group",
+                "//vendor/isoftstone/${product_name}/bluetooth:libbt_vendor",
+                "//vendor/isoftstone/${product_name}/bluetooth:BCM4343A1.hcd"
             ]
         }
     }
