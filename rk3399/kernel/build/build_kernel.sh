@@ -38,7 +38,7 @@ bash ${ROOT_DIR}/drivers/hdf_core/adapter/khdf/linux/patch_hdf.sh ${ROOT_DIR} ${
 #合入kernel patch
 bash ${3}/kernel/src/kernel-patch.sh ${3}/kernel/src ${KERNEL_PATCH_PATH}
 
-cp -rf ${3}/kernel/logo* ${KERNEL_SRC_TMP_PATH}/
+cp -rf ${3}/kernel/logo/logo* ${KERNEL_SRC_TMP_PATH}/
 
 #拷贝config
 cp -rf ${KERNEL_CONFIG_FILE} ${KERNEL_SRC_TMP_PATH}/arch/arm64/configs/rockchip_linux_defconfig
