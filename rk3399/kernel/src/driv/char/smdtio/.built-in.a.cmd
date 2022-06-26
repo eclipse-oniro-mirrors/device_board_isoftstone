@@ -1,1 +1,0 @@
-cmd_drivers/char/smdtio/built-in.a := rm -f drivers/char/smdtio/built-in.a; ../../../../prebuilts/gcc/linux-x86/aarch64/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-ar cDPrST drivers/char/smdtio/built-in.a drivers/char/smdtio/smdtio.o

@@ -10,7 +10,7 @@ kernel_build_script_dir = "//kernel/linux/linux-5.10"
 kernel_source_dir = "//kernel/linux/linux-5.10"
 
 action("kernel") {
-  script = "build_kernel.sh"
+  script = "build/build_kernel.sh"
   sources = [ kernel_source_dir ]
 
   product_path = "vendor/$product_company/$product_name"
