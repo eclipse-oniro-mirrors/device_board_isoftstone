@@ -1,6 +1,0 @@
-config DRIVERS_HDF_AUDIO_RK3399
-    bool "Enable HDF Audio Codec driver"
-    default y
-    depends on DRIVERS_HDF_AUDIO
-    help
-        Answer Y to choice HDF Audio Codec driver.
