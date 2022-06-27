@@ -1,0 +1,12 @@
+{
+    "subsystem": "rockchip_products",
+    "parts": {
+        "rockchip_products": {
+            "module_list": [
+                "//device/board/isoftstone/${product_name}:rk3399_group",
+                "//vendor/isoftstone/${product_name}/bluetooth:libbt_vendor",
+                "//vendor/isoftstone/${product_name}/bluetooth:BCM4343A1.hcd"
+            ]
+        }
+    }
+}
