@@ -1,0 +1,30 @@
+# Copyright (c) 2021-2022 iSoftStone Device Co., Ltd.
+#
+# HDF is dual licensed: you can use it either under the terms of
+# the GPL, or the BSD license, at your option.
+# See the LICENSE file in the root of this repository for complete details.
+import("//build/ohos.gni")
+
+BOOTANIMATION_DIR = "//device/board/isoftstone/rk3399/bootanimation"
+
+ohos_prebuilt_etc("bootanimation-1920x1080") {
+  source = "$BOOTANIMATION_DIR/bootanimation-1920x1080.raw"
+  part_name = "rockchip_products"
+  install_enable = true
+}
+
+ohos_prebuilt_etc("bootanimation-720x1280") {
+  source = "$BOOTANIMATION_DIR/bootanimation-720x1280.raw"
+  part_name = "rockchip_products"
+  install_enable = true
+}
+
+
+group("bootanimation") {
+  deps = [
+    ":bootanimation-720x1280",
+    ":bootanimation-1920x1080",
+  ]
+}
+
+
