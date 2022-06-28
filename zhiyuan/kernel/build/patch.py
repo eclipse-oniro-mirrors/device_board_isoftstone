@@ -97,29 +97,21 @@ def copy_new_file(src_path, dest_path):
   p = Popen(f"cp -a {src_path} {dest_path}/", shell=True, stdout=PIPE)
   p.wait()
 
-def copy_file():
-  src_device_ic_json = os.path.join(file_source_path, 'productdefine', 'device', json_name)
-  dest_device_ic_json = os.path.join(root_path, 'productdefine/common/device')
-  copy_new_file(src_device_ic_json, dest_device_ic_json)
-
-  src_product_ic_json = os.path.join(file_source_path, 'productdefine', 'product', json_name)
-  dest_product_ic_json = os.path.join(root_path, 'productdefine/common/products')
-  copy_new_file(src_product_ic_json, dest_product_ic_json)
-  print("---- [success] copy file to harmony ----")
 
 if __name__ == "__main__":
 
-  support_platforms = ["T507", "R818"]
+  support_platforms = ["t507", "r818"]
   curent_path = os.getcwd()
-  root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(curent_path))))
-  allwinner_path = os.path.join(root_path, 'device', "soc", 'allwinner')
+  root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(curent_path))))))
+  print(root_path)
+  allwinner_path = os.path.join(root_path, "device", "soc", 'allwinner')
 
 
   if len(sys.argv) <= 1:
     print("[error] please selete ic only support 'T507' or 'R818' now")
     print("[sample] 'python3 patch.py R818'")
     sys.exit(1)
-  current_ic = str(sys.argv[-1]).upper()
+  current_ic = str(sys.argv[-1]).lower()
   print(f"ic name is {current_ic}")
   if current_ic not in support_platforms:
     print(f"[error] {current_ic} not support")
@@ -127,12 +119,10 @@ if __name__ == "__main__":
 
   ic_path = os.path.join(allwinner_path, current_ic)
   patch_path = os.path.join(ic_path, 'patches', 'harmony')
- # code_source_path = os.path.join(source_path, 'code')
+
   file_source_path = os.path.join(ic_path, 'patches', 'file')
   json_name = current_ic + '.json'
   patch()
-  #push_source()
-  copy_file()
 
 
 

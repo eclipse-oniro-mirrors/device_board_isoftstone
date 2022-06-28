@@ -69,7 +69,7 @@ fi
 PACK_TYPE="linux"
 OTA_TEST_NAME="ota_test"
 
-export PATH=${LICHEE_TOOLS_DIR}/pack/pctools/linux/mod_update:${LICHEE_TOOLS_DIR}/pack/pctools/linux/openssl:${LICHEE_TOOLS_DIR}/pack/pctools/linux/eDragonEx:${LICHEE_TOOLS_DIR}/pack/pctools/linux/fsbuild200:${LICHEE_TOOLS_DIR}/pack/pctools/linux/android:$PATH
+export PATH=${LICHEE_TOOLS_DIR}/pack/mod_update:${LICHEE_TOOLS_DIR}/pack/openssl:${LICHEE_TOOLS_DIR}/pack/eDragonEx:${LICHEE_TOOLS_DIR}/pack/fsbuild200:${LICHEE_TOOLS_DIR}/pack/android:$PATH
 
 possible_bin_path=(
 bin
@@ -135,21 +135,17 @@ ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/boot0_nand_${PACK_CHIP}.bin:${LICHEE_PACK_
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/boot0_sdcard_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/boot0_sdcard.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/boot0_spinor_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/boot0_spinor.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/fes1_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/fes1.fex
-${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/${LICHEE_KERN_VER}/u-boot-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot.fex
+${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/u-boot-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/u-boot-crashdump-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-crash.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/u-boot-crashdump-spinor-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-spinor-crash.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/bl31.bin:${LICHEE_PACK_OUT_DIR}/monitor.fex
-${LICHEE_CHIP_CONFIG_DIR}/\${BIN_PATH}/bl31_${PACK_BOARD}.bin:${LICHEE_PACK_OUT_DIR}/monitor.fex
+${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/bl31_${PACK_BOARD}.bin:${LICHEE_PACK_OUT_DIR}/monitor.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/scp.bin:${LICHEE_PACK_OUT_DIR}/scp.fex
-${LICHEE_CHIP_CONFIG_DIR}/\${BIN_PATH}/dsp0.bin:${LICHEE_PACK_OUT_DIR}/dsp0.fex
-${LICHEE_CHIP_CONFIG_DIR}/\${BIN_PATH}/dsp1.bin:${LICHEE_PACK_OUT_DIR}/dsp1.fex
+${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/dsp0.bin:${LICHEE_PACK_OUT_DIR}/dsp0.fex
+${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/dsp1.bin:${LICHEE_PACK_OUT_DIR}/dsp1.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/optee_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/optee.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/u-boot-spinor-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-spinor.fex
-${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/boot0_nand_${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/boot0_nand-${OTA_TEST_NAME}.fex
-${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/boot0_sdcard_${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/boot0_sdcard-${OTA_TEST_NAME}.fex
-${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/boot0_spinor_${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/boot0_spinor-${OTA_TEST_NAME}.fex
 ${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/u-boot-${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-${OTA_TEST_NAME}.fex
-${LICHEE_CHIP_CONFIG_DIR}/${BIN_PATH}/u-boot-spinor-${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-spinor-${OTA_TEST_NAME}.fex
 )
 
 boot_file_list_2=(
@@ -158,13 +154,10 @@ ${LICHEE_PLAT_OUT}/boot0_sdcard_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/boot0_sd
 ${LICHEE_PLAT_OUT}/boot0_spinor_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/boot0_spinor.fex
 ${LICHEE_PLAT_OUT}/fes1_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/fes1.fex
 ${LICHEE_PLAT_OUT}/sboot_${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/sboot.bin
-${LICHEE_PLAT_OUT}/${LICHEE_KERN_VER}/u-boot-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot.fex
+${LICHEE_PLAT_OUT}/u-boot-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot.fex
 ${LICHEE_PLAT_OUT}/u-boot-crashdump-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-crash.fex
 ${LICHEE_PLAT_OUT}/u-boot-crashdump-spinor-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-spinor-crash.fex
 ${LICHEE_PLAT_OUT}/u-boot-spinor-${PACK_CHIP}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-spinor.fex
-${LICHEE_PLAT_OUT}/boot0_nand_${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/boot0_nand-${OTA_TEST_NAME}.fex
-${LICHEE_PLAT_OUT}/boot0_sdcard_${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/boot0_sdcard-${OTA_TEST_NAME}.fex
-${LICHEE_PLAT_OUT}/boot0_spinor_${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/boot0_spinor-${OTA_TEST_NAME}.fex
 ${LICHEE_PLAT_OUT}/sboot_${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/sboot-${OTA_TEST_NAME}.bin
 ${LICHEE_PLAT_OUT}/u-boot-${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-${OTA_TEST_NAME}.fex
 ${LICHEE_PLAT_OUT}/u-boot-spinor-${PACK_CHIP}-${OTA_TEST_NAME}.bin:${LICHEE_PACK_OUT_DIR}/u-boot-spinor-${OTA_TEST_NAME}.fex
@@ -286,32 +279,6 @@ function uart_switch()
 	rm -f ${LICHEE_PACK_OUT_DIR}/sys_config.fex
 	mv ${LICHEE_PACK_OUT_DIR}/sys_config_debug.fex ${LICHEE_PACK_OUT_DIR}/sys_config.fex
 	echo "uart -> card0"
-}
-
-function copy_ota_test_file()
-{
-	printf "ota test bootloader by diff bootlogo\n"
-	mv ${LICHEE_PACK_OUT_DIR}/boot-resource/bootlogo_ota_test.bmp ${LICHEE_PACK_OUT_DIR}/boot-resource/bootlogo.bmp
-
-	printf "copying ota test boot file\n"
-	if [ -f sys_partition_nor.fex -o \
-		-f sys_partition_nor_${PACK_TYPE}.fex ];  then
-		mv ${LICHEE_PACK_OUT_DIR}/boot0_spinor-${OTA_TEST_NAME}.fex	${LICHEE_PACK_OUT_DIR}/boot0_spinor.fex
-		mv ${LICHEE_PACK_OUT_DIR}/u-boot-spinor-${OTA_TEST_NAME}.fex	${LICHEE_PACK_OUT_DIR}/u-boot-spinor.fex
-	else
-		mv ${LICHEE_PACK_OUT_DIR}/boot0_nand-${OTA_TEST_NAME}.fex	${LICHEE_PACK_OUT_DIR}/boot0_nand.fex
-		mv ${LICHEE_PACK_OUT_DIR}/boot0_sdcard-${OTA_TEST_NAME}.fex	${LICHEE_PACK_OUT_DIR}/boot0_sdcard.fex
-		mv ${LICHEE_PACK_OUT_DIR}/u-boot-${OTA_TEST_NAME}.fex		${LICHEE_PACK_OUT_DIR}/u-boot.fex
-	fi
-
-	if [ "x${PACK_SECURE}" = "xsecure" -o  "x${PACK_SIG}" = "prev_refurbish"] ; then
-		printf "Copying ota test secure boot file\n"
-		mv ${LICHEE_PACK_OUT_DIR}/sboot-${OTA_TEST_NAME}.bin ${LICHEE_PACK_OUT_DIR}/sboot.bin
-	fi
-
-	printf "OTA test env by bootdelay(10) and logolevel(8)\n"
-	sed -i 's/\(logolevel=\).*/\18/' ${LICHEE_PACK_OUT_DIR}/env.cfg
-	sed -i 's/\(bootdelay=\).*/\110/' ${LICHEE_PACK_OUT_DIR}/env.cfg
 }
 
 function add_lzma_header()
@@ -477,11 +444,6 @@ function do_prepare()
 		sed -i 's/^usb_port_type.*/usb_port_type = 0/g' ${LICHEE_PACK_OUT_DIR}/sys_config.fex
 		sed -i 's/^usb_serial_unique.*/usb_serial_unique = 0/g' ${LICHEE_PACK_OUT_DIR}/sys_config.fex
 		sed -i 's/^usb_serial_number.*/usb_serial_number = "'"${PACK_CHIP}"'_android"/g' ${LICHEE_PACK_OUT_DIR}/sys_config.fex
-	fi
-
-	if [ "x${PACK_MODE}" = "xota_test" ] ; then
-		printf "copy ota test file\n"
-		copy_ota_test_file
 	fi
 
 	printf "copying additional files\n"
@@ -710,6 +672,7 @@ function do_common()
 
 	busybox unix2dos sys_config.fex
 	busybox unix2dos board_config.fex
+
 	script  sys_config.fex > /dev/null
 	cp -f   sys_config.bin config.fex
 	script  board_config.fex > /dev/null
@@ -717,65 +680,10 @@ function do_common()
 
 	busybox unix2dos sys_partition.fex
 	script  sys_partition.fex > /dev/null
-
-	# Those files for SpiNor. We will try to find sys_partition_nor.fex
-	if [ "x${PACK_NOR}" = "xnor" ] ; then
-
-		if [ ! -f sys_partition_nor.fex ];  then
-			echo "sys partition for nor not exist"
-			exit 1
-		fi
-
-		if [ -f "${LICHEE_PLAT_OUT}/sunxi.dtb" ]; then
-			cp ${LICHEE_PLAT_OUT}/sunxi.dtb sunxi.fex
-		fi
-
-		if [ -f "scp.fex" ]; then
-			echo "update scp"
-			update_scp scp.fex sunxi.fex >/dev/null
-		fi
-
-		# Here, will create sys_partition_nor.bin
-		busybox unix2dos sys_partition_nor.fex
-		script  sys_partition_nor.fex > /dev/null
-		update_boot0 boot0_spinor.fex   sys_config.bin SPINOR_FLASH > /dev/null
-		update_chip boot0_spinor.fex >/dev/null
-		if [ "x${PACK_KERN}" = "xlinux-3.4" ] ; then
-			update_uboot -merge u-boot-spinor.fex  sys_config.bin > /dev/null
-		else
-			update_uboot -no_merge u-boot-spinor.fex  sys_config.bin > /dev/null
-		fi
-
-		if [ -f boot_package_nor.cfg ]; then
-			mv u-boot-spinor-crash.fex u-boot-crash.fex
-			echo "pack boot package"
-			busybox unix2dos boot_package.cfg
-			dragonsecboot -pack boot_package_nor.cfg
-			cp boot_package.fex boot_package_nor.fex
-		fi
-		# Ugly, but I don't have a better way to change it.
-		# We just set env's downloadfile name to env_nor.cfg in sys_partition_nor.fex
-		# And if env_nor.cfg is not exist, we should copy one.
-		if [ ! -f env_nor.cfg ]; then
-			cp -f env.cfg env_nor.cfg >/dev/null 2<&1
-		fi
-
-		# Fixup boot mode for SPINor, just can bootm
-		sed -i '/^boot_normal/s#\<boota\>#bootm#g' env_nor.cfg
-
-		if [ "x${LICHEE_REDUNDANT_ENV_SIZE}" != "x" ]; then
-			echo "--mkenvimage create redundant env data!--"
-			echo "--redundant nor env data size ${LICHEE_REDUNDANT_ENV_SIZE}---"
-			mkenvimage -r -p 0x00 -s ${LICHEE_REDUNDANT_ENV_SIZE} -o env_nor.fex env_nor.cfg
-		else
-			u_boot_env_gen env_nor.cfg env_nor.fex >/dev/null
-		fi
-	else
-		update_boot0 boot0_nand.fex     sys_config.bin NAND > /dev/null
-		update_boot0 boot0_sdcard.fex   sys_config.bin SDMMC_CARD > /dev/null
-		update_chip boot0_nand.fex > /dev/null
-		update_chip boot0_sdcard.fex > /dev/null
-	fi
+	update_boot0 boot0_nand.fex     sys_config.bin NAND > /dev/null
+	update_boot0 boot0_sdcard.fex   sys_config.bin SDMMC_CARD > /dev/null
+	update_chip boot0_nand.fex > /dev/null
+	update_chip boot0_sdcard.fex > /dev/null
 
 	if [ ! -f "u-boot-crash.fex" ]; then
 		touch "u-boot-crash.fex"
@@ -786,7 +694,6 @@ function do_common()
 		cp ${LICHEE_PLAT_OUT}/sunxi.dtb sunxi.fex
 		update_dtb sunxi.fex 4096
 	fi
-
 	if [ -f "scp.fex" ]; then
 		echo "update scp"
 		update_scp scp.fex sunxi.fex >/dev/null
@@ -815,8 +722,8 @@ function do_common()
 			exit 1
 		fi
 	fi
-	fsbuild      boot-resource.ini  split_xxxx.fex > /dev/null
 
+	fsbuild      boot-resource.ini  split_xxxx.fex > /dev/null
 	if [ -f boot_package.cfg ]; then
 			echo "pack boot package"
 			busybox unix2dos boot_package.cfg
@@ -1221,10 +1128,8 @@ function do_signature()
 
 function do_pack_linux()
 {
-	typeset -u chip_name
-	chip_name=${LICHEE_IC}
 
-	local harmony_image_path=${CFG_TOP_DIR}/out/${chip_name}/packages/phone/images
+	local harmony_image_path=${LICHEE_OUT_DIR}/${PRODUCT_NAME}/packages/phone/images
 	local link_real=$(get_realpath ${LICHEE_PLAT_OUT} ./)
 	local recovery_path=${link_real}/recovery.img
 

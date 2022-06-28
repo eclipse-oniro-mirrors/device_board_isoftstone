@@ -21,7 +21,7 @@ iSoftStone以OpenHarmonyOS为核心，聚焦垂类，提供商业发行版产品
 ```
 device/board/isoftston
 ├── yangfan                            	# yangfan board
-├── zhiyuan								# zhiyuan board                              
+├── zhiyuan					# zhiyuan board                              
 └── ...
 ```
 

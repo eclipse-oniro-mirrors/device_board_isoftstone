@@ -19,12 +19,13 @@ device_type="${product_name}"
 group("products_group") {
   if (device_type == "t507_pines") {
     deps = [
-      "//device/soc/allwinner/T507:T507_group",
+      "//device/board/seed/t507_pines/cfg:rc_files",
+      "//device/board/seed/t507_pines/cfg/rootfs:init_configs",
     ]
   }
 
   deps += [
     "//device/soc/allwinner/t507/hardware:hardware_group",
-    "//device/board/seed/t507_pines/kernel/build:kernel_module",
+    "//device/board/seed/t507_pines/kernel/build:kernel",
   ]
 }

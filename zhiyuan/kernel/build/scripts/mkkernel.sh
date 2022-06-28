@@ -387,8 +387,8 @@ function build_ramfs()
     DTB_OFFSET=`printf "(%d+%d+%d+%d)/%d*%d\n" $KERNEL_OFFSET $kernel_size $bss_section_size 0x1fffff 0x100000 0x100000 | bc`
     RAMDISK_OFFSET=`printf "%d+%d\n" $DTB_OFFSET 0x100000 | bc`
 
-    local MKBOOTIMG=${LICHEE_TOOLS_DIR}/pack/pctools/linux/android/mkbootimg
-    [ ! -f ${MKBOOTIMG} ] && MKBOOTIMG=${KUNOS_TOOLS_DIR}/android/mkbootimg
+    local MKBOOTIMG=${LICHEE_TOOLS_DIR}/pack/android/mkbootimg
+
 
     if [ "${LICHEE_KERN_SYSTEM}" = "kernel_recovery" ]; then
         IMAGE_NAME="recovery.img"

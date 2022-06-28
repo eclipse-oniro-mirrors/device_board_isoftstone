@@ -3,8 +3,7 @@
     "parts": {
         "allwinner_products": {
             "module_list": [
-                "//device/board/seed/t507_pines:products_group",
-                "//device/soc/allwinner/t507/gpu:gpu_libs"
+                "//device/board/seed/t507_pines:products_group"
             ]
         }
     }

@@ -19,7 +19,7 @@ VENDOR_WIFI_ROOT = .
 WIFI_PATH := $(shell pwd)
 $(warning WIFI_PATH=$(WIFI_PATH))
 
-include $(WIFI_PATH)/../../../../../device/board/seed/T507/wifi/xr829_hdfadapter/wifi_config.mk
+include $(WIFI_PATH)/../../../../../device/board/seed/t507_pines/kernel/hdf/driver/wifi/xr829_hdfadapter/wifi_config.mk
 
 $(warning HDF_FRAMEWORKS_INC=$(HDF_FRAMEWORKS_INC))
 $(warning HDF_WIFI_FRAMEWORKS_INC=$(HDF_WIFI_FRAMEWORKS_INC))

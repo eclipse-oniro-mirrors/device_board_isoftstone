@@ -34,7 +34,7 @@ build_flag=${5}
 
 
 if [ "x$LICHEE_IC" == "xt507" ]; then
-	export LICHEE_BOARD=evb_oh1
+	export LICHEE_BOARD=t507_pines
 	export LICHEE_CHIP=sun50iw9p1
 	export LICHEE_KERN_DEFCONF=t507_linux-5.10_defconfig
 fi
@@ -77,22 +77,21 @@ export BOARD_COMPANY_PATH=${OHOS_ROOT_PATH}/device/board/${PRODUCT_COMPANY}   #d
 export BOARD_PATH=${BOARD_COMPANY_PATH}/${PRODUCT_NAME}                       #device/board/seed/t507_pines
 export BOARD_KERNEL_PATH=${BOARD_PATH}/kernel                                 #device/board/seed/t507_pines/kernel
 export LICHEE_TOP_DIR=${BOARD_KERNEL_PATH}/build                              #device/board/seed/T507_pines/kernel/build
-export LICHEE_BUILD_DIR=${LICHEE_TOP_DIR}/scripts                         #device/soc/allwinner/build/scripts
-export LICHEE_TOOLS_DIR=${DEVICE_COMPANY_PATH}/build/tools                #device/soc/allwinner/build/tools
-export LICHEE_BSP_DIR=${DEVICE_COMPANY_PATH}/bsp                          #device/soc/allwinner/bsp
+export LICHEE_BUILD_DIR=${LICHEE_TOP_DIR}/scripts                             #device/board/seed/T507_pines/kernel/build/scripts
+export LICHEE_TOOLS_DIR=${LICHEE_TOP_DIR}/tools                               #device/board/seed/T507_pines/kernel/build/tools
+export LICHEE_BSP_DIR=${BOARD_KERNEL_PATH}/driver                             #device/board/seed/T507_pines/kernel/driver
 export LICHEE_SRC_KERN_DEFCONF=${DEVICE_CHIP_PATH}/patches/config/${LICHEE_KERN_DEFCONF}
-export LICHEE_COMMON_CONFIG_DIR=${BOARD_COMPANY_PATH}/common                  #device/board/common
-export LICHEE_CHIP_DIR=${BOARD_COMPANY_PATH}/${LICHEE_IC_BIG}                 #device/board/T507
-export LICHEE_CHIP_CONFIG_DIR=${LICHEE_CHIP_DIR}/config                    	  #device/board/T507/config
-export LICHEE_BRANDY_OUT_DIR=${LICHEE_CHIP_CONFIG_DIR}/bin                    #device/board/T507/config/bin
-export LICHEE_BOARD_CONFIG_DIR=${LICHEE_CHIP_CONFIG_DIR}/configs/${LICHEE_BOARD}  #device/board/T507/config/configs/bearpi
+export LICHEE_LOADER_DIR=${BOARD_PATH}/loader                                 #device/board/seed/t507_pines/loader
+export LICHEE_CHIP_CONFIG_DIR=${LICHEE_LOADER_DIR}                   	      #device/board/seed/t507_pines/loader
+export LICHEE_BRANDY_OUT_DIR=${LICHEE_LOADER_DIR}/bin                         #device/board/seed/t507_pines/loader/bin
+export LICHEE_BOARD_CONFIG_DIR=${LICHEE_CHIP_CONFIG_DIR}/configs/${PRODUCT_NAME}  #device/board/seed/t507_pines/loader/configs/t507_pines
 [ -d "${LICHEE_BSP_DIR}" ] && export BSP_TOP=${LICHEE_KERN_DIR}/bsp/
 
 
 
 pack_config_file=.packconfig
 
-export BUILD_CONFIG_FILE=${DEVICE_COMPANY_PATH}/build/${pack_config_file}
+export BUILD_CONFIG_FILE=${LICHEE_TOP_DIR}/${pack_config_file}
 
 
 function mk_error()
@@ -244,7 +243,7 @@ function add_patch_to_kernel()
 		if [ -e "${LICHEE_BSP_DIR}" ]; then
 			rm -rf bsp
 		fi
-		cp -af ${LICHEE_BSP_DIR} ./
+		cp -af ${LICHEE_BSP_DIR} bsp
 	fi
 
 #---------------------------------------------------------------------------
@@ -330,11 +329,12 @@ function mkkernel()
 	LICHEE_KERN_SYSTEM="kernel_boot"
 
 	prepare_mkkernel
+	
 	echo "(cd ${KERNEL_BUILD_SCRIPT_DIR} && [ -x ${KERNEL_BUILD_SCRIPT} ] && ./${KERNEL_BUILD_SCRIPT})"
 	(cd ${KERNEL_BUILD_SCRIPT_DIR} && [ -x ${KERNEL_BUILD_SCRIPT} ] && ./${KERNEL_BUILD_SCRIPT} $@)
 	[ $? -ne 0 ] && mk_error "build kernel Failed" && return 1
 	# copy files related to pack to platform out
-	cp $BUILD_CONFIG $LICHEE_PLAT_OUT
+
 	cp ${KERNEL_BUILD_OUT_DIR}/vmlinux ${LICHEE_PLAT_OUT}
 
 	cp ${LICHEE_KERN_DIR}/scripts/dtc/dtc ${LICHEE_PLAT_OUT}
@@ -438,7 +438,6 @@ LICHEE_TOP_DIR
 LICHEE_BUILD_DIR
 LICHEE_TOOLS_DIR
 LICHEE_DEVICE_DIR
-LICHEE_COMMON_CONFIG_DIR
 LICHEE_CHIP_CONFIG_DIR
 LICHEE_BOARD_CONFIG_DIR
 LICHEE_PRODUCT_CONFIG_DIR
@@ -446,7 +445,8 @@ LICHEE_BRANDY_OUT_DIR
 LICHEE_PACK_OUT_DIR
 LICHEE_TOOLCHAIN_PATH
 LICHEE_PLAT_OUT
-BSP_TOP)
+BSP_TOP
+PRODUCT_NAME)
 
 function save_config()
 {
@@ -522,8 +522,6 @@ check_env
 mklichee
 
 save_all_config
-
-#cp_ko_to_system
 
 mk_info "----------------------------------------"
 mk_info "build kernel OK."
