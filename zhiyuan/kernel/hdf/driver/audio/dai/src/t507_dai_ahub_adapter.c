@@ -1,0 +1,150 @@
+/*
+ * Copyright (C) 2022 VYAGOO TECHNOLOGY Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "t507_dai_ahub_ops.h"
+#include "audio_core.h"
+#include "osal_io.h"
+#include "audio_dai_base.h"
+#include "audio_driver_log.h"
+
+#define HDF_LOG_TAG t507_dai_ahub_adapter
+
+struct AudioDaiOps g_daiDeviceOps = {
+    .HwParams   = T507AhubDaiHwParams,
+    .Trigger    = T507AhubDaiTrigger,
+    .Startup    = T507AhubDaiStartup,
+};
+
+struct DaiData g_daiData = {
+    .DaiInit    = T507AhubDeviceInit,
+    .Read       = T507AhubDeviceReadReg,
+    .Write      = T507AhubDeviceWriteReg,
+    .ops        = &g_daiDeviceOps,
+};
+
+/* HdfDriverEntry implementations */
+static int32_t DaiDriverBind(struct HdfDeviceObject *device)
+{
+    struct DaiHost *daiHost = NULL;
+
+    if (device == NULL) {
+        AUDIO_DRIVER_LOG_ERR("input para is NULL.");
+        return HDF_FAILURE;
+    }
+
+    daiHost = (struct DaiHost *)OsalMemCalloc(sizeof(*daiHost));
+    if (daiHost == NULL) {
+        AUDIO_DRIVER_LOG_ERR("malloc host fail!");
+        return HDF_FAILURE;
+    }
+
+    daiHost->device = device;
+    device->service = &daiHost->service;
+    g_daiData.daiInitFlag = false;
+
+    AUDIO_DRIVER_LOG_DEBUG("success!");
+    return HDF_SUCCESS;
+}
+
+static int32_t DaiGetServiceName(const struct HdfDeviceObject *device)
+{
+    int32_t ret;
+    const struct DeviceResourceNode *node = NULL;
+    struct DeviceResourceIface *drsOps = NULL;
+
+    if (device == NULL) {
+        AUDIO_DRIVER_LOG_ERR("input para is nullptr.");
+        return HDF_FAILURE;
+    }
+
+    node = device->property;
+    if (node == NULL) {
+        AUDIO_DRIVER_LOG_ERR("drs node is nullptr.");
+        return HDF_FAILURE;
+    }
+    drsOps = DeviceResourceGetIfaceInstance(HDF_CONFIG_SOURCE);
+    if (drsOps == NULL || drsOps->GetString == NULL) {
+        AUDIO_DRIVER_LOG_ERR("invalid drs ops fail!");
+        return HDF_FAILURE;
+    }
+
+    ret = drsOps->GetString(node, "serviceName", &g_daiData.drvDaiName, 0);
+    if (ret != HDF_SUCCESS) {
+        AUDIO_DRIVER_LOG_ERR("read serviceName fail!");
+        return ret;
+    }
+
+    return HDF_SUCCESS;
+}
+
+static int32_t DaiDriverInit(struct HdfDeviceObject *device)
+{
+    int32_t ret = 0;
+
+    if (device == NULL) {
+        AUDIO_DRIVER_LOG_ERR("device is nullptr.");
+        return HDF_ERR_INVALID_OBJECT;
+    }
+
+    if (DaiGetConfigInfo(device, &g_daiData) !=  HDF_SUCCESS) {
+        AUDIO_DRIVER_LOG_ERR("get dai data fail.");
+        return HDF_FAILURE;
+    }
+
+    if (DaiGetServiceName(device) !=  HDF_SUCCESS) {
+        AUDIO_DRIVER_LOG_ERR("get service name fail.");
+        return HDF_FAILURE;
+    }
+
+    OsalMutexInit(&g_daiData.mutex);
+
+    ret = AudioSocRegisterDai(device, &g_daiData);
+    if (ret !=  HDF_SUCCESS) {
+        AUDIO_DRIVER_LOG_ERR("register dai fail.");
+        return ret;
+    }
+
+    AUDIO_DRIVER_LOG_DEBUG("success.\n");
+    return HDF_SUCCESS;
+}
+
+static void DaiDriverRelease(struct HdfDeviceObject *device)
+{
+    struct DaiHost *daiHost;
+
+    if (device == NULL) {
+        AUDIO_DRIVER_LOG_ERR("device is NULL");
+        return;
+    }
+
+    OsalMutexDestroy(&g_daiData.mutex);
+
+    daiHost = (struct DaiHost *)device->service;
+    if (daiHost == NULL) {
+        AUDIO_DRIVER_LOG_ERR("daiHost is NULL");
+        return;
+    }
+    OsalMemFree(daiHost);
+}
+
+/* HdfDriverEntry definitions */
+struct HdfDriverEntry g_daiDriverEntry = {
+    .moduleVersion  = 1,
+    .moduleName     = "DAI_T507",
+    .Bind           = DaiDriverBind,
+    .Init           = DaiDriverInit,
+    .Release        = DaiDriverRelease,
+};
+HDF_INIT(g_daiDriverEntry);

@@ -1,0 +1,6 @@
+menu "Misc Devices Drivers"
+
+source "$(BSP_TOP)drivers/misc/sunxi-rf/Kconfig"
+source "$(BSP_TOP)drivers/misc/sunxi-addr/Kconfig"
+
+endmenu

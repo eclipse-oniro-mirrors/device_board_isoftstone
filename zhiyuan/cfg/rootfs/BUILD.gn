@@ -1,0 +1,67 @@
+# Copyright (C) 2022 VYAGOO TECHNOLOGY Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/ohos/kernel/kernel.gni")
+
+if (linux_kernel_version == "linux-4.19") {
+  source_path="linux-4.19"
+} else if (linux_kernel_version == "linux-5.10") {
+  source_path="linux-5.10"
+}
+
+ohos_prebuilt_etc("init.sun50iw9p1.cfg") {
+  source = "init.sun50iw9p1.cfg"
+  module_install_dir = "etc"
+  install_images = [ "vendor" ]
+  part_name = "allwinner_products"
+  install_enable = true
+}
+
+ohos_prebuilt_etc("init.sun50iw9p1.usb.cfg") {
+  source = "init.sun50iw9p1.usb.cfg"
+  module_install_dir = "etc"
+  install_images = [ "vendor" ]
+  part_name = "allwinner_products"
+  install_enable = true
+}
+
+ohos_prebuilt_etc("init.without_two_stages.cfg") {
+  source = "${source_path}/init.without_two_stages.cfg"
+  install_images = [ "system" ]
+  part_name = "allwinner_products"
+}
+
+ohos_prebuilt_etc("init_cfg") {
+  source = "${source_path}/init.cfg"
+  install_images = [ "system" ]
+  part_name = "allwinner_products"
+  install_enable = true
+}
+
+ohos_prebuilt_etc("init.sun50iw9p1.updater.cfg") {
+  source = "init.sun50iw9p1.updater.cfg"
+  install_images = [ "updater" ]
+  part_name = "allwinner_products"
+  install_enable = true
+}
+
+group("init_configs") {
+  deps = [
+    ":init.sun50iw9p1.cfg",
+    ":init.sun50iw9p1.updater.cfg",
+    ":init_cfg",
+    ":init.sun50iw9p1.usb.cfg",
+    ":init.without_two_stages.cfg",
+  ]
+}

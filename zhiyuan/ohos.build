@@ -1,0 +1,10 @@
+{
+    "subsystem": "allwinner_products",
+    "parts": {
+        "allwinner_products": {
+            "module_list": [
+                "//device/board/seed/t507_pines:products_group"
+            ]
+        }
+    }
+}

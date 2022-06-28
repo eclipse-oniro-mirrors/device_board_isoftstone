@@ -43,15 +43,28 @@
                 <filteritem type="filepath" name="yangfan/kernel/logo/.*" desc="png file"/>				
                 <filteritem type="filepath" name="yangfan/kernel/drivers/wifi/.*" desc="binary file "/>
                 <filteritem type="filepath" name="yangfan/kernel/src/.*" desc="thirdparty file "/>
-            </filefilter>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/BUILD.gn" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/device_manager/BUILD.gn" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/driver_adapter/BUILD.gn" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/pipeline_core/BUILD.gn" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/audio/.*" desc=" GPL, or the BSD license, at your option."/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/wifi/.*" desc=" GPL, or the BSD license, at your option."/>
+                <filteritem type="filename" name="*.fex|*dts" desc="no license heard"/>
+
+				</filefilter>
             <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
                 <filteritem type="filepath" name="yangfan/kernel/hdf/drivers/camera/src/driver_adapter/BUILD.gn" desc=""/>
             </filefilter>
             <filefilter name="copyrightPolicyFilter" desc="Filters for copyright header policies">
-                 <filteritem type="filepath" name="yangfan/kernel/hdf/drivers/camera/src/driver_adapter/BUILD.gn" desc=""/>
+                <filteritem type="filepath" name="yangfan/kernel/hdf/drivers/camera/src/driver_adapter/BUILD.gn" desc=""/>
+				<filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/BUILD.gn" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/device_manager/BUILD.gn" desc="no copyriht heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/driver_adapter/BUILD.gn" desc="no copyriht heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/pipeline_core/BUILD.gn" desc="no copyriht heard"/>
+                <filteritem type="filename" name="*.fex|*dts" desc="no copyriht heard"/>				 
             </filefilter>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
-                <filteritem type="filename" name="*.png|*.bmp" desc="png bmp file"/>
+                <filteritem type="filename" name="*.so|*.bin|*.bir|*.fex|*.bmp|*.sft|*.png|*.hap|*.o" desc="png bmp file"/>
                 <filteritem type="filepath" name="yangfan/kernel/src/mcu/jy.o" desc="thirdparty file"/>
                 <filteritem type="filepath" name="yangfan/kernel/src/mcu/mcu.o" desc="thirdparty file"/>
             </filefilter>
