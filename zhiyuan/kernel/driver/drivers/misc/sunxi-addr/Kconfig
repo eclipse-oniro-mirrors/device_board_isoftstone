@@ -1,0 +1,6 @@
+config AW_MACADDR_MGT
+  tristate "Allwinner Network MAC Addess Manager"
+  depends on AW_RFKILL || BT || ETHERNET
+  help
+    allwinner network mac address management
+

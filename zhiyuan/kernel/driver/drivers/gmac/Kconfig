@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menu "Gmac Drivers"
+	depends on AW_BSP
+
+config AW_GMAC
+	tristate "Allwinner GMAC support"
+	depends on OF
+	select CRC32
+	select MII
+	select PHYLIB
+	help
+	  Support for Allwinner Gigabit ethernet driver.
+
+	  To compile this driver as a module, choose M here.  The module
+	  will be called sunxi-gmac.ko.
+
+config AW_EXT_PHY
+	bool "Use extern phy"
+	depends on AW_GMAC
+	default y
+	help
+	  Allwinnertech SOC support both internal & extern PHY, Say "Y" to
+	  use extern phy, Say "N" to use internal phy
+
+endmenu
