@@ -1,0 +1,63 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menu "Pinctrl Drivers"
+	depends on AW_BSP
+
+config AW_PINCTRL
+	tristate "Pinctrl Support for Allwinner SoCs"
+	depends on AW_BSP
+	select PINMUX
+	select GENERIC_PINCONF
+	select GPIOLIB
+	default y
+
+config AW_PINCTRL_DEBUGFS
+	tristate "Pinctrl Debugfs Driver"
+	depends on AW_PINCTRL && DEBUG_FS
+	default n
+
+config AW_PINCTRL_SUN8IW15P1
+	tristate "SUN8IW15P1 PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN8IW15
+
+config AW_PINCTRL_SUN8IW15P1_R
+	tristate "SUN8IW15P1 R_PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN8IW15
+
+config AW_PINCTRL_SUN8IW20
+	tristate "SUN8IW20 PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN8IW20 || ARCH_SUN20IW1
+
+config AW_PINCTRL_SUN50IW9
+	tristate "SUN50IW9 PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN50IW9
+
+config AW_PINCTRL_SUN50IW9_R
+	tristate "SUN50IW9 R_PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN50IW9
+
+config AW_PINCTRL_SUN50IW10P1
+	tristate "SUN50IW10P1 PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN50IW10
+
+config AW_PINCTRL_SUN50IW10P1_R
+	tristate "SUN50IW10P1 R_PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN50IW10
+
+config AW_PINCTRL_SUN50IW12
+	tristate "SUN50IW12 PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN50IW12
+
+config AW_PINCTRL_SUN50IW12_R
+	tristate "SUN50IW12 R_PIO"
+	depends on AW_PINCTRL
+	default ARCH_SUN50IW12
+
+endmenu

@@ -1,0 +1,75 @@
+# SPDX-License-Identifier: GPL-2.0-only
+
+# Minimal System
+menu "Device Drivers"
+source "$(BSP_TOP)drivers/clk/Kconfig"
+source "$(BSP_TOP)drivers/pinctrl/Kconfig"
+source "$(BSP_TOP)drivers/uart/Kconfig"
+source "$(BSP_TOP)drivers/timer/Kconfig"
+
+# Basic System
+source "$(BSP_TOP)drivers/dma/Kconfig"
+source "$(BSP_TOP)drivers/rtc/Kconfig"
+# source "$(BSP_TOP)drivers/bus/Kconfig"
+source "$(BSP_TOP)drivers/dumpreg/Kconfig"
+source "$(BSP_TOP)drivers/watchdog/Kconfig"
+source "$(BSP_TOP)drivers/i2c/Kconfig"
+source "$(BSP_TOP)drivers/spi/Kconfig"
+source "$(BSP_TOP)drivers/ledc/Kconfig"
+source "$(BSP_TOP)drivers/pwm/Kconfig"
+# source "$(BSP_TOP)drivers/ir-tx/Kconfig"
+# source "$(BSP_TOP)drivers/ir-rx/Kconfig"
+source "$(BSP_TOP)drivers/gpadc/Kconfig"
+source "$(BSP_TOP)drivers/lradc/Kconfig"
+# source "$(BSP_TOP)drivers/rtp/Kconfig"
+source "$(BSP_TOP)drivers/usb/Kconfig"
+source "$(BSP_TOP)drivers/iommu/Kconfig"
+source "$(BSP_TOP)drivers/gmac/Kconfig"
+
+# Power Management
+source "$(BSP_TOP)drivers/irqchip/Kconfig"
+source "$(BSP_TOP)drivers/standby/Kconfig"
+source "$(BSP_TOP)drivers/thermal/Kconfig"
+source "$(BSP_TOP)drivers/nvmem/Kconfig"
+# source "$(BSP_TOP)drivers/pm_domain/Kconfig"
+source "$(BSP_TOP)drivers/power/Kconfig"
+source "$(BSP_TOP)drivers/cpufreq/Kconfig"
+
+# Input
+source "$(BSP_TOP)drivers/input/Kconfig"
+
+# Storage
+source "$(BSP_TOP)drivers/mmc/Kconfig"
+
+# Graphics
+source "$(BSP_TOP)drivers/video/Kconfig"
+source "$(BSP_TOP)drivers/g2d/Kconfig"
+source "$(BSP_TOP)drivers/vin/Kconfig"
+
+# Multi-Media
+# source "$(BSP_TOP)drivers/ve/Kconfig"
+
+# Sound
+# source "$(BSP_TOP)drivers/sound/Kconfig"
+
+# Security
+source "$(BSP_TOP)drivers/smc/Kconfig"
+source "$(BSP_TOP)drivers/sid/Kconfig"
+# source "$(BSP_TOP)drivers/secure_storage/Kconfig"
+
+# Net
+source "$(BSP_TOP)drivers/net/Kconfig"
+
+# Wireless
+source "$(BSP_TOP)drivers/bluetooth/Kconfig"
+
+# Misc
+source "$(BSP_TOP)drivers/misc/Kconfig"
+
+# Drm
+source "$(BSP_TOP)drivers/drm/Kconfig"
+
+# Open source GPU
+source "$(BSP_TOP)drivers/gpu/panfrost/Kconfig"
+
+endmenu

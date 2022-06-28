@@ -1,0 +1,50 @@
+# Copyright (C) 2022 VYAGOO TECHNOLOGY Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//build/ohos/kernel/kernel.gni")
+
+if (linux_kernel_version == "linux-4.19") {
+  source_path="vendor/etc/linux-4.19"
+} else if (linux_kernel_version == "linux-5.10") {
+  source_path="vendor/etc/linux-5.10"
+}
+
+ohos_prebuilt_etc("fstab.required") {
+  source = "${source_path}/fstab.required"
+  module_install_dir = "etc"
+  install_images = [ "system" ]
+  part_name = "allwinner_products"
+}
+
+ohos_prebuilt_etc("fstab.sun50iw9p1") {
+  source = "${source_path}/fstab.sun50iw9p1"
+  module_install_dir = "etc"
+  install_images = [ "vendor" ]
+  part_name = "allwinner_products"
+}
+
+ohos_prebuilt_etc("vb_config_user.ini") {
+  source = "vendor/etc/vb_config_user.ini"
+  module_install_dir = "./"
+  install_images = [ "vendor" ]
+  part_name = "allwinner_products"
+}
+
+group("rc_files") {
+  deps = [
+    ":fstab.required",
+    ":fstab.sun50iw9p1",
+    ":vb_config_user.ini",
+  ]
+}
