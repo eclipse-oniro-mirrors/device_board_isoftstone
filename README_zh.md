@@ -2,27 +2,32 @@
 
 ## 简介
 
-#### iSoftStone简介
+### iSoftStone简介
 
-iSoftStone以OpenHarmonyOS为核心，聚焦垂类，提供商业发行版产品全栈服务及解决方案。全力打造OpenHarmony OS发行版、SwanLink OS产品与  应用开发及OpenHarmony 技术服务能力，支持信创产业发展，共同推进软件创新
+iSoftStone深耕操作系统研发，提供操作系统商业发行版产品全栈服务及解决方案。以创新思维和专业化技术，服务和使能千行百业，为客户创造价值，为国家自主可控开疆拓土。为客户提供订阅及培训
+服务；基于开发板/方案板，提供整机产品（例如电子哨兵，闸机等）；为客户提供定制化开发服务行业方案应用开发项目、定制服务和技术支持。
 
-#### 开发板简介
+### 开发板简介
 
-- [扬帆开发板]
+- 扬帆开发板
 
-“扬帆”基于Big.Little架构，其稳定的Wi-Fi连接性、丰富的扩展接口可以满足市场各类外设要求。同时，其灵活的模块化拓展能力和组网能力，可广泛应用于互动广告机、互动数字标牌、智能自助终端、智能零售终端、工控主机、机器人设备等各类场景。“扬帆”装载瑞芯微RK3399芯片，是一款L2级别开发板，可实现LCD显示、触摸、多媒体、上网等基本特性。此外，“扬帆”搭载OpenHarmony富设备，真正具备了集成性高、接口丰富、性能稳定、应用场景广泛等更强更快的优势，可广泛应用于计算机、个人互联网移动设备、VR、广告机、打印机、闸机等智能终端设备。
+扬帆基于Big.Little架构，其丰富的扩展接口可以满足市场各类外设要求。同时，其灵活的模块化拓展能力和组网能力，可广泛应用于互动广告机、互动数字标牌、智能自助终端、智能零售终端、工控主机、机器人设备等各类场景。“扬帆”装载瑞芯微RK3399芯片，是一款L2级别开发板，可实现LCD显示、触摸、多媒体、上网等基本特性。此外，“扬帆”真正具备了集成性高、接口丰富、性能稳定、应用场景广泛等更强更快的优势，可广泛应用于计算机、个人互联网移动设备、VR、广告机、打印机、闸机等智能终端设备。
 
-- [致远开发板]
+![图1 扬帆开发板](yangfan/figures/yangfan_board.png)
 
-“致远”是一片尺寸为150mm100mm15mm的开发板，其结构紧凑，功能强大，外形美观，开发板上搭载有庞大的资源外设，同时开发板可搭载OpenHarmony操作系统，配套有DevEco Device Tool开发、调试环境，部分教程以及实验案例，开发者可以根据需求自由开发。
+- 致远开发板
+
+致远是一片尺寸为150mm100mm15mm的开发板，其结构紧凑，功能强大，外形美观，开发板上搭载有庞大的资源外设，同时开发板可搭载OpenHarmony操作系统，配套有DevEco Device Tool开发、调试环境，部分教程以及实验案例，开发者可以根据需求自由开发。
+
+![图2 致远开发板](zhiyuan/figures/EVB_OH1.png)
 
 ## 目录
 
 ```
 device/board/isoftston
-├── yangfan                            	# yangfan board
-├── zhiyuan					# zhiyuan board                              
-└── ...
+├── yangfan                 # yangfan board
+├── zhiyuan                 # zhiyuan board                        
+└── XXX
 ```
 
 ## 使用说明
@@ -36,6 +41,5 @@ device/board/isoftston
 
 ## 相关仓
 
-* [vendor/isoftstone](https://gitee.com/openharmony-sig/vendor_isoftstone)
-* [device/soc/rockchip](https://gitee.com/openharmony-sig/device_soc_rockchip)
-
+* [vendor_isoftstone](https://gitee.com/openharmony-sig/vendor_isoftstone)
+* [device_soc_rockchip](https://gitee.com/openharmony-sig/device_soc_rockchip)
