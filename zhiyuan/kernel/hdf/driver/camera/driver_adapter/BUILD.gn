@@ -1,4 +1,4 @@
-# Copyright (C) VYAGOO TECHNOLOGY Co., Ltd. 2022. All rights reserved.
+# Copyright (C) iSoftStone Device Co., Ltd. 2022. All rights reserved.
 
 # import("//build/ohos.gni")
 # import("//drivers/hdf_core/adapter/uhdf2/uhdf.gni")
