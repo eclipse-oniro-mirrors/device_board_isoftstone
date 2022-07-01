@@ -1,19 +1,21 @@
-- [使用isoftstone-rk3399快速上手OpenHarmony](#使用isoftstone-rk3399快速上手openharmony)
-  - [代码下载](#代码下载)
-    - [安装依赖工具](#安装依赖工具)
-    - [获取标准系统源码](#获取标准系统源码)
-      - [前提条件](#前提条件)
-      - [操作步骤](#操作步骤)
-    - [执行prebuilts](#执行prebuilts)
-  - [编译](#编译)
-  - [烧录方法](#烧录方法)
-    - [安装驱动](#安装驱动)
-    - [安装烧录工具](#安装烧录工具)
-    - [烧录](#烧录)
+# 【开发板名称】扬帆开发板
 
-# 使用isoftstone-rk3399快速上手OpenHarmony
+**简介**
+
+“扬帆”装载瑞芯微RK3399芯片，基于Big.Little架构，其丰富的扩展接口可实现LCD显示、触摸、多媒体、上网等基本特性，可广泛应用于互动广告机、互动数字标牌、智能自助终端、智能零售终端、工控主机、机器人设备等各类场景。
+
+扬帆开发板外观图如图1所示：
+
+![图1 扬帆开发板](yangfan/figures/yangfan_board.png)
+
+图1：扬帆开发板外观图
+
+# 扬帆开发的开发指南
+
+本文档用来指导开发者在扬帆开发上进行鸿蒙系统的移植开发。
 
 ## 代码下载
+
 ### 安装依赖工具
 
 安装命令如下：
@@ -85,7 +87,6 @@ bash build/prebuilts_download.sh
     bash device/rockchip/product/rk3399_prebuild.sh
     ./build.sh --product-name rk3399 --ccache
     ```
-
 2.  检查编译结果。编译完成后，log中显示如下：
 
     ```
@@ -93,22 +94,28 @@ bash build/prebuilts_download.sh
     =====build rk3399 successful.
     2021-09-13 09:22:28
     ```
-
     编译所生成的文件都归档在out/ohos-arm-release/目录下，结果镜像输出在 out/ohos-arm-release/packages/phone/images/ 目录下。
-
 
 3.  编译源码完成，请进行镜像烧录。
 
-
 ## 烧录方法
 先将tools目录拷贝到windows下
-### 安装驱动
-解压DriverAssitant_v5.1.1.zip，然后运行DriverInstall.exe
-![驱动安装](./figures/DriverAssitant.png)
-### 安装烧录工具
-解压RKDevTool_Release.zip，双击运行RKDevTool.exe
-![](./figures/FlashTool.png)
-### 烧录
-运行RKDevTool.exe后，选在对应的镜像，按reset后然后长按uboot键，软件底部出现**发现一个LOADER设备**后点击执行，然后等待烧录完成
-![](./figures/Dowanload.png)
 
+### 安装驱动
+解压DriverAssitant_v5.1.1.zip，然后运行DriverInstall.exe。
+
+![驱动安装](./figures/DriverAssitant.png)
+
+### 安装烧录工具
+解压RKDevTool_Release.zip，双击运行RKDevTool.exe。
+
+![烧录工具安装](./figures/FlashTool.png)
+
+### 烧录
+运行RKDevTool.exe后，选在对应的镜像，按reset后然后长按uboot键，软件底部出现**发现一个LOADER设备**后点击执行，然后等待烧录完成。
+
+![镜像烧录](./figures/Dowanload.png)
+
+## 后记
+
+单板烧录完成后，可以扬帆开发板上运行和测试鸿蒙系统，在后续可以根据开发者的需求对系统进行裁剪，增加等定制化开发。
