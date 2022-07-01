@@ -4,9 +4,9 @@
 
 “扬帆”装载瑞芯微RK3399芯片，基于Big.Little架构，其丰富的扩展接口可实现LCD显示、触摸、多媒体、上网等基本特性，可广泛应用于互动广告机、互动数字标牌、智能自助终端、智能零售终端、工控主机、机器人设备等各类场景。
 
-扬帆开发板外观图如图1所示：
+“扬帆”开发板外观图如图1所示：
 
-![图1 扬帆开发板](yangfan/figures/yangfan_board.png)
+![图1 扬帆开发板](figures/yangfan_board.png)
 
 图1：扬帆开发板外观图
 
@@ -14,15 +14,16 @@
 
 本文档用来指导开发者在扬帆开发上进行鸿蒙系统的移植开发。
 
-## 代码下载
+## 开发环境准备
 
-### 安装依赖工具
+### 安装工具
 
 安装命令如下：
 
 ```
 sudo apt-get update && sudo apt-get install binutils git git-lfs gnupg flex bison gperf build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev ccache libgl1-mesa-dev libxml2-utils xsltproc unzip m4 bc gnutls-bin python3.8 python3-pip
 ```
+
 **说明：** 
 >以上安装命令适用于Ubuntu18.04，其他版本请根据安装包名称采用对应的安装命令。
 
@@ -54,7 +55,7 @@ sudo apt-get update && sudo apt-get install binutils git git-lfs gnupg flex biso
 方式一（推荐）：通过repo + ssh 下载（需注册公钥，请参考[码云帮助中心](https://gitee.com/help/articles/4191)）。
 
 ```
-repo init -u ssh://git@gitee.com/openharmony-sig/manifest.git -b master -m devboard_rk3399.xml --no-repo-verify
+repo init -u ssh://git@gitee.com/openharmony-sig/manifest.git -b master -m devboard_yangfan.xml --no-repo-verify
 repo sync -c
 repo forall -c 'git lfs pull'
 ```
@@ -62,7 +63,7 @@ repo forall -c 'git lfs pull'
 方式二：通过repo + https 下载。
 
 ```
-repo init -u https://gitee.com/openharmony-sig/manifest.git -b master -m devboard_rk3399.xml --no-repo-verify
+repo init -u https://gitee.com/openharmony-sig/manifest.git -b master -m devboard_yangfan.xml --no-repo-verify
 repo sync -c
 repo forall -c 'git lfs pull'
 ```

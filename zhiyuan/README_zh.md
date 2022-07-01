@@ -109,59 +109,65 @@
 
 3）安装[git客户端](https://gitee.com/link?target=http%3A%2F%2Fgit-scm.com%2Fbook%2Fzh%2Fv2%2F%E8%B5%B7%E6%AD%A5-%E5%AE%89%E8%A3%85-Git)和[git-lfs](https://gitee.com/vcs-all-in-one/git-lfs?_from=gitee_search#downloading)并配置用户信息。
 
+```
 git config --global user.name "yourname"
 
 git config --global user.email "your-email-address"
 
 git config --global credential.helper store
-
+```
 
 4）安装码云repo工具，可以执行如下命令。
 
-
+```
 curl -s https://gitee.com/oschina/repo/raw/fork_flow/repo-py3 > /usr/local/bin/repo #如果没有权限，可下载至其他目录，并将其配置到环境变量中
 
 chmod a+x /usr/local/bin/repo
 
 pip3 install -i [https://repo.huaweicloud.com/repository/pypi/simple](https://gitee.com/link?target=https%3A%2F%2Frepo.huaweicloud.com%2Frepository%2Fpypi%2Fsimple) requests
-
+```
 
 ### 获取代码流程
 
 1：创建项目文件夹
+2：进入项目文件夹
+3：使用repo工具下载资源仓库
+4：下载所有仓库当前分支的代码
+5：下载仓库大容量二进制文件
+6：下载并安装编译器及二进制工具
+
+```
 mkdir openharmony
 
-2：进入项目文件夹
 cd openharmony
 
-3：使用repo工具下载资源仓库
 repo init -u https://gitee.com/openharmony/manifest.git --no-repo-verify
 
-4：下载所有仓库当前分支的代码
 repo sync -c
 
-5：下载仓库大容量二进制文件
 repo forall -c 'git lfs pull'
 
-6：下载并安装编译器及二进制工具
 bash ./build/prebuilts_download.sh
-
+```
 
 ### 编译流程
 
 进入源码根目录，执行如下命令进行编译。
 
-1：编译t507_pines的system.img/vendor.img等
+1：编译zhiyuan的system.img/vendor.img等
+2：进入pack目录
+3：生成img镜像文件
+4：进入out目录可看到生成的镜像文件
+
+```
 ./build.sh --product-name zhiyuan               
 
-2：进入pack目录
 cd ./device/board/isoftstone/zhiyuan/kernel/build    
 
-3：生成img镜像文件
 ./pack.sh                                       
 
-4：进入out目录可看到生成的镜像文件
 cd ../../../../../../out/
+```
 
 镜像文件为：t507_linux_zhiyuan_uart0.img
 

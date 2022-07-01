@@ -1,8 +1,6 @@
 # device_board_iSoftStone
 
-## 简介
-
-### 开发板简介
+## 开发板简介
 
 - 扬帆开发板
 
