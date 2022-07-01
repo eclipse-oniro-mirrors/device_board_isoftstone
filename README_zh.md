@@ -1,13 +1,6 @@
 # device_board_iSoftStone
 
-## 简介
-
-### iSoftStone简介
-
-iSoftStone深耕操作系统研发，提供操作系统商业发行版产品全栈服务及解决方案。以创新思维和专业化技术，服务和使能千行百业，为客户创造价值，为国家自主可控开疆拓土。为客户提供订阅及培训
-服务；基于开发板/方案板，提供整机产品（例如电子哨兵，闸机等）；为客户提供定制化开发服务行业方案应用开发项目、定制服务和技术支持。
-
-### 开发板简介
+## 开发板简介
 
 - 扬帆开发板
 
@@ -24,10 +17,9 @@ iSoftStone深耕操作系统研发，提供操作系统商业发行版产品全�
 ## 目录
 
 ```
-device/board/isoftston
-├── yangfan                 # yangfan board
-├── zhiyuan                 # zhiyuan board                        
-└── XXX
+device/board/isoftston				
+├── yangfan                 			  # yangfan board
+└── zhiyuan                 			  # zhiyuan board                        
 ```
 
 ## 使用说明

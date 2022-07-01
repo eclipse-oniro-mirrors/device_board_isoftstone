@@ -1,103 +1,107 @@
-# device_board_seed
+# 【开发板名称】致远开发板
 
-#### 开发板介绍
-​		EVB_OH1是一片尺寸为150mm*100mm*15mm的开发板，其结构紧凑，功能强大，外形美观，开发板上搭载有庞大的资源外设，同时开发板可搭载OpenHarmony操作系统，配套有DevEco Device Tool开发、调试环境，部分教程以及实验案例，开发者可以根据需求自由开发。EVB_OH1的外观如图1所示。
+**简介**
 
-![图1 EVB_OH1外观图](figures/EVB_OH1.png)
+“致远”装载全志T507芯片，基于ARM架构，四核64位处理器，支持蓝牙、WIFI、音频、视频和摄像头等功能。拥有丰富的扩展接口，以及多种视频输入输出接口；
+适用于工业控制、智能驾舱、智慧家居、智慧电力、在线教育等诸多行业需求。
 
-​		EVB_OH1板载有丰富的外设资源，便于多应用的开发和部署：
+“致远”开发板外观图如图1所示：
 
-1、全志T507四核、主频 1.5GHz CPU； Mali-400 G31 GPU；
+![图1 致远开发板](figures/EVB_OH1.png)
 
-  标配LPDDR4 2G内存；
+图1：致远开发板外观图
 
-  标配eMMC 8G存储器；
+# 致远开发板开发指南
 
-2、Ethernet接口
+本文档用来指导开发者在致远开发上进行鸿蒙系统的移植开发。
 
-3、3个USB，支持OTG
+## 开发板规格
 
-4、HDMI视频输出
+全志 T507采用四核64位Cortex-A53处理器，主频高达1.5GHz，集成Mali-400 G31 GPU，具有低功耗高性能的特点，可广泛应用于工业控制、智能驾舱、智慧家居、智慧电力、在线教育等诸多行业需求。
 
-5、LCD视频输出
+致远开发板MCU/处理器规格及规格清单如表1所示：
 
-6、Audio接口
-
-7、支持4G、5G通讯 背部SIM卡
-
-8、CAN总线接口
-
-9、Wi-Fi/蓝牙
-
-10、Camera接口
-
-11、SDIO接口
-
-12、CH340接口
-
-13、Type-C电源接口
-
-14、User's Key
-
-15、E53 案例接口
-
-![图2 EVB_OH1外设资源图](figures/EVB_OH1_2.png)
-
-​		核心板芯片是一个[全志](https://www.forlinx.com/product/t3-95.html)T507高性能四核处理器。电源管理芯片AXP853T支持待机，按键开关机。工作电压为5V，最大功率小于2W。支持Linux/OpenHamony系统，工业级运行温度-25~75℃，连续运行寿命大于5年。全志T507如图3所示。常用接口参数说明如下：
-
-![图3 全志T507核心板](figures/T507.png)
-
-全志T507接口参数：
-
-* 拥有4路独立USB接口，其中一路为OTG
-* UART 串口6路TTL3.3V电平，其中一路为Debug
-*  98路GPIO接口（备注：有复用功能）
-*  6路PWM3.3V电平（备注：有复用功能）
-*  LVDS显示为一路LVDS最大支持1920*1080 1080P60fps
-* RGB显示为一路RGB888输出最大支持1920*1080 1080P60fps HDMI显示 一路HDMI输出 支持4K 60fps输出
-* 一路CVBS输出
-* CAN总线包括一路CAN BUS2.0总线 两路SDIO接口，一路TF卡，另一路接 WIFI
-* 两路ADC接口
-* 5路I2C接口
-*  两路以太网，GMAC和EMAC PHY 接口
-* 多路电源输出1.8V 3.3V
-* 支持本地USB系统升级
-
-全志T507应用处理器框图如图4所示。
-
-![图4 全志T507应用处理器框图](figures/T507_2.png)
-
-​		EVB_OH1开发板的Ethernet接口采用单口RJ45 Hanrun-HR911105A插头，直插式传输效率可达100M。三个具有OTG可扩展的USB接口可方便开发者与PC、移动设备、存储设备等进行数据交换。高清晰度多媒体接口HDMI（High Definition Multimedia Interface）是一种数字化视频、音频接口技术，支持传送无压缩的音频信号及高分辨率视频信号，最高支持1080P视频。LCD Interface可直接连接液晶显示屏，实现界面交互。Audio接口可传输高质量的音频。4G、5G通讯模块选用单通道IP101GR以太网芯片。芯片类型为Ethernet Transceivers，接口类型有四种MII, RMII, TP, Fiber，工作电压为3.3V。CAN接口集成电路High Speed EMC Opt CAN Transceiver选用芯片为SN65HVD1050DR总线接口是一种功能丰富的车用总线标准。用于和汽车等设备的相互通信，也可用于其他行业。图5为芯片SN65HVD1050DR内部原理。
-
-![图5 芯片SN65HVD1050DR 内部原理图](figures/SN65HVD1050DR.png)
-
-​		WIFI/蓝牙模块采用芯之联XR829芯片。它是一颗支持802.11b/g/n和蓝牙2.1/4.2的2.4GHz单芯片，集成了SDIO接口的无线局域网（WLAN）控制器和UART接口的蓝牙2.1/4.2控制器。它将无线局域网MAC、基带和射频集成在一个芯片中。XR829为高吞吐量、低功耗的无线局域网设备提供了WiFi和蓝牙的完整解决方案。芯片XR829工作流程如图6所示。
-
-![图6 芯片XR829工作原理](figures/XR829.png)
+<table>
+   <tr>
+        <td>芯片</td> 
+        <td>全志 T507 芯片</td> 
+   </tr>
+   <tr>
+        <td>架构</td> 
+        <td>ARM</td> 
+   </tr>
+    <tr>
+        <td>主频</td> 
+        <td>1.5GHz</td> 
+   </tr>
+    <tr>
+        <td>工作电压</td> 
+        <td>2V~8V</td> 
+   </tr>
+    <tr>
+        <td>内存&存储</td> 
+        <td>2GBLPDDR4, 8GB Flash</td> 
+   </tr>
+   <tr>
+        <td rowspan="5">通用规格</td>    
+        <td >支持OpenHarmony、Linux系统</td>  
+    </tr>
+    <tr>
+        <td >百兆网口：可通过该网口访问和传输内外网的数据，提高网络传输效率</td>  
+    </tr>
+    <tr>
+        <td >多屏异显：最多可以满足双屏异显功能</td>  
+    </tr>
+    <tr>
+        <td >核心板尺寸 150mm*100mm*15mm，可满足小型终端产品空间需求</td>  
+    </tr>
+    <tr>
+        <td >丰富的扩展接口，支持多种视频输入输出接口（详见底板规格说明）</td>  
+    </tr>
+</table>
 
 
+表1 致远开发板MCU/处理器规格及规格清单规格
 
-Camera接口可供开发者实现图像采集识别功能，广泛应用于人脸识别，智能摄像头、安防监控、车载记录仪等系统。
+致远开发板底板规则说明如表2所示：
 
-SDIO接口支持外部SD-Card扩展。CH340作为USB总线的转接芯片，实现USB转串口、USB转IrDA红外或者USB转打印口。
+| **致远底板规格说明**   |                                                                                                              |
+|------------------------------|--------------------------------------------------------------------------------------------------------|
+| 显示接口                     | 1xHDMI2.0 支持4K 60fp , 1x双通道LVDS接口 															|
+| 音频接口                     | 1x耳机输出 (3.5mm耳机座)        																	    |
+| 以太网                       | 1x GMAC(10/100)                                                                                        |
+| 无线网络                     | SDIO接口，支持WIFI 2.4G  BT4.2                                                                         |
+| 摄像头接口                   | 支持Mipi和USB接口                                                          							|
+| USB                          | 1x Type-C + 3 x USB Host                        														|
+| PCIe                         | Mini Pcie                                                            									|
+| SDMMC                        | 最大支持64GB                                                                         					|
+| 按键                         | 板载一个Recovery按键，一个reset按键，二个GPIO按键                                                      |
+| 调试                         | UART 串口6路TTL3.3V电平，其中一路为Debug                                                               |
+| FAN                          | 1x Fan                                                                                                 |
+| 扩展接口                     | 98路GPIO接口、6路PWM3.3V电平、两路ADC接口、5路I2C接口、两路以太网，GMAC和EMAC PHY 接口、一路CVBS输出 	|
+| 底板尺寸                     | 150mm×100mm×15mm                                                                                       |
+| PCB 规格                     | 4 层板                                                                                                 |
+| 电源管理                     | 电源管理芯片AXP853T，支持待机和按键开关机                                                              |
+| 工作温度                     | 工业级运行温度-25~+75摄氏度，连续运行寿命大于5年                                                             |
 
-Type-C电源接口为系统提供一个稳定的5V/3A电源。用户按键为两个可编译按键F1，F2,一个复位按键RST，一个动力模式按键PWR。
 
-板上搭载的E53接口，是一种资源丰富、易于扩展的标准接口，通过接入标准的E53案例扩展板，可以很容易的实现多种应用的开发和部署。E53接口标准如图7所示
+表2 致远开发板底板规则说明
 
-![图7 E53接口标准](figures/E53.png)
+## 开发板功能
 
-* 一路SPI（Synchronous Peripheral Interface）接口
-* 一路UART（Uni[versal](https://www.elecfans.com/tags/Versal/) Asynchronous Receiver & Transmitter）接口
-* 一路IIC（The Inter Integrated Circuit）接口
-* 一路DAC（Digital to [Analog](https://www.elecfans.com/tags/Analog/) Converter）接口
-* 一路ADC（[Analog](https://www.elecfans.com/tags/Analog/) to Digital Converter）接口
-* 五路GPIO（General Purpose Input/Output）接口
-* 双路电源（5.0V/3.3V）输入
+**·** 高性价比：适合中小规模企业/用户使用。
 
-​		搭载全志工业级T507芯片的EVB_OH1开发板，拥有强大的编解码能力和丰富的外围接口，与物联网新贵OpenHarmony L2 OS相结合，满足工业控制、智能驾舱、智慧家居、智慧电力、在线教育等诸多行业需求。
+· 高速网口：可通过网口访问和传输内外网数据，提供稳定可靠的网络传输性能。
 
-#### 搭建开发环境
+· 工作温度范围大：工作温度从-25~+75摄氏度，适用于各种工业应用场景。
+
+· 支持CAN接口： Can总线接口是一种功能丰富的车用总线标准，用于车辆设备通信，在智能驾驶和汽车行业有广泛应用。
+
+· 支持多系统：支持OpenHarmony、Linux系统。
+
+## 搭建开发环境
+
+### 前置条件
 
 1）注册码云gitee账号。
 
@@ -123,73 +127,71 @@ chmod a+x /usr/local/bin/repo
 pip3 install -i [https://repo.huaweicloud.com/repository/pypi/simple](https://gitee.com/link?target=https%3A%2F%2Frepo.huaweicloud.com%2Frepository%2Fpypi%2Fsimple) requests
 ```
 
+### 获取代码流程
 
+1：创建项目文件夹
 
+2：进入项目文件夹
 
-#### 获取代码流程
+3：使用repo工具下载资源仓库
+
+4：下载所有仓库当前分支的代码
+
+5：下载仓库大容量二进制文件
+
+6：下载并安装编译器及二进制工具
+
 ```
 mkdir openharmony
 
 cd openharmony
 
-通过repo + https 下载。
-repo init -u https://gitee.com/openharmony-sig/manifest.git -b master --no-repo-verify -m devboard_seed.xml
+repo init -u https://gitee.com/openharmony/manifest.git --no-repo-verify
 
-下载当前分支的代码:
 repo sync -c
 
-下载部分大容量二进制文件:
 repo forall -c 'git lfs pull'
 
-在源码根目录下执行脚本，安装编译器及二进制工具。
-./build/prebuilts_download.sh
+bash ./build/prebuilts_download.sh
 ```
 
+### 编译流程
 
+进入源码根目录，执行如下命令进行编译。
 
-#### 代码框架
+1：编译zhiyuan的system.img/vendor.img等
 
-```
-/device/board/seed
-├── T507
-  ├── audio        #audio  驱动代码
-  ├── camera       #camear 驱动代码
-  ├── config       #开发版配置文件
-  └── wifi         #WiFi   驱动代码
-```
+2：进入pack目录
 
+3：生成img镜像文件
 
-
-#### 编译流程
+4：进入out目录可看到生成的镜像文件
 
 ```
-1） 进入源码根目录，执行如下命令进行版本编译。
-1 ./build.sh --product-name evb_oh1    # 编译evb_oh1 L2的system.img/vendor.img等
+./build.sh --product-name zhiyuan               
 
-2. cd ./device/soc/allwinner/build    # 重新进入allwinner/build目录
+cd ./device/board/isoftstone/zhiyuan/kernel/build    
 
-3. ./pack.sh                          # 生成img镜像文件
+./pack.sh                                       
 
-4. cd ../../../../out                # 进入out目录可看到生成的镜像文件
-
-# 镜像文件为：evb_oh1_linux_bearpi_uart0.img
+cd ../../../../../../out/
 ```
 
+镜像文件为：t507_linux_zhiyuan_uart0.img
 
+## 开发板烧录
 
-#### 开发板烧录
+**注意：本文档基于致远开发进行说明。**
 
-**注意：本文档基于T507_bearpi进行说明。**
-
-##### 1、获取烧写软件：
+### 1、获取烧写软件：
 
 ​	路径链接： https://gitee.com/vyagoo_0/seed_tools/tree/master/tools
 
 ​	下载到本地后解压后得到如下文件：
 
 ```sh
-├── LiveSuit.zip    # 烧录工具
-└── UsbDriver.zip   # 烧录工具所需驱动
+├── LiveSuit.zip    					# 烧录工具
+└── UsbDriver.zip   					# 烧录工具所需驱动
 ```
 
 ​	解压相应压缩包，解压LiveSuit.zip并运行LiveSuit.exe如下：
@@ -198,13 +200,13 @@ repo forall -c 'git lfs pull'
 
 ​	点击Image选择需要升级的镜像文件
 
-##### 2、安装驱动
+### 2、安装驱动
 
 **注意：该步骤一般在首次刷机才需要，安装成功之后就不需要再次进行该步骤。**
 
 开发板无镜像上电或者切换至 usb 升级模式时，如果 PC 端没有安装驱动，在设备管理 器中将会被识别成未知设备，按以下步骤安装 usb 驱动即可： 驱动在解压出来的的目录下：UsbDriver
 
-开发板上电开机，用 miniUSB 线连接到电脑，查看是否检测到设备(首次需要安装驱动)
+开发板上电开机，用 MicroUSB 线连接到电脑，查看是否检测到设备(首次需要安装驱动)
 
 打开设备管理器，找到未识别设备，选择右键菜单“更新驱动”
 
@@ -224,7 +226,7 @@ repo forall -c 'git lfs pull'
 
 驱动安装完成，开发板切换到升级状态时，会被识别成 USB Device(VID_1f3a_PID_efe8)
 
-##### 3、刷机
+### 3、刷机
 
 - 确保驱动安装后，确保机器上电并且连接好miniUSB数据线后，切换板子到升级模式即可开始烧录，切换方式如下：
 
