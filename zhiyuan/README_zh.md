@@ -11,7 +11,7 @@
 
 图1：致远开发板外观图
 
-# 致远开发的开发指南
+# 致远开发板开发指南
 
 本文档用来指导开发者在致远开发上进行鸿蒙系统的移植开发。
 
@@ -130,10 +130,15 @@ pip3 install -i [https://repo.huaweicloud.com/repository/pypi/simple](https://gi
 ### 获取代码流程
 
 1：创建项目文件夹
+
 2：进入项目文件夹
+
 3：使用repo工具下载资源仓库
+
 4：下载所有仓库当前分支的代码
+
 5：下载仓库大容量二进制文件
+
 6：下载并安装编译器及二进制工具
 
 ```
@@ -155,8 +160,11 @@ bash ./build/prebuilts_download.sh
 进入源码根目录，执行如下命令进行编译。
 
 1：编译zhiyuan的system.img/vendor.img等
+
 2：进入pack目录
+
 3：生成img镜像文件
+
 4：进入out目录可看到生成的镜像文件
 
 ```
