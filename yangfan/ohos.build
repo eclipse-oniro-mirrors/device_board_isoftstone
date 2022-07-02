@@ -5,7 +5,8 @@
             "module_list": [
                 "//device/board/isoftstone/${product_name}:rk3399_group",
                 "//vendor/isoftstone/${product_name}/bluetooth:libbt_vendor",
-                "//vendor/isoftstone/${product_name}/bluetooth:BCM4343A1.hcd"
+                "//vendor/isoftstone/${product_name}/bluetooth:BCM4343A1.hcd",
+                "//device/board/isoftstone/${product_name}/kernel/drivers/wifi:ap6xxx"
             ]
         }
     }
