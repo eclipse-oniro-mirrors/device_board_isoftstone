@@ -12,11 +12,11 @@
 # limitations under the License.
 import("//build/ohos.gni")
 
-AP6XXX_ETC_DIR = "//device/soc/rockchip/rk3399/hardware/wifi/ap6xxx"
-MODULES_DIR = "//device/soc/rockchip/rk3399/hardware/wifi/modules"
-DNS_CONFIG_DIR = "//device/soc/rockchip/rk3399/hardware/wifi"
-WIFI_LIB_DIR = "//device/soc/rockchip/rk3399/hardware/wifi/lib"
-WIFI_BIN_DIR = "//device/soc/rockchip/rk3399/hardware/wifi/bin"
+AP6XXX_ETC_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/ap6xxx"
+MODULES_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/modules"
+DNS_CONFIG_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi"
+WIFI_LIB_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/lib"
+WIFI_BIN_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/bin"
 
 ohos_prebuilt_etc("clm_bcm43752a2_ag.blob") {
   source = "$AP6XXX_ETC_DIR/clm_bcm43752a2_ag.blob"
