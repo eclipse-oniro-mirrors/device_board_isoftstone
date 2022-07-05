@@ -78,9 +78,9 @@ int32_t T507CodecDeviceInit(struct AudioCard *audioCard, const struct CodecDevic
     return HDF_SUCCESS;
 }
 
-int32_t T507CodecDeviceReadReg(unsigned long virtualAddress, uint32_t reg, uint32_t *value)
+int32_t T507CodecDeviceReadReg(const struct CodecDevice *codec, uint32_t reg, uint32_t *value)
 {
-    (void)virtualAddress;
+    (void)codec;
 
     if (value == NULL) {
         AUDIO_DRIVER_LOG_ERR("param value is null.");
@@ -91,9 +91,9 @@ int32_t T507CodecDeviceReadReg(unsigned long virtualAddress, uint32_t reg, uint3
     return HDF_SUCCESS;
 }
 
-int32_t T507CodecDeviceWriteReg(unsigned long virtualAddress, uint32_t reg, uint32_t value)
+int32_t T507CodecDeviceWriteReg(const struct CodecDevice *codec, uint32_t reg, uint32_t value)
 {
-    (void)virtualAddress;
+    (void)codec;
 
     T507CodecImplRegmapWrite(reg, value);
     return HDF_SUCCESS;

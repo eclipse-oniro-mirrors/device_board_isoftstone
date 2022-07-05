@@ -15,7 +15,7 @@
 #include "audio_stream_dispatch.h"
 
 #include "t507_dai_ahub_impl_linux.h"
-#include "ac107_accessory_impl_linux.h"
+/* #include "ac107_accessory_impl_linux.h" */
 
 #define HDF_LOG_TAG t507_dai_ahub_ops
 
@@ -55,9 +55,9 @@ int32_t T507AhubDeviceInit(struct AudioCard *audioCard, const struct DaiDevice *
     return HDF_SUCCESS;
 }
 
-int32_t T507AhubDeviceReadReg(unsigned long virtualAddress, uint32_t reg, uint32_t *value)
+int32_t T507AhubDeviceReadReg(const struct DaiDevice *dai, uint32_t reg, uint32_t *value)
 {
-    (void)virtualAddress;
+    (void)dai;
 
     if (value == NULL) {
         AUDIO_DRIVER_LOG_ERR("param value is null.");
@@ -68,9 +68,9 @@ int32_t T507AhubDeviceReadReg(unsigned long virtualAddress, uint32_t reg, uint32
     return HDF_SUCCESS;
 }
 
-int32_t T507AhubDeviceWriteReg(unsigned long virtualAddress, uint32_t reg, uint32_t value)
+int32_t T507AhubDeviceWriteReg(const struct DaiDevice *dai, uint32_t reg, uint32_t value)
 {
-    (void)virtualAddress;
+    (void)dai;
 
     T507AhubImplRegmapWrite(reg, value);
     return HDF_SUCCESS;

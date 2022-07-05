@@ -20,6 +20,9 @@
 typedef int errno_t;
 #endif
 
+#define XR829_POINT_CHANNEL_SIZE (8)
+
+
 extern struct cfg80211_ops xrmac_config_ops;
 
 extern NetDevice *get_netDev(void);
@@ -34,6 +37,8 @@ extern int ieee80211_cancel_scan(struct wiphy *wiphy, struct wireless_dev *wdev)
 extern errno_t memset_s(void * dest, size_t dest_max, int ch, size_t count);
 extern errno_t memcpy_s(void *dest, size_t dest_max, const void *src, size_t count);
 extern int snprintf_s(char *dest, size_t dest_max, size_t count, const char *format, ...);
+extern void rtnl_lock(void);
+extern void rtnl_unlock(void);
 
 typedef enum {
     WLAN_BAND_2G,
@@ -270,16 +275,12 @@ void inform_connect_result(uint8_t *bssid, uint8_t *rspIe, uint8_t *reqIe, uint3
     NetDevice *netDev = get_netDev();
     struct ConnetResult connResult;
 
-   /* if (netDev == NULL || bssid == NULL || rspIe == NULL || reqIe == NULL) {
+    if (netDev == NULL || bssid == NULL || rspIe == NULL || reqIe == NULL) {
          HDF_LOGE("%s: netDev / bssid / rspIe / reqIe null!", __func__);
         return;
      }
-    */
 
-    if (netDev == NULL || bssid == NULL || rspIe == NULL) {
-        HDF_LOGE("%s: netDev / bssid / rspIe null!", __func__);
-        return;
-    }
+	HDF_LOGE("%s: reqIe %s rspIe %s reqIeLen %d rspIeLen %d", __func__, reqIe, rspIe, reqIeLen, rspIeLen);
 
     memcpy_s(&connResult.bssid[0], HDF_ETHER_ADDR_LEN, bssid, HDF_ETHER_ADDR_LEN);
     HDF_LOGE("%s: connResult:%02x:%02x:%02x:%02x:%02x:%02x\n", __func__, 
@@ -351,7 +352,9 @@ int32_t WalSetMode(NetDevice *netDev, enum WlanWorkMode iftype)
     struct net_device *netdev = get_krn_netdev();
 
     HDF_LOGE("%s: start... iftype=%d ", __func__, iftype);
+	rtnl_lock();
     retVal = (int32_t)xrmac_config_ops.change_virtual_intf(wiphy, netdev, (enum nl80211_iftype)iftype, NULL);
+	rtnl_unlock();
     if (retVal < 0) {
         HDF_LOGE("%s: set mode failed!", __func__);
     }
@@ -366,11 +369,26 @@ int32_t WalAddKey(struct NetDevice *netDev, uint8_t keyIndex, bool pairwise, con
     int32_t retVal = 0;
     struct wiphy* wiphy = wrap_get_wiphy();
     struct net_device *netdev = get_krn_netdev();
+	struct key_params keypm;
 
     HDF_LOGE("%s: start...", __func__);
 
     (void)netDev;
-    retVal = (int32_t)xrmac_config_ops.add_key(wiphy, netdev, keyIndex, pairwise, macAddr, (struct key_params *)params);
+    memset_s(&keypm, sizeof(struct key_params), 0, sizeof(struct key_params));
+    keypm.key = params->key;
+    keypm.seq = params->seq;
+    keypm.key_len = params->keyLen;
+    keypm.seq_len = params->seqLen;
+    keypm.cipher = params->cipher;
+    keypm.vlan_id = 0;
+
+    if(macAddr)
+		HDF_LOGE("macAddr=%02x:%02x:%02x:%02x:%02x:%02x\n",
+			macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+	else
+		HDF_LOGE("macAddr is null");
+
+    retVal = (int32_t)xrmac_config_ops.add_key(wiphy, netdev, keyIndex, pairwise, macAddr, &keypm);
     if (retVal < 0) {
         HDF_LOGE("%s: add key failed!", __func__);
     }
@@ -449,7 +467,7 @@ int32_t WalSetMacAddr(NetDevice *netDev, uint8_t *mac, uint8_t len)
             HDF_LOGE("%s: lenght(%u) is err", __func__, len);
 	}
 
-	if (retVal <= 0)
+	if (retVal < 0)
 	    return -1;
 
     return HDF_SUCCESS;
@@ -847,9 +865,10 @@ int32_t WalStartScan(NetDevice *netDev, struct WlanScanRequest *scanParam)
     enum Ieee80211Band band = IEEE80211_BAND_2GHZ;
     struct ieee80211_channel *chan = NULL;
     struct wiphy* wiphy = wrap_get_wiphy();
+	int32_t channelTotal;channelTotal = ieee80211_get_num_supported_channels(wiphy);
 
     struct cfg80211_scan_request *request = 
-            (struct cfg80211_scan_request *)OsalMemCalloc(sizeof(struct cfg80211_scan_request));
+            (struct cfg80211_scan_request *)OsalMemCalloc(sizeof(struct cfg80211_scan_request) + XR829_POINT_CHANNEL_SIZE * channelTotal);
 
 	HDF_LOGE("%s: start ...", __func__);
 
@@ -860,10 +879,8 @@ int32_t WalStartScan(NetDevice *netDev, struct WlanScanRequest *scanParam)
 
     // basic info
     request->wiphy = wiphy;
-    // request->dev = netdev;  // for sched scan 
     request->wdev = GET_NET_DEV_CFG80211_WIRELESS(netDev);
     request->n_ssids = scanParam->ssidCount;
-    // request->prefix_ssid_scan_flag = 0;  // for sched scan 
 
     // channel info
     if ((scanParam->freqs == NULL) || (scanParam->freqsCount == 0)) {
@@ -886,7 +903,6 @@ int32_t WalStartScan(NetDevice *netDev, struct WlanScanRequest *scanParam)
                 HDF_LOGE("%s: freq not found!freq=%d!\n", __func__, scanParam->freqs[loop]);
                 continue;
             }
-
             request->channels[count++] = chan;
         }
     }

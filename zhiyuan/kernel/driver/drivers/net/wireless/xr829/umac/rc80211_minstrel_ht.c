@@ -1749,10 +1749,12 @@ static void __init init_sample_table(void)
 	}
 }
 
-// modify by lzq for hdf
-// int __init
+#ifndef CONFIG_DRIVERS_HDF_XR829
+int __init
+#else
 int
 rc80211_minstrel_init(void)
+#endif
 {
 	init_sample_table();
 	return mac80211_rate_control_register(&mac80211_minstrel_ht);

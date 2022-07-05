@@ -18,8 +18,8 @@ extern "C" {
 #endif /* __cplusplus */
 
 int32_t T507AhubDeviceInit(struct AudioCard *audioCard, const struct DaiDevice *dai);
-int32_t T507AhubDeviceReadReg(unsigned long virtualAddress, uint32_t reg, uint32_t *value);
-int32_t T507AhubDeviceWriteReg(unsigned long virtualAddress, uint32_t reg, uint32_t value);
+int32_t T507AhubDeviceReadReg(const struct DaiDevice *dai, uint32_t reg, uint32_t *value);
+int32_t T507AhubDeviceWriteReg(const struct DaiDevice *dai, uint32_t reg, uint32_t value);
 
 int32_t T507AhubDaiStartup(const struct AudioCard *card, const struct DaiDevice *device);
 int32_t T507AhubDaiHwParams(const struct AudioCard *card, const struct AudioPcmHwParams *param);

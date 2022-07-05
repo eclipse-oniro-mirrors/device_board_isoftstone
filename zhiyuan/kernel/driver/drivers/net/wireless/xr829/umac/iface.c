@@ -42,7 +42,7 @@
  * by either the RTNL, the iflist_mtx or RCU.
  */
 
-// add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 extern struct net_device *get_krn_netdev(void);
 struct ieee80211_sub_if_data *g_hdf_sdata = NULL;
 
@@ -51,6 +51,7 @@ getDeviceSData(void)
 {
     return g_hdf_sdata;
 }
+#endif
 
 static void ieee80211_iface_work(struct work_struct *work);
 
@@ -226,8 +227,11 @@ static int ieee80211_change_mac(struct net_device *dev, void *addr)
 	if (ret)
 		return ret;
 
-	//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	ret = eth_mac_addr(sdata->dev, sa);
+#else
+	ret = eth_mac_addr(dev, sa);
+#endif
 
 	if (ret == 0)
 		memcpy(sdata->vif.addr, sa->sa_data, ETH_ALEN);
@@ -501,9 +505,11 @@ void ieee80211_del_virtual_monitor(struct ieee80211_local *local)
  */
 int ieee80211_do_open(struct wireless_dev *wdev, bool coming_up)
 {
-	//modify by lzq for hdf
-	//struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#endif	
 	struct net_device *dev = wdev->netdev;
 	struct ieee80211_local *local = sdata->local;
 	struct sta_info *sta;
@@ -795,12 +801,14 @@ static int ieee80211_open(struct net_device *dev)
 	int err;
 
 	/* fail early if user set an invalid address */
+#ifdef CONFIG_DRIVERS_HDF_XR829	
 	if (!is_valid_ether_addr(sdata->dev->dev_addr))
+#else
+	if (!is_valid_ether_addr(dev->dev_addr))
+#endif
 		return -EADDRNOTAVAIL;
 
-	rtnl_lock();
 	err = ieee80211_check_concurrent_iface(sdata, sdata->vif.type);
-	rtnl_unlock();
 	if (err)
 		return err;
 
@@ -1102,11 +1110,19 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
 	struct ieee80211_local *local = sdata->local;
 	int allmulti, sdata_allmulti;
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	allmulti = !!(sdata->dev->flags & IFF_ALLMULTI);
+#else
+	allmulti = !!(dev->flags & IFF_ALLMULTI);
+#endif	
 	sdata_allmulti = !!(sdata->flags & IEEE80211_SDATA_ALLMULTI);
 
 	if (allmulti != sdata_allmulti) {
+#ifdef CONFIG_DRIVERS_HDF_XR829
 		if (sdata->dev->flags & IFF_ALLMULTI)
+#else
+		if (dev->flags & IFF_ALLMULTI)
+#endif	
 			atomic_inc(&local->iff_allmultis);
 		else
 			atomic_dec(&local->iff_allmultis);
@@ -1114,7 +1130,11 @@ static void ieee80211_set_multicast_list(struct net_device *dev)
 	}
 
 	spin_lock_bh(&local->filter_lock);
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	__hw_addr_sync(&local->mc_list, &sdata->dev->mc, sdata->dev->addr_len);
+#else
+	__hw_addr_sync(&local->mc_list, &dev->mc, dev->addr_len);
+#endif		
 	spin_unlock_bh(&local->filter_lock);
 	mac80211_queue_work(&local->hw, &local->reconfig_filter);
 }
@@ -1153,23 +1173,38 @@ static u16 ieee80211_netdev_select_queue(struct net_device *dev,
 }
 
 static void
+#ifdef CONFIG_DRIVERS_HDF_XR829
+ieee80211_get_stats64(struct net_device *dev, struct net_device_stats *stats)
+#else
 ieee80211_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats)
+#endif
 {
 	int i;
 
 	for_each_possible_cpu(i) {
 		const struct pcpu_sw_netstats *tstats;
+#ifdef CONFIG_DRIVERS_HDF_XR829		
+		unsigned long rx_packets, rx_bytes, tx_packets, tx_bytes;
+#else
 		u64 rx_packets, rx_bytes, tx_packets, tx_bytes;
+#endif		
 		unsigned int start;
 
 		tstats = per_cpu_ptr(dev->tstats, i);
 
 		do {
 			start = u64_stats_fetch_begin_irq(&tstats->syncp);
+#ifdef CONFIG_DRIVERS_HDF_XR829		
+			rx_packets = (unsigned long)tstats->rx_packets;
+			tx_packets = (unsigned long)tstats->tx_packets;
+			rx_bytes = (unsigned long)tstats->rx_bytes;
+			tx_bytes = (unsigned long)tstats->tx_bytes;
+#else
 			rx_packets = tstats->rx_packets;
 			tx_packets = tstats->tx_packets;
 			rx_bytes = tstats->rx_bytes;
 			tx_bytes = tstats->tx_bytes;
+#endif				
 		} while (u64_stats_fetch_retry_irq(&tstats->syncp, start));
 
 		stats->rx_packets += rx_packets;
@@ -1179,9 +1214,11 @@ ieee80211_get_stats64(struct net_device *dev, struct rtnl_link_stats64 *stats)
 	}
 }
 
-// modify by lzq for hdf
-//static const struct net_device_ops ieee80211_dataif_ops = {
+#ifndef CONFIG_DRIVERS_HDF_XR829	
+static const struct net_device_ops ieee80211_dataif_ops = {
+#else
 struct net_device_ops ieee80211_dataif_ops = {
+#endif
 	.ndo_open		= ieee80211_open,
 	.ndo_stop		= ieee80211_stop,
 	.ndo_uninit		= ieee80211_uninit,
@@ -1229,8 +1266,7 @@ static void ieee80211_if_free(struct net_device *dev)
 	free_percpu(dev->tstats);
 }
 
-// modify by lzq for hdf
-#if 0
+#ifndef CONFIG_DRIVERS_HDF_XR829
 static void ieee80211_if_setup(struct net_device *dev)
 {
 	ether_setup(dev);
@@ -1429,8 +1465,7 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
 
 	sdata->noack_map = 0;
 
-// modify by lzq for hdf
-#if 0
+#ifndef CONFIG_DRIVERS_HDF_XR829
 	/* only monitor/p2p-device differ */
 	if (sdata->dev) {
 		sdata->dev->netdev_ops = &ieee80211_dataif_ops;
@@ -1481,9 +1516,10 @@ static void ieee80211_setup_sdata(struct ieee80211_sub_if_data *sdata,
 			ieee80211_mesh_init_sdata(sdata);
 		break;
 	case NL80211_IFTYPE_MONITOR:
-		// modify by lzq for hdf
-		/*sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
-		sdata->dev->netdev_ops = &ieee80211_monitorif_ops;*/
+#ifndef CONFIG_DRIVERS_HDF_XR829
+		sdata->dev->type = ARPHRD_IEEE80211_RADIOTAP;
+		sdata->dev->netdev_ops = &ieee80211_monitorif_ops;
+#endif		
 		sdata->u.mntr.flags = MONITOR_FLAG_CONTROL |
 				      MONITOR_FLAG_OTHER_BSS;
 		break;
@@ -1787,8 +1823,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 			txq_size += sizeof(struct txq_info) +
 				    local->hw.txq_data_size;
 
-// modify by lzq for hdf
-#if 0
+#ifndef CONFIG_DRIVERS_HDF_XR829
 		if (local->ops->wake_tx_queue) {
 			if_setup = ieee80211_if_setup_no_queue;
 		} else {
@@ -1800,7 +1835,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 		ndev = alloc_netdev_mqs(size + txq_size,
 					name, name_assign_type,
 					if_setup, txqs, 1);
-#endif
+#else
 
 		sdata = kzalloc(sizeof(*sdata) + local->hw.vif_data_size,
 						GFP_KERNEL);
@@ -1808,10 +1843,9 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 			return -ENOMEM;
 
 		ndev = get_krn_netdev();
-		if (!ndev) {
-			printk(KERN_DEBUG "get_krn_netdev is null\n");
+#endif		
+		if (!ndev)
 			return -ENOMEM;
-		}
 		dev_net_set(ndev, wiphy_net(local->hw.wiphy));
 
 		ndev->tstats = netdev_alloc_pcpu_stats(struct pcpu_sw_netstats);
@@ -1836,11 +1870,11 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 			return ret;
 		}
 
-		//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 		ndev->dev_addr = kzalloc((sizeof(unsigned char) * ETH_ALEN), GFP_KERNEL);
 		if (!ndev->dev_addr)
 			return -ENOMEM;
-
+#endif
 		ieee80211_assign_perm_addr(local, ndev->perm_addr, type);
 		if (is_valid_ether_addr(params->macaddr))
 			memcpy(ndev->dev_addr, params->macaddr, ETH_ALEN);
@@ -1849,8 +1883,9 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 		SET_NETDEV_DEV(ndev, wiphy_dev(local->hw.wiphy));
 
 		/* don't use IEEE80211_DEV_TO_SUB_IF -- it checks too much */
-		//modify by lzq for hdf
-		//sdata = netdev_priv(ndev);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+		sdata = netdev_priv(ndev);
+#endif
 		ndev->ieee80211_ptr = &sdata->wdev;
 		memcpy(sdata->vif.addr, ndev->dev_addr, ETH_ALEN);
 		memcpy(sdata->name, ndev->name, IFNAMSIZ);
@@ -1927,8 +1962,7 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 		ndev->min_mtu = 256;
 		ndev->max_mtu = local->hw.max_mtu;
 
-//modify by lzq for hdf
-#if 0
+#ifndef CONFIG_DRIVERS_HDF_XR829
 		ret = register_netdevice(ndev);
 		if (ret) {
 			free_netdev(ndev);
@@ -1937,8 +1971,9 @@ int ieee80211_if_add(struct ieee80211_local *local, const char *name,
 #endif
 	}
 
-	// modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	g_hdf_sdata = sdata;
+#endif	
 	mutex_lock(&local->iflist_mtx);
 	list_add_tail_rcu(&sdata->list, &local->interfaces);
 	mutex_unlock(&local->iflist_mtx);
@@ -1964,7 +1999,9 @@ void ieee80211_if_remove(struct ieee80211_sub_if_data *sdata)
 
 	if (sdata->dev) {
 		unregister_netdevice(sdata->dev);
+#ifdef CONFIG_DRIVERS_HDF_XR829		
 		kfree(sdata);
+#endif		
 	} else {
 		cfg80211_unregister_wdev(&sdata->wdev);
 		ieee80211_teardown_sdata(sdata);
@@ -2076,6 +2113,7 @@ void ieee80211_vif_dec_num_mcast(struct ieee80211_sub_if_data *sdata)
 		atomic_dec(&sdata->u.vlan.num_mcast_sta);
 }
 
-// add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 EXPORT_SYMBOL(ieee80211_dataif_ops);
 EXPORT_SYMBOL(getDeviceSData);
+#endif

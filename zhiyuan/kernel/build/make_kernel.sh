@@ -28,7 +28,7 @@ export IC_COMPANY=allwinner
 export LICHEE_KERN_SYSTEM=kernel_boot
 export LICHEE_FLASH=default
 export PRODUCT_NAME=t507_pines
-
+export DEVICE_NAME=${PRODUCT_NAME}
 # test_flag
 build_flag=${5}
 
@@ -47,14 +47,12 @@ if [ "x$LICHEE_ARCH" == "xarm64" ]; then
 	export LICHEE_GNU_NAME=aarch64-linux-gnu-
 fi
 
-export PRODUCT_PATH=vendor/${PRODUCT_COMPANY}/${PRODUCT_NAME}
-export KERNEL_BUILD_SCRIPT=scripts/build.sh
-
 # src kernel path
-export OHOS_KERNEL_SRC_PATH=${OHOS_ROOT_PATH}/kernel/linux
+export OHOS_KERNEL_SRC_PATH=${OHOS_ROOT_PATH}/kernel/linux                    #kernel/linux
 
 # vendor path
 export LICHEE_VENDOR_DIR=${OHOS_ROOT_PATH}/vendor
+export PRODUCT_PATH=vendor/${PRODUCT_COMPANY}/${PRODUCT_NAME}                 #vendor/seed/t507_pines
 
 # out path
 export LICHEE_OUT_DIR=${OHOS_ROOT_PATH}/out
@@ -62,15 +60,13 @@ export BUILD_ROOT_PATH=${LICHEE_OUT_DIR}/${PRODUCT_NAME}
 export LICHEE_KERN_DIR=${LICHEE_OUT_DIR}/KERNEL_OBJ/kernel/src_tmp/${LICHEE_KERN_VER}
 export KERNEL_BUILD_SCRIPT_DIR=${LICHEE_KERN_DIR}
 export KERNEL_BUILD_OUT_DIR=${LICHEE_KERN_DIR}
-export KERNEL_STAGING_DIR=${LICHEE_KERN_DIR}/output
 export LICHEE_KERN_DEFCONF_ABSOLUTE=${LICHEE_KERN_DIR}/arch/${LICHEE_ARCH}/configs/${LICHEE_KERN_DEFCONF}
 export LICHEE_PACK_OUT_DIR=/${LICHEE_OUT_DIR}/pack_out
-export LICHEE_PLAT_OUT=${LICHEE_OUT_DIR}/${LICHEE_IC}/${LICHEE_BOARD}/bsp
-export SYSTEM_LIB_PATH=${BUILD_ROOT_PATH}/packages/phone/system/lib
+export LICHEE_PLAT_OUT=${LICHEE_OUT_DIR}/kernel/bsp
 
 # device soc path
-export DEVICE_COMPANY_PATH=${OHOS_ROOT_PATH}/device/soc/${IC_COMPANY}     #device/soc/allwinner
-export DEVICE_CHIP_PATH=${DEVICE_COMPANY_PATH}/${LICHEE_IC}               #device/soc/allwinner/t507
+export DEVICE_COMPANY_PATH=${OHOS_ROOT_PATH}/device/soc/${IC_COMPANY}         #device/soc/allwinner
+export DEVICE_CHIP_PATH=${DEVICE_COMPANY_PATH}/${LICHEE_IC}                   #device/soc/allwinner/t507
 
 # device board path
 export BOARD_COMPANY_PATH=${OHOS_ROOT_PATH}/device/board/${PRODUCT_COMPANY}   #device/board/seed
@@ -110,44 +106,6 @@ function mk_info()
 }
 
 tag_version="kernel-v0.1"
-
-function vendor_hcs()
-{
-	 #config chip hcs
-	 typeset -u chip_name
-	 local chip_name=${LICHEE_IC}
-	 local vendor_chip_path=${LICHEE_VENDOR_DIR}/${PRODUCT_COMPANY}/${LICHEE_IC_BIG}
-	 local hcs_path=${vendor_chip_path}/chips/${LICHEE_BOARD}/hdf_config
-	 local link_path=${vendor_chip_path}/hdf_config
-
-	 if [ ! -d "$hcs_path" ] ; then
-			 mk_error "No found $hcs_path"
-			 exit 1
-	 fi
-
-	 #delete old link path and relink path
-	 rm -rf ${link_path}
-	 cd ${vendor_chip_path}
-	 ln -s chips/${LICHEE_BOARD}/hdf_config hdf_config
-	 cd -
-}
-
-function cp_ko_to_system()
-{
-	if [ ! -d ${SYSTEM_LIB_PATH}/module/ ] ; then
-		mkdir -p ${SYSTEM_LIB_PATH}/module/
-	fi
-
-	local modules_ko_path=${LICHEE_PLAT_OUT}/rootfs_def/lib/modules/4.19.155
-	if [ -d ${modules_ko_path} ]; then
-		cp -af  ${modules_ko_path}/* ${SYSTEM_LIB_PATH}/module/
-	else
-		mk_error "No found ${modules_ko_path}"
-		exit 1
-	fi
-
-}
-
 
 function check_env()
 {
@@ -295,14 +253,7 @@ function prepare_mkkernel()
 	# mark kernel .config belong to which platform
 	local config_mark="${KERNEL_BUILD_OUT_DIR}/.config.mark"
 	local board_dts="$LICHEE_BOARD_CONFIG_DIR/${LICHEE_KERN_VER}/board.dts"
-	
-	if  [ "x$LICHEE_KERN_VER" == "xlinux-4.19" ] && [ -f ${board_dts} ]; then
-		if [ "x${LICHEE_ARCH}" == "xarm64" ]; then
-			cp $board_dts ${LICHEE_KERN_DIR}/arch/${LICHEE_ARCH}/boot/dts/sunxi/
-		else
-			cp $board_dts ${LICHEE_KERN_DIR}/arch/${LICHEE_ARCH}/boot/dts/
-		fi
-	fi
+
 	if [ -f ${config_mark} ] ; then
 		local tmp=`cat ${config_mark}`
 		local tmp1="${LICHEE_CHIP}_${LICHEE_BOARD}_${LICHEE_PLATFORM}"
@@ -323,8 +274,6 @@ function mkkernel()
 {
 	#source .buildconfig-bk
 	mk_info "build kernel ..."
-
-	local build_script="scripts/build.sh"
 
 	LICHEE_KERN_SYSTEM="kernel_boot"
 
@@ -512,8 +461,6 @@ else
 	load_kernel
 	add_patch_to_kernel
 fi
-
-# vendor_hcs
 
 delete_kernel_config
 

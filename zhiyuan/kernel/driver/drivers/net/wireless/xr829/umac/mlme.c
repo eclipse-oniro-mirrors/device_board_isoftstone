@@ -42,9 +42,10 @@
 #define IEEE80211_ASSOC_TIMEOUT_SHORT	(HZ / 10)
 #define IEEE80211_ASSOC_MAX_TRIES	3
 
-// modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 extern void inform_auth_result(struct net_device *dev, const u8 *buf, size_t len);
 extern void inform_connect_result(uint8_t *bssid, uint8_t *rspIe, uint8_t *reqIe, uint32_t reqIeLen, uint32_t rspIeLen, uint16_t connectStatus);
+#endif
 
 static int max_nullfunc_tries = 2;
 module_param(max_nullfunc_tries, int, 0644);
@@ -3045,8 +3046,9 @@ static void ieee80211_rx_mgmt_auth(struct ieee80211_sub_if_data *sdata,
 	}
 
 	cfg80211_rx_mlme_mgmt(sdata->dev, (u8 *)mgmt, len);
-	// modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	inform_auth_result(sdata->dev, (u8 *)mgmt, len);
+#endif
 }
 
 #define case_WLAN(type) \
@@ -3698,15 +3700,17 @@ static void ieee80211_rx_mgmt_assoc_resp(struct ieee80211_sub_if_data *sdata,
 				uapsd_queues |= ieee80211_ac_to_qos_mask[ac];
 	}
 
-	// modify by lzq for hdf
-	// cfg80211_rx_assoc_resp(sdata->dev, bss, (u8 *)mgmt, len, uapsd_queues,
-	//		       ifmgd->assoc_req_ies, ifmgd->assoc_req_ies_len);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+	cfg80211_rx_assoc_resp(sdata->dev, bss, (u8 *)mgmt, len, uapsd_queues,
+			       ifmgd->assoc_req_ies, ifmgd->assoc_req_ies_len);
+#else	
 	inform_connect_result(mgmt->bssid,
 					mgmt->u.assoc_resp.variable,
-					mgmt->u.assoc_req.variable,
+					mgmt->u.assoc_req.variable,  
 					len - offsetof(struct ieee80211_mgmt, u.assoc_req.variable),
 					len - offsetof(struct ieee80211_mgmt, u.assoc_resp.variable),
 					status_code);
+#endif					
 }
 
 static void ieee80211_rx_bss_info(struct ieee80211_sub_if_data *sdata,

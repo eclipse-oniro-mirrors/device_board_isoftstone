@@ -32,8 +32,9 @@
 #include "wme.h"
 #include "rate.h"
 
-// modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 extern void wal_netif_receive_skb(struct sk_buff *skb);
+#endif
 
 static inline void ieee80211_rx_stats(struct net_device *dev, u32 len)
 {
@@ -858,9 +859,11 @@ ieee80211_rx_monitor(struct ieee80211_local *local, struct sk_buff *origskb,
 			if (skb) {
 				skb->dev = sdata->dev;
 				ieee80211_rx_stats(skb->dev, skb->len);
-				// modify by lzq for hdf
-				// netif_receive_skb(skb);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+				netif_receive_skb(skb);
+#else				
 				wal_netif_receive_skb(skb);
+#endif				
 			}
 		}
 
@@ -2485,11 +2488,12 @@ static void ieee80211_deliver_skb_to_local_stack(struct sk_buff *skb,
 		/* deliver to local stack */
 		if (rx->napi)
 			napi_gro_receive(rx->napi, skb);
-		else {
-			// modify by lzq for hdf
-			// netif_receive_skb(skb);
+		else
+#ifndef CONFIG_DRIVERS_HDF_XR829
+			netif_receive_skb(skb);
+#else		
 			wal_netif_receive_skb(skb);
-		}
+#endif			
 	}
 }
 
@@ -2578,7 +2582,9 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
 #endif
 
 	if (skb) {
+#ifndef CONFIG_DRIVERS_HDF_XR829
 		skb->protocol = eth_type_trans(skb, dev);
+#endif		
 		ieee80211_deliver_skb_to_local_stack(skb, rx);
 	}
 
@@ -3592,9 +3598,11 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
 			skb2 = skb_clone(skb, GFP_ATOMIC);
 			if (skb2) {
 				skb2->dev = prev_dev;
-				// modify by lzq for hdf
-				// netif_receive_skb(skb);
-				wal_netif_receive_skb(skb);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+				netif_receive_skb(skb2);
+#else
+				wal_netif_receive_skb(skb2);
+#endif				
 			}
 		}
 
@@ -3604,9 +3612,11 @@ static void ieee80211_rx_cooked_monitor(struct ieee80211_rx_data *rx,
 
 	if (prev_dev) {
 		skb->dev = prev_dev;
-		// modify by lzq for hdf
-		// netif_receive_skb(skb);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+		netif_receive_skb(skb);
+#else		
 		wal_netif_receive_skb(skb);
+#endif		
 		return;
 	}
 
@@ -4361,15 +4371,18 @@ static bool ieee80211_invoke_fast_rx(struct ieee80211_rx_data *rx,
 	}
 
 	/* deliver to local stack */
+#ifndef CONFIG_DRIVERS_HDF_XR829
 	skb->protocol = eth_type_trans(skb, fast_rx->dev);
+#endif	
 	memset(skb->cb, 0, sizeof(skb->cb));
 	if (rx->napi)
 		napi_gro_receive(rx->napi, skb);
-	else {
-		// modify by lzq for hdf
-		// netif_receive_skb(skb);
+	else
+#ifndef CONFIG_DRIVERS_HDF_XR829
+		netif_receive_skb(skb);
+#else		
 		wal_netif_receive_skb(skb);
-	}
+#endif		
 
 	return true;
  drop:

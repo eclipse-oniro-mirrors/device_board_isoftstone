@@ -33,7 +33,11 @@
 #include "sta_info.h"
 #include "debug.h"
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
 extern const struct cfg80211_ops xrmac_config_ops;
+#else
+extern const struct cfg80211_ops mac80211_config_ops;
+#endif
 
 struct ieee80211_local;
 
@@ -329,8 +333,9 @@ struct ieee80211_if_vlan {
 	atomic_t num_mcast_sta; /* number of stations receiving multicast */
 };
 
-//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 extern struct ieee80211_sub_if_data *getDeviceSData(void);
+#endif
 
 struct mesh_stats {
 	__u32 fwded_mcast;		/* Mesh forwarded multicast frames */
@@ -1444,10 +1449,12 @@ struct ieee80211_local {
 static inline struct ieee80211_sub_if_data *
 IEEE80211_DEV_TO_SUB_IF(struct net_device *dev)
 {
-	//return netdev_priv(dev);
-	//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	(void)dev;
 	return getDeviceSData();
+#else
+	return netdev_priv(dev);
+#endif	
 }
 
 static inline struct ieee80211_sub_if_data *

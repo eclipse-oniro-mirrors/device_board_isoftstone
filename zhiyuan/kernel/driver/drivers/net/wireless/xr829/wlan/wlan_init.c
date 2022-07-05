@@ -14,23 +14,35 @@
 #include <linux/init.h>
 #include <linux/delay.h>
 #include <linux/moduleparam.h>
-#include <linux/netdevice.h>
 
-// modify by lzq for hdf
-/*MODULE_AUTHOR("XRadioTech");
+#ifdef CONFIG_DRIVERS_HDF_XR829
+#include <linux/netdevice.h>
+#endif
+
+#ifndef CONFIG_DRIVERS_HDF_XR829
+MODULE_AUTHOR("XRadioTech");
 MODULE_DESCRIPTION("XRadioTech WLAN driver");
 MODULE_LICENSE("GPL");
-MODULE_ALIAS("xradio_wlan");*/
+MODULE_ALIAS("xradio_wlan");
+#endif
 
 /* external interfaces */
 extern int  xradio_core_init(void);
 extern void xradio_core_deinit(void);
 
-//extern int  __init ieee80211_init(void);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+extern int  __init ieee80211_init(void);
+#else
 extern int  ieee80211_init(void);
+#endif
+
 extern void ieee80211_exit(void);
-//extern int  __init xradio_core_entry(void);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+extern int  __init xradio_core_entry(void);
+#else
 extern int  xradio_core_entry(void);
+#endif
+
 extern void xradio_core_exit(void);
 
 #ifdef CONFIG_XRADIO_ETF
@@ -38,12 +50,17 @@ void xradio_etf_to_wlan(u32 change);
 #endif
 
 static int etf_enable = -1;
-//module_param(etf_enable, int, S_IRUSR);
+
+#ifndef CONFIG_DRIVERS_HDF_XR829
+module_param(etf_enable, int, S_IRUSR);
+#endif
 
 /* Init Module function -> Called by insmod */
-//modify by lzq for hdf
-//static int __init xradio_init(void)
+#ifndef CONFIG_DRIVERS_HDF_XR829
+static int __init xradio_init(void)
+#else
 int xradio_init(void)
+#endif
 {
 	int ret = 0;
 	printk(KERN_ERR "======== XRADIO WIFI OPEN ========\n");
@@ -84,9 +101,11 @@ ieee80211_fail:
 }
 
 /* Called at Driver Unloading */
-//modify by lzq for hdf
-//static void __exit xradio_exit(void)
+#ifndef CONFIG_DRIVERS_HDF_XR829
+static void __exit xradio_exit(void)
+#else
 void xradio_exit(void)
+#endif
 {
 	if (etf_enable == 1)
 		goto exit_end;
@@ -101,10 +120,10 @@ exit_end:
 	printk(KERN_ERR "======== XRADIO WIFI CLOSE ========\n");
 }
 
-//modify by lzq for hdf
-
-//module_init(xradio_init);
-//module_exit(xradio_exit);
-
+#ifndef CONFIG_DRIVERS_HDF_XR829
+module_init(xradio_init);
+module_exit(xradio_exit);
+#else
 EXPORT_SYMBOL(xradio_init);
 EXPORT_SYMBOL(xradio_exit);
+#endif

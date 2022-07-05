@@ -16,6 +16,7 @@ CONFIG_XRADIO_DUMP_ON_ERROR = n
 CONFIG_XRADIO_DEBUGFS = y
 CONFIG_XRMAC_VERBOSE_DEBUG = y
 CONFIG_XRMAC_DRIVER_API_TRACER = y
+CONFIG_MODULE_NAME = xr829
 
 define boolen_flag
 $(strip $(if $(findstring $($(1)),$(2)),-D$(1)))
@@ -49,9 +50,8 @@ NOSTDINC_FLAGS := -I$(srctree)/$(src)/include/
 
 ldflags-y += --strip-debug
 
-MODULE_NAME := xr829_module
 # xradio_mac objects
-$(MODULE_NAME)-y := \
+xradio_mac-y := \
 	umac/main.o \
 	umac/status.o \
 	umac/sta_info.o \
@@ -87,66 +87,39 @@ $(MODULE_NAME)-y := \
 	umac/tdls.o \
 	umac/trace.o \
 
-ifeq ($(CONFIG_XRMAC_LEDS),y)
-$(MODULE_NAME)-objs += umac/led.o
-endif
-
-ifeq ($(CONFIG_XRMAC_DEBUGFS),y)
-$(MODULE_NAME)-objs += \
+xradio_mac-$(CONFIG_XRMAC_LEDS) += umac/led.o
+xradio_mac-$(CONFIG_XRMAC_DEBUGFS) += \
 	umac/debugfs.o \
 	umac/debugfs_sta.o \
 	umac/debugfs_netdev.o \
 	umac/debugfs_key.o
-endif
 
-ifeq ($(CONFIG_XRMAC_MESH),y)
-$(MODULE_NAME)-objs += \
+xradio_mac-$(CONFIG_XRMAC_MESH) += \
 	umac/mesh.o \
 	umac/mesh_pathtbl.o \
 	umac/mesh_plink.o \
 	umac/mesh_hwmp.o \
 	umac/mesh_ps.o \
 	umac/mesh_sync.o
-endif
 
-ifeq ($(CONFIG_PM),y)
-$(MODULE_NAME)-objs += umac/pm.o
-endif
+xradio_mac-$(CONFIG_PM) += umac/pm.o
 
-ifeq ($(CONFIG_XRMAC_DRIVER_API_TRACER),y)
-$(MODULE_NAME)-objs += umac/driver-ops.o
-endif
-
+xradio_mac-$(CONFIG_XRMAC_DRIVER_API_TRACER) += umac/driver-ops.o
 CFLAGS_driver-trace.o := -I$(src)
 
 # objects for PID algorithm
-# objects for PID algorithm
-#ifeq ($(CONFIG_XRMAC_RC_PID),y)
-#$(MODULE_NAME)-objs += umac/rc80211_pid_algo.o
-#endif
+#rc80211_pid-y := umac/rc80211_pid_algo.o
+#rc80211_pid-$(CONFIG_XRMAC_DEBUGFS) += umac/rc80211_pid_debugfs.o
 
-#ifeq ($(CONFIG_XRMAC_DEBUGFS),y)
-#$(MODULE_NAME)-objs += umac/rc80211_pid_debugfs.o
-#endif
+rc80211_minstrel-y := umac/rc80211_minstrel.o
+rc80211_minstrel-$(CONFIG_XRMAC_DEBUGFS) += umac/rc80211_minstrel_debugfs.o
 
+rc80211_minstrel_ht-y := umac/rc80211_minstrel_ht.o
+rc80211_minstrel_ht-$(CONFIG_XRMAC_DEBUGFS) += umac/rc80211_minstrel_ht_debugfs.o
 
-ifeq ($(CONFIG_XRMAC_RC_MINSTREL),y)
-$(MODULE_NAME)-objs += umac/rc80211_minstrel.o
-endif
-
-ifeq ($(CONFIG_XRMAC_DEBUGFS),y)
-$(MODULE_NAME)-objs += umac/rc80211_minstrel_debugfs.o
-endif
-
-ifeq ($(CONFIG_XRMAC_RC_MINSTREL_HT),y)
-$(MODULE_NAME)-objs += umac/rc80211_minstrel_ht.o
-endif
-
-ifeq ($(CONFIG_XRMAC_DEBUGFS),y)
-$(MODULE_NAME)-objs += umac/rc80211_minstrel_ht_debugfs.o
-endif
-
-
+#xradio_mac-$(CONFIG_XRMAC_RC_PID) += $(rc80211_pid-y)
+xradio_mac-$(CONFIG_XRMAC_RC_MINSTREL) += $(rc80211_minstrel-y)
+xradio_mac-$(CONFIG_XRMAC_RC_MINSTREL_HT) += $(rc80211_minstrel_ht-y)
 
 ccflags-y += -D__CHECK_ENDIAN__
 # Extra IE for probe response from upper layer is needed in P2P GO
@@ -161,7 +134,7 @@ ccflags-y += -DUSE_RSSI_SMOOTH
 #ccflags-y += -DOLD_P2P_MODE
 
 ######## xradio_core objects ########
-$(MODULE_NAME)-objs += \
+xradio_core-y := \
 	wlan/fwio.o \
 	wlan/txrx.o \
 	wlan/vendor.o \
@@ -175,29 +148,17 @@ $(MODULE_NAME)-objs += \
 	wlan/scan.o \
 	wlan/platform.o
 
-ifeq ($(CONFIG_PM),y)
-$(MODULE_NAME)-objs             += wlan/pm.o
-endif
+xradio_core-$(CONFIG_PM)            += wlan/pm.o
+xradio_core-$(CONFIG_XRADIO_SDIO)   += wlan/sdio.o
+xradio_core-$(CONFIG_XRADIO_DEBUG)  += wlan/debug.o
+xradio_core-$(CONFIG_XRADIO_ITP)    += wlan/itp.o
+xradio_core-$(CONFIG_XRADIO_ETF)    += wlan/etf.o
 
-ifeq ($(CONFIG_XRADIO_SDIO),y)
-$(MODULE_NAME)-objs   			+= wlan/sdio.o
-endif
+$(CONFIG_MODULE_NAME)-y := $(xradio_mac-y)
+$(CONFIG_MODULE_NAME)-y += $(xradio_core-y)
+$(CONFIG_MODULE_NAME)-y += wlan/wlan_init.o
 
-ifeq ($(CONFIG_XRADIO_DEBUG),y)
-$(MODULE_NAME)-objs  			+= wlan/debug.o
-endif
-
-ifeq ($(CONFIG_XRADIO_ITP),y)
-$(MODULE_NAME)-objs    			+= wlan/itp.o
-endif
-
-ifeq ($(CONFIG_XRADIO_ETF),y)
-$(MODULE_NAME)-objs    			+= wlan/etf.o
-endif
-
-$(MODULE_NAME)-objs += wlan/wlan_init.o
-
-obj-y += $(MODULE_NAME).o
+obj-$(CONFIG_XR829_WLAN) += $(CONFIG_MODULE_NAME).o
 
 ##=======  User Options =======
 ## Mac addr config, disable hex for default.

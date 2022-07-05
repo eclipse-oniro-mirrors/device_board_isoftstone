@@ -128,7 +128,11 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
 	if (err)
 		return ERR_PTR(err);
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 
 	if (type == NL80211_IFTYPE_MONITOR) {
 		err = ieee80211_set_mon_options(sdata, params);
@@ -143,7 +147,11 @@ static struct wireless_dev *ieee80211_add_iface(struct wiphy *wiphy,
 
 static int ieee80211_del_iface(struct wiphy *wiphy, struct wireless_dev *wdev)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	ieee80211_if_remove(IEEE80211_DEV_TO_SUB_IF(wdev->netdev));
+#else
 	ieee80211_if_remove(IEEE80211_WDEV_TO_SUB_IF(wdev));
+#endif
 
 	return 0;
 }
@@ -155,13 +163,14 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
 {
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 	int ret;
-	rtnl_lock();
+
 	ret = ieee80211_if_change_type(sdata, type);
-	rtnl_unlock();
 	if (ret)
 		return ret;
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	if(params != NULL) {
+#endif	
 		if (type == NL80211_IFTYPE_AP_VLAN && params->use_4addr == 0) {
 			RCU_INIT_POINTER(sdata->u.vlan.sta, NULL);
 			ieee80211_check_fast_rx_iface(sdata);
@@ -174,15 +183,20 @@ static int ieee80211_change_iface(struct wiphy *wiphy,
 			if (ret)
 				return ret;
 		}
+#ifdef CONFIG_DRIVERS_HDF_XR829		
 	}
-
+#endif
 	return 0;
 }
 
 static int ieee80211_start_p2p_device(struct wiphy *wiphy,
 				      struct wireless_dev *wdev)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 	int ret;
 
 	mutex_lock(&sdata->local->chanctx_mtx);
@@ -196,14 +210,23 @@ static int ieee80211_start_p2p_device(struct wiphy *wiphy,
 static void ieee80211_stop_p2p_device(struct wiphy *wiphy,
 				      struct wireless_dev *wdev)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	ieee80211_sdata_stop(IEEE80211_DEV_TO_SUB_IF(wdev->netdev));
+#else
 	ieee80211_sdata_stop(IEEE80211_WDEV_TO_SUB_IF(wdev));
+#endif
 }
 
 static int ieee80211_start_nan(struct wiphy *wiphy,
 			       struct wireless_dev *wdev,
 			       struct cfg80211_nan_conf *conf)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
+
 	int ret;
 
 	mutex_lock(&sdata->local->chanctx_mtx);
@@ -228,7 +251,11 @@ static int ieee80211_start_nan(struct wiphy *wiphy,
 static void ieee80211_stop_nan(struct wiphy *wiphy,
 			       struct wireless_dev *wdev)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 
 	drv_stop_nan(sdata->local, sdata);
 	ieee80211_sdata_stop(sdata);
@@ -239,7 +266,11 @@ static int ieee80211_nan_change_conf(struct wiphy *wiphy,
 				     struct cfg80211_nan_conf *conf,
 				     u32 changes)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 	struct cfg80211_nan_conf new_conf;
 	int ret = 0;
 
@@ -268,7 +299,11 @@ static int ieee80211_add_nan_func(struct wiphy *wiphy,
 				  struct wireless_dev *wdev,
 				  struct cfg80211_nan_func *nan_func)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 	int ret;
 
 	if (sdata->vif.type != NL80211_IFTYPE_NAN)
@@ -322,7 +357,11 @@ ieee80211_find_nan_func_by_cookie(struct ieee80211_sub_if_data *sdata,
 static void ieee80211_del_nan_func(struct wiphy *wiphy,
 				  struct wireless_dev *wdev, u64 cookie)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 	struct cfg80211_nan_func *func;
 	u8 instance_id = 0;
 
@@ -743,9 +782,12 @@ static int ieee80211_dump_station(struct wiphy *wiphy, struct net_device *dev,
 static int ieee80211_dump_survey(struct wiphy *wiphy, struct net_device *dev,
 				 int idx, struct survey_info *survey)
 {
-	//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 	struct ieee80211_local *local = wdev_priv(sdata->dev->ieee80211_ptr);
+#else
+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+#endif
 
 	return drv_get_survey(local, idx, survey);
 }
@@ -2447,9 +2489,13 @@ static int ieee80211_resume(struct wiphy *wiphy)
 static int ieee80211_scan(struct wiphy *wiphy,
 			  struct cfg80211_scan_request *req)
 {
-	//modify by lzq for hdf
-	//struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(req->wdev);
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(req->wdev->netdev);
+#else
+	struct ieee80211_sub_if_data *sdata;
+
+	sdata = IEEE80211_WDEV_TO_SUB_IF(req->wdev);
+#endif
 
 	switch (ieee80211_vif_type_p2p(&sdata->vif)) {
 	case NL80211_IFTYPE_STATION:
@@ -2493,7 +2539,7 @@ static void ieee80211_abort_scan(struct wiphy *wiphy, struct wireless_dev *wdev)
 	ieee80211_scan_cancel(wiphy_priv(wiphy));
 }
 
-//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 int ieee80211_cancel_scan(struct wiphy *wiphy,
 			  /*struct net_device *dev, */
 			  struct wireless_dev *wdev)
@@ -2504,6 +2550,7 @@ int ieee80211_cancel_scan(struct wiphy *wiphy,
 	return 0;
 }
 EXPORT_SYMBOL(ieee80211_cancel_scan);
+#endif
 
 static int
 ieee80211_sched_scan_start(struct wiphy *wiphy,
@@ -2657,7 +2704,12 @@ static int ieee80211_set_tx_power(struct wiphy *wiphy,
 	bool has_monitor = false;
 
 	if (wdev) {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+		sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
+
 
 		if (sdata->vif.type == NL80211_IFTYPE_MONITOR) {
 			sdata = rtnl_dereference(local->monitor_sdata);
@@ -2739,7 +2791,11 @@ static int ieee80211_get_tx_power(struct wiphy *wiphy,
 				  int *dbm)
 {
 	struct ieee80211_local *local = wiphy_priv(wiphy);
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 
 	if (local->ops->get_txpower)
 		return drv_get_txpower(local, sdata, dbm);
@@ -2783,7 +2839,12 @@ static int ieee80211_testmode_cmd(struct wiphy *wiphy,
 	if (wdev) {
 		struct ieee80211_sub_if_data *sdata;
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
+		sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
+
 		if (sdata->flags & IEEE80211_SDATA_IN_DRIVER)
 			vif = &sdata->vif;
 	}
@@ -2938,8 +2999,11 @@ static int ieee80211_set_power_mgmt(struct wiphy *wiphy, struct net_device *dev,
 				    bool enabled, int timeout)
 {
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-	//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	struct ieee80211_local *local = wdev_priv(sdata->dev->ieee80211_ptr);
+#else
+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+#endif
 
 	if (sdata->vif.type != NL80211_IFTYPE_STATION)
 		return -EOPNOTSUPP;
@@ -3030,8 +3094,11 @@ static int ieee80211_set_bitrate_mask(struct wiphy *wiphy,
 				      const struct cfg80211_bitrate_mask *mask)
 {
 	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
-	//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	struct ieee80211_local *local = wdev_priv(sdata->dev->ieee80211_ptr);
+#else
+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+#endif
 	int i, ret;
 
 	if (!ieee80211_sdata_running(sdata))
@@ -3642,7 +3709,11 @@ static void ieee80211_mgmt_frame_register(struct wiphy *wiphy,
 					  u16 frame_type, bool reg)
 {
 	struct ieee80211_local *local = wiphy_priv(wiphy);
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 
 	switch (frame_type) {
 	case IEEE80211_FTYPE_MGMT | IEEE80211_STYPE_PROBE_REQ:
@@ -3803,7 +3874,11 @@ static int ieee80211_cfg_get_channel(struct wiphy *wiphy,
 				     struct wireless_dev *wdev,
 				     struct cfg80211_chan_def *chandef)
 {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 	struct ieee80211_local *local = wiphy_priv(wiphy);
 	struct ieee80211_chanctx_conf *chanctx_conf;
 	int ret = -ENODATA;
@@ -4074,7 +4149,11 @@ static int ieee80211_get_txq_stats(struct wiphy *wiphy,
 	rcu_read_lock();
 
 	if (wdev) {
+#ifdef CONFIG_DRIVERS_HDF_XR829
+		sdata = IEEE80211_DEV_TO_SUB_IF(wdev->netdev);
+#else
 		sdata = IEEE80211_WDEV_TO_SUB_IF(wdev);
+#endif
 		if (!sdata->vif.txq) {
 			ret = 1;
 			goto out;
@@ -4119,7 +4198,11 @@ ieee80211_start_pmsr(struct wiphy *wiphy, struct wireless_dev *dev,
 		     struct cfg80211_pmsr_request *request)
 {
 	struct ieee80211_local *local = wiphy_priv(wiphy);
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(dev);
+#endif
 
 	return drv_start_pmsr(local, sdata, request);
 }
@@ -4129,12 +4212,21 @@ ieee80211_abort_pmsr(struct wiphy *wiphy, struct wireless_dev *dev,
 		     struct cfg80211_pmsr_request *request)
 {
 	struct ieee80211_local *local = wiphy_priv(wiphy);
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *sdata = IEEE80211_DEV_TO_SUB_IF(dev->netdev);
+#else
 	struct ieee80211_sub_if_data *sdata = IEEE80211_WDEV_TO_SUB_IF(dev);
+#endif
+
 
 	return drv_abort_pmsr(local, sdata, request);
 }
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
 const struct cfg80211_ops xrmac_config_ops = {
+#else
+const struct cfg80211_ops mac80211_config_ops = {
+#endif
 	.add_virtual_intf = ieee80211_add_iface,
 	.del_virtual_intf = ieee80211_del_iface,
 	.change_virtual_intf = ieee80211_change_iface,

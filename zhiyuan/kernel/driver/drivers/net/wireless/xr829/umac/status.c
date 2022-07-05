@@ -17,8 +17,9 @@
 #include "led.h"
 #include "wme.h"
 
-// modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 extern void wal_netif_rx(struct sk_buff *skb);
+#endif
 
 void mac80211_tx_status_irqsafe(struct ieee80211_hw *hw,
 				 struct sk_buff *skb)
@@ -844,9 +845,11 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
 				skb2 = skb_clone(skb, GFP_ATOMIC);
 				if (skb2) {
 					skb2->dev = prev_dev;
-					//modify by lzq for hdf
-					//netif_rx(skb2);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+					netif_rx(skb2);
+#else					
 					wal_netif_rx(skb2);
+#endif					
 				}
 			}
 
@@ -855,9 +858,11 @@ void ieee80211_tx_monitor(struct ieee80211_local *local, struct sk_buff *skb,
 	}
 	if (prev_dev) {
 		skb->dev = prev_dev;
-		//modify by lzq for hdf
-		//netif_rx(skb);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+		netif_rx(skb);
+#else		
 		wal_netif_rx(skb);
+#endif		
 		skb = NULL;
 	}
 	rcu_read_unlock();

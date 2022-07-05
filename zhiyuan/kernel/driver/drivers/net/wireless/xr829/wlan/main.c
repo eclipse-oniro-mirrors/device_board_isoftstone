@@ -39,11 +39,12 @@
 #include "xr_version.h"
 #include "debug.h"
 
-// modify by lzq for hdf
-/*MODULE_AUTHOR("XRadioTech");
+#ifndef CONFIG_DRIVERS_HDF_XR829
+MODULE_AUTHOR("XRadioTech");
 MODULE_DESCRIPTION("XRadioTech WLAN driver core");
 MODULE_LICENSE("GPL");
-MODULE_ALIAS("xradio_core");*/
+MODULE_ALIAS("xradio_core");
+#endif
 
 char *drv_version   = XRADIO_VERSION;
 //char *drv_buildtime = __DATE__" "__TIME__;
@@ -54,14 +55,20 @@ char *drv_buildtime = " ";
 /* insmod xradio_wlan.ko macaddr=0xDC, 0x44, 0x6D, 0x00, 0x00, 0x00 */
 static u8 xradio_macaddr_param[ETH_ALEN] = { 0x0 };
 
-//module_param_array_named(macaddr, xradio_macaddr_param, byte, NULL, S_IRUGO);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+module_param_array_named(macaddr, xradio_macaddr_param, byte, NULL, S_IRUGO);
+#endif
 #else
 /* insmod xradio_wlan.ko macaddr=xx:xx:xx:xx:xx:xx */
 static char *xradio_macaddr_param;
-//module_param_named(macaddr, xradio_macaddr_param, charp, S_IRUGO);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+module_param_named(macaddr, xradio_macaddr_param, charp, S_IRUGO);
+#endif
 #endif
 
-//MODULE_PARM_DESC(macaddr, "First MAC address");
+#ifndef CONFIG_DRIVERS_HDF_XR829
+MODULE_PARM_DESC(macaddr, "First MAC address");
+#endif
 
 #ifdef HW_RESTART
 void xradio_restart_work(struct work_struct *work);
@@ -477,9 +484,11 @@ static int xradio_macaddr_char2val(u8 *v_mac, const char *c_mac)
 
 extern int get_custom_mac_address(int fmt, char *name, char *addr);
 
-//modify by lzq for hdf
-//static void xradio_get_mac_addrs(u8 *macaddr)
+#ifndef CONFIG_DRIVERS_HDF_XR829
+static void xradio_get_mac_addrs(u8 *macaddr)
+#else
 void xradio_get_mac_addrs(uint8_t *macaddr)
+#endif
 {
 	int ret = 0;
 	SYS_BUG(!macaddr);
@@ -1554,9 +1563,11 @@ static struct file_operations hwinfo_proc_op = {
 #endif
 
 /* Init Module function -> Called by insmod */
-// modify by lzq for hdf
-//int __init xradio_core_entry(void)
+#ifndef CONFIG_DRIVERS_HDF_XR829
+int __init xradio_core_entry(void)
+#else
 int  xradio_core_entry(void)
+#endif
 {
 	int ret = 0;
 	xradio_dbg(XRADIO_DBG_TRC, "%s\n", __func__);
@@ -1606,5 +1617,6 @@ void xradio_core_exit(void)
 	xradio_dbg(XRADIO_DBG_TRC, "%s\n", __func__);
 }
 
-//add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 EXPORT_SYMBOL(xradio_get_mac_addrs);
+#endif

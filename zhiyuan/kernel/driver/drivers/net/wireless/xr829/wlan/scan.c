@@ -1120,6 +1120,13 @@ void xradio_scan_timeout(struct work_struct *work)
 		container_of(work, struct xradio_common, scan.timeout.work);
 	scan_printk(XRADIO_DBG_TRC, "%s\n", __func__);
 
+#ifdef ROAM_OFFLOAD
+       if (hw_priv->auto_scanning == 0)
+               up(&hw_priv->wsm_oper_lock);
+#else
+       up(&hw_priv->wsm_oper_lock);
+#endif /*ROAM_OFFLOAD*/
+
 	if (likely(atomic_xchg(&hw_priv->scan.in_progress, 0))) {
 		down(&hw_priv->scan.status_lock);
 		if (hw_priv->scan.status > 0) {
