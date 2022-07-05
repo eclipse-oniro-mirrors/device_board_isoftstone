@@ -37,10 +37,9 @@
 #include "led.h"
 #include "debugfs.h"
 
-// add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 struct wiphy *g_wiphy = NULL;
 
-// add by lzq for hdf
 void hdf_wiphy_register(struct wiphy *wiphy)
 {
     g_wiphy = wiphy;
@@ -50,6 +49,7 @@ void hdf_wiphy_unregister(void)
 {
 	g_wiphy = NULL;
 }
+#endif
 
 void ieee80211_configure_filter(struct ieee80211_sub_if_data *sdata)
 {
@@ -593,6 +593,25 @@ static const struct ieee80211_vht_cap mac80211_vht_capa_mod_mask = {
 	},
 };
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
+static const struct ieee80211_regdomain xr829_regdom = {
+	.n_reg_rules = 4,
+	.alpha2 =  "99",
+	.reg_rules = {
+		/* IEEE 802.11b/g, channels 1..11 */
+		REG_RULE(2412-10, 2472+10, 40, 6, 20, 0),
+		/* If any */
+		/* IEEE 802.11 channel 14 - Only JP enables
+		 * this and for 802.11b only
+		 */
+		REG_RULE(2484-10, 2484+10, 20, 6, 20, 0),
+		/* IEEE 802.11a, channel 36..64 */
+		REG_RULE(5150-10, 5350+10, 40, 6, 20, 0),
+		/* IEEE 802.11a, channel 100..165 */
+		REG_RULE(5470-10, 5850+10, 40, 6, 20, 0), }
+};
+#endif
+
 struct ieee80211_hw *mac80211_alloc_hw_nm(size_t priv_data_len,
 					   const struct ieee80211_ops *ops,
 					   const char *requested_name)
@@ -635,7 +654,11 @@ struct ieee80211_hw *mac80211_alloc_hw_nm(size_t priv_data_len,
 	 */
 	priv_size = ALIGN(sizeof(*local), NETDEV_ALIGN) + priv_data_len;
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	wiphy = wiphy_new_nm(&xrmac_config_ops, priv_size, requested_name);
+#else
+	wiphy = wiphy_new_nm(&mac80211_config_ops, priv_size, requested_name);
+#endif
 
 	if (!wiphy)
 		return NULL;
@@ -695,8 +718,9 @@ struct ieee80211_hw *mac80211_alloc_hw_nm(size_t priv_data_len,
 
 	local->hw.wiphy = wiphy;
 
-	// add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	hdf_wiphy_register(wiphy);
+#endif
 
 	local->hw.priv = (char *)local + ALIGN(sizeof(*local), NETDEV_ALIGN);
 
@@ -1342,6 +1366,11 @@ int mac80211_register_hw(struct ieee80211_hw *hw)
 		local->sband_allocated |= BIT(band);
 	}
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
+	local->hw.wiphy->regulatory_flags |= REGULATORY_IGNORE_STALE_KICKOFF | REGULATORY_CUSTOM_REG;
+	wiphy_apply_custom_regulatory(local->hw.wiphy, &xr829_regdom);
+#endif
+
 	result = wiphy_register(local->hw.wiphy);
 	if (result < 0)
 		goto fail_wiphy_register;
@@ -1483,8 +1512,9 @@ void mac80211_free_hw(struct ieee80211_hw *hw)
 	mutex_destroy(&local->iflist_mtx);
 	mutex_destroy(&local->mtx);
 
-	// add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 	hdf_wiphy_unregister();
+#endif
 
 	if (local->wiphy_ciphers_allocated)
 		kfree(local->hw.wiphy->cipher_suites);
@@ -1506,14 +1536,18 @@ void mac80211_free_hw(struct ieee80211_hw *hw)
 	wiphy_free(local->hw.wiphy);
 }
 
-// add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 struct wiphy* wrap_get_wiphy(void)
 {
 	return g_wiphy;
 }
+#endif
 
-//int __init ieee80211_init(void)
+#ifndef CONFIG_DRIVERS_HDF_XR829
+int __init ieee80211_init(void)
+#else
 int ieee80211_init(void)
+#endif
 {
 	struct sk_buff *skb;
 	int ret;
@@ -1552,9 +1586,10 @@ void ieee80211_exit(void)
 //subsys_initcall(ieee80211_init);
 //module_exit(ieee80211_exit);
 
-// add by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829
 EXPORT_SYMBOL(xrmac_config_ops);
 EXPORT_SYMBOL(wrap_get_wiphy);
-
-/*MODULE_DESCRIPTION("IEEE 802.11 subsystem");
-MODULE_LICENSE("GPL");*/
+#else
+MODULE_DESCRIPTION("IEEE 802.11 subsystem");
+MODULE_LICENSE("GPL");
+#endif

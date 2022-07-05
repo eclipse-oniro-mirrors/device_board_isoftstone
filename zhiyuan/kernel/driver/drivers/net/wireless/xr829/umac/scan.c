@@ -29,6 +29,7 @@
 #define IEEE80211_CHANNEL_TIME (HZ / 33)
 #define IEEE80211_PASSIVE_CHANNEL_TIME (HZ / 9)
 
+#ifdef CONFIG_DRIVERS_HDF_XR829
 typedef enum {
      WIFI_SCAN_SUCCESS,
      WIFI_SCAN_FAILED,
@@ -36,10 +37,10 @@ typedef enum {
      WIFI_SCAN_TIMEOUT
 } WifiScanStatus;
 
-// modify by lzq for hdf
 extern void inform_bss_frame(struct ieee80211_channel *channel, int32_t signal, int16_t freq, struct ieee80211_mgmt *mgmt, uint32_t mgmtLen);
 extern int32_t HdfWifiEventScanDone(const struct NetDevice *netDev, WifiScanStatus status);
 extern struct net_device *get_krn_netdev(void);
+#endif
 
 void ieee80211_rx_bss_put(struct ieee80211_local *local,
 			  struct ieee80211_bss *bss)
@@ -164,18 +165,24 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
 	struct ieee802_11_elems elems;
 	size_t baselen;
 	u8 *elements;
-	int freq; // modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829	
+	int freq;
+#endif
 
 	if (rx_status->flag & RX_FLAG_NO_SIGNAL_VAL)
 		bss_meta.signal = 0; /* invalid signal indication */
 	else if (ieee80211_hw_check(&local->hw, SIGNAL_DBM))
-		//modify by lzq for hdf
-		// bss_meta.signal = rx_status->signal * 100;
+#ifndef CONFIG_DRIVERS_HDF_XR829	
+		bss_meta.signal = rx_status->signal * 100;
+#else		
 		bss_meta.signal = rx_status->signal;
+#endif		
 	else if (ieee80211_hw_check(&local->hw, SIGNAL_UNSPEC))
-		// modify by lzq for hdf
-		// bss_meta.signal = (rx_status->signal * 100) / local->hw.max_signal;
+#ifndef CONFIG_DRIVERS_HDF_XR829
+		bss_meta.signal = (rx_status->signal * 100) / local->hw.max_signal;
+#else		
 		bss_meta.signal = rx_status->signal / local->hw.max_signal;
+#endif
 
 	bss_meta.scan_width = NL80211_BSS_CHAN_WIDTH_20;
 	if (rx_status->bw == RATE_INFO_BW_5)
@@ -221,15 +228,15 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
 	/* In case the signal is invalid update the status */
 	signal_valid = channel == cbss->channel;
 
-	//modify by lzq for hdf
+#ifdef CONFIG_DRIVERS_HDF_XR829	
 	if (elems.ds_params)
 		freq = ieee80211_channel_to_frequency(elems.ds_params[0],
 						      rx_status->band);
 	else
 		freq = rx_status->freq;
 
-	// add by lzq for hdf
 	inform_bss_frame(channel, bss_meta.signal, freq, mgmt, len);
+#endif
 
 	if (!signal_valid)
 		rx_status->flag |= RX_FLAG_NO_SIGNAL_VAL;
@@ -363,8 +370,8 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_sub_if_data *sdata)
 				return false;
 
 			n_chans = 0;
-			printk(KERN_WARNING "req->n_channels %d!\n", req->n_channels);
-			for (i = 0; i < req->n_channels-2; i++) {
+
+			for (i = 0; i < req->n_channels; i++) {
 				if (req->channels[i]->band !=
 				    local->hw_scan_band)
 					continue;
@@ -455,9 +462,9 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
 
 	if (scan_req != local->int_scan_req) {
 		local->scan_info.aborted = aborted;
-		//modify by lzq for hdf
-		//cfg80211_scan_done(scan_req, &local->scan_info);
-		// add by lzq for hdf
+#ifndef CONFIG_DRIVERS_HDF_XR829	
+		cfg80211_scan_done(scan_req, &local->scan_info);
+#else
 		if (true == aborted) {
 			if (HdfWifiEventScanDone(get_krn_netdev(), 1) < 0) {
 				printk(KERN_WARNING "HdfWifiEventScanDone 1 Failed!\n");
@@ -471,7 +478,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
 				printk(KERN_WARNING "HdfWifiEventScanDone 0 ok!\n");
 			}
 		}
-
+#endif
 	}
 	RCU_INIT_POINTER(local->scan_req, NULL);
 	RCU_INIT_POINTER(local->scan_sdata, NULL);

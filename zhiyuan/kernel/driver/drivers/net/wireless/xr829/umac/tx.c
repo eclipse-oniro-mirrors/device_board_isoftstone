@@ -2210,14 +2210,20 @@ static bool ieee80211_parse_tx_radiotap(struct ieee80211_local *local,
 netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
 					 struct net_device *dev)
 {
-	//modify by lzq for hdf
+#ifndef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
+#else
 	struct ieee80211_sub_if_data *tmp_sdata, *sdata = IEEE80211_DEV_TO_SUB_IF(dev);
 	struct ieee80211_local *local = wdev_priv(sdata->dev->ieee80211_ptr);
+#endif	
 	struct ieee80211_chanctx_conf *chanctx_conf;
 	struct ieee80211_radiotap_header *prthdr =
 		(struct ieee80211_radiotap_header *)skb->data;
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
 	struct ieee80211_hdr *hdr;
+#ifndef CONFIG_DRIVERS_HDF_XR829
+	struct ieee80211_sub_if_data *tmp_sdata, *sdata;
+#endif
 	struct cfg80211_chan_def *chandef;
 	u16 len_rthdr;
 	int hdrlen;
@@ -2297,8 +2303,9 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
 	 * VLAN/WDS support we will need a different mechanism (which
 	 * likely isn't going to be monitor interfaces).
 	 */
-	 //modify by lzq for hdf
-	 // sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+#ifndef CONFIG_DRIVERS_HDF_XR829
+	sdata = IEEE80211_DEV_TO_SUB_IF(dev);
+#endif
 
 	list_for_each_entry_rcu(tmp_sdata, &local->interfaces, list) {
 		if (!ieee80211_sdata_running(tmp_sdata))

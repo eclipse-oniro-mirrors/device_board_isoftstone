@@ -26,6 +26,9 @@ extern "C" {
   2 全局变量声明
 **************************************************************************** */
 NetDevice *gp_hdf_netDev;
+extern void rtnl_lock(void);
+extern void rtnl_unlock(void);
+extern struct net_device *GetLinuxInfByNetDevice(const struct NetDevice *netDevice);
 extern struct net_device_ops ieee80211_dataif_ops;
 extern struct wiphy* wrap_get_wiphy(void);
 extern struct net_device *get_krn_netdev(void);
@@ -40,8 +43,8 @@ extern void xradio_get_mac_addrs(uint8_t *macaddr);
 **************************************************************************** */
 int32_t hdf_netdev_init(struct NetDevice *netDev)
 {
-    HDF_LOGE("%s: start...", __func__);
-    if (NULL == netDev) {
+    HDF_LOGE("%s: start %s...", __func__, netDev->name);
+    if (netDev == NULL) {
         HDF_LOGE("%s: netDev null!", __func__);
         return HDF_FAILURE;
     }
@@ -65,29 +68,26 @@ int32_t hdf_netdev_init(struct NetDevice *netDev)
 
 void hdf_netdev_deinit(struct NetDevice *netDev)
 {
-    HDF_LOGE("%s: start...", __func__);
+    HDF_LOGE("%s: start %s...", __func__, netDev->name);
     (void)netDev;
 }
 
 int32_t hdf_netdev_open(struct NetDevice *netDev)
 {
     int32_t retVal = 0;
-    //struct wiphy* wiphy = wrap_get_wiphy();
-    struct net_device * netdev = get_krn_netdev();
+    struct net_device *netdev = GetLinuxInfByNetDevice(netDev);
+    if (netdev != get_krn_netdev()) {
+        // for virtual don't call open
+        return 0;
+    }
 
-    (void)netDev;
-    HDF_LOGE("%s: start...", __func__);
-
-    if (NULL == netdev) {
+    if (netdev == NULL) {
         HDF_LOGE("%s: netDev null!", __func__);
         return HDF_FAILURE;
     }
 
-   /* HDF_LOGE("%s: ndo_stop...", __func__);
-    retVal = (int32_t)ieee80211_dataif_ops.ndo_stop(netdev);
-    if (retVal < 0) {
-        HDF_LOGE("%s: hdf net device stop failed! ret = %d", __func__, retVal);
-    }*/
+    HDF_LOGE("%s: start...", __func__);
+    rtnl_lock();
 
     retVal = (int32_t)ieee80211_dataif_ops.ndo_open(netdev);
     if (retVal < 0) {
@@ -95,11 +95,10 @@ int32_t hdf_netdev_open(struct NetDevice *netDev)
     }
 
     netDev->ieee80211Ptr = netdev->ieee80211_ptr;
-    if (NULL == netDev->ieee80211Ptr) {
+    if (netDev->ieee80211Ptr == NULL) {
         HDF_LOGE("%s: NULL == netDev->ieee80211Ptr", __func__);
     }
-
-    //struct wireless_dev *wdev = GET_NET_DEV_CFG80211_WIRELESS(netDev);
+    rtnl_unlock();
     gp_hdf_netDev = netDev;
 
 	HDF_LOGE("%s: ndo_open...", __func__);
@@ -109,34 +108,34 @@ int32_t hdf_netdev_open(struct NetDevice *netDev)
 int32_t hdf_netdev_stop(struct NetDevice *netDev)
 {
     int32_t retVal = 0;
-    struct net_device * netdev = get_krn_netdev();
-
-    (void)netDev;
-    HDF_LOGE("%s: start...", __func__);
-
-    if (NULL == netdev) {
+    struct net_device *netdev = GetLinuxInfByNetDevice(netDev);
+    HDF_LOGE("%s: start %s...", __func__, netDev->name);
+    if (netdev != get_krn_netdev()) {
+        return 0;
+    }
+    if (netdev == NULL) {
         HDF_LOGE("%s: netDev null!", __func__);
         return HDF_FAILURE;
     }
 
+    rtnl_lock();
     retVal = (int32_t)ieee80211_dataif_ops.ndo_stop(netdev);
+    rtnl_unlock();
     if (retVal < 0) {
         HDF_LOGE("%s: hdf net device stop failed! ret = %d", __func__, retVal);
     }
 
-	HDF_LOGE("%s: ndo_stop...", __func__);
     return retVal;
 }
 
 int32_t hdf_netdev_xmit(struct NetDevice *netDev, NetBuf *netBuff)
 {
     int32_t retVal = 0;
-    struct net_device * netdev = get_krn_netdev();
+    struct net_device *netdev = GetLinuxInfByNetDevice(netDev);
 
-    (void)netDev;
     HDF_LOGI("%s: start...", __func__);
 
-    if (NULL == netdev || NULL == netBuff) {
+    if (netdev == NULL || netBuff == NULL) {
         HDF_LOGE("%s: netdev or netBuff null!", __func__);
         return HDF_FAILURE;
     }
@@ -149,13 +148,27 @@ int32_t hdf_netdev_xmit(struct NetDevice *netDev, NetBuf *netBuff)
     return retVal;
 }
 
+int32_t hdf_netdev_ioctl(struct NetDevice *netDev, IfReq *req, int32_t cmd)
+{
+    struct net_device *netdev = GetLinuxInfByNetDevice(netDev);
+
+    HDF_LOGE("%s: start %s...", __func__, netDev->name);
+    if (netdev == NULL) {
+        HDF_LOGE("%s: netdev or req null!", __func__);
+        return HDF_FAILURE;
+    }
+
+    HDF_LOGE("%s: is not support!!! \n", __FUNCTION__);
+    return HDF_SUCCESS;
+}
+
 int32_t hdf_netdev_setmacaddr(struct NetDevice *netDev, void *addr)
 {
     int32_t retVal = 0;
-    struct net_device * netdev = get_krn_netdev();
+    struct net_device *netdev = GetLinuxInfByNetDevice(netDev);
 
-    (void)netDev;
-    HDF_LOGE("%s: start...", __func__);
+
+    HDF_LOGE("%s: start %s...", __func__, netDev->name);
 
     if (NULL == netdev || NULL == addr) {
         HDF_LOGE("%s: netDev or addr null!", __func__);
@@ -170,6 +183,36 @@ int32_t hdf_netdev_setmacaddr(struct NetDevice *netDev, void *addr)
     return retVal;
 }
 
+struct NetDevStats *hdf_netdev_getstats(struct NetDevice *netDev)
+{
+    static struct NetDevStats devStat = {0};
+    struct net_device_stats *kdevStat = NULL;
+    struct net_device *netdev = GetLinuxInfByNetDevice(netDev);
+
+    HDF_LOGE("%s: start %s...", __func__, netDev->name);
+
+    if (netdev == NULL) {
+        HDF_LOGE("%s: netDev null!", __func__);
+        return NULL;
+    }
+
+    ieee80211_dataif_ops.ndo_get_stats64(netdev, kdevStat);
+    if (kdevStat == NULL) {
+        HDF_LOGE("%s: ndo_get_stats return null!", __func__);
+        return NULL;
+    }
+
+    devStat.rxPackets = kdevStat->rx_packets;
+    devStat.txPackets = kdevStat->tx_packets;
+    devStat.rxBytes = kdevStat->rx_bytes;
+    devStat.txBytes = kdevStat->tx_bytes;
+    devStat.rxErrors = kdevStat->rx_errors;
+    devStat.txErrors = kdevStat->tx_errors;
+    devStat.rxDropped = kdevStat->rx_dropped;
+    devStat.txDropped = kdevStat->tx_dropped;
+
+    return &devStat;
+}
 void hdf_netdev_setnetifstats(struct NetDevice *netDev, NetIfStatus status)
 {
     HDF_LOGE("%s: start...", __func__);
@@ -196,22 +239,14 @@ uint32_t hdf_netdev_netifnotify(struct NetDevice *netDev, NetDevNotify *notify)
 int32_t hdf_netdev_changemtu(struct NetDevice *netDev, int32_t mtu)
 {   
     int32_t retVal = 0;
-    struct net_device * netdev = get_krn_netdev();
-    HDF_LOGE("%s: start...", __func__);
-
-    (void)netDev;
-    if (NULL == netdev) {
+    struct net_device *netdev = GetLinuxInfByNetDevice(netDev);
+    HDF_LOGE("%s: start %s...", __func__, netDev->name);
+    if (netdev == NULL) {
         HDF_LOGE("%s: netdev null!", __func__);
         return HDF_FAILURE;
     }
-    HDF_LOGE("%s: change mtu to %d\n", __FUNCTION__, mtu);
-
-    retVal = (int32_t)ieee80211_dataif_ops.ndo_change_mtu(netdev, mtu);
-    if (retVal < 0) {
-        HDF_LOGE("%s: hdf net device chg mtu failed! ret = %d", __func__, retVal);
-    }
-
-    return retVal;
+    HDF_LOGE("%s: is not support!!! \n", __FUNCTION__);
+    return HDF_SUCCESS;
 }
 
 void hdf_netdev_linkstatuschanged(struct NetDevice *netDev)
@@ -219,19 +254,18 @@ void hdf_netdev_linkstatuschanged(struct NetDevice *netDev)
     HDF_LOGE("%s: start...", __func__);
     (void)netDev;
 }
-
-#define WIFI_SHIFT_BIT 8
-
+#define PEPROCESS1 12
+#define PEPROCESS2 13
+#define PEPROCESS3 8
 ProcessingResult hdf_netdev_specialethertypeprocess(const struct NetDevice *netDev, NetBuf *buff)
 {
     //struct EtherHeader *header = NULL;
     //uint16_t etherType;
     const struct Eapol *eapolInstance = NULL;
-    int ret;
+    int ret = HDF_SUCCESS;
     uint16_t protocol;
-    const int pidx0 = 12, pidx1 = 13;
 
-    HDF_LOGE("%s: start...", __func__);
+    //HDF_LOGE("%s: start %s...", __func__, netDev->name);
 
     if (netDev == NULL || buff == NULL) {
         return PROCESSING_ERROR;
@@ -239,9 +273,9 @@ ProcessingResult hdf_netdev_specialethertypeprocess(const struct NetDevice *netD
 
     //header = (struct EtherHeader *)NetBufGetAddress(buff, E_DATA_BUF);
 
-    protocol = (buff->data[pidx0] << WIFI_SHIFT_BIT) | buff->data[pidx1];
+    protocol = (buff->data[PEPROCESS1] << PEPROCESS3) | buff->data[PEPROCESS2];
     if (protocol != ETHER_TYPE_PAE) {
-        HDF_LOGE("%s: return PROCESSING_CONTINUE", __func__);
+        //HDF_LOGE("%s: return PROCESSING_CONTINUE", __func__);
         return PROCESSING_CONTINUE;
     }
     if (netDev->specialProcPriv == NULL) {
@@ -268,7 +302,9 @@ struct NetDeviceInterFace g_wal_net_dev_ops =
     .open       = hdf_netdev_open,
     .stop       = hdf_netdev_stop,
     .xmit       = hdf_netdev_xmit,
+    .ioctl      = hdf_netdev_ioctl,
     .setMacAddr = hdf_netdev_setmacaddr,
+    .getStats   = hdf_netdev_getstats,
     .setNetIfStatus     = hdf_netdev_setnetifstats,
     .selectQueue        = hdf_netdev_selectqueue,
     .netifNotify        = hdf_netdev_netifnotify,

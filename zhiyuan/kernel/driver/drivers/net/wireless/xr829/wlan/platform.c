@@ -28,11 +28,12 @@
 //#include <linux/power/aw_pm.h>
 #include <linux/pm_wakeirq.h>
 
-// modify by lzq for hdf
-/*MODULE_AUTHOR("XRadioTech");
+#ifndef CONFIG_DRIVERS_HDF_XR829
+MODULE_AUTHOR("XRadioTech");
 MODULE_DESCRIPTION("XRadioTech WLAN driver");
 MODULE_LICENSE("GPL");
-MODULE_ALIAS("xradio_wlan");*/
+MODULE_ALIAS("xradio_wlan");
+#endif
 
 extern void sunxi_wlan_set_power(bool on);
 extern int sunxi_wlan_get_bus_index(void);

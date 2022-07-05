@@ -2077,12 +2077,12 @@ static int wsm_set_pm_indication(struct xradio_common *hw_priv,
 static int wsm_scan_complete_indication(struct xradio_common *hw_priv,
 					struct wsm_buf *buf)
 {
-#ifdef ROAM_OFFLOAD
-	if (hw_priv->auto_scanning == 0)
-		wsm_oper_unlock(hw_priv);
-#else
-	wsm_oper_unlock(hw_priv);
-#endif /*ROAM_OFFLOAD*/
+//#ifdef ROAM_OFFLOAD
+//	if (hw_priv->auto_scanning == 0)
+//		wsm_oper_unlock(hw_priv);
+//#else
+//	wsm_oper_unlock(hw_priv);
+//#endif /*ROAM_OFFLOAD*/
 
 	if (hw_priv->wsm_cbc.scan_complete) {
 		struct wsm_scan_complete arg;

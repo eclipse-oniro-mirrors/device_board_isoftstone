@@ -47,7 +47,7 @@ source "$(BSP_TOP)drivers/g2d/Kconfig"
 source "$(BSP_TOP)drivers/vin/Kconfig"
 
 # Multi-Media
-# source "$(BSP_TOP)drivers/ve/Kconfig"
+source "$(BSP_TOP)drivers/ve/Kconfig"
 
 # Sound
 # source "$(BSP_TOP)drivers/sound/Kconfig"

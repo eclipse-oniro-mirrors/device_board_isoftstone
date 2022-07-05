@@ -46,7 +46,7 @@ obj-y += g2d/
 obj-y += vin/
 
 # Multi-Media
-# obj-y += ve/
+obj-y += ve/
 
 # Sound
 # obj-y += sound/
