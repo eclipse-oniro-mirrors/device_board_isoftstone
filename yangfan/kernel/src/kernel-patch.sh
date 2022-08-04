@@ -33,10 +33,6 @@ delete_list=(
     drivers/devfreq/rk3399_dmc.c
     drivers/dma-buf/heaps/heap-helpers.c
     drivers/dma-buf/heaps/heap-helpers.h
-    include/linux/sched/core_ctl.h
-    include/linux/sched/frame_rtg.h
-    include/linux/sched/rtg.h
-    include/linux/sched/rtg_ctrl.h
 )
 
 copy_list=(
@@ -78,7 +74,7 @@ copy_list=(
     incl/media/*                            include/media/
     incl/soc/*                              include/soc/rockchip/
     incl/treace/events/*                    include/trace/events/
-    incl/treace/hooks                       include/trace/
+    # incl/treace/hooks                       include/trace/
     incl/uapi/drm/*                         include/uapi/drm/
     incl/uapi/linux/*                       include/uapi/linux/
     incl/uapi/misc/*                        include/uapi/misc/
@@ -110,7 +106,7 @@ function apply_rk3399_kernel_patch()
 {
     for ((i = 0; i < ${#patch_list[*]}; i++))
     do
-        git apply ${kernel_patch_path}/${patch_list[$i]}
+        patch -p1 < ${kernel_patch_path}/${patch_list[$i]}
         echo "patch for ${patch_list[$i]} success."
     done
 }
