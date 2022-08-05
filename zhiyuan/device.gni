@@ -1,4 +1,4 @@
-# Copyright (C) 2021 HiHope Open Source Organization .
+# Copyright (c) 2021 iSoftStone Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -22,7 +22,8 @@ if (!defined(defines)) {
 }
 
 product_config_path = "//vendor/${product_company}/${product_name}"
-board_camera_path = "//device/board/${product_company}/${device_name}/kernel/hdf/driver/camera"
+board_camera_path =
+    "//device/board/${product_company}/${device_name}/kernel/hdf/driver/camera"
 is_support_v4l2 = true
 if (is_support_v4l2) {
   is_support_mpi = false
