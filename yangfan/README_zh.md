@@ -95,7 +95,7 @@ bash build/prebuilts_download.sh
     =====build rk3399 successful.
     2021-09-13 09:22:28
     ```
-    编译所生成的文件都归档在out/ohos-arm-release/目录下，结果镜像输出在 out/ohos-arm-release/packages/phone/images/ 目录下。
+    编译所生成的文件都归档在out/ohos-arm-release/目录下，结果镜像输出在out/ohos-arm-release/packages/phone/images/ 目录下。
 
 3.  编译源码完成，请进行镜像烧录。
 
@@ -113,7 +113,7 @@ bash build/prebuilts_download.sh
 ![烧录工具安装](./figures/FlashTool.png)
 
 ### 烧录
-运行RKDevTool.exe后，选在对应的镜像，按reset后然后长按uboot键，软件底部出现**发现一个LOADER设备**后点击执行，然后等待烧录完成。
+运行RKDevTool.exe后，选择对应的镜像，按reset后然后长按uboot键，软件底部出现**发现一个LOADER设备**后点击执行，然后等待烧录完成。
 
 ![镜像烧录](./figures/Dowanload.png)
 
