@@ -1,16 +1,15 @@
-# Copyright (C) 2021 HiHope Open Source Organization .
+# Copyright (c) 2021 iSoftStone Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import("//build/ohos.gni")
 
 AP6XXX_ETC_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/ap6xxx"
 MODULES_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/modules"
@@ -49,6 +48,7 @@ ohos_prebuilt_etc("nvram_ap6275s.txt") {
   part_name = "rockchip_products"
   install_enable = true
 }
+
 ##43438 begin
 ohos_prebuilt_etc("fw_bcm43438a1.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43438a1.bin"
@@ -97,6 +97,7 @@ ohos_prebuilt_etc("bcmdhd.ko") {
   part_name = "rockchip_products"
   install_enable = true
 }
+
 ##43438 end
 
 ohos_prebuilt_etc("resolv.conf") {
@@ -168,24 +169,24 @@ ohos_prebuilt_shared_library("libnl_share.z.so") {
 
 group("ap6xxx") {
   deps = [
+    ":bcmdhd.ko",
     ":clm_bcm43752a2_ag.blob",
+    ":cywdhd.ko",
+    ":fw_bcm43438a1.bin",
     ":fw_bcm43752a2_ag.bin",
     ":fw_bcm43752a2_ag_apsta.bin",
-    ":nvram_ap6275s.txt",
-    ":fw_bcm43438a1.bin",
     ":fw_cyw43438_apsta.bin",
     ":fw_cyw43438_p2p.bin",
+    ":hostapd",
+    ":hostapd.conf",
+    ":hostapd_cli",
+    ":libnl_share.z.so",
+    ":libwpa.z.so",
+    ":libwpa_client.z.so",
     ":nvram_ap6212a.txt",
-    ":cywdhd.ko",
-    ":bcmdhd.ko",
+    ":nvram_ap6275s.txt",
     ":resolv.conf",
     ":wpa_cli",
     ":wpa_supplicant",
-    ":hostapd.conf",
-    ":hostapd",
-    ":hostapd_cli",
-    ":libwpa_client.z.so",
-    ":libwpa.z.so",
-    ":libnl_share.z.so",
   ]
 }
