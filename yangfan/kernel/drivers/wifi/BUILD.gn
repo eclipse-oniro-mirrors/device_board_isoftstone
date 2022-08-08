@@ -48,6 +48,7 @@ ohos_prebuilt_etc("nvram_ap6275s.txt") {
   part_name = "rockchip_products"
   install_enable = true
 }
+
 ##43438 begin
 ohos_prebuilt_etc("fw_bcm43438a1.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43438a1.bin"
@@ -96,6 +97,7 @@ ohos_prebuilt_etc("bcmdhd.ko") {
   part_name = "rockchip_products"
   install_enable = true
 }
+
 ##43438 end
 
 ohos_prebuilt_etc("resolv.conf") {
@@ -167,24 +169,24 @@ ohos_prebuilt_shared_library("libnl_share.z.so") {
 
 group("ap6xxx") {
   deps = [
+    ":bcmdhd.ko",
     ":clm_bcm43752a2_ag.blob",
+    ":cywdhd.ko",
+    ":fw_bcm43438a1.bin",
     ":fw_bcm43752a2_ag.bin",
     ":fw_bcm43752a2_ag_apsta.bin",
-    ":nvram_ap6275s.txt",
-    ":fw_bcm43438a1.bin",
     ":fw_cyw43438_apsta.bin",
     ":fw_cyw43438_p2p.bin",
+    ":hostapd",
+    ":hostapd.conf",
+    ":hostapd_cli",
+    ":libnl_share.z.so",
+    ":libwpa.z.so",
+    ":libwpa_client.z.so",
     ":nvram_ap6212a.txt",
-    ":cywdhd.ko",
-    ":bcmdhd.ko",
+    ":nvram_ap6275s.txt",
     ":resolv.conf",
     ":wpa_cli",
     ":wpa_supplicant",
-    ":hostapd.conf",
-    ":hostapd",
-    ":hostapd_cli",
-    ":libwpa_client.z.so",
-    ":libwpa.z.so",
-    ":libnl_share.z.so",
   ]
 }
