@@ -24,6 +24,7 @@
             <policy name="projectPolicy" desc="">
                 <policyitem type="copyright" name="Rockchip Electronics Co., Ltd." path=".*" desc="Developed By Rockchip"/>
                 <policyitem type="copyright" name="Isoftstone Open Source Organization ." path=".*"  desc="Developed By Hihope"/>
+				<policyitem type="copyright" name="iSoftStone Information Technology (Group) Co.,Ltd." path=".*" desc=""/>
                 <policyitem type="license" name="GPL" path=".*" desc="linux kernel adapter codes"/>
                 <policyitem type="license" name="MIT" path=".*" desc=""/>
                 <policyitem type="license" name="Linux-OpenIB" path=".*" desc="linux kernel adapter codes"/>
