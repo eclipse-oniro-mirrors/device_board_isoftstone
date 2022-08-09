@@ -12,7 +12,7 @@
 #include <linux/of_gpio.h>
 #include <linux/of_device.h>
 #include <linux/fs.h>
-
+#include <linux/gpio/consumer.h>
 
 /*IOCTL set*/
 #define IOCTL_USBOTG_SET_POWER               0xA3
