@@ -10,6 +10,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import("//build/ohos.gni")
 
 AP6XXX_ETC_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/ap6xxx"
 MODULES_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/modules"
