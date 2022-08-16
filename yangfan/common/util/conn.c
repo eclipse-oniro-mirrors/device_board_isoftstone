@@ -141,7 +141,7 @@ getnextargument(const char *signature, struct argumentdetails *details)
 {
     details->nullable = 0;
     for(; *signature; ++signature) {
-        switch(*signature) {
+        switch(*signature) {     //switch Statement
         case 'i':
         case 'u':
         case 'f':
@@ -154,6 +154,8 @@ getnextargument(const char *signature, struct argumentdetails *details)
             return signature + 1;
         case '?':
             details->nullable = 1;
+        default:
+            break;
         }
     }
     details->type = '\0';
@@ -175,6 +177,8 @@ argcountforsignature(const char *signature)
         case 'a':
         case 'h':
             ++count;
+        default:
+            break;
         }
     }
     return count;
@@ -1109,6 +1113,8 @@ isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
                 return -1;
             }
             closure->args[i].o = object;
+        default:
+            break;
         }
     }
 
