@@ -25,7 +25,9 @@
 #include <unistd.h>
 #include <expat.h>
 #define NUM2 2 
-
+#define NUM8 8
+#define NUM72 72 
+#define NUM3 3 
 enum side {
     CLIENT,
     SERVER,
@@ -61,7 +63,7 @@ descdump(char *desc, const char *fmt, ...)
 
     for (i = 0, col = 0; buf[i] != '*'; i++) {
         if (buf[i] == '\t')
-            col = (col + 8) & ~7;
+            col = (col + NUM8) & ~7;
         else
             col++;
     }
@@ -97,7 +99,7 @@ descdump(char *desc, const char *fmt, ...)
 
         if (newlines > 1)
             printf("\n%s*", indent(startcol));
-        if (newlines > 1 || col + i - j > 72) {
+        if (newlines > 1 || col + i - j > NUM72) {
             printf("\n%s*%c", indent(startcol), hang);
             col = startcol;
         }
@@ -149,7 +151,7 @@ isnullabletype(struct arg *arg)
     default:
         return false;
     }
-}
+}    
 
 static struct message *
 createmessage(struct location loc, const char *name)
@@ -241,8 +243,8 @@ isdtdvalid(FILE *input, const char *filename)
         abort();
 
     buffer = xmlParserInputBufferCreateMem(&DTDDATAbegin,
-                           DTDDATAlen,
-                           XMLCHARENCODINGUTF8);
+                                            DTDDATAlen,
+                                            XMLCHARENCODINGUTF8);
     if (!buffer) {
         fprintf(stderr, "Failed to init buffer for DTD.\n");
         abort();
@@ -534,13 +536,10 @@ freeinterface(struct interface *interface)
     free(interface);
 }
 
-
-
 static void
 launchtype(struct arg *a)
 {
     switch (a->type) {
-    default:
     case INT:
     case FD:
         printf("int32t ");
@@ -560,6 +559,8 @@ launchtype(struct arg *a)
         break;
     case ARRAY:
         printf("struct isftarray *");
+        break;
+    default:
         break;
     }
 }
@@ -910,7 +911,8 @@ launchstructs(struct isftlist *messagelist, struct interface *interface, enum si
     if (side == CLIENT) {
         printf("/**\n"
            " * @ingroup iface%s\n"
-           " */\n", interface->name);
+           " */\n", 
+    interface->name);
         printf("static inline int\n"
            "%saddlistener(struct %s *%s,\n"
            "%sconst struct %slistener *listener, void *data)\n"
@@ -918,11 +920,11 @@ launchstructs(struct isftlist *messagelist, struct interface *interface, enum si
            "\treturn isftproxyaddlistener((struct isftproxy *) %s,\n"
            "%s(void (**)(void)) listener, data);\n"
            "}\n\n",
-           interface->name, interface->name, interface->name,
-           indent(14 + strlen(interface->name)),
-           interface->name,
-           interface->name,
-           indent(37));
+    interface->name, interface->name, interface->name,
+    indent(14 + strlen(interface->name)),
+    interface->name,
+    interface->name,
+    indent(37));
     }
 }
 
@@ -1022,29 +1024,39 @@ startelement(void *data, const char *elementname, const char **atts)
 
     ctx->loc.linenumber = XMLGetCurrentLineNumber(ctx->parser);
     for (i = 0; atts[i]; i += 2) {
-        if (strcmp(atts[i], "name") == 0)
+        if (strcmp(atts[i], "name") == 0) {
             name = atts[i + 1];
+        }
         if (strcmp(atts[i], "version") == 0) {
             version = strtouint(atts[i + 1]);
-            if (version == -1)
+            if (version == -1) {
                 fail(&ctx->loc, "wrong version (%s)", atts[i + 1]);
+            }
         }
-        if (strcmp(atts[i], "type") == 0)
+        if (strcmp(atts[i], "type") == 0) {
             type = atts[i + 1];
-        if (strcmp(atts[i], "value") == 0)
+        }
+        if (strcmp(atts[i], "value") == 0) {
             value = atts[i + 1];
-        if (strcmp(atts[i], "interface") == 0)
+        }
+        if (strcmp(atts[i], "interface") == 0) {
             interfacename = atts[i + 1];
-        if (strcmp(atts[i], "summary") == 0)
+        }
+        if (strcmp(atts[i], "summary") == 0) {
             summary = atts[i + 1];
-        if (strcmp(atts[i], "since") == 0)
+        }
+        if (strcmp(atts[i], "since") == 0) {
             since = atts[i + 1];
-        if (strcmp(atts[i], "allow-null") == 0)
+        }
+        if (strcmp(atts[i], "allow-null") == 0) {
             allownull = atts[i + 1];
-        if (strcmp(atts[i], "enum") == 0)
+        }
+        if (strcmp(atts[i], "enum") == 0) {
             enumerationname = atts[i + 1];
-        if (strcmp(atts[i], "bitfield") == 0)
+            ]
+        if (strcmp(atts[i], "bitfield") == 0) {
             bitfield = atts[i + 1];
+        }
     }
 
     ctx->characterdatalength = 0;
@@ -1071,41 +1083,44 @@ startelement(void *data, const char *elementname, const char **atts)
                    &interface->link);
     } else if (strcmp(elementname, "request") == 0 ||
            strcmp(elementname, "event") == 0) {
-        if (name == NULL)
+        if (name == NULL) {
             fail(&ctx->loc, "no request name given");
+        }
 
         validateidentifier(&ctx->loc, name, STANDALONEIDENT);
         message = createmessage(ctx->loc, name);
 
-        if (strcmp(elementname, "request") == 0)
+        if (strcmp(elementname, "request") == 0) {
             isftlistinsert(ctx->interface->requestlist.prev,
                        &message->link);
-        else
+        }else {
             isftlistinsert(ctx->interface->eventlist.prev,
                        &message->link);
-
-        if (type != NULL && strcmp(type, "destructor") == 0)
+        }
+        if (type != NULL && strcmp(type, "destructor") == 0) {
             message->destructor = 1;
-
+        }
         version = versionfromsince(ctx, since);
-
-        if (version < ctx->interface->since)
+        if (version < ctx->interface->since) {
             warn(&ctx->loc, "since version not increasing\n");
+        }
         ctx->interface->since = version;
         message->since = version;
 
-        if (strcmp(name, "destroy") == 0 && !message->destructor)
+        if (strcmp(name, "destroy") == 0 && !message->destructor) {
             fail(&ctx->loc, "destroy request should be destructor type");
-
+        }
         ctx->message = message;
     } else if (strcmp(elementname, "arg") == 0) {
-        if (name == NULL)
+        if (name == NULL) {
             fail(&ctx->loc, "no argument name given");
+        }
 
         validateidentifier(&ctx->loc, name, STANDALONEIDENT);
         arg = createarg(name);
-        if (!setargtype(arg, type))
+        if (!setargtype(arg, type)) {
             fail(&ctx->loc, "unknown type (%s)", type);
+        }
 
         switch (arg->type) {
         case NEWID:
@@ -1120,88 +1135,99 @@ startelement(void *data, const char *elementname, const char **atts)
             }
             break;
         default:
-            if (interfacename != NULL)
+            if (interfacename != NULL) {
                 fail(&ctx->loc, "interface attribute not allowed for type %s", type);
+            }
             break;
         }
 
         if (allownull) {
-            if (strcmp(allownull, "true") == 0)
+            if (strcmp(allownull, "true") == 0) {
                 arg->nullable = 1;
-            else if (strcmp(allownull, "false") != 0)
+            }
+            else if (strcmp(allownull, "false") != 0){
                 fail(&ctx->loc,
                      "invalid value for allow-null attribute (%s)",
                      allownull);
+            }
 
-            if (!isnullabletype(arg))
+            if (!isnullabletype(arg)) {
                 fail(&ctx->loc,
                      "allow-null is only valid for objects, strings, and arrays");
+            }
         }
 
-        if (enumerationname == NULL || strcmp(enumerationname, "") == 0)
+        if (enumerationname == NULL || strcmp(enumerationname, "") == 0) {
             arg->enumerationname = NULL;
-        else
+        }else {
             arg->enumerationname = xstrdup(enumerationname);
-
-        if (summary)
+        }
+        if (summary) {
             arg->summary = xstrdup(summary);
+        }
 
         isftlistinsert(ctx->message->arglist.prev, &arg->link);
         ctx->message->argcount++;
     } else if (strcmp(elementname, "enum") == 0) {
-        if (name == NULL)
+        if (name == NULL) {
             fail(&ctx->loc, "no enum name given");
+        }
 
         validateidentifier(&ctx->loc, name, TRAILINGIDENT);
         enumeration = createenumeration(name);
 
-        if (bitfield == NULL || strcmp(bitfield, "false") == 0)
+        if (bitfield == NULL || strcmp(bitfield, "false") == 0) {
             enumeration->bitfield = false;
-        else if (strcmp(bitfield, "true") == 0)
+        }
+        else if (strcmp(bitfield, "true") == 0) {
             enumeration->bitfield = true;
-        else
+        }
+        else {
             fail(&ctx->loc,
                  "invalid value (%s) for bitfield attribute (only true/false are accepted)",
                  bitfield);
+        }
 
         isftlistinsert(ctx->interface->enumerationlist.prev,
                    &enumeration->link);
-
         ctx->enumeration = enumeration;
     } else if (strcmp(elementname, "entry") == 0) {
-        if (name == NULL)
+        if (name == NULL) {
             fail(&ctx->loc, "no entry name given");
+        }
 
         validateidentifier(&ctx->loc, name, TRAILINGIDENT);
         entry = createentry(name, value);
         version = versionfromsince(ctx, since);
-
-        if (version < ctx->enumeration->since)
+        if (version < ctx->enumeration->since) {
             warn(&ctx->loc, "since version not increasing\n");
+        }
         ctx->enumeration->since = version;
         entry->since = version;
 
-        if (summary)
+        if (summary) {
             entry->summary = xstrdup(summary);
-        else
+        } else {
             entry->summary = NULL;
+        }
         isftlistinsert(ctx->enumeration->entrylist.prev,
                    &entry->link);
     } else if (strcmp(elementname, "description") == 0) {
-        if (summary == NULL)
+        if (summary == NULL) {
             fail(&ctx->loc, "description without summary");
+        }
 
         description = xzalloc(sizeof *description);
         description->summary = xstrdup(summary);
-
-        if (ctx->message)
+        if (ctx->message) {
             ctx->message->description = description;
-        else if (ctx->enumeration)
+        } else if (ctx->enumeration) {
             ctx->enumeration->description = description;
-        else if (ctx->interface)
+        } else if (ctx->interface) {
             ctx->interface->description = description;
-        else
+        }else {
             ctx->protocol->description = description;
+        }
         ctx->description = description;
     }
 }
@@ -1226,16 +1252,19 @@ findenumeration(struct protocol *protocol,
         enumname = enumattribute + idx + 1;
 
         isftlistforeach(i, &protocol->interfacelist, link)
-            if (strncmp(i->name, enumattribute, idx) == 0)
+            if (strncmp(i->name, enumattribute, idx) == 0) {
                 isftlistforeach(e, &i->enumerationlist, link)
-                    if (strcmp(e->name, enumname) == 0)
+            }
+                    if (strcmp(e->name, enumname) == 0) {
                         return e;
+                    }
     } else if (interface) {
         enumname = enumattribute;
 
         isftlistforeach(e, &interface->enumerationlist, link)
-            if (strcmp(e->name, enumname) == 0)
+            if (strcmp(e->name, enumname) == 0) {
                 return e;
+            }
     }
 
     return NULL;
@@ -1253,22 +1282,22 @@ verifyarguments(struct parsecontext *ctx,
         isftlistforeach(a, &m->arglist, link) {
             struct enumeration *e;
 
-            if (!a->enumerationname)
+            if (!a->enumerationname) {
                 continue;
-
-
+            }
             e = findenumeration(ctx->protocol, interface,
                          a->enumerationname);
 
             switch (a->type) {
-            case INT:
-                if (e && e->bitfield)
+                case INT:
+                if (e && e->bitfield) {
                     fail(&ctx->loc,
                          "bitfield-style enum must only be referenced by uint");
+                }
                 break;
-            case UNSIGNED:
+                case UNSIGNED:
                 break;
-            default:
+                default:
                 fail(&ctx->loc,
                      "enumeration-style argument has wrong type");
             }
@@ -1358,9 +1387,10 @@ launchheader(struct protocol *protocol, enum side side)
            protocol->uppercasename, s,
            protocol->uppercasename, s,
            getincludename(protocol->coreheaders, side));
-    if (side == SERVER)
+    if (side == SERVER) {
         printf("struct isftclient;\n"
                "struct isftresource;\n\n");
+    }
 
     launchmainpageblurb(protocol, side);
 
@@ -1378,8 +1408,9 @@ launchheader(struct protocol *protocol, enum side side)
     qsort(types.data, types.size / sizeof *p, sizeof *p, cmpnames);
     prev = NULL;
     isftarrayforeach(p, &types) {
-        if (prev && strcmp(*p, prev) == 0)
+        if (prev && strcmp(*p, prev) == 0) {
             continue;
+        }
         printf("struct %s;\n", *p);
         prev = *p;
     }
@@ -1404,8 +1435,9 @@ launchheader(struct protocol *protocol, enum side side)
         printf("/**\n"
                " * @defgroup iface%s The %s interface\n",
                i->name, i->name);
-        if (i->description && i->description->text)
+        if (i->description && i->description->text) {
             formattexttocomment(i->description->text, false);
+        }
         printf(" */\n");
         printf("extern const struct isftinterface "
                "%sinterface;\n", i->name);
@@ -1413,9 +1445,7 @@ launchheader(struct protocol *protocol, enum side side)
     }
 
     printf("\n");
-
     isftlistforeachsafe(i, inext, &protocol->interfacelist, link) {
-
         launchenumerations(i);
 
         if (side == SERVER) {
@@ -1462,24 +1492,23 @@ launchtypes(struct protocol *protocol, struct isftlist *messagelist)
             m->typeindex = 0;
             continue;
         }
-
         m->typeindex =
             protocol->nullrunlength + protocol->typeindex;
         protocol->typeindex += m->argcount;
 
         isftlistforeach(a, &m->arglist, link) {
             switch (a->type) {
-            case NEWID:
-            case OBJECT:
-                if (a->interfacename)
-                    printf("\t&%sinterface,\n",
-                           a->interfacename);
+                case NEWID:
+                case OBJECT:
+                    if (a->interfacename)
+                        printf("\t&%sinterface,\n",
+                            a->interfacename);
                 else
                     printf("\tNULL,\n");
-                break;
-            default:
-                printf("\tNULL,\n");
-                break;
+                    break;
+                default:
+                    printf("\tNULL,\n");
+                    break;
             }
         }
     }
@@ -1492,51 +1521,53 @@ launchmessages(const char *name, struct isftlist *messagelist,
     struct message *m;
     struct arg *a;
 
-    if (isftlistempty(messagelist))
+    if (isftlistempty(messagelist)) {
         return;
-
+    }
     printf("static const struct isftmessage "
            "%s%s[] = {\n",
            interface->name, suffix);
 
     isftlistforeach(m, messagelist, link) {
         printf("\t{ \"%s\", \"", m->name);
-
-        if (m->since > 1)
+        if (m->since > 1) {
             printf("%d", m->since);
-
+        }
+            
         isftlistforeach(a, &m->arglist, link) {
-            if (isnullabletype(a) && a->nullable)
+            if (isnullabletype(a) && a->nullable) {
                 printf("?");
+            }
 
             switch (a->type) {
-            default:
-            case INT:
-                printf("i");
-                break;
-            case NEWID:
-                if (a->interfacename == NULL)
-                    printf("su");
-                printf("n");
-                break;
-            case UNSIGNED:
-                printf("u");
-                break;
-            case FIXED:
-                printf("f");
-                break;
-            case STRING:
-                printf("s");
-                break;
-            case OBJECT:
-                printf("o");
-                break;
-            case ARRAY:
-                printf("a");
-                break;
-            case FD:
-                printf("h");
-                break;
+                case INT:
+                    printf("i");
+                    break;
+                case NEWID:
+                    if (a->interfacename == NULL)
+                        printf("su");
+                    printf("n");
+                    break;
+                case UNSIGNED:
+                    printf("u");
+                    break;
+                case FIXED:
+                    printf("f");
+                    break;
+                case STRING:
+                    printf("s");
+                    break;
+                case OBJECT:
+                    printf("o");
+                    break;
+                case ARRAY:
+                    printf("a");
+                    break;
+                case FD:
+                    printf("h");
+                    break;
+                default:
+                    break;
             }
         }
         printf("\", %stypes + %d },\n", name, m->typeindex);
@@ -1556,9 +1587,9 @@ launchcode(struct protocol *protocol, enum visibility vis)
 
     printf("/* Generated by %s %s */\n\n", PROGRAMNAME, WAYLANDVERSION);
 
-    if (protocol->copyright)
+    if (protocol->copyright) {
         formattexttocomment(protocol->copyright, true);
-
+    }
     printf("#include <stdlib.h>\n"
            "#include <stdint.h>\n"
            "#include \"wayland-util.h\"\n\n");
@@ -1587,8 +1618,9 @@ launchcode(struct protocol *protocol, enum visibility vis)
     qsort(types.data, types.size / sizeof *p, sizeof *p, cmpnames);
     prev = NULL;
     isftarrayforeach(p, &types) {
-        if (prev && strcmp(*p, prev) == 0)
+        if (prev && strcmp(*p, prev) == 0) {
             continue;
+        }
         printf("extern const struct isftinterface %sinterface;\n", *p);
         prev = *p;
     }
@@ -1602,29 +1634,26 @@ launchcode(struct protocol *protocol, enum visibility vis)
         launchtypes(protocol, &i->eventlist);
     }
     printf("};\n\n");
-
     isftlistforeachsafe(i, next, &protocol->interfacelist, link) {
-
         launchmessages(protocol->name, &i->requestlist, i, "requests");
         launchmessages(protocol->name, &i->eventlist, i, "events");
-
         printf("%s const struct isftinterface "
                "%sinterface = {\n"
                "\t\"%s\", %d,\n",
                symbolvisibility, i->name, i->name, i->version);
 
-        if (!isftlistempty(&i->requestlist))
+        if (!isftlistempty(&i->requestlist)) {
             printf("\t%d, %srequests,\n",
                    isftlistlength(&i->requestlist), i->name);
-        else
+        } else {
             printf("\t0, NULL,\n");
-
-        if (!isftlistempty(&i->eventlist))
+        }
+        if (!isftlistempty(&i->eventlist)) {
             printf("\t%d, %sevents,\n",
                    isftlistlength(&i->eventlist), i->name);
-        else
+        } else {
             printf("\t0, NULL,\n");
-
+        }
         printf("};\n\n");
 
         /* we won't need it any further */
@@ -1656,8 +1685,9 @@ formattexttocomment(const char *text, bool standalonecomment)
             commentstarted = true;
         }
     }
-    if (commentstarted && standalonecomment)
+    if (commentstarted && standalonecomment) {
         printf(" */\n\n");
+    }
 }
 
 static void
@@ -1666,8 +1696,9 @@ launchopcodes(struct isftlist *messagelist, struct interface *interface)
     struct message *m;
     int opcode;
 
-    if (isftlistempty(messagelist))
+    if (isftlistempty(messagelist)) {
         return;
+    }
 
     opcode = 0;
     isftlistforeach(m, messagelist, link)
@@ -1691,7 +1722,6 @@ launchopcodeversions(struct isftlist *messagelist, struct interface *interface)
     printf("\n");
 }
 
-
 static void
 launchtypesforwarddeclarations(struct protocol *protocol,
                 struct isftlist *messagelist,
@@ -1708,27 +1738,28 @@ launchtypesforwarddeclarations(struct protocol *protocol,
         isftlistforeach(a, &m->arglist, link) {
             length++;
             switch (a->type) {
-            case NEWID:
-            case OBJECT:
-                if (!a->interfacename)
-                    continue;
+                case NEWID:
+                case OBJECT:
+                    if (!a->interfacename)
+                        continue;
 
-                m->allnull = 0;
-                p = failonnull(isftarrayadd(types, sizeof *p));
-                *p = a->interfacename;
-                break;
-            default:
-                break;
+                    m->allnull = 0;
+                    p = failonnull(isftarrayadd(types, sizeof *p));
+                    *p = a->interfacename;
+                    break;
+                default:
+                    break;
             }
         }
 
-        if (m->allnull && length > protocol->nullrunlength)
+        if (m->allnull && length > protocol->nullrunlength) {
             protocol->nullrunlength = length;
+        }
     }
 }
 
 static int
-cmpnames(const void *p1, const void *p2)
+cmpnames(const char *p1, const char *p2)
 {
     const char * const *s1 = p1, * const *s2 = p2;
 
@@ -1738,10 +1769,11 @@ cmpnames(const void *p1, const void *p2)
 static const char *
 getincludename(bool core, enum side side)
 {
-    if (side == SERVER)
+    if (side == SERVER) {
         return core ? "wayland-server-core.h" : "wayland-server.h";
-    else
+    } else {
         return core ? "wayland-client-core.h" : "wayland-client.h";
+    }
 }
 
 static void
@@ -1826,54 +1858,62 @@ int main(int argc, char *argv[])
 
     while (1) {
         opt = getoptlong(argc, argv, "hvcs", options, NULL);
-
-        if (opt == -1)
+        if (opt == -1) {
             break;
-
+        }
         switch (opt) {
-        case 'h':
-            help = true;
+            case 'h':
+                help = true;
+                break;
+            case 'v':
+                version = true;
             break;
-        case 'v':
-            version = true;
-            break;
-        case 'c':
-            coreheaders = true;
-            break;
-        case 's':
-            strict = true;
-            break;
-        default:
-            fail = true;
-            break;
+            case 'c':
+                coreheaders = true;
+                break;
+            case 's':
+                strict = true;
+                break;
+            default:
+                fail = true;
+                break;
         }
     }
 
-    argv += optind;
-    argc -= optind;
-
-    if (help)
+    *argv += optind;
+    *argc -= optind;
+    if (help) {
         usage(EXITSUCCESS);
-    else if (version)
+    }
+    else if (version) {
         scannerversion(EXITSUCCESS);
-    else if ((argc != 1 && argc != 3) || fail)
+    }
+    else if ((argc != 1 && argc != NUM3) || fail) {
         usage(EXITFAILURE);
-    else if (strcmp(argv[0], "help") == 0)
+    }
+    else if (strcmp(argv[0], "help") == 0) {
         usage(EXITSUCCESS);
-    else if (strcmp(argv[0], "client-header") == 0)
+    }
+    else if (strcmp(argv[0], "client-header") == 0) {
         mode = CLIENTHEADER;
-    else if (strcmp(argv[0], "server-header") == 0)
+    }
+    else if (strcmp(argv[0], "server-header") == 0) {
         mode = SERVERHEADER;
-    else if (strcmp(argv[0], "private-code") == 0)
+    }
+    else if (strcmp(argv[0], "private-code") == 0) {
         mode = PRIVATECODE;
-    else if (strcmp(argv[0], "public-code") == 0)
+    }
+    else if (strcmp(argv[0], "public-code") == 0) {
         mode = PUBLICCODE;
-    else if (strcmp(argv[0], "code") == 0)
+    }
+    else if (strcmp(argv[0], "code") == 0) {
         mode = CODE;
-    else
+    }
+    else {
         usage(EXITFAILURE);
+    }
 
-    if (argc == 3) {
+    if (argc == NUM3) {
         inputfilename = argv[1];
         input = fopen(inputfilename, "r");
         if (input == NULL) {
@@ -1881,7 +1921,7 @@ int main(int argc, char *argv[])
                 strerror(errno));
             exit(EXITFAILURE);
         }
-        if (freopen(argv[2], "w", stdout) == NULL) {
+        if (freopen(argv[NUM2], "w", stdout) == NULL) {
             fprintf(stderr, "Could not open output file: %s\n",
                 strerror(errno));
             fclose(input);
@@ -1897,11 +1937,11 @@ int main(int argc, char *argv[])
     /* initialize context */
     memset(&ctx, 0, sizeof ctx);
     ctx.protocol = &protocol;
-    if (input == stdin)
+    if (input == stdin) {
         ctx.loc.filename = "<stdin>";
-    else
+    } else {
         ctx.loc.filename = inputfilename;
-
+    }
     if (!isdtdvalid(input, ctx.loc.filename)) {
         fprintf(stderr,
         "*******************************************************\n"
