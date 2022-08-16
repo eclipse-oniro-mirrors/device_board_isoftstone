@@ -27,6 +27,10 @@
 #include <time.h>
 #include <ffi.h>
 
+#define NUM2 2
+#define NUM16 16
+#define NUM1000 1000
+
 unsigned int
 isftconnectionpendinginput(struct isftconnection *connection)
 {
@@ -209,7 +213,7 @@ isftargumentfromvalist(const char *signature, union isftargument *args,
     for (i = 0; i < count; i++) {
         sigiter = getnextargument(sigiter, &arg);
 
-        switch(arg.type) {
+        switch (arg.type) {
         case 'i':
             args[i].i = vaarg(ap, int );
             break;
@@ -364,7 +368,7 @@ isftconnectiondemarshal(struct isftconnection *connection,
     struct isftarray *arrayextra;
 
     /* Space for senderid and opcode */
-    if (size < 2 * sizeof *p) {
+    if (size < NUM2 * sizeof *p) {
         isftlog("message too short, invalid header\n");
         isftconnectionconsume(connection, size);
         errno = EINVAL;
@@ -613,7 +617,7 @@ isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count)
         iov[0].iovlen = sizeof b->data - head;
         iov[1].iovbase = b->data;
         iov[1].iovlen = tail;
-        *count = 2;
+        *count = NUM2;
     }
 }
 
@@ -628,10 +632,10 @@ serializeclosure(struct isftclosure *closure, unsigned int *buffer,
     struct argumentdetails arg;
     const char *signature;
 
-    if (buffercount < 2)
+    if (buffercount < NUM2)
         goto overflow;
 
-    p = buffer + 2;
+    p = buffer + NUM2;
     end = buffer + buffercount;
 
     signature = message->signature;
@@ -699,7 +703,7 @@ serializeclosure(struct isftclosure *closure, unsigned int *buffer,
     size = (p - buffer) * sizeof *p;
 
     buffer[0] = closure->senderid;
-    buffer[1] = size << 16 | (closure->opcode & 0x0000ffff);
+    buffer[1] = size << NUM16 | (closure->opcode & 0x0000ffff);
 
     return size;
 
@@ -774,10 +778,10 @@ isftclosureprint(struct isftclosure *closure, struct isftobject *target, int sen
     unsigned int time;
 
     clockgettime(CLOCKREALTIME, &tp);
-    time = (tp.tvsec * 1000000L) + (tp.tvnsec / 1000);
+    time = (tp.tvsec * 1000000L) + (tp.tvnsec / NUM1000);
 
     fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
-        time / 1000.0,
+        time / NUM1000,
         send ? " -> " : "",
         target->interface->name, target->id,
         closure->message->name);
@@ -881,7 +885,7 @@ isftbuffergetiov(struct isftbuffer *b, struct iovec *iov, int *count)
         iov[0].iovlen = sizeof b->data - tail;
         iov[1].iovbase = b->data;
         iov[1].iovlen = head;
-        *count = 2;
+        *count = NUM2;
     }
 }
 
@@ -977,9 +981,9 @@ ipccmsg(struct isftbuffer *buffer, char *data, int *clen)
     int size;
 
     size = isftbuffersize(buffer);
-    if (size > MAXFDSOUT * sizeof(int ))
-        size = MAXFDSOUT * sizeof(int );
-
+    if (size > MAXFDSOUT * sizeof(int)) {
+        size = MAXFDSOUT * sizeof(int);
+    }
     if (size > 0) {
         cmsg = (struct cmsghdr *) data;
         cmsg->cmsglevel = SOLSOCKET;
@@ -1197,10 +1201,10 @@ isftclosureinvoke(struct isftclosure *closure, unsigned int flags,
     ffiargs[1] = &target;
 
     convertargumentstoffi(closure->message->signature, flags, closure->args,
-                 count, ffitypes + 2, ffiargs + 2);
+                 count, ffitypes + NUM2, ffiargs + NUM2);
 
     ffiprepcif(&cif, FFIDEFAULTABI,
-             count + 2, &ffitypevoid, ffitypes);
+             count + NUM2, &ffitypevoid, ffitypes);
 
     implementation = target->implementation;
     if (!implementation[opcode]) {
@@ -1298,6 +1302,6 @@ buffersizeforclosure(struct isftclosure *closure)
         }
     }
 
-    return buffersize + 2;
+    return buffersize + NUM2;
 }
 
