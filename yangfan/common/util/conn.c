@@ -31,14 +31,12 @@
 #define NUM16 16
 #define NUM1000 1000
 
-unsigned int
-isftconnectionpendinginput(struct isftconnection *connection)
+unsigned int isftconnectionpendinginput(struct isftconnection *connection)
 {
     return isftbuffersize(&connection->in);
 }
 
-int
-isftconnectionread(struct isftconnection *connection)
+int isftconnectionread(struct isftconnection *connection)
 {
     struct iovec iov[2];
     struct msghdr msg;
@@ -77,8 +75,7 @@ isftconnectionread(struct isftconnection *connection)
 }
 
 int
-isftconnectionwrite(struct isftconnection *connection,
-            const void *data, int count)
+isftconnectionwrite(struct isftconnection *connection, const void *data, int count)
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
@@ -95,22 +92,21 @@ isftconnectionwrite(struct isftconnection *connection,
     return 0;
 }
 
-int
-isftconnectionqueue(struct isftconnection *connection,
+int isftconnectionqueue(struct isftconnection *connection,
             const void *data, int count)
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
         connection->wantflush = 1;
-        if (isftconnectionflush(connection) < 0)
+        if (isftconnectionflush(connection) < 0) {
             return -1;
+        }
     }
 
     return isftbufferput(&connection->out, data, count);
 }
 
-int
-isftmessagecountarrays(const struct isftmessage *message)
+int isftmessagecountarrays(const struct isftmessage *message)
 {
     int i, arrays;
 
@@ -128,13 +124,13 @@ isftconnectiongetfd(struct isftconnection *connection)
     return connection->fd;
 }
 
-static int
-isftconnectionputfd(struct isftconnection *connection, int  fd)
+static int isftconnectionputfd(struct isftconnection *connection, int  fd)
 {
     if (isftbuffersize(&connection->fdsout) == MAXFDSOUT * sizeof fd) {
         connection->wantflush = 1;
-        if (isftconnectionflush(connection) < 0)
+        if (isftconnectionflush(connection) < 0) {
             return -1;
+        }
     }
 
     return isftbufferput(&connection->fdsout, &fd, sizeof fd);
@@ -145,65 +141,59 @@ getnextargument(const char *signature, struct argumentdetails *details)
 {
     details->nullable = 0;
     for(; *signature; ++signature) {
-        switch(*signature) {     //switch Statement
-        case 'i':
-        case 'u':
-        case 'f':
-        case 's':
-        case 'o':
-        case 'n':
-        case 'a':
-        case 'h':
-            details->type = *signature;
-            return signature + 1;
-        case '?':
+        switch(*signature) {     // switch Statement
+            case 'i':
+            case 'u':
+            case 'f':
+            case 's':
+            case 'o':
+            case 'n':
+            case 'a':
+            case 'h':
+                details->type = *signature;
+                return signature + 1;
+            case '?':
             details->nullable = 1;
-        default:
-            break;
+            default:
+                break;
         }
     }
     details->type = '\0';
     return signature;
 }
 
-int
-argcountforsignature(const char *signature)
+int argcountforsignature(const char *signature)
 {
     int count = 0;
     for(; *signature; ++signature) {
         switch(*signature) {
-        case 'i':
-        case 'u':
-        case 'f':
-        case 's':
-        case 'o':
-        case 'n':
-        case 'a':
-        case 'h':
-            ++count;
-        default:
-            break;
+            case 'i':
+            case 'u':
+            case 'f':
+            case 's':
+            case 'o':
+            case 'n':
+            case 'a':
+            case 'h':
+                ++count;
+            default:
+                break;
         }
     }
     return count;
 }
 
-int
-isftmessagegetsince(const struct isftmessage *message)
+int isftmessagegetsince(const struct isftmessage *message)
 {
     int since;
-
     since = atoi(message->signature);
-
-    if (since == 0)
+    if (since == 0) {
         since = 1;
-
+    }
     return since;
 }
 
-void
-isftargumentfromvalist(const char *signature, union isftargument *args,
-             int count, valist ap)
+void isftargumentfromvalist(const char *signature, union isftargument *args, int count, valist ap)
 {
     int i;
     const char *sigiter;
@@ -213,39 +203,38 @@ isftargumentfromvalist(const char *signature, union isftargument *args,
     for (i = 0; i < count; i++) {
         sigiter = getnextargument(sigiter, &arg);
 
-        switch (arg.type) {
-        case 'i':
-            args[i].i = vaarg(ap, int );
-            break;
-        case 'u':
-            args[i].u = vaarg(ap, unsigned int);
-            break;
-        case 'f':
-            args[i].f = vaarg(ap, isftfixedt);
-            break;
-        case 's':
-            args[i].s = vaarg(ap, const char *);
-            break;
-        case 'o':
-            args[i].o = vaarg(ap, struct isftobject *);
-            break;
-        case 'n':
-            args[i].o = vaarg(ap, struct isftobject *);
-            break;
-        case 'a':
-            args[i].a = vaarg(ap, struct isftarray *);
-            break;
-        case 'h':
-            args[i].h = vaarg(ap, int );
-            break;
-        case '\0':
-            return;
+        switch(arg.type) {
+            case 'i':
+                args[i].i = vaarg(ap, int);
+                break;
+            case 'u':
+                args[i].u = vaarg(ap, unsigned int);
+                break;
+            case 'f':
+                args[i].f = vaarg(ap, isftfixedt);
+                break;
+            case 's':
+                args[i].s = vaarg(ap, const char *);
+                break;
+            case 'o':
+                args[i].o = vaarg(ap, struct isftobject *);
+                break;
+            case 'n':
+                args[i].o = vaarg(ap, struct isftobject *);
+                break;
+            case 'a':
+                args[i].a = vaarg(ap, struct isftarray *);
+                break;
+            case 'h':
+                args[i].h = vaarg(ap, int );
+                break;
+            case '\0':
+                return;
         }
     }
 }
 
-static void
-isftclosureclearfds(struct isftclosure *closure)
+static void isftclosureclearfds(struct isftclosure *closure)
 {
     const char *signature = closure->message->signature;
     struct argumentdetails arg;
@@ -297,8 +286,7 @@ isftclosureinit(const struct isftmessage *message, unsigned int size,
 }
 
 struct isftclosure *
-isftclosuremarshal(struct isftobject *sender, unsigned int opcode,
-           union isftargument *args,
+isftclosuremarshal(struct isftobject *sender, unsigned int opcode, union isftargument *args,
            const struct isftmessage *message)
 {
     struct isftclosure *closure;
@@ -351,7 +339,6 @@ isftclosuremarshal(struct isftobject *sender, unsigned int opcode,
                 return NULL;
             }
 
-
 struct isftclosure *
 isftconnectiondemarshal(struct isftconnection *connection,
             unsigned int size,
@@ -398,125 +385,125 @@ isftconnectiondemarshal(struct isftconnection *connection,
         if (arg.type != 'h' && p + 1 > end) {
             isftlog("message too short, "
                    "object (%d), message %s(%s)\n",
-                   closure->senderid, message->name,
-                   message->signature);
+                   closure->senderid, message->
+                   name,message->signature);
             errno = EINVAL;
             goto err;
         }
 
         switch (arg.type) {
-        case 'u':
-            closure->args[i].u = *p++;
-            break;
-        case 'i':
-            closure->args[i].i = *p++;
-            break;
-        case 'f':
-            closure->args[i].f = *p++;
-            break;
-        case 's':
-            length = *p++;
+            case 'u':
+                    closure->args[i].u = *p++;
+                    break;
+                case 'i':
+                    closure->args[i].i = *p++;
+                    break;
+                case 'f':
+                    closure->args[i].f = *p++;
+                    break;
+                case 's':
+                    length = *p++;
+    
+                    if (length == 0) {
+                        closure->args[i].s = NULL;
+                        break;
+                }
 
-            if (length == 0) {
-                closure->args[i].s = NULL;
+                lengthinu32 = divroundup(length, sizeof *p);
+                if ((unsigned int) (end - p) < lengthinu32) {
+                    isftlog("message too short, "
+                        "object (%d), message %s(%s)\n",
+                        closure->senderid, message->
+                        name,message->signature);
+                    errno = EINVAL;
+                    goto err;
+                }
+                next = p + lengthinu32;
+
+                s = (char *) p;
+
+                if (length > 0 && s[length - 1] != '\0') {
+                    isftlog("string not nul-terminated, "
+                        "message %s(%s)\n",message->
+                        name, message->signature);
+                    errno = EINVAL;
+                    goto err;
+                }
+
+                closure->args[i].s = s;
+                p = next;
                 break;
-            }
+            case 'o':
+                id = *p++;
+                closure->args[i].n = id;
 
-            lengthinu32 = divroundup(length, sizeof *p);
-            if ((unsigned int) (end - p) < lengthinu32) {
-                isftlog("message too short, "
-                       "object (%d), message %s(%s)\n",
-                       closure->senderid, message->name,
-                       message->signature);
-                errno = EINVAL;
-                goto err;
-            }
-            next = p + lengthinu32;
+                if (id == 0 && !arg.nullable) {
+                    isftlog("NULL object received on non-nullable "
+                        "type, message %s(%s)\n", message->
+                        name,message->signature);
+                    errno = EINVAL;
+                    goto err;
+                }
+                break;
+            case 'n':
+                id = *p++;
+                closure->args[i].n = id;
 
-            s = (char *) p;
+                if (id == 0 && !arg.nullable) {
+                    isftlog("NULL new ID received on non-nullable "
+                        "type, message %s(%s)\n", message->
+                        name,message->signature);
+                    errno = EINVAL;
+                    goto err;
+                }
 
-            if (length > 0 && s[length - 1] != '\0') {
-                isftlog("string not nul-terminated, "
-                       "message %s(%s)\n",
-                       message->name, message->signature);
-                errno = EINVAL;
-                goto err;
-            }
+                if (isftmapreservenew(objects, id) < 0) {
+                    isftlog("not a valid new object id (%u), "
+                        "message %s(%s)\n",id, message
+                        ->name, message->signature);
+                    errno = EINVAL;
+                    goto err;
+                }
 
-            closure->args[i].s = s;
-            p = next;
-            break;
-        case 'o':
-            id = *p++;
-            closure->args[i].n = id;
+                break;
+            case 'a':
+                length = *p++;
 
-            if (id == 0 && !arg.nullable) {
-                isftlog("NULL object received on non-nullable "
-                       "type, message %s(%s)\n", message->name,
-                       message->signature);
-                errno = EINVAL;
-                goto err;
-            }
-            break;
-        case 'n':
-            id = *p++;
-            closure->args[i].n = id;
+                lengthinu32 = divroundup(length, sizeof *p);
+                if ((unsigned int) (end - p) < lengthinu32) {
+                    isftlog("message too short, "
+                        "object (%d), message %s(%s)\n",
+                        closure->senderid, message->
+                        name,message->signature);
+                    errno = EINVAL;
+                    goto err;
+                }
+                next = p + lengthinu32;
 
-            if (id == 0 && !arg.nullable) {
-                isftlog("NULL new ID received on non-nullable "
-                       "type, message %s(%s)\n", message->name,
-                       message->signature);
-                errno = EINVAL;
-                goto err;
-            }
+                arrayextra->size = length;
+                arrayextra->alloc = 0;
+                arrayextra->data = p;
+    
+                closure->args[i].a = arrayextra++;
+                p = next;
+                break;
+            case 'h':
+                if (connection->fdsin.tail == connection->fdsin.head) {
+                    isftlog("file descriptor expected, "
+                        "object (%d), message %s(%s)\n",
+                        closure->senderid, message->
+                        name,message->signature);
+                    errno = EINVAL;
+                    goto err;
+                }
 
-            if (isftmapreservenew(objects, id) < 0) {
-                isftlog("not a valid new object id (%u), "
-                       "message %s(%s)\n",
-                       id, message->name, message->signature);
-                errno = EINVAL;
-                goto err;
-            }
-
-            break;
-        case 'a':
-            length = *p++;
-
-            lengthinu32 = divroundup(length, sizeof *p);
-            if ((unsigned int) (end - p) < lengthinu32) {
-                isftlog("message too short, "
-                       "object (%d), message %s(%s)\n",
-                       closure->senderid, message->name,
-                       message->signature);
-                errno = EINVAL;
-                goto err;
-            }
-            next = p + lengthinu32;
-
-            arrayextra->size = length;
-            arrayextra->alloc = 0;
-            arrayextra->data = p;
-
-            closure->args[i].a = arrayextra++;
-            p = next;
-            break;
-        case 'h':
-            if (connection->fdsin.tail == connection->fdsin.head) {
-                isftlog("file descriptor expected, "
-                       "object (%d), message %s(%s)\n",
-                       closure->senderid, message->name,
-                       message->signature);
-                errno = EINVAL;
-                goto err;
-            }
-
-            isftbuffercopy(&connection->fdsin, &fd, sizeof fd);
-            connection->fdsin.tail += sizeof fd;
-            closure->args[i].h = fd;
-            break;
-        default:
-            isftabort("unknown type\n");
-            break;
+                isftbuffercopy(&connection->fdsin, &fd, sizeof fd);
+                connection->fdsin.tail += sizeof fd;
+                closure->args[i].h = fd;
+                break;
+            default:
+                isftabort("unknown type\n");
+                break;
         }
     }
 
@@ -530,7 +517,6 @@ isftconnectiondemarshal(struct isftconnection *connection,
 
     return NULL;
 }
-
 
 bool
 isftobjectiszombie(struct isftmap *map, unsigned int id)
@@ -577,8 +563,7 @@ isftbufferput(struct isftbuffer *b, const void *data, int count)
     unsigned int head, size;
 
     if (count > sizeof(b->data)) {
-        isftlog("Data too big for buffer (%d > %d).\n",
-               count, sizeof(b->data));
+        isftlog("Data too big for buffer (%d > %d).\n",count, sizeof(b->data));
         errno = E2BIG;
         return -1;
     }
@@ -621,7 +606,6 @@ isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count)
     }
 }
 
-
 static int
 serializeclosure(struct isftclosure *closure, unsigned int *buffer,
           int buffercount)
@@ -650,53 +634,53 @@ serializeclosure(struct isftclosure *closure, unsigned int *buffer,
             goto overflow;
 
         switch (arg.type) {
-        case 'u':
-            *p++ = closure->args[i].u;
-            break;
-        case 'i':
-            *p++ = closure->args[i].i;
-            break;
-        case 'f':
-            *p++ = closure->args[i].f;
-            break;
-        case 'o':
-            *p++ = closure->args[i].o ? closure->args[i].o->id : 0;
-            break;
-        case 'n':
-            *p++ = closure->args[i].n;
-            break;
-        case 's':
-            if (closure->args[i].s == NULL) {
-                *p++ = 0;
+            case 'u':
+                *p++ = closure->args[i].u;
                 break;
-            }
-
-            size = strlen(closure->args[i].s) + 1;
-            *p++ = size;
-
-            if (p + divroundup(size, sizeof *p) > end)
-                goto overflow;
-
-            memcpy(p, closure->args[i].s, size);
-            p += divroundup(size, sizeof *p);
-            break;
-        case 'a':
-            if (closure->args[i].a == NULL) {
-                *p++ = 0;
+            case 'i':
+                *p++ = closure->args[i].i;
                 break;
-            }
+            case 'f':
+                *p++ = closure->args[i].f;
+                break;
+            case 'o':
+                *p++ = closure->args[i].o ? closure->args[i].o->id : 0;
+                break;
+            case 'n':
+                *p++ = closure->args[i].n;
+                break;
+            case 's':
+                if (closure->args[i].s == NULL) {
+                    *p++ = 0;
+                    break;
+                }
 
-            size = closure->args[i].a->size;
-            *p++ = size;
+                size = strlen(closure->args[i].s) + 1;
+                *p++ = size;
 
-            if (p + divroundup(size, sizeof *p) > end)
+                if (p + divroundup(size, sizeof *p) > end)
+                    goto overflow;
+
+                memcpy(p, closure->args[i].s, size);
+                p += divroundup(size, sizeof *p);
+                break;
+            case 'a':
+                if (closure->args[i].a == NULL) {
+                    *p++ = 0;
+                    break;
+                }
+
+                size = closure->args[i].a->size;
+                *p++ = size;
+
+                if (p + divroundup(size, sizeof *p) > end)
                 goto overflow;
-
-            memcpy(p, closure->args[i].a->data, size);
-            p += divroundup(size, sizeof *p);
-            break;
-        default:
-            break;
+    
+                memcpy(p, closure->args[i].a->data, size);
+                p += divroundup(size, sizeof *p);
+                break;
+            default:
+                break;
         }
     }
 
@@ -792,46 +776,46 @@ isftclosureprint(struct isftclosure *closure, struct isftobject *target, int sen
             fprintf(stderr, ", ");
 
         switch (arg.type) {
-        case 'u':
-            fprintf(stderr, "%u", closure->args[i].u);
-            break;
-        case 'i':
-            fprintf(stderr, "%d", closure->args[i].i);
-            break;
-        case 'f':
-            fprintf(stderr, "%f",
-                isftfixedtodouble(closure->args[i].f));
-            break;
-        case 's':
-            if (closure->args[i].s)
-                fprintf(stderr, "\"%s\"", closure->args[i].s);
-            else
-                fprintf(stderr, "nil");
-            break;
-        case 'o':
-            if (closure->args[i].o)
-                fprintf(stderr, "%s@%u",
-                    closure->args[i].o->interface->name,
-                    closure->args[i].o->id);
-            else
-                fprintf(stderr, "nil");
-            break;
-        case 'n':
-            fprintf(stderr, "new id %s@",
-                (closure->message->types[i]) ?
-                 closure->message->types[i]->name :
-                  "[unknown]");
-            if (closure->args[i].n != 0)
-                fprintf(stderr, "%u", closure->args[i].n);
-            else
-                fprintf(stderr, "nil");
-            break;
-        case 'a':
-            fprintf(stderr, "array");
-            break;
-        case 'h':
-            fprintf(stderr, "fd %d", closure->args[i].h);
-            break;
+            case 'u':
+                fprintf(stderr, "%u", closure->args[i].u);
+                break;
+            case 'i':
+                fprintf(stderr, "%d", closure->args[i].i);
+                break;
+            case 'f':
+                fprintf(stderr, "%f",
+                    isftfixedtodouble(closure->args[i].f));
+                break;
+            case 's':
+                if (closure->args[i].s)
+                    fprintf(stderr, "\"%s\"", closure->args[i].s);
+                else
+                    fprintf(stderr, "nil");
+                break;
+            case 'o':
+                if (closure->args[i].o)
+                    fprintf(stderr, "%s@%u",
+                        closure->args[i].o->interface->name,
+                        closure->args[i].o->id);
+                else
+                    fprintf(stderr, "nil");
+                break;
+            case 'n':
+                fprintf(stderr, "new id %s@",
+                    (closure->message->types[i]) ?
+                     closure->message->types[i]->name :
+                      "[unknown]");
+                if (closure->args[i].n != 0)
+                    fprintf(stderr, "%u", closure->args[i].n);
+                else
+                    fprintf(stderr, "nil");
+                break;
+            case 'a':
+                fprintf(stderr, "array");
+                break;
+            case 'h':
+                fprintf(stderr, "fd %d", closure->args[i].h);
+                break;
         }
     }
 
@@ -1013,7 +997,7 @@ decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
         max = sizeof(buffer->data) - isftbuffersize(buffer);
         if (size > max || overflow) {
             overflow = 1;
-            size /= sizeof(int );
+            size /= sizeof(int);
             for (i = 0; i < size; i++)
                 close(((int*)CMSGDATA(cmsg))[i]);
         } else if (isftbufferput(buffer, CMSGDATA(cmsg), size) < 0) {
@@ -1056,8 +1040,7 @@ isftconnectionflush(struct isftconnection *connection)
         msg.msgflags = 0;
 
         do {
-            len = sendmsg(connection->fd, &msg,
-                      MSGNOSIGNAL | MSGDONTWAIT);
+            len = sendmsg(connection->fd, &msg, MSGNOSIGNAL | MSGDONTWAIT);
         } while (len == -1 && errno == EINTR);
 
         if (len == -1)
@@ -1072,7 +1055,6 @@ isftconnectionflush(struct isftconnection *connection)
 
     return connection->out.head - tail;
 }
-
 
 int
 isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
@@ -1090,35 +1072,34 @@ isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
     for (i = 0; i < count; i++) {
         signature = getnextargument(signature, &arg);
         switch (arg.type) {
-        case 'o':
-            id = closure->args[i].n;
-            closure->args[i].o = NULL;
+            case 'o':
+                id = closure->args[i].n;
+                closure->args[i].o = NULL;
 
-            object = isftmaplookup(objects, id);
-            if (isftobjectiszombie(objects, id)) {
-                /* references object we've already
-                 * destroyed client side */
-                object = NULL;
-            } else if (object == NULL && id != 0) {
-                isftlog("unknown object (%u), message %s(%s)\n",
-                       id, message->name, message->signature);
-                errno = EINVAL;
-                return -1;
-            }
+                object = isftmaplookup(objects, id);
+                if (isftobjectiszombie(objects, id)) {
+                    /* references object we've already
+                     * destroyed client side */
+                    object = NULL;
+                } else if (object == NULL && id != 0) {
+                    isftlog("unknown object (%u), message %s(%s)\n",id, message
+                           ->name, message->signature);
+                    errno = EINVAL;
+                    return -1;
+                }
 
-            if (object != NULL && message->types[i] != NULL &&
-                !isftinterfaceequal((object)->interface,
-                        message->types[i])) {
-                isftlog("invalid object (%u), type (%s), "
-                       "message %s(%s)\n",
-                       id, (object)->interface->name,
-                       message->name, message->signature);
-                errno = EINVAL;
-                return -1;
-            }
-            closure->args[i].o = object;
-        default:
-            break;
+                if (object != NULL && message->types[i] != NULL &&
+                    !isftinterfaceequal((object)->interface,message->types[i])) {
+                    isftlog("invalid object (%u), type (%s), "
+                           "message %s(%s)\n",
+                           id, (object)->interface->name,message->
+                           name, message->signature);
+                    errno = EINVAL;
+                    return -1;
+                }
+                closure->args[i].o = object;
+            default:
+                break;
         }
     }
 
@@ -1139,46 +1120,46 @@ convertargumentstoffi(const char *signature, unsigned int flags,
         sigiter = getnextargument(sigiter, &arg);
 
         switch(arg.type) {
-        case 'i':
-            ffitypes[i] = &ffitypesint32;
-            ffiargs[i] = &args[i].i;
-            break;
-        case 'u':
-            ffitypes[i] = &ffitypeuint32;
-            ffiargs[i] = &args[i].u;
-            break;
-        case 'f':
-            ffitypes[i] = &ffitypesint32;
-            ffiargs[i] = &args[i].f;
-            break;
-        case 's':
-            ffitypes[i] = &ffitypepointer;
-            ffiargs[i] = &args[i].s;
-            break;
-        case 'o':
-            ffitypes[i] = &ffitypepointer;
-            ffiargs[i] = &args[i].o;
-            break;
-        case 'n':
-            if (flags & WLCLOSUREINVOKECLIENT) {
+            case 'i':
+                ffitypes[i] = &ffitypesint32;
+                ffiargs[i] = &args[i].i;
+                break;
+            case 'u':
+                ffitypes[i] = &ffitypeuint32;
+                ffiargs[i] = &args[i].u;
+                break;
+            case 'f':
+                ffitypes[i] = &ffitypesint32;
+                ffiargs[i] = &args[i].f;
+                break;
+            case 's':
+                ffitypes[i] = &ffitypepointer;
+                ffiargs[i] = &args[i].s;
+                break;
+            case 'o':
                 ffitypes[i] = &ffitypepointer;
                 ffiargs[i] = &args[i].o;
-            } else {
-                ffitypes[i] = &ffitypeuint32;
-                ffiargs[i] = &args[i].n;
-            }
-            break;
-        case 'a':
-            ffitypes[i] = &ffitypepointer;
-            ffiargs[i] = &args[i].a;
-            break;
-        case 'h':
-            ffitypes[i] = &ffitypesint32;
-            ffiargs[i] = &args[i].h;
-            break;
-        default:
-            isftabort("unknown type\n");
-            break;
+                break;
+            case 'n':
+                if (flags & WLCLOSUREINVOKECLIENT) {
+                    ffitypes[i] = &ffitypepointer;
+                    ffiargs[i] = &args[i].o;
+                } else {
+                    ffitypes[i] = &ffitypeuint32;
+                    ffiargs[i] = &args[i].n;
+                }
+                break;
+            case 'a':
+                ffitypes[i] = &ffitypepointer;
+                ffiargs[i] = &args[i].a;
+                break;
+            case 'h':
+                ffitypes[i] = &ffitypesint32;
+                ffiargs[i] = &args[i].h;
+                break;
+            default:
+                isftabort("unknown type\n");
+                break;
         }
     }
 }
@@ -1200,16 +1181,14 @@ isftclosureinvoke(struct isftclosure *closure, unsigned int flags,
     ffitypes[1] = &ffitypepointer;
     ffiargs[1] = &target;
 
-    convertargumentstoffi(closure->message->signature, flags, closure->args,
-                 count, ffitypes + NUM2, ffiargs + NUM2);
+    convertargumentstoffi(closure->message->signature, flags, closure->
+                 args,count, ffitypes + NUM2, ffiargs + NUM2);
 
-    ffiprepcif(&cif, FFIDEFAULTABI,
-             count + NUM2, &ffitypevoid, ffitypes);
-
+    ffiprepcif(&cif, FFIDEFAULTABI,count + NUM2, &ffitypevoid, ffitypes);
     implementation = target->implementation;
     if (!implementation[opcode]) {
-        isftabort("listener function for opcode %u of %s is NULL\n",
-             opcode, target->interface->name);
+        isftabort("listener function for opcode %u of %s is NULL\n",opcode, target->
+                  interface->name);
     }
     fficall(&cif, implementation[opcode], NULL, ffiargs);
 
@@ -1220,9 +1199,7 @@ void
 isftclosuredispatch(struct isftclosure *closure, isftdispatcherfunct dispatcher,
             struct isftobject *target, unsigned int opcode)
 {
-    dispatcher(target->implementation, target, opcode, closure->message,
-           closure->args);
-
+    dispatcher(target->implementation, target, opcode, closure->message,closure->args);
     isftclosureclearfds(closure);
 }
 
@@ -1254,7 +1231,6 @@ copyfdstoconnection(struct isftclosure *closure,
     return 0;
 }
 
-
 static unsigned int
 buffersizeforclosure(struct isftclosure *closure)
 {
@@ -1270,35 +1246,35 @@ buffersizeforclosure(struct isftclosure *closure)
         signature = getnextargument(signature, &arg);
 
         switch (arg.type) {
-        case 'h':
-            break;
-        case 'u':
-        case 'i':
-        case 'f':
-        case 'o':
-        case 'n':
-            buffersize++;
-            break;
-        case 's':
-            if (closure->args[i].s == NULL) {
+            case 'h':
+                break;
+            case 'u':
+            case 'i':
+            case 'f':
+            case 'o':
+            case 'n':
                 buffersize++;
                 break;
-            }
+            case 's':
+                if (closure->args[i].s == NULL) {
+                    buffersize++;
+                    break;
+                }
 
-            size = strlen(closure->args[i].s) + 1;
-            buffersize += 1 + divroundup(size, sizeof(unsigned int));
-            break;
-        case 'a':
-            if (closure->args[i].a == NULL) {
-                buffersize++;
+                size = strlen(closure->args[i].s) + 1;
+                buffersize += 1 + divroundup(size, sizeof(unsigned int));
                 break;
-            }
+            case 'a':
+                if (closure->args[i].a == NULL) {
+                    buffersize++;
+                    break;
+                }
 
-            size = closure->args[i].a->size;
-            buffersize += (1 + divroundup(size, sizeof(unsigned int)));
-            break;
-        default:
-            break;
+                size = closure->args[i].a->size;
+                buffersize += (1 + divroundup(size, sizeof(unsigned int)));
+                break;
+            default:
+                break;
         }
     }
 
