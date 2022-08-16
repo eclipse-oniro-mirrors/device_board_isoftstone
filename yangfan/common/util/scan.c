@@ -74,6 +74,7 @@ descdump(char *desc, const char *fmt, ...)
 
     startcol = col;
     col += strlen(&buf[i]);
+	//检测增加col是否大于
     if (col - startcol > 2)
         hang = '\t';
     else
