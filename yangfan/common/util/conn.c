@@ -74,7 +74,7 @@ int isftconnectionread(struct isftconnection *connection)
     return isftconnectionpendinginput(connection);
 }
 
-int isftconnectionwrite(struct isftconnection *connection, const void *data, int count)
+int isftconnectionwrite(struct isftconnection *connection, const void data, int count)
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
@@ -92,7 +92,7 @@ int isftconnectionwrite(struct isftconnection *connection, const void *data, int
     return 0;
 }
 
-int isftconnectionqueue(struct isftconnection *connection, const void *data, int count)
+int isftconnectionqueue(struct isftconnection *connection, const void data, int count)
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
@@ -117,8 +117,7 @@ int isftmessagecountarrays(const struct isftmessage *message)
     return arrays;
 }
 
-int
-isftconnectiongetfd(struct isftconnection *connection)
+int isftconnectiongetfd(struct isftconnection *connection)
 {
     return connection->fd;
 }
@@ -135,11 +134,10 @@ static int isftconnectionputfd(struct isftconnection *connection, int  fd)
     return isftbufferput(&connection->fdsout, &fd, sizeof fd);
 }
 
-const char *
-getnextargument(const char *signature, struct argumentdetails *details)
+const char *getnextargument(const char *signature, struct argumentdetails *details)
 {
     details->nullable = 0;
-    for (; *signature; ++signature) {
+    for (; *signature; ++*signature) {
         switch (*signature) {     // switch Statement
             case 'i':
             case 'u':
@@ -304,46 +302,45 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int o
         signature = getnextargument(signature, &arg);
 
         switch (arg.type) {
-        case 'f':
-        case 'u':
-        case 'i':
-            break;
-        case 's':
-            if (!arg.nullable && args[i].s == NULL)
-                goto errnull;
-            break;
-        case 'o':
-            if (!arg.nullable && args[i].o == NULL)
-                goto errnull;
-            break;
-        case 'n':
-            object = args[i].o;
-            if (!arg.nullable && object == NULL)
-                goto errnull;
+            case 'f':
+            case 'u':
+            case 'i':
+                break;
+            case 's':
+                if (!arg.nullable && args[i].s == NULL)
+                    goto errnull;
+                break;
+            case 'o':
+                if (!arg.nullable && args[i].o == NULL)
+                    goto errnull;
+                break;
+            case 'n':
+                object = args[i].o;
+                if (!arg.nullable && object == NULL)
+                    goto errnull;
 
-            closure->args[i].n = object ? object->id : 0;
-            break;
-        case 'a':
-            if (!arg.nullable && args[i].a == NULL)
-                goto errnull;
-            break;
-        case 'h':
-            fd = args[i].h;
-            dupfd = isftosdupfdcloexec(fd, 0);
-            if (dupfd < 0) {
-                isftclosuredestroy(closure);
-                isftlog("error marshalling arguments for %s: dup failed: %s\n",message->
-                        name, strerror(errno));
+                closure->args[i].n = object ? object->id : 0;
+                break;
+            case 'a':
+                if (!arg.nullable && args[i].a == NULL) {
+                    goto errnull;
+                }
+                break;
+            case 'h':
+                fd = args[i].h;
+                dupfd = isftosdupfdcloexec(fd, 0);
+                if (dupfd < 0) {
+                    isftclosuredestroy(closure);
+                    isftlog("error marshalling arguments for %s: dup failed: %s\n", message->
+                            name, strerror(errno));
                 return NULL;
             }
-		}
-	}
+        }
+    }
 }
-struct isftclosure *
-sftconnectiondemarshal(struct isftconnection *connection,
-            unsigned int size,
-            struct isftmap *objects,
-            const struct isftmessage *message)
+struct isftclosure *sftconnectiondemarshal(struct isftconnection *connection,unsigned int
+                                           size,struct isftmap *objects, const struct
+                                           isftmessage *message)
 {
     unsigned int *p, *next, *end, length, lengthinu32, id;
     int fd;
@@ -354,7 +351,6 @@ sftconnectiondemarshal(struct isftconnection *connection,
     struct isftclosure *closure;
     struct isftarray *arrayextra;
 
-    /* Space for senderid and opcode */
     if (size < NUM2 * sizeof *p) {
         isftlog("message too short, invalid header\n");
         isftconnectionconsume(connection, size);
@@ -384,8 +380,8 @@ sftconnectiondemarshal(struct isftconnection *connection,
 
         if (arg.type != 'h' && p + 1 > end) {
             isftlog("message too short, "
-                   "object (%d), message %s(%s)\n",closure->senderid, message->
-                   name, message->signature);
+                    "object (%d), message %s(%s)\n", closure->senderid, message->
+                    name, message->signature);
             errno = EINVAL;
             goto err;
         }
@@ -516,16 +512,13 @@ sftconnectiondemarshal(struct isftconnection *connection,
     return NULL;
 }
 
-bool
-isftobjectiszombie(struct isftmap *map, unsigned int id)
+bool isftobjectiszombie(struct isftmap *map, unsigned int id)
 {
     unsigned int flags;
 
-    /* Zombie objects only exist on the client side. */
     if (map->side == WLMAPSERVERSIDE)
         return false;
 
-    /* Zombie objects can only have been created by the client. */
     if (id >= WLSERVERIDSTART)
         return false;
 
@@ -533,7 +526,7 @@ isftobjectiszombie(struct isftmap *map, unsigned int id)
     return !!(flags & WLMAPENTRYZOMBIE);
 }
 
-divroundup(unsigned int n, int a)
+int divroundup(unsigned int n, int a)
 {
     return (unsigned int) (((unsigned long) n + (a - 1)) / a);
 }
@@ -543,7 +536,10 @@ struct isftbuffer {
     unsigned int head, tail;
 };
 
-#define MASK(i) ((i) & 4095)
+int MASK(i)
+{
+    return ((i) & 4095);
+}
 
 #define MAXFDSOUT    28
 #define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
@@ -555,8 +551,7 @@ struct isftconnection {
     int wantflush;
 };
 
-static int
-isftbufferput(struct isftbuffer *b, const void *data, int count)
+static int isftbufferput(struct isftbuffer *b, const void data, int count)
 {
     unsigned int head, size;
 
@@ -580,8 +575,7 @@ isftbufferput(struct isftbuffer *b, const void *data, int count)
     return 0;
 }
 
-static void
-isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count)
+static void isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count)
 {
     unsigned int head, tail;
 
@@ -604,9 +598,7 @@ isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count)
     }
 }
 
-static int
-serializeclosure(struct isftclosure *closure, unsigned int *buffer,
-          int buffercount)
+static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, int buffercount)
 {
     const struct isftmessage *message = closure->message;
     unsigned int i, count, size;
@@ -614,9 +606,9 @@ serializeclosure(struct isftclosure *closure, unsigned int *buffer,
     struct argumentdetails arg;
     const char *signature;
 
-    if (buffercount < NUM2)
+    if (buffercount < NUM2) {
         goto overflow;
-
+    }
     p = buffer + NUM2;
     end = buffer + buffercount;
 
@@ -625,9 +617,9 @@ serializeclosure(struct isftclosure *closure, unsigned int *buffer,
     for (i = 0; i < count; i++) {
         signature = getnextargument(signature, &arg);
 
-        if (arg.type == 'h')
+        if (arg.type == 'h') {
             continue;
-
+        }
         if (p + 1 > end)
             goto overflow;
 
@@ -656,9 +648,9 @@ serializeclosure(struct isftclosure *closure, unsigned int *buffer,
                 size = strlen(closure->args[i].s) + 1;
                 *p++ = size;
 
-                if (p + divroundup(size, sizeof *p) > end)
+                if (p + divroundup(size, sizeof *p) > end) {
                     goto overflow;
-
+                }
                 memcpy(p, closure->args[i].s, size);
                 p += divroundup(size, sizeof *p);
                 break;
@@ -671,9 +663,9 @@ serializeclosure(struct isftclosure *closure, unsigned int *buffer,
                 size = closure->args[i].a->size;
                 *p++ = size;
 
-                if (p + divroundup(size, sizeof *p) > end)
+                if (p + divroundup(size, sizeof *p) > end) {
                 goto overflow;
-    
+                }
                 memcpy(p, closure->args[i].a->data, size);
                 p += divroundup(size, sizeof *p);
                 break;
@@ -694,8 +686,7 @@ overflow:
     return -1;
 }
 
-int
-isftclosuresend(struct isftclosure *closure, struct isftconnection *connection)
+int isftclosuresend(struct isftclosure *closure, struct isftconnection *connection)
 {
     int size;
     unsigned int buffersize;
@@ -707,9 +698,9 @@ isftclosuresend(struct isftclosure *closure, struct isftconnection *connection)
 
     buffersize = buffersizeforclosure(closure);
     buffer = zalloc(buffersize * sizeof buffer[0]);
-    if (buffer == NULL)
+    if (buffer == NULL) {
         return -1;
-
+    }
     size = serializeclosure(closure, buffer, buffersize);
     if (size < 0) {
         free(buffer);
@@ -722,22 +713,21 @@ isftclosuresend(struct isftclosure *closure, struct isftconnection *connection)
     return result;
 }
 
-int
-isftclosurequeue(struct isftclosure *closure, struct isftconnection *connection)
+int isftclosurequeue(struct isftclosure *closure, struct isftconnection *connection)
 {
     int size;
     unsigned int buffersize;
     unsigned int *buffer;
     int result;
 
-    if (copyfdstoconnection(closure, connection))
+    if (copyfdstoconnection(closure, connection)) {
         return -1;
-
+    }
     buffersize = buffersizeforclosure(closure);
     buffer = malloc(buffersize * sizeof buffer[0]);
-    if (buffer == NULL)
+    if (buffer == NULL) {
         return -1;
-
+    }
     size = serializeclosure(closure, buffer, buffersize);
     if (size < 0) {
         free(buffer);
@@ -750,7 +740,7 @@ isftclosurequeue(struct isftclosure *closure, struct isftconnection *connection)
     return result;
 }
 
-void isftclt(struct isftclosure *closure, struct isftobject *target, int send) // isftclosureprint
+void isftclt(struct isftclosure *closure, struct isftobject *target, int send)
 {
     int i;
     struct argumentdetails arg;
@@ -760,18 +750,18 @@ void isftclt(struct isftclosure *closure, struct isftobject *target, int send) /
 
     clockgettime(CLOCKREALTIME, &tp);
     time = (tp.tvsec * 1000000L) + (tp.tvnsec / NUM1000);
-
-    fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
-        time / NUM1000,
-        send ? " -> " : "",
-        target->interface->name, target->id,
-        closure->message->name);
-
+    if (1) {
+        fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
+            time / NUM1000,
+            send ? " -> " : "",
+            target->interface->name, target->id,
+            closure->message->name);
+    }
     for (i = 0; i < closure->count; i++) {
         signature = getnextargument(signature, &arg);
-        if (i > 0)
+        if (i > 0) {
             fprintf(stderr, ", ");
-
+        }
         switch (arg.type) {
             case 'u':
                 fprintf(stderr, "%u", closure->args[i].u);
@@ -815,12 +805,12 @@ void isftclt(struct isftclosure *closure, struct isftobject *target, int send) /
                 break;
         }
     }
-
-    fprintf(stderr, ")\n");
+    if (1) {
+        fprintf(stderr, ")\n");
+    }
 }
 
-static int
-isftclosureclosefds(struct isftclosure *closure)
+static int isftclosureclosefds(struct isftclosure *closure)
 {
     int i;
     struct argumentdetails arg;
@@ -828,26 +818,23 @@ isftclosureclosefds(struct isftclosure *closure)
 
     for (i = 0; i < closure->count; i++) {
         signature = getnextargument(signature, &arg);
-        if (arg.type == 'h' && closure->args[i].h != -1)
+        if (arg.type == 'h' && closure->args[i].h != -1) {
             close(closure->args[i].h);
+        }
     }
-
     return 0;
 }
 
-void
-isftclosuredestroy(struct isftclosure *closure)
+void isftclosuredestroy(struct isftclosure *closure)
 {
-    /* isftclosuredestroy has free() semantics */
-    if (!closure)
+    if (!closure) {
         return;
-
+    }
     isftclosureclosefds(closure);
     free(closure);
 }
 
-static void
-isftbuffergetiov(struct isftbuffer *b, struct iovec *iov, int *count)
+static void isftbuffergetiov(struct isftbuffer *b, struct iovec *iov, int *count)
 {
     unsigned int head, tail;
 
@@ -870,8 +857,7 @@ isftbuffergetiov(struct isftbuffer *b, struct iovec *iov, int *count)
     }
 }
 
-static void
-isftbuffercopy(struct isftbuffer *b, void *data, int count)
+static void isftbuffercopy(struct isftbuffer *b, void data, int count)
 {
     unsigned int tail, size;
 
@@ -885,30 +871,27 @@ isftbuffercopy(struct isftbuffer *b, void *data, int count)
     }
 }
 
-static unsigned int
-isftbuffersize(struct isftbuffer *b)
+static unsigned int isftbuffersize(struct isftbuffer *b)
 {
     return b->head - b->tail;
 }
 
-struct isftconnection *
-isftconnectioncreate(int fd)
+struct isftconnection *isftconnectioncreate(int fd)
 {
     struct isftconnection *connection;
 
     connection = zalloc(sizeof *connection);
-    if (connection == NULL)
+    if (connection == NULL) {
         return NULL;
-
+    }
     connection->fd = fd;
 
     return connection;
 }
 
-static void
-closefds(struct isftbuffer *buffer, int max)
+static void closefds(struct isftbuffer *buffer, int max)
 {
-    int fds[sizeof(buffer->data) / sizeof(int )], i, count;
+    int fds[sizeof(buffer->data) / sizeof(int)], i, count;
     int size;
 
     size = isftbuffersize(buffer);
@@ -917,22 +900,22 @@ closefds(struct isftbuffer *buffer, int max)
 
     isftbuffercopy(buffer, fds, size);
     count = size / sizeof fds[0];
-    if (max > 0 && max < count)
+    if (max > 0 && max < count) {
         count = max;
+    }
     size = count * sizeof fds[0];
-    for (i = 0; i < count; i++)
+    for (i = 0; i < count; i++) {
         close(fds[i]);
+    }
     buffer->tail += size;
 }
 
-void
-isftconnectionclosefdsin(struct isftconnection *connection, int max)
+void isftconnectionclosefdsin(struct isftconnection *connection, int max)
 {
     closefds(&connection->fdsin, max);
 }
 
-int
-isftconnectiondestroy(struct isftconnection *connection)
+int isftconnectiondestroy(struct isftconnection *connection)
 {
     int fd = connection->fd;
 
@@ -943,20 +926,17 @@ isftconnectiondestroy(struct isftconnection *connection)
     return fd;
 }
 
-void
-isftconnectioncopy(struct isftconnection *connection, void *data, int size)
+void isftconnectioncopy(struct isftconnection *connection, void data, int size)
 {
     isftbuffercopy(&connection->in, data, size);
 }
 
-void
-isftconnectionconsume(struct isftconnection *connection, int size)
+void isftconnectionconsume(struct isftconnection *connection, int size)
 {
     connection->in.tail += size;
 }
 
-static void
-ipccmsg(struct isftbuffer *buffer, char *data, int *clen)
+static void ipccmsg(struct isftbuffer *buffer, char *data, int *clen)
 {
     struct cmsghdr *cmsg;
     int size;
@@ -977,8 +957,7 @@ ipccmsg(struct isftbuffer *buffer, char *data, int *clen)
     }
 }
 
-static int
-decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
+static int decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
 {
     struct cmsghdr *cmsg;
     int size, max, i;
@@ -995,8 +974,9 @@ decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
         if (size > max || overflow) {
             overflow = 1;
             size /= sizeof(int);
-            for (i = 0; i < size; i++)
+            for (i = 0; i < size; i++) {
                 close(((int*)CMSGDATA(cmsg))[i]);
+            }
         } else if (isftbufferput(buffer, CMSGDATA(cmsg), size) < 0) {
                 return -1;
         }
@@ -1010,8 +990,7 @@ decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
     return 0;
 }
 
-int
-isftconnectionflush(struct isftconnection *connection)
+int isftconnectionflush(struct isftconnection *connection)
 {
     struct iovec iov[2];
     struct msghdr msg;
@@ -1019,9 +998,9 @@ isftconnectionflush(struct isftconnection *connection)
     int len = 0, count, clen;
     unsigned int tail;
 
-    if (!connection->wantflush)
+    if (!connection->wantflush) {
         return 0;
-
+    }
     tail = connection->out.tail;
     while (connection->out.head - connection->out.tail > 0) {
         isftbuffergetiov(&connection->out, iov, &count);
@@ -1053,8 +1032,7 @@ isftconnectionflush(struct isftconnection *connection)
     return connection->out.head - tail;
 }
 
-int
-isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
+int isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
 {
     struct isftobject *object;
     const struct isftmessage *message;
@@ -1075,8 +1053,6 @@ isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
 
                 object = isftmaplookup(objects, id);
                 if (isftobjectiszombie(objects, id)) {
-                    /* references object we've already
-                     * destroyed client side */
                     object = NULL;
                 } else if (object == NULL && id != 0) {
                     isftlog("unknown object (%u), message %s(%s)\n", id, message
@@ -1088,8 +1064,8 @@ isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
                 if (object != NULL && message->types[i] != NULL &&
                     !isftinterfaceequal((object)->interface, message->types[i])) {
                     isftlog("invalid object (%u), type (%s), "
-                           "message %s(%s)\n",id, (object)->interface->name,message->
-                           name, message->signature);
+                            "message %s(%s)\n",id, (object)->interface->name, message->
+                            name, message->signature);
                     errno = EINVAL;
                     return -1;
                 }
@@ -1102,10 +1078,8 @@ isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
     return 0;
 }
 
-static void
-convertargumentstoffi(const char *signature, unsigned int flags,
-             union isftargument *args,
-             int count, ffitype **ffitypes, void** ffiargs)
+static void convertargumentstoffi(const char *signature, unsigned int flags, union
+                                  isftargument *args, int count, ffitype **ffitypes, void ffiargs)
 {
     int i;
     const char *sigiter;
@@ -1160,14 +1134,13 @@ convertargumentstoffi(const char *signature, unsigned int flags,
     }
 }
 
-void
-isftclosureinvoke(struct isftclosure *closure, unsigned int flags,
-          struct isftobject *target, unsigned int opcode, void *data)
+void isftclosureinvoke(struct isftclosure *closure, unsigned int flags, struct 
+                  isftobject *target, unsigned int opcode, void data)
 {
     int count;
     fficif cif;
     ffitype *ffitypes[WLCLOSUREMAXARGS + 2];
-    void * ffiargs[WLCLOSUREMAXARGS + 2];
+    void *ffiargs[WLCLOSUREMAXARGS + 2];
     void (* const *implementation)(void);
 
     count = argcountforsignature(closure->message->signature);
@@ -1191,17 +1164,14 @@ isftclosureinvoke(struct isftclosure *closure, unsigned int flags,
     isftclosureclearfds(closure);
 }
 
-void
-isftclosuredispatch(struct isftclosure *closure, isftdispatcherfunct dispatcher,
-            struct isftobject *target, unsigned int opcode)
+void isftclosuredispatch(struct isftclosure *closure, isftdispatcherfunct dispatcher, struct
+                         isftobject *target, unsigned int opcode)
 {
     dispatcher(target->implementation, target, opcode, closure->message, closure->args);
     isftclosureclearfds(closure);
 }
 
-static int
-copyfdstoconnection(struct isftclosure *closure,
-               struct isftconnection *connection)
+static int copyfdstoconnection(struct isftclosure *closure, struct isftconnection *connection)
 {
     const struct isftmessage *message = closure->message;
     unsigned int i, count;
@@ -1227,8 +1197,7 @@ copyfdstoconnection(struct isftclosure *closure,
     return 0;
 }
 
-static unsigned int
-buffersizeforclosure(struct isftclosure *closure)
+static unsigned int buffersizeforclosure(struct isftclosure *closure)
 {
     const struct isftmessage *message = closure->message;
     int i, count;
