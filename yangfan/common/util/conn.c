@@ -30,6 +30,7 @@
 #define NUM2 2
 #define NUM16 16
 #define NUM1000 1000
+#define NUM4096 4096
 
 unsigned int isftconnectionpendinginput(struct isftconnection *connection)
 {
@@ -138,7 +139,7 @@ const char *getnextargument(const char *signature, struct argumentdetails *detai
 {
     details->nullable = 0;
     for (; *signature; ++*signature) {
-        switch (*signature) {     // switch Statement
+        switch (*signature) {
             case 'i':
             case 'u':
             case 'f':
@@ -162,7 +163,7 @@ const char *getnextargument(const char *signature, struct argumentdetails *detai
 int argcountforsignature(const char *signature)
 {
     int count = 0;
-    for (; *signature; ++signature) {
+    for (; *signature; ++*signature) {
         switch (*signature) {
             case 'i':
             case 'u':
@@ -338,8 +339,8 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int o
         }
     }
 }
-struct isftclosure *sftconnectiondemarshal(struct isftconnection *connection,unsigned int
-                                           size,struct isftmap *objects, const struct
+struct isftclosure *sftconnectiondemarshal(struct isftconnection *connection, unsigned int
+                                           size, struct isftmap *objects, const struct
                                            isftmessage *message)
 {
     unsigned int *p, *next, *end, length, lengthinu32, id;
@@ -526,7 +527,7 @@ bool isftobjectiszombie(struct isftmap *map, unsigned int id)
     return !!(flags & WLMAPENTRYZOMBIE);
 }
 
-int divroundup(unsigned int n, int a)
+unsigned int divroundup(unsigned int n, int a)
 {
     return (unsigned int) (((unsigned long) n + (a - 1)) / a);
 }
@@ -538,7 +539,7 @@ struct isftbuffer {
 
 int MASK(i)
 {
-    return ((i) & 4095);
+    return ((i) & NUM4096);
 }
 
 #define MAXFDSOUT    28
@@ -693,9 +694,9 @@ int isftclosuresend(struct isftclosure *closure, struct isftconnection *connecti
     unsigned int *buffer;
     int result;
 
-    if (copyfdstoconnection(closure, connection))
+    if (copyfdstoconnection(closure, connection)) {
         return -1;
-
+    }
     buffersize = buffersizeforclosure(closure);
     buffer = zalloc(buffersize * sizeof buffer[0]);
     if (buffer == NULL) {
@@ -895,9 +896,9 @@ static void closefds(struct isftbuffer *buffer, int max)
     int size;
 
     size = isftbuffersize(buffer);
-    if (size == 0)
+    if (size == 0) {
         return;
-
+    }
     isftbuffercopy(buffer, fds, size);
     count = size / sizeof fds[0];
     if (max > 0 && max < count) {
@@ -1019,9 +1020,9 @@ int isftconnectionflush(struct isftconnection *connection)
             len = sendmsg(connection->fd, &msg, MSGNOSIGNAL | MSGDONTWAIT);
         } while (len == -1 && errno == EINTR);
 
-        if (len == -1)
+        if (len == -1) {
             return -1;
-
+        }
         closefds(&connection->fdsout, MAXFDSOUT);
 
         connection->out.tail += len;
@@ -1064,7 +1065,7 @@ int isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *object
                 if (object != NULL && message->types[i] != NULL &&
                     !isftinterfaceequal((object)->interface, message->types[i])) {
                     isftlog("invalid object (%u), type (%s), "
-                            "message %s(%s)\n",id, (object)->interface->name, message->
+                            "message %s(%s)\n", id, (object)->interface->name, message->
                             name, message->signature);
                     errno = EINVAL;
                     return -1;
@@ -1134,8 +1135,8 @@ static void convertargumentstoffi(const char *signature, unsigned int flags, uni
     }
 }
 
-void isftclosureinvoke(struct isftclosure *closure, unsigned int flags, struct 
-                  isftobject *target, unsigned int opcode, void data)
+void isftclosureinvoke(struct isftclosure *closure, unsigned int flags, struct
+                       isftobject *target, unsigned int opcode, void data)
 {
     int count;
     fficif cif;
