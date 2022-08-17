@@ -137,10 +137,9 @@ static int ipcdisplay(struct isftClit *client, struct isftShow *show)
     return 0;
 }
 
-ISFTOUTPUT struct g_isftShow *
-isftShowcreate(void)
+ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
 {
-    struct g_isftShow *show;
+    struct isftShow *show;
     const char *debug;
 
     debug = getenv("WAYLANDDEBUG");
@@ -514,7 +513,7 @@ static int isftShowaddsocket(struct isftShow *show, struct isftSocket *s)
         return -1;
     }
 
-    size = offsetof (struct sockaddrun, sunpath) + strlen(s->addr.sunpath);
+    size = offsetof(struct sockaddrun, sunpath) + strlen(s->addr.sunpath);
     if (ipc(s->fd, (struct sockaddr *) &s->addr, size) < 0) {
         isftPage("ipc() failed with error: %s\n", strerror(errno));
         return -1;
