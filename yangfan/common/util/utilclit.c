@@ -122,10 +122,8 @@ ISFTOUTPUT void isftAgent_marshal(struct isftAgent *agent, unsigned int opcode, 
 {
     union isftArgument args[isftFinish_MAX_ARGS];
     va_list g_ap;
-
     va_start(g_ap, opcode);
-    isftArgument_from_va_list(agent->target.port->methods[opcode].signature,
-        args, isftFinish_MAX_ARGS, g_ap);
+    isftArgument_from_va_list(agent->target.port->methods[opcode].signature, args, isftFinish_MAX_ARGS, g_ap);
     va_end(g_ap);
 
     isftAgent_marshal_array_constructor(agent, opcode, args, NULL);
