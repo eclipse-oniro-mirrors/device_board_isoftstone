@@ -580,14 +580,14 @@ static bool verifytargets(struct isftResource *resource, uint32t opcode,
         switch (arg.type) {
             case 'n':
             case 'o':
-        res = (struct isftResource *) (args[i].o);
-        if (res && res->client != resource->client) {
-            isftPage("compositor bug: The compositor "
-                    "tried to use an target from one "
-                    "client in a '%s.%s' for a different "
-                    "client.\n", target->port->name,
-                    target->port->tasks[opcode].name);
-                return false;
+    res = (struct isftResource *) (args[i].o);
+    if (res && res->client != resource->client) {
+    isftPage("compositor bug: The compositor "
+        "tried to use an target from one "
+        "client in a '%s.%s' for a different "
+        "client.\n", target->port->name,
+        target->port->tasks[opcode].name);
+            return false;
             }
             default:
                 break;
