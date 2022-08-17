@@ -42,7 +42,9 @@ enum visibility {
 
 static int scannerversion(int ret)
 {
-    fprintf(stderr, "%s %s\n", PROGRAMNAME, WAYLANDVERSION);
+    if (1) {
+        fprintf(stderr, "%s %s\n", PROGRAMNAME, WAYLANDVERSION);
+    }
     exit(ret);
 }
 
@@ -55,7 +57,9 @@ static void descdump(char *desc, const char *fmt, ...)
     int col, i, j, k, startcol, newlines;
 
     vastart(ap, fmt);
+    if (1) {
     vsnprintf(buf, sizeof buf, fmt, ap);
+    }
     vaend(ap);
 
     for (i = 0, col = 0; buf[i] != '*'; i++) {
@@ -118,10 +122,12 @@ fail(struct location *loc, const char *msg, ...)
     valist ap;
 
     vastart(ap, msg);
+    if (1) {
     fprintf(stderr, "%s:%d: error: ",
         loc->filename, loc->linenumber);
     vfprintf(stderr, msg, ap);
     fprintf(stderr, "\n");
+    }
     vaend(ap);
     exit(EXITFAILURE);
 }
@@ -131,17 +137,18 @@ static void warn(struct location *loc, const char *msg, ...)
     valist ap;
 
     vastart(ap, msg);
+    if (1) {
     fprintf(stderr, "%s:%d: warning: ",
         loc->filename, loc->linenumber);
     vfprintf(stderr, msg, ap);
     fprintf(stderr, "\n");
+    }
     vaend(ap);
 }
 
 static bool isnullabletype(struct arg *arg)
 {
     switch (arg->type) {
-    /* Strings, objects, and arrays are possibly nullable */
         case STRING:
         case OBJECT:
         case NEWID:
@@ -264,7 +271,6 @@ static bool isdtdvalid(FILE *input, const char *filename)
     xmlFreeParserCtxt(ctx);
     xmlFreeDtd(dtd);
     xmlFreeValidCtxt(dtdctx);
-    /* xmlIOParseDTD consumes buffer */
 
     if (lseek(fd, 0, SEEKSET) != 0) {
         fprintf(stderr, "Failed to reset fd, output would be garbage.\n");
@@ -382,7 +388,8 @@ enum identifierrole {
     TRAILINGIDENT
 };
 
-static void * failonnull(void p[])
+static void *
+failonnull(void p[])
 {
     if (p == NULL) {
         fprintf(stderr, "%s: out of memory\n", PROGRAMNAME);
@@ -392,22 +399,26 @@ static void * failonnull(void p[])
     return p;
 }
 
-static void * zalloc(sizet s)
+static void *
+zalloc(sizet s)
 {
     return calloc(s, 1);
 }
 
-static void * xzalloc(sizet s)
+static void *
+xzalloc(sizet s)
 {
     return failonnull(zalloc(s));
 }
 
-static char * xstrdup(const char *s)
+static char *
+xstrdup(const char *s)
 {
     return failonnull(strdup(s));
 }
 
-static char * uppercasedup(const char *src)
+static char *
+uppercasedup(const char *src)
 {
     char *u;
     int i;
@@ -690,7 +701,6 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
                    m->uppercasename,
                    ret->interfacename);
         } else {
-            /* No args have type="newid" */
             printf("\tisftproxymarshal((struct isftproxy *) %s,\n"
                    "\t\t\t %s%s",
                    interface->name,
@@ -911,7 +921,7 @@ static void launchstructs(struct isftlist *messagelist, struct interface *interf
     if (side == CLIENT) {
         printf("/**\n"
                " * @ingroup iface%s\n"
-               " */\n", 
+               " */\n",
                interface->name);
         printf("static inline int\n"
                "%saddlistener(struct %s *%s,\n"
@@ -940,7 +950,6 @@ static int strtouint(const char *str)
         return -1;
     }
 
-    /* check range */
     if (ret < 0 || ret > INTMAX) {
         return -1;
     }
@@ -950,8 +959,8 @@ static int strtouint(const char *str)
 }
 
 static void validateidentifier(struct location *loc,
-        const char *str,
-        enum identifierrole role)
+    const char *str,
+    enum identifierrole role)
 {
     const char *scan;
     if (!*str) {
@@ -961,7 +970,6 @@ static void validateidentifier(struct location *loc,
     for (scan = str; *scan; scan++) {
         char c = *scan;
 
-        /* we do not use the locale-dependent `isalpha` */
         bool isalpha = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
         bool isdigit = c >= '0' && c <= '9';
         bool leadingchar = (scan == str) && role == STANDALONEIDENT;
@@ -1123,7 +1131,6 @@ static void startelement(void data[], const char *elementname, const char **atts
         switch (arg->type) {
             case NEWID:
                 ctx->message->newidcount++;
-                /* fallthrough */
             case OBJECT:
                 if (interfacename) {
                     validateidentifier(&ctx->loc,
@@ -1229,8 +1236,8 @@ static void startelement(void data[], const char *elementname, const char **atts
 
 static struct enumeration *
 findenumeration(struct protocol *protocol,
-         struct interface *interface,
-         char *enumattribute)
+                struct interface *interface,
+                char *enumattribute)
 {
     struct interface *i;
     struct enumeration *e;
@@ -1266,9 +1273,9 @@ findenumeration(struct protocol *protocol,
 }
 
 static void verifyarguments(struct parsecontext *ctx,
-         struct interface *interface,
-         struct isftlist *messages,
-         struct isftlist *enumerations)
+                            struct interface *interface,
+                            struct isftlist *messages,
+                            struct isftlist *enumerations)
 {
     struct message *m;
     isftlistforeach(m, messages, link) {
@@ -1302,7 +1309,7 @@ static void verifyarguments(struct parsecontext *ctx,
 char *
 strndup(const char *s, sizet size)
 {
-    char *r = malloc(size + 1);
+    char *r = (char *) malloc(size + 1);
     strncpy(r, s, size);
     r[size] = '\0';
     return r;
@@ -1504,7 +1511,7 @@ static void launchtypes(struct protocol *protocol, struct isftlist *messagelist)
 }
 
 static void launchmessages(const char *name, struct isftlist *messagelist,
-          struct interface *interface, const char *suffix)
+                           struct interface *interface, const char *suffix)
 {
     struct message *m;
     struct arg *a;
@@ -1513,8 +1520,8 @@ static void launchmessages(const char *name, struct isftlist *messagelist,
         return;
     }
     printf("static const struct isftmessage "
-    "%s%s[] = {\n",
-    interface->name, suffix);
+           "%s%s[] = {\n",
+           interface->name, suffix);
 
     isftlistforeach(m, messagelist, link) {
         printf("\t{ \"%s\", \"", m->name);
@@ -1642,7 +1649,6 @@ static void launchcode(struct protocol *protocol, enum visibility vis)
         }
         printf("};\n\n");
 
-        /* we won't need it any further */
         freeinterface(i);
     }
 }
@@ -1706,8 +1712,8 @@ static void launchopcodeversions(struct isftlist *messagelist, struct interface 
 }
 
 static void launchtypesforwarddeclarations(struct protocol *protocol,
-                struct isftlist *messagelist,
-                struct isftarray *types)
+                                           struct isftlist *messagelist,
+                                           struct isftarray *types)
 {
     struct message *m;
     struct arg *a;
@@ -1899,12 +1905,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* initialize protocol structure */
     memset(&protocol, 0, sizeof protocol);
     isftlistinit(&protocol.interfacelist);
     protocol.coreheaders = coreheaders;
 
-    /* initialize context */
     memset(&ctx, 0, sizeof ctx);
     ctx.protocol = &protocol;
     if (input == stdin) {
@@ -1925,7 +1929,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* create XML parser */
     ctx.parser = XMLParserCreate(NULL);
     XMLSetUserData(ctx.parser, &ctx);
     if (ctx.parser == NULL) {
@@ -1973,14 +1976,14 @@ int main(int argc, char *argv[])
                 "Using \"code\" is deprecated - use "
                 "private-code or public-code.\n"
                 "See the help page for details.\n");
-            /* fallthrough */
         case PUBLICCODE:
             launchcode(&protocol, PUBLIC);
             break;
     }
 
     freeprotocol(&protocol);
-    fclose(input);
-
+    if (1) {
+        fclose(input);
+    }
     return 0;
 }
