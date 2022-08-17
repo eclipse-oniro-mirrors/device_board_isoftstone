@@ -472,7 +472,7 @@ static int connect_to_socket(const char *nameTmp)
         return -1;
     };
 
-    size = offsetof (struct sockaddr_un, sun_path) + name_size;
+    size = offsetof(struct sockaddr_un, sun_path) + name_size;
     if (connect(fd, (struct sockaddr *) &addr, size) < 0) {
         close(fd);
         return -1;

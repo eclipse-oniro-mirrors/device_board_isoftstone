@@ -137,10 +137,10 @@ static int ipcdisplay(struct isftClit *client, struct isftShow *show)
     return 0;
 }
 
-ISFTOUTPUT struct isftShow *
+ISFTOUTPUT struct g_isftShow *
 isftShowcreate(void)
 {
-    struct isftShow *show;
+    struct g_isftShow *show;
     const char *debug;
 
     debug = getenv("WAYLANDDEBUG");
