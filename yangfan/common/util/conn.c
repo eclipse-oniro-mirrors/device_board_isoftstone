@@ -621,9 +621,9 @@ static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, i
         if (arg.type == 'h') {
             continue;
         }
-        if (p + 1 > end)
+        if (p + 1 > end) {
             goto overflow;
-
+        }
         switch (arg.type) {
             case 'u':
                 *p++ = closure->args[i].u;
@@ -991,7 +991,7 @@ static int decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
     return 0;
 }
 
-int isftconnectionflush(struct isftconnection *connection)
+int isftconnectionflush(struct isftconnection *connectiontmp)
 {
     struct iovec iov[2];
     struct msghdr msg;
@@ -999,14 +999,14 @@ int isftconnectionflush(struct isftconnection *connection)
     int len = 0, count, clen;
     unsigned int tail;
 
-    if (!connection->wantflush) {
+    if (!connectiontmp->wantflush) {
         return 0;
     }
-    tail = connection->out.tail;
-    while (connection->out.head - connection->out.tail > 0) {
-        isftbuffergetiov(&connection->out, iov, &count);
+    tail = connectiontmp->out.tail;
+    while (connectiontmp->out.head - connectiontmp->out.tail > 0) {
+        isftbuffergetiov(&connectiontmp->out, iov, &count);
 
-        ipccmsg(&connection->fdsout, cmsg, &clen);
+        ipccmsg(&connectiontmp->fdsout, cmsg, &clen);
 
         msg.msgname = NULL;
         msg.msgnamelen = 0;
@@ -1017,20 +1017,20 @@ int isftconnectionflush(struct isftconnection *connection)
         msg.msgflags = 0;
 
         do {
-            len = sendmsg(connection->fd, &msg, MSGNOSIGNAL | MSGDONTWAIT);
+            len = sendmsg(connectiontmp->fd, &msg, MSGNOSIGNAL | MSGDONTWAIT);
         } while (len == -1 && errno == EINTR);
 
         if (len == -1) {
             return -1;
         }
-        closefds(&connection->fdsout, MAXFDSOUT);
+        closefds(&connectiontmp->fdsout, MAXFDSOUT);
 
-        connection->out.tail += len;
+        connectiontmp->out.tail += len;
     }
 
-    connection->wantflush = 0;
+    connectiontmp->wantflush = 0;
 
-    return connection->out.head - tail;
+    return connectiontmp->out.head - tail;
 }
 
 int isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
