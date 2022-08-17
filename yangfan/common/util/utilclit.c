@@ -903,10 +903,7 @@ static int post_queue(struct isftShow *show, struct isftTaskqueue *queue)
     }
 
     return count;
-
 }
-
-
 ISFTOUTPUT int isftShow_flush(struct isftShow *show)
 {
     int ret;

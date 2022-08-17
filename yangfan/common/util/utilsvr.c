@@ -759,64 +759,42 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
         resource = isftPlatlookup(&client->targets, p[0]);
         resourceflags = isftPlatlookupflags(&client->targets, p[0]);
         if (resource == NULL) {
-            isftResourceposterror(client->displayresource,
-                ISFTSHOWERRORINVALIDOBJECT,
-                "invalid target %u", p[0]);
+            isftResourceposterror(client->displayresource, ISFTSHOWERRORINVALIDOBJECT, "invalid target %u", p[0]);
             break;
         }
 
         target = &resource->target;
         if (opcode >= target->port->methodcount) {
-            isftResourceposterror(client->displayresource,
-                ISFTSHOWERRORINVALIDMETHOD,
-                "invalid method %d, target %s@%u",
-                opcode,
-                target->port->name,
-                target->id);
+            isftResourceposterror(client->displayresource, ISFTSHOWERRORINVALIDMETHOD,
+                "invalid method %d, target %s@%u", opcode, target->port->name, target->id);
             break;
         }
-}
-static int isftClitlinkdata(int fd, uint32t mask, void data[])
-{
+
         information = &target->port->methods[opcode];
         since = isftInformationgetsince(information);
-        if (!(resourceflags & ISFTPLATENTRYLEGACY) &&
-            resource->version > 0 && resource->version < since) {
-            isftResourceposterror(client->displayresource,
-                ISFTSHOWERRORINVALIDMETHOD,
-                "invalid method %d (since %d < %d)"
-                           ", target %s@%u",
-                opcode, resource->version, since,
-                target->port->name,
-                target->id);
+        if (!(resourceflags & ISFTPLATENTRYLEGACY) && resource->version > 0 && resource->version < since) {
+            isftResourceposterror(client->displayresource, ISFTSHOWERRORINVALIDMETHOD,
+                "invalid method %d (since %d < %d), target %s@%u", opcode, resource->version, since,
+                target->port->name, target->id);
             break;
         }
-        closure = isftLinkdemarshal(client->link, size,
-            &client->targets, information);
+        closure = isftLinkdemarshal(client->link, size, &client->targets, information);
         if (closure == NULL && errno == ENOMEM) {
             isftResourcepostnomemory(resource);
             break;
-        } else if (closure == NULL ||
-               isftFinishlookuptargets(closure, &client->targets) < 0) {
-            isftResourceposterror(client->displayresource,
-                ISFTSHOWERRORINVALIDMETHOD,
-                "invalid arguments for %s@%u.%s",
-                target->port->name,
-                target->id,
-                information->name);
+        } else if (closure == NULL || isftFinishlookuptargets(closure, &client->targets) < 0) {
+            isftResourceposterror(client->displayresource, ISFTSHOWERRORINVALIDMETHOD, "invalid argument for %s@%u.%s",
+                target->port->name, target->id, information->name);
             isftFinishdestroy(closure);
             break;
         }
 
         inforclosure(resource, closure, false);
 
-        if ((resourceflags & ISFTPLATENTRYLEGACY) ||
-            resource->distributor == NULL) {
-            isftFinishinvoke(closure, ISFTFINISHINVOKESERVER,
-                target, opcode, client);
+        if ((resourceflags & ISFTPLATENTRYLEGACY) || resource->distributor == NULL) {
+            isftFinishinvoke(closure, ISFTFINISHINVOKESERVER, target, opcode, client);
         } else {
-            isftFinishpost(closure, resource->distributor,
-                target, opcode);
+            isftFinishpost(closure, resource->distributor, target, opcode);
         }
 
         isftFinishdestroy(closure);
