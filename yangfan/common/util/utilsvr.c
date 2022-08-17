@@ -775,7 +775,9 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
                 target->id);
             break;
         }
-
+}
+static int isftClitlinkdata(int fd, uint32t mask, void data[])
+{
         information = &target->port->methods[opcode];
         since = isftInformationgetsince(information);
         if (!(resourceflags & ISFTPLATENTRYLEGACY) &&
@@ -886,7 +888,10 @@ isftClitcreate(struct isftShow *show, int fd)
         }
     err:
         return ret;
-
+}
+ISFTOUTPUT struct isftClit *
+isftClitcreate(struct isftShow *show, int fd)
+{
     isftPlatinit(&client->targets, ISFTPLATSERVERSIDE);
 
     if (isftPlatinsertat(&client->targets, 0, 0, NULL) < 0)
@@ -1330,11 +1335,11 @@ ISFTOUTPUT int isftShowaddsocket(struct isftShow *show, char *name)
         return -1;
         }
 
-    if (name == NULL) {
-        name = getenv("WAYLANDDISPLAY");
+    if (names == NULL) {
+        names = getenv("WAYLANDDISPLAY");
         }
-    if (name == NULL) {
-        name = "wayland-0";
+    if (names == NULL) {
+        names = "wayland-0";
         }
 
     if (isftSocketinitfordisplayname(s, name) < 0) {

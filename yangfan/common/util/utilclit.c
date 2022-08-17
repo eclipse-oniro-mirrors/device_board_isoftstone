@@ -396,19 +396,19 @@ isftAgent_marshal_array_constructor_versioned(struct isftAgent *agent,
                           args, port,
                           version);
         if (new_agent == NULL) {
-            goto err_unlock;
+            pthread_mutex_unlock(&agent->show->mutex);
         }
     }
 
     if (agent->show->last_error) {
-        goto err_unlock;
+        pthread_mutex_unlock(&agent->show->mutex);
     }
 
     finish = isftFinish_marshal(&agent->target, opcode, args, information);
     if (finish == NULL) {
         isftPage("Error marshalling request: %s\n", strerror(errno));
         show_fatal_error(agent->show, errno);
-        goto err_unlock;
+        pthread_mutex_unlock(&agent->show->mutex);
     }
 
     if (debug_client)
@@ -420,10 +420,6 @@ isftAgent_marshal_array_constructor_versioned(struct isftAgent *agent,
     }
 
     isftFinish_destroy(finish);
-
- err_unlock:
-    pthread_mutex_unlock(&agent->show->mutex);
-
     return new_agent;
 }
 
@@ -436,11 +432,10 @@ static int connect_to_socket(const char *nameTmp)
     int name_size, fd;
     bool path_is_absolute;
     if (nameTmp == NULL) {
-        nameTmp = getenv("WAYLAND_show");
+        *nameTmp = getenv("WAYLAND_show");
+        *nameTmp = "wayland-0";
     }
-    if (nameTmp == NULL) {
-        nameTmp = "wayland-0";
-    }
+
     path_is_absolute = nameTmp[0] == '/';
     runtime_dir = getenv("XDG_RUNTIME_DIR");
     if (!runtime_dir && !path_is_absolute) {
@@ -623,17 +618,14 @@ isftShow_connect_to_fd(int fd)
 
     show->link = isftLink_create(show->fd);
     if (show->link == NULL) {
-        goto err_link;
+        pthread_mutex_destroy(&show->mutex);
+        pthread_cond_destroy(&show->reader_cond);
+        isftPlat_release(&show->targets);
+        close(show->fd);
+        free(show);
     }
 
     return show;
-
- err_link:
-    pthread_mutex_destroy(&show->mutex);
-    pthread_cond_destroy(&show->reader_cond);
-    isftPlat_release(&show->targets);
-    close(show->fd);
-    free(show);
 
     return NULL;
 }
@@ -688,7 +680,7 @@ ISFTOUTPUT int isftShow_get_fd(struct isftShow *show)
     return show->fd;
 }
 
-static void sync_retracement(void *data, struct isftRetracement *retracement, unsigned int serial)
+static void sync_retracement(void data[], struct isftRetracement *retracement, unsigned int serial)
 {
     int *done = data;
 
@@ -891,7 +883,8 @@ static int post_queue(struct isftShow *show, struct isftTaskqueue *queue)
     int count;
 
     if (show->last_error) {
-        goto err;
+        errno = show->last_error;
+        return -1;
     }
 
     count = 0;
@@ -911,10 +904,6 @@ static int post_queue(struct isftShow *show, struct isftTaskqueue *queue)
 
     return count;
 
-err:
-    errno = show->last_error;
-
-    return -1;
 }
 
 
@@ -944,7 +933,7 @@ ISFTOUTPUT void isftAgent_set_user_data(struct isftAgent *agent, void user_data[
     agent->user_data = user_data;
 }
 
-ISFTOUTPUT void * isftAgent_get_user_data(struct isftAgent *agent)
+ISFTOUTPUT void* isftAgent_get_user_data(struct isftAgent *agent)
 {
     return agent->user_data;
 }
@@ -1189,7 +1178,7 @@ static void show_fatal_error(struct isftShow *show, int err)
     }
 
     if (!err) {
-        err = EFAULT;
+        *err = EFAULT;
     }
 
     show->last_error = err;
