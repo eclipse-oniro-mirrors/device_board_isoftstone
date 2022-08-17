@@ -49,22 +49,20 @@ static int scannerversion(int ret)
 }
 
 static void descdump(char *desc, const char *fmt, ...) WLPRINTF(2, 3);
-int col;
-char buf[128];
-void forxun(int col, char buf[])
+void forxun(int col1, char buf1[])
 {
-    for (i = 0, col = 0; buf[i] != '*'; i++) {
-        if (buf[i] == '\t') {
-            col = (col + NUM8) & ~NUM7;
+    for (int i = 0, col1 = 0; buf1[i] != '*'; i++) {
+        if (buf1[i] == '\t') {
+            col1 = (col1 + NUM8) & ~NUM7;
         } else {
-            col++;
+            col1++;
         }
 }
 static void descdump(char *desc, const char *fmt, ...)
 {
     valist ap;
-    char  hang;
-    int  i, j, k, startcol, newlines;
+    char  buf[128],hang;
+    int  col,i, j, k, startcol, newlines;
     vastart(ap, fmt);
     if (1) {
     vsnprintf(buf, sizeof buf, fmt, ap);
@@ -1309,6 +1307,9 @@ char *
 strndup(const char *s, sizet size)
 {
     char *r = (char *)malloc(size + 1);
+    if (r == NULL) {
+        fprintf(stderr, "malloc is error");
+    }
     strncpy(r, s, size);
     r[size] = '\0';
     return r;
