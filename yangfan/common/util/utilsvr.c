@@ -583,8 +583,8 @@ static bool verifytargets(struct isftResource *resource, uint32t opcode,
                 res = (struct isftResource *) (args[i].o);
                 if (res && res->client != resource->client) {
                     isftPage("compositor bug: The compositor "
-                    "tried to use an target from one "
-                    "client in a '%s.%s' for a different "
+                        "tried to use an target from one "
+                        "client in a '%s.%s' for a different "
                         "client.\n", target->port->name,
                         target->port->tasks[opcode].name);
                 return false;
@@ -775,9 +775,7 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
                 target->id);
             break;
         }
-}
-static int isftClitlinkdata(int fd, uint32t mask, void data[])
-{
+
         information = &target->port->methods[opcode];
         since = isftInformationgetsince(information);
         if (!(resourceflags & ISFTPLATENTRYLEGACY) &&
@@ -868,7 +866,7 @@ isftClitcreate(struct isftShow *show, int fd)
         isftClitlinkdata, client);
 
     if (!client->source) {
-        goto errclient;
+        free(client);
         }
     err:
         return ret;
@@ -876,13 +874,13 @@ isftClitcreate(struct isftShow *show, int fd)
     len = sizeof client->ucred;
     if (getsockopt(fd, SOLSOCKET, SOPEERCRED,
         &client->ucred, &len) < 0)
-        goto errsource;
+        isftTasksourceremove(client->source);
     err:
         return ret;
 
     client->link = isftLinkcreate(fd);
     if (client->link == NULL) {
-        goto errsource;
+        isftTasksourceremove(client->source);
         }
     err:
         return ret;
@@ -890,13 +888,15 @@ isftClitcreate(struct isftShow *show, int fd)
     isftPlatinit(&client->targets, ISFTPLATSERVERSIDE);
 
     if (isftPlatinsertat(&client->targets, 0, 0, NULL) < 0)
-        goto errmap;
+        isftPlatrelease(&client->targets);
+        isftLinkdestroy(client->link);
     err:
         return ret;
 
     isftPrivsignalinit(&client->destroysignal);
     if (ipcdisplay(client, show) < 0) {
-        goto errmap;
+        isftPlatrelease(&client->targets);
+        isftLinkdestroy(client->link);
         }
     err:
         return ret;
