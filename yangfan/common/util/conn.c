@@ -599,6 +599,61 @@ static void isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count
     }
 }
 
+void isftswitch(struct argumentdetails arg);
+{
+    struct argumentdetails arg;
+    switch (arg.type) {
+        case 'u':
+            *p++ = closure->args[i].u;
+                break;
+        case 'i':
+            *p++ = closure->args[i].i;
+            break;
+        case 'f':
+            *p++ = closure->args[i].f;
+            break;
+        case 'o':
+            *p++ = closure->args[i].o ? closure->args[i].o->id : 0;
+            break;
+        case 'n':
+            *p++ = closure->args[i].n;
+            break;
+        case 's':
+            if (closure->args[i].s == NULL) {
+                *p++ = 0;
+                break;
+            }
+
+            size = strlen(closure->args[i].s) + 1;
+            *p++ = size;
+
+            if (p + divroundup(size, sizeof *p) > end) {
+                errno = ERANGE;
+            }
+            memcpy(p, closure->args[i].s, size);
+            p += divroundup(size, sizeof *p);
+            break;
+        case 'a':
+            if (closure->args[i].a == NULL) {
+                *p++ = 0;
+                break;
+            }
+
+            size = closure->args[i].a->size;
+            *p++ = size;
+
+            if (p + divroundup(size, sizeof *p) > end) {
+                errno = ERANGE;
+            }
+            memcpy(p, closure->args[i].a->data, size);
+            p += divroundup(size, sizeof *p);
+            break;
+        default:
+            break;
+    }
+
+}
+
 static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, int buffercount)
 {
     const struct isftmessage *message = closure->message;
@@ -608,7 +663,7 @@ static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, i
     const char *signature;
 
     if (buffercount < NUM2) {
-        goto overflow;
+        errno = ERANGE;
     }
     p = buffer + NUM2;
     end = buffer + buffercount;
@@ -622,57 +677,9 @@ static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, i
             continue;
         }
         if (p + 1 > end) {
-            goto overflow;
+            errno = ERANGE;
         }
-        switch (arg.type) {
-            case 'u':
-                *p++ = closure->args[i].u;
-                break;
-            case 'i':
-                *p++ = closure->args[i].i;
-                break;
-            case 'f':
-                *p++ = closure->args[i].f;
-                break;
-            case 'o':
-                *p++ = closure->args[i].o ? closure->args[i].o->id : 0;
-                break;
-            case 'n':
-                *p++ = closure->args[i].n;
-                break;
-            case 's':
-                if (closure->args[i].s == NULL) {
-                    *p++ = 0;
-                    break;
-                }
-
-                size = strlen(closure->args[i].s) + 1;
-                *p++ = size;
-
-                if (p + divroundup(size, sizeof *p) > end) {
-                    goto overflow;
-                }
-                memcpy(p, closure->args[i].s, size);
-                p += divroundup(size, sizeof *p);
-                break;
-            case 'a':
-                if (closure->args[i].a == NULL) {
-                    *p++ = 0;
-                    break;
-                }
-
-                size = closure->args[i].a->size;
-                *p++ = size;
-
-                if (p + divroundup(size, sizeof *p) > end) {
-                goto overflow;
-                }
-                memcpy(p, closure->args[i].a->data, size);
-                p += divroundup(size, sizeof *p);
-                break;
-            default:
-                break;
-        }
+        isftswitch(arg);
     }
 
     size = (p - buffer) * sizeof *p;
@@ -681,10 +688,6 @@ static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, i
     buffer[1] = size << NUM16 | (closure->opcode & 0x0000ffff);
 
     return size;
-
-overflow:
-    errno = ERANGE;
-    return -1;
 }
 
 int isftclosuresend(struct isftclosure *closure, struct isftconnection *connection)
