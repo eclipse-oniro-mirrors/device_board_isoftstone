@@ -990,9 +990,9 @@ static int decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
     for (cmsg = CMSGFIRSTHDR(msg); cmsg != NULL;
          cmsg = CMSGNXTHDR(msg, cmsg)) {
         if (cmsg->cmsglevel != SOLSOCKET ||
-            cmsg->cmsgtype != SCMRIGHTS)
+            cmsg->cmsgtype != SCMRIGHTS) {
             continue;
-
+        }
         size = cmsg->cmsglen - CMSGLEN(0);
         max = sizeof(buffer->data) - isftbuffersize(buffer);
         if (size > max || overflow) {
@@ -1014,7 +1014,7 @@ static int decodecmsg(struct isftbuffer *buffer, struct msghdr *msg)
     return 0;
 }
 
-int isftconnectionflush(struct isftconnection *connectiontmp)
+static int isftconnectionflush(struct isftconnection *connection)
 {
     struct iovec iov[2];
     struct msghdr msg;
@@ -1022,14 +1022,14 @@ int isftconnectionflush(struct isftconnection *connectiontmp)
     int len = 0, count, clen;
     unsigned int tail;
 
-    if (!connectiontmp->wantflush) {
+    if (!connection->wantflush) {
         return 0;
     }
-    tail = connectiontmp->out.tail;
-    while (connectiontmp->out.head - connectiontmp->out.tail > 0) {
-        isftbuffergetiov(&connectiontmp->out, iov, &count);
+    tail = connection->out.tail;
+    while (connection->out.head - connection->out.tail > 0) {
+        isftbuffergetiov(&connection->out, iov, &count);
 
-        ipccmsg(&connectiontmp->fdsout, cmsg, &clen);
+        ipccmsg(&connection->fdsout, cmsg, &clen);
 
         msg.msgname = NULL;
         msg.msgnamelen = 0;
@@ -1040,20 +1040,20 @@ int isftconnectionflush(struct isftconnection *connectiontmp)
         msg.msgflags = 0;
 
         do {
-            len = sendmsg(connectiontmp->fd, &msg, MSGNOSIGNAL | MSGDONTWAIT);
+            len = sendmsg(connection->fd, &msg, MSGNOSIGNAL | MSGDONTWAIT);
         } while (len == -1 && errno == EINTR);
 
         if (len == -1) {
             return -1;
         }
-        closefds(&connectiontmp->fdsout, MAXFDSOUT);
+        closefds(&connection->fdsout, MAXFDSOUT);
 
-        connectiontmp->out.tail += len;
+        connection->out.tail += len;
     }
 
-    connectiontmp->wantflush = 0;
+    connection->wantflush = 0;
 
-    return connectiontmp->out.head - tail;
+    return connection->out.head - tail;
 }
 
 int isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
@@ -1206,9 +1206,9 @@ static int copyfdstoconnection(struct isftclosure *closure, struct isftconnectio
     count = argcountforsignature(signature);
     for (i = 0; i < count; i++) {
         signature = getnextargument(signature, &arg);
-        if (arg.type != 'h')
+        if (arg.type != 'h') {
             continue;
-
+        }
         fd = closure->args[i].h;
         if (isftconnectionputfd(connection, fd)) {
             isftlog("request could not be marshaled: "
