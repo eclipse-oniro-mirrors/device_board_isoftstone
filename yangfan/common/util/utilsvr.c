@@ -824,7 +824,9 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
 
         len = isftLinkpendinginput(link);
     }
-
+}
+static int isftClitlinkdata(int fd, uint32t mask, void data[])
+{
     if (client->error) {
         destroyclientwitherror(client,
                       "error in client communication");

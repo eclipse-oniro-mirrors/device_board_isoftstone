@@ -87,7 +87,7 @@ struct isftShow {
 static int debug_client = 0;
 
 
-static enum isftIterator_result free_defuncts(void *element, void *data, unsigned int flags)
+static enum isftIterator_result free_defuncts(void element[], void data[], unsigned int flags)
 {
     if (flags & ISFTPLAT_ENTRY_DEFUNCT)
         free(element);
@@ -171,8 +171,8 @@ ISFTOUTPUT void isftAgent_marshal_array(struct isftAgent *agent, unsigned int op
     isftAgent_marshal_array_constructor(agent, opcode, args, NULL);
 }
 
-static void show_handle_error(void *data,
-    struct isftShow *show, void *target,
+static void show_handle_error(void data[],
+    struct isftShow *show, void target[],
     unsigned int code, const char *information)
 {
     struct isftAgent *agent = target;
@@ -198,7 +198,7 @@ static void show_handle_error(void *data,
     show_protocol_error(show, code, target_id, port);
 }
 
-static void show_handle_delete_id(void *data, struct isftShow *show, unsigned int id)
+static void show_handle_delete_id(void data[], struct isftShow *show, unsigned int id)
 {
     struct isftAgent *agent;
 
@@ -294,7 +294,7 @@ ISFTOUTPUT void isftAgent_destroy(struct isftAgent *agent)
 }
 
 ISFTOUTPUT int isftAgent_add_listener(struct isftAgent *agent,
-    void (**implementation)(void), void *data)
+    void (**implementation)(void), void data[])
 {
     if (agent->flags & ISFTAGENT_FLAG_WRAPPER) {
         isftDiscontinue("agent %p is a wrapper\n", agent);
@@ -318,7 +318,7 @@ ISFTOUTPUT const void* isftAgent_get_listener(struct isftAgent *agent)
 
 ISFTOUTPUT int isftAgent_add_distributor(struct isftAgent *agent,
     isftDistributor_func_t distributor,
-    const void *implementation, void *data)
+    const void implementation[], void data[])
 {
     if (agent->flags & isftAgent_FLAG_WRAPPER) {
         isftDiscontinue("agent %p is a wrapper\n", agent);
@@ -428,20 +428,20 @@ isftAgent_marshal_array_constructor_versioned(struct isftAgent *agent,
 }
 
 
-static int connect_to_socket(const char *name)
+static int connect_to_socket(const char *nameTmp)
 {
     struct sockaddr_un addr;
     socklen_t size;
     const char *runtime_dir;
     int name_size, fd;
     bool path_is_absolute;
-    if (name == NULL) {
-        name = getenv("WAYLAND_show");
+    if (nameTmp == NULL) {
+        nameTmp = getenv("WAYLAND_show");
     }
-    if (name == NULL) {
-        name = "wayland-0";
+    if (nameTmp == NULL) {
+        nameTmp = "wayland-0";
     }
-    path_is_absolute = name[0] == '/';
+    path_is_absolute = nameTmp[0] == '/';
     runtime_dir = getenv("XDG_RUNTIME_DIR");
     if (!runtime_dir && !path_is_absolute) {
         isftPage("error: XDG_RUNTIME_DIR not set in the environment.\n");
@@ -457,11 +457,11 @@ static int connect_to_socket(const char *name)
     if (!path_is_absolute) {
         name_size =
             snprintf(addr.sun_path, sizeof addr.sun_path,
-                     "%s/%s", runtime_dir, name) + 1;
+                     "%s/%s", runtime_dir, nameTmp) + 1;
     } else {
         name_size =
             snprintf(addr.sun_path, sizeof addr.sun_path,
-                     "%s", name) + 1;
+                     "%s", nameTmp) + 1;
     }
     assert(name_size > 0);
     if (name_size > (int)sizeof addr.sun_path) {
@@ -470,7 +470,7 @@ static int connect_to_socket(const char *name)
                 " exceeds %i bytes\n", runtime_dir, name, (int) sizeof(addr.sun_path));
         } else {
             isftPage("error: socket path \"%s\" plus null terminator"
-                " exceeds %i bytes\n", name, (int) sizeof(addr.sun_path));
+                " exceeds %i bytes\n", nameTmp, (int) sizeof(addr.sun_path));
         }
         close(fd);
         errno = ENAMETOOLONG;
@@ -939,7 +939,7 @@ ISFTOUTPUT int isftShow_flush(struct isftShow *show)
     return ret;
 }
 
-ISFTOUTPUT void isftAgent_set_user_data(struct isftAgent *agent, void *user_data)
+ISFTOUTPUT void isftAgent_set_user_data(struct isftAgent *agent, void user_data[])
 {
     agent->user_data = user_data;
 }
@@ -986,7 +986,7 @@ ISFTOUTPUT void isftAgent_set_queue(struct isftAgent *agent, struct isftTaskqueu
     }
 }
 
-ISFTOUTPUT void* isftAgent_create_wrapper(void *agent)
+ISFTOUTPUT void* isftAgent_create_wrapper(void agent[])
 {
     struct isftAgent *wrapped_agent = agent;
     struct isftAgent *wrapper;
@@ -1011,7 +1011,7 @@ ISFTOUTPUT void* isftAgent_create_wrapper(void *agent)
     return wrapper;
 }
 
-ISFTOUTPUT void isftAgent_wrapper_destroy(void *agent_wrapper)
+ISFTOUTPUT void isftAgent_wrapper_destroy(void agent_wrapper[])
 {
     struct isftAgent *wrapper = agent_wrapper;
 
@@ -1182,17 +1182,17 @@ static void show_wakeup_threads(struct isftShow *show)
     pthread_cond_broadcast(&show->reader_cond);
 }
 
-static void show_fatal_error(struct isftShow *show, int error)
+static void show_fatal_error(struct isftShow *show, int err)
 {
     if (show->last_error) {
         return;
     }
 
-    if (!error) {
-        error = EFAULT;
+    if (!err) {
+        err = EFAULT;
     }
 
-    show->last_error = error;
+    show->last_error = err;
 
     show_wakeup_threads(show);
 }
@@ -1367,7 +1367,6 @@ prepare_defunct(struct isftAgent *agent)
     for (i = 0; i < port->task_count; i++) {
         information = &port->tasks[i];
         count = information_count_fds(information->signature);
-
         if (!count)
             continue;
 
