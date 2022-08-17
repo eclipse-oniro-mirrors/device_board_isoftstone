@@ -897,7 +897,7 @@ void launchstructs1()
 
             printf("%s", a->name);
         }
-        }
+}
 static void launchstructs(struct isftlist *messagelist, struct interface *interface, enum side side)
 {
     struct message *m;
@@ -1010,7 +1010,7 @@ static int versionfromsince(struct parsecontext *ctx, const char *since)
 }
 void startelement1(const char **atts)
 {
-	for (i = 0; atts[i]; i += 2) {
+    for (i = 0; atts[i]; i += 2) {
         if (strcmp(atts[i], "name") == 0) {
             name = atts[i + 1];
         }
@@ -1097,7 +1097,7 @@ static void startelement(void data[], const char *elementname, const char **atts
 }
 static void startelement(void data[], const char *elementname, const char **atts)
 {
-	if (strcmp(elementname, "request") == 0 ||
+    if (strcmp(elementname, "request") == 0 ||
            strcmp(elementname, "event") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no request name given");
@@ -1131,7 +1131,7 @@ static void startelement(void data[], const char *elementname, const char **atts
 }
 static void startelement(void data[], const char *elementname, const char **atts)
 {
-	if (strcmp(elementname, "arg") == 0) {
+    if (strcmp(elementname, "arg") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no argument name given");
         }
@@ -1190,7 +1190,7 @@ static void startelement(void data[], const char *elementname, const char **atts
 }
 static void startelement(void data[], const char *elementname, const char **atts)
 {
-	if (strcmp(elementname, "enum") == 0) {
+    if (strcmp(elementname, "enum") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no enum name given");
         }
@@ -1215,7 +1215,7 @@ static void startelement(void data[], const char *elementname, const char **atts
 }
 static void startelement(void data[], const char *elementname, const char **atts)
 {
-	if (strcmp(elementname, "entry") == 0) {
+    if (strcmp(elementname, "entry") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no entry name given");
         }
@@ -1391,8 +1391,7 @@ void launchheader1()
     isftlistforeach(i, &protocol->interfacelist, link) {
     printf("#ifndef %sINTERFACE\n", i->uppercasename);
     printf("#define %sINTERFACE\n", i->uppercasename);
-    printf("/**\n"
-           " * @page pageiface%s %s\n",
+    printf("/**\n"" * @page pageiface%s %s\n",
            i->name, i->name);
     if (i->description && i->description->text) {
         printf(" * @section pageiface%sdesc Description\n",
@@ -1400,18 +1399,15 @@ void launchheader1()
         formattexttocomment(i->description->text, false);
     }
     printf(" * @section pageiface%sapi API\n"
-           " * See @ref iface%s.\n"
-           " */\n",
+           " * See @ref iface%s.\n"" */\n",
            i->name, i->name);
-    printf("/**\n"
-           " * @defgroup iface%s The %s interface\n",
+    printf("/**\n"" * @defgroup iface%s The %s interface\n",
            i->name, i->name);
     if (i->description && i->description->text) {
         formattexttocomment(i->description->text, false);
     }
     printf(" */\n");
-    printf("extern const struct isftinterface "
-           "%sinterface;\n", i->name);
+    printf("extern const struct isftinterface ""%sinterface;\n", i->name);
     printf("#endif\n");
     }
 
@@ -1598,7 +1594,7 @@ static void launchmessages(const char *name, struct isftlist *messagelist,
 
 void launchcode1( )
 {
-	enum visibility vis;
+    enum visibility vis;
     const char *symbolvisibility;
     printf("#include <stdlib.h>\n""#include <stdint.h>\n""#include \"wayland-util.h\"\n\n");
 
