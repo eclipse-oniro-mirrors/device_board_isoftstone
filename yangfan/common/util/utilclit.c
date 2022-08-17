@@ -121,12 +121,12 @@ agent_create(struct isftAgent *factory, const struct isftPort *port,
 ISFTOUTPUT void isftAgent_marshal(struct isftAgent *agent, unsigned int opcode, ...)
 {
     union isftArgument args[isftFinish_MAX_ARGS];
-    va_list ap;
+    va_list g_ap;
 
-    va_start(ap, opcode);
+    va_start(g_ap, opcode);
     isftArgument_from_va_list(agent->target.port->methods[opcode].signature,
-        args, isftFinish_MAX_ARGS, ap);
-    va_end(ap);
+        args, isftFinish_MAX_ARGS, g_ap);
+    va_end(g_ap);
 
     isftAgent_marshal_array_constructor(agent, opcode, args, NULL);
 }
