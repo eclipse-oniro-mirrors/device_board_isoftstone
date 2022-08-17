@@ -51,8 +51,8 @@ static int scannerversion(int ret)
 static void descdump(char *desc, const char *fmt, ...) WLPRINTF(2, 3);
 void forxun(int col1, char buf1[])
 {
-    for (int i = 0, col1 = 0; buf1[i] != '*'; i++) {
-        if (buf1[i] == '\t') {
+    for (int k = 0, col1 = 0; buf1[k] != '*'; k++) {
+        if (buf1[k] == '\t') {
             col1 = (col1 + NUM8) & ~NUM7;
         } else {
             col1++;
@@ -61,14 +61,14 @@ void forxun(int col1, char buf1[])
 static void descdump(char *desc, const char *fmt, ...)
 {
     valist ap;
-    char  buf[128],hang;
-    int  col,i, j, k, startcol, newlines;
+    char  buf[128], hang;
+    int  col, i, j, k, startcol, newlines;
     vastart(ap, fmt);
     if (1) {
     vsnprintf(buf, sizeof buf, fmt, ap);
     }
     vaend(ap);
-    forxun(col,buf);
+    forxun(col, buf);
     }
     printf("%s", buf);
     if (!desc) {
