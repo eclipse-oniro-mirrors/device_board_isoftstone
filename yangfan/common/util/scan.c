@@ -848,27 +848,9 @@ static void launchenumerations(struct interface *interface)
                interface->uppercasename, e->uppercasename);
     }
 }
-
-static void launchstructs(struct isftlist *messagelist, struct interface *interface, enum side side)
+static void launchstructs1()
 {
-    struct message *m;
-    struct arg *a;
-    int n;
-
-    if (isftlistempty(messagelist)) {
-        return;
-    }
-    isftlistforeach(m, messagelist, link) {
-        struct description *mdesc = m->description;
-
-        printf("\t/**\n");
-        if (mdesc) {
-            if (mdesc->summary) {
-                printf("\t * %s\n", mdesc->summary);
-            }
-            printf("\t *\n");
-            descdump(mdesc->text, "\t * ");
-        }
+    enum side side;
         isftlistforeach(a, &m->arglist, link) {
             if (side == SERVER && a->type == NEWID &&
                 a->interfacename == NULL) {
@@ -915,10 +897,30 @@ static void launchstructs(struct isftlist *messagelist, struct interface *interf
 
             printf("%s", a->name);
         }
+        }
+static void launchstructs(struct isftlist *messagelist, struct interface *interface, enum side side)
+{
+    struct message *m;
+    struct arg *a;
+    int n;
 
+    if (isftlistempty(messagelist)) {
+        return;
+    }
+    isftlistforeach(m, messagelist, link) {
+        struct description *mdesc = m->description;
+
+        printf("\t/**\n");
+        if (mdesc) {
+            if (mdesc->summary) {
+                printf("\t * %s\n", mdesc->summary);
+            }
+            printf("\t *\n");
+            descdump(mdesc->text, "\t * ");
+        }
         printf(");\n");
     }
-
+    launchstructs1();
     printf("};\n\n");
 
     if (side == CLIENT) {
@@ -1364,7 +1366,57 @@ static void characterdata(void data[], const XMLChar *s, int len)
     memcpy(ctx->characterdata + ctx->characterdatalength, s, len);
     ctx->characterdatalength += len;
 }
+static void launchheader1()
+{
+    enum side side;
+    isftlistforeach(i, &protocol->interfacelist, link) {
+    printf("#ifndef %sINTERFACE\n", i->uppercasename);
+    printf("#define %sINTERFACE\n", i->uppercasename);
+    printf("/**\n"
+           " * @page pageiface%s %s\n",
+           i->name, i->name);
+    if (i->description && i->description->text) {
+        printf(" * @section pageiface%sdesc Description\n",
+               i->name);
+        formattexttocomment(i->description->text, false);
+    }
+    printf(" * @section pageiface%sapi API\n"
+           " * See @ref iface%s.\n"
+           " */\n",
+           i->name, i->name);
+    printf("/**\n"
+           " * @defgroup iface%s The %s interface\n",
+           i->name, i->name);
+    if (i->description && i->description->text) {
+        formattexttocomment(i->description->text, false);
+    }
+    printf(" */\n");
+    printf("extern const struct isftinterface "
+           "%sinterface;\n", i->name);
+    printf("#endif\n");
+    }
 
+    printf("\n");
+    isftlistforeachsafe(i, inext, &protocol->interfacelist, link) {
+        launchenumerations(i);
+
+        if (side == SERVER) {
+            launchstructs(&i->requestlist, i, side);
+            launchopcodes(&i->eventlist, i);
+            launchopcodeversions(&i->eventlist, i);
+            launchopcodeversions(&i->requestlist, i);
+            launcheventwrappers(&i->eventlist, i);
+        } else {
+            launchstructs(&i->eventlist, i, side);
+            launchopcodes(&i->requestlist, i);
+            launchopcodeversions(&i->eventlist, i);
+            launchopcodeversions(&i->requestlist, i);
+            launchstubs(&i->requestlist, i);
+        }
+
+        freeinterface(i);
+    }
+}
 
 static void launchheader(struct protocol *protocol, enum side side)
 {
@@ -1416,55 +1468,7 @@ static void launchheader(struct protocol *protocol, enum side side)
     }
     isftarrayrelease(&types);
     printf("\n");
-
-    isftlistforeach(i, &protocol->interfacelist, link) {
-        printf("#ifndef %sINTERFACE\n", i->uppercasename);
-        printf("#define %sINTERFACE\n", i->uppercasename);
-        printf("/**\n"
-               " * @page pageiface%s %s\n",
-               i->name, i->name);
-        if (i->description && i->description->text) {
-            printf(" * @section pageiface%sdesc Description\n",
-                   i->name);
-            formattexttocomment(i->description->text, false);
-        }
-        printf(" * @section pageiface%sapi API\n"
-               " * See @ref iface%s.\n"
-               " */\n",
-               i->name, i->name);
-        printf("/**\n"
-               " * @defgroup iface%s The %s interface\n",
-               i->name, i->name);
-        if (i->description && i->description->text) {
-            formattexttocomment(i->description->text, false);
-        }
-        printf(" */\n");
-        printf("extern const struct isftinterface "
-               "%sinterface;\n", i->name);
-        printf("#endif\n");
-    }
-
-    printf("\n");
-    isftlistforeachsafe(i, inext, &protocol->interfacelist, link) {
-        launchenumerations(i);
-
-        if (side == SERVER) {
-            launchstructs(&i->requestlist, i, side);
-            launchopcodes(&i->eventlist, i);
-            launchopcodeversions(&i->eventlist, i);
-            launchopcodeversions(&i->requestlist, i);
-            launcheventwrappers(&i->eventlist, i);
-        } else {
-            launchstructs(&i->eventlist, i, side);
-            launchopcodes(&i->requestlist, i);
-            launchopcodeversions(&i->eventlist, i);
-            launchopcodeversions(&i->requestlist, i);
-            launchstubs(&i->requestlist, i);
-        }
-
-        freeinterface(i);
-    }
-
+    launchheader1();
     printf("#ifdef  cplusplus\n"
            "}\n"
            "#endif\n"
@@ -1573,18 +1577,9 @@ static void launchmessages(const char *name, struct isftlist *messagelist,
     printf("};\n\n");
 }
 
-
-static void launchcode(struct protocol *protocol, enum visibility vis)
+static void launchcode1( enum visibility vis)
 {
     const char *symbolvisibility;
-    struct interface *i, *next;
-    struct isftarray types;
-    char **p, *prev;
-    printf("/* Generated by %s %s */\n\n", PROGRAMNAME, WAYLANDVERSION);
-
-    if (protocol->copyright) {
-        formattexttocomment(protocol->copyright, true);
-    }
     printf("#include <stdlib.h>\n""#include <stdint.h>\n""#include \"wayland-util.h\"\n\n");
 
     if (vis == PRIVATE) {
@@ -1596,6 +1591,19 @@ static void launchcode(struct protocol *protocol, enum visibility vis)
     } else {
         symbolvisibility = "WLEXPORT";
     }
+}
+static void launchcode(struct protocol *protocol, enum visibility vis)
+{
+    const char *symbolvisibility;
+    struct interface *i, *next;
+    struct isftarray types;
+    char **p, *prev;
+    printf("/* Generated by %s %s */\n\n", PROGRAMNAME, WAYLANDVERSION);
+
+    if (protocol->copyright) {
+        formattexttocomment(protocol->copyright, true);
+    }
+    launchcode1();
 
     isftarrayinit(&types);
     isftlistforeach(i, &protocol->interfacelist, link) {
