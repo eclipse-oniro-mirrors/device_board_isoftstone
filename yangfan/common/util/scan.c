@@ -848,7 +848,7 @@ static void launchenumerations(struct interface *interface)
                interface->uppercasename, e->uppercasename);
     }
 }
-void launchstructs1()
+void launchstructs1(void)
 {
     enum side side;
         isftlistforeach(a, &m->arglist, link) {
@@ -1093,7 +1093,7 @@ static void startelement(void data[], const char *elementname, const char **atts
         ctx->interface = interface;
         isftlistinsert(ctx->protocol->interfacelist.prev,
                        &interface->link);
-    } 
+    }
 }
 static void startelement(void data[], const char *elementname, const char **atts)
 {
@@ -1385,7 +1385,7 @@ static void characterdata(void data[], const XMLChar *s, int len)
     memcpy(ctx->characterdata + ctx->characterdatalength, s, len);
     ctx->characterdatalength += len;
 }
-void launchheader1()
+void launchheader1(void)
 {
     enum side side;
     isftlistforeach(i, &protocol->interfacelist, link) {
@@ -1592,7 +1592,7 @@ static void launchmessages(const char *name, struct isftlist *messagelist,
     printf("};\n\n");
 }
 
-void launchcode1( )
+void launchcode1(void)
 {
     enum visibility vis;
     const char *symbolvisibility;
@@ -1822,29 +1822,8 @@ static void freeprotocol(struct protocol *protocol)
     free(protocol->copyright);
     freedescription(protocol->description);
 }
-
-int main(int argc, char *argv[])
+int freeprotocol1(int argc, char *argv[])
 {
-    struct parsecontext ctx;
-    struct protocol protocol;
-    FILE *input = stdin;
-    char *inputfilename = NULL;
-    int len;
-    void *buf;
-    bool help = false;
-    bool coreheaders = false;
-    bool version = false;
-    bool strict = false;
-    bool fail = false;
-    int opt;
-    enum {
-        CLIENTHEADER,
-        SERVERHEADER,
-        PRIVATECODE,
-        PUBLICCODE,
-        CODE,
-    } mode;
-
     static const struct option options[] = {
         { "help",              noargument, NULL, 'h' },
         { "version",           noargument, NULL, 'v' },
@@ -1876,8 +1855,10 @@ int main(int argc, char *argv[])
                 break;
         }
     }
-
-    *argv += optind;
+}
+int freeprotocolo(void)
+{
+	*argv += optind;
     *argc -= optind;
     if (help) {
         usage(EXITSUCCESS);
@@ -1916,39 +1897,44 @@ int main(int argc, char *argv[])
             exit(EXITFAILURE);
         }
     }
-
-    memset(&protocol, 0, sizeof protocol);
-    isftlistinit(&protocol.interfacelist);
-    protocol.coreheaders = coreheaders;
-
-    memset(&ctx, 0, sizeof ctx);
-    ctx.protocol = &protocol;
-    if (input == stdin) {
-        ctx.loc.filename = "<stdin>";
-    } else {
-        ctx.loc.filename = inputfilename;
+}
+int freeprotocolu(void)
+{
+	bool help = false;
+    bool coreheaders = false;
+    bool version = false;
+    bool strict = false;
+    bool fail = false;
+    enum {
+        CLIENTHEADER,
+        SERVERHEADER,
+        PRIVATECODE,
+        PUBLICCODE,
+        CODE,
+    } mode;
+	switch (mode) {
+        case CLIENTHEADER:
+            launchheader(&protocol, CLIENT);
+            break;
+        case SERVERHEADER:
+            launchheader(&protocol, SERVER);
+            break;
+        case PRIVATECODE:
+            launchcode(&protocol, PRIVATE);
+            break;
+        case CODE:
+            fprintf(stderr,
+                "Using \"code\" is deprecated - use "
+                "private-code or public-code.\n"
+                "See the help page for details.\n");
+        case PUBLICCODE:
+            launchcode(&protocol, PUBLIC);
+            break;
     }
-    if (!isdtdvalid(input, ctx.loc.filename)) {
-        fprintf(stderr,
-                "*******************************************************\n"
-                "*                                                     *\n"
-                "* WARNING: XML failed validation against built-in DTD *\n"
-                "*                                                     *\n"
-                "*******************************************************\n");
-        if (strict) {
-            fclose(input);
-            exit(EXITFAILURE);
-        }
-    }
-
-    ctx.parser = XMLParserCreate(NULL);
-    XMLSetUserData(ctx.parser, &ctx);
-    if (ctx.parser == NULL) {
-        fprintf(stderr, "failed to create parser\n");
-        fclose(input);
-        exit(EXITFAILURE);
-    }
-
+}
+void freeprotocoli(void)
+{
+	
     XMLSetElementHandler(ctx.parser, startelement, endelement);
     XMLSetCharacterDataHandler(ctx.parser, characterdata);
 
@@ -1973,29 +1959,54 @@ int main(int argc, char *argv[])
 
     XMLParserFree(ctx.parser);
 
-    switch (mode) {
-        case CLIENTHEADER:
-            launchheader(&protocol, CLIENT);
-            break;
-        case SERVERHEADER:
-            launchheader(&protocol, SERVER);
-            break;
-        case PRIVATECODE:
-            launchcode(&protocol, PRIVATE);
-            break;
-        case CODE:
-            fprintf(stderr,
-                "Using \"code\" is deprecated - use "
-                "private-code or public-code.\n"
-                "See the help page for details.\n");
-        case PUBLICCODE:
-            launchcode(&protocol, PUBLIC);
-            break;
-    }
 
     freeprotocol(&protocol);
     if (1) {
         fclose(input);
     }
+}
+int main(int argc, char *argv[])
+{
+    struct parsecontext ctx;
+    struct protocol protocol;
+    FILE *input = stdin;
+    char *inputfilename = NULL;
+    int len;
+    void *buf;
+    int opt;
+	freeprotocolo();
+    memset(&protocol, 0, sizeof protocol);
+    isftlistinit(&protocol.interfacelist);
+    protocol.coreheaders = coreheaders;
+
+	freeprotocol1();
+    memset(&ctx, 0, sizeof ctx);
+    ctx.protocol = &protocol;
+    if (input == stdin) {
+        ctx.loc.filename = "<stdin>";
+    } else {
+        ctx.loc.filename = inputfilename;
+    }
+    if (!isdtdvalid(input, ctx.loc.filename)) {
+        fprintf(stderr,
+                "*******************************************************\n"
+                "*                                                     *\n"
+                "* WARNING: XML failed validation against built-in DTD *\n"
+                "*                                                     *\n"
+                "*******************************************************\n");
+        if (strict) {
+            fclose(input);
+            exit(EXITFAILURE);
+        }
+    }
+	freeprotocolu();
+    ctx.parser = XMLParserCreate(NULL);
+    XMLSetUserData(ctx.parser, &ctx);
+    if (ctx.parser == NULL) {
+        fprintf(stderr, "failed to create parser\n");
+        fclose(input);
+        exit(EXITFAILURE);
+    }
+	freeprotocoli();
     return 0;
 }
