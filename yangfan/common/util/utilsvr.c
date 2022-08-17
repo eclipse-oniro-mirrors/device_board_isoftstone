@@ -585,8 +585,8 @@ static bool verifytargets(struct isftResource *resource, uint32t opcode,
                     isftPage("compositor bug: The compositor "
                     "tried to use an target from one "
                     "client in a '%s.%s' for a different "
-                    "client.\n", target->port->name,
-                    target->port->tasks[opcode].name);
+                        "client.\n", target->port->name,
+                        target->port->tasks[opcode].name);
                 return false;
             }
             default:
@@ -775,7 +775,9 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
                 target->id);
             break;
         }
-
+}
+static int isftClitlinkdata(int fd, uint32t mask, void data[])
+{
         information = &target->port->methods[opcode];
         since = isftInformationgetsince(information);
         if (!(resourceflags & ISFTPLATENTRYLEGACY) &&
