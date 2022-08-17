@@ -571,8 +571,7 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
     struct message *m;
     struct arg *a, *ret;
     int hasdestructor, hasdestroy;
-
-    printf("/** @ingroup iface%s */\n", interface->name);
+		printf("/** @ingroup iface%s */\n", interface->name);
     printf("static inline void\n"
            "%ssetuserdata(struct %s *%s, void *userdata)\n"
            "{\n"
@@ -580,8 +579,7 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
            "}\n\n",
            interface->name, interface->name, interface->name,
            interface->name);
-
-    printf("/** @ingroup iface%s */\n", interface->name);
+    printf("/** @ingroup iface%s */\n", *name);
     printf("static inline void *\n"
            "%sgetuserdata(struct %s *%s)\n"
            "{\n"
@@ -589,7 +587,6 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
            "}\n\n",
            interface->name, interface->name, interface->name,
            interface->name);
-
     printf("static inline uint32t\n"
            "%sgetversion(struct %s *%s)\n"
            "{\n"
@@ -597,7 +594,6 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
            "}\n\n",
            interface->name, interface->name, interface->name,
            interface->name);
-
     hasdestructor = 0;
     hasdestroy = 0;
     isftlistforeach(m, messagelist, link) {
@@ -616,7 +612,9 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
              interface->name);
         exit(EXITFAILURE);
     }
-
+}
+static void launchstubs(struct isftlist *messagelist, struct interface *interface)
+{
     if (!hasdestroy && strcmp(interface->name, "isftdisplay") != 0) {
         printf("/** @ingroup iface%s */\n", interface->name);
         printf("static inline void\n"
@@ -663,7 +661,9 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
         } else {
             printf("static inline void\n");
         }
-
+}
+static void launchstubs(struct isftlist *messagelist, struct interface *interface)
+{
         printf("%s%s(struct %s *%s",
                interface->name, m->name,
                interface->name, interface->name);
@@ -681,8 +681,7 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
             printf("%s", a->name);
         }
 
-        printf(")\n"
-               "{\n");
+        printf(")\n""{\n");
         if (ret && ret->interfacename == NULL) {
             printf("\tstruct isftproxy *%s;\n\n"
                    "\t%s = isftproxymarshalconstructorversioned("
@@ -709,7 +708,9 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
                    interface->uppercasename,
                    m->uppercasename);
         }
-
+}
+static void launchstubs(struct isftlist *messagelist, struct interface *interface)
+{
         isftlistforeach(a, &m->arglist, link) {
             if (a->type == NEWID) {
                 if (a->interfacename == NULL)
