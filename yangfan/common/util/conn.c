@@ -340,7 +340,7 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int o
     }
 }
 
-void isftswitch1(struct argumentdetails arg)
+void isftswitch0(struct argumentdetails arg)
 {
     struct argumentdetails arg;
     switch (arg.type) {
@@ -353,6 +353,13 @@ void isftswitch1(struct argumentdetails arg)
         case 'f':
             closure->args[i].f = *p++;
             break;
+    }
+    return;
+}
+void isftswitch1(struct argumentdetails arg)
+{
+    struct argumentdetails arg;
+    switch (arg.type) {
         case 's':
             length = *p++;
 
@@ -396,6 +403,7 @@ void isftswitch1(struct argumentdetails arg)
                 isftconnectionconsume(connection, size);
             }
             break;
+    }
     return;
 }
 
@@ -407,7 +415,7 @@ void isftswitch2(struct argumentdetails arg)
             closure->args[i].n = id;
 
             if (id == 0 && !arg.nullable) {
-                isftlog("NULL new ID received on non-nullable " "type, message %s(%s)\n", 
+                isftlog("NULL new ID received on non-nullable " "type, message %s(%s)\n",
                         message->name, message->signature);
                 errno = EINVAL;
                 isftclosuredestroy(closure);
@@ -509,6 +517,7 @@ struct isftclosure *sftconnectiondemarshal(struct isftconnection *connection, un
             isftclosuredestroy(closure);
             isftconnectionconsume(connection, size);
         }
+        isftswitch0(arg);
         isftswitch1(arg);
         isftswitch2(arg);
     }
@@ -748,6 +757,54 @@ int isftclosurequeue(struct isftclosure *closure, struct isftconnection *connect
     return result;
 }
 
+void isftswitch3(struct argumentdetails arg)
+{
+    struct argumentdetails arg;
+    switch (arg.type) {
+        case 'u':
+            fprintf(stderr, "%u", closure->args[i].u);
+            break;
+        case 'i':
+            fprintf(stderr, "%d", closure->args[i].i);
+            break;
+        case 'f':
+            fprintf(stderr, "%f",
+                isftfixedtodouble(closure->args[i].f));
+            break;
+        case 's':
+            if (closure->args[i].s)
+                fprintf(stderr, "\"%s\"", closure->args[i].s);
+            else
+                fprintf(stderr, "nil");
+            break;
+        case 'o':
+            if (closure->args[i].o)
+                fprintf(stderr, "%s@%u",
+                    closure->args[i].o->interface->name,
+                    closure->args[i].o->id);
+            else
+                fprintf(stderr, "nil");
+            break;
+        case 'n':
+            fprintf(stderr, "new id %s@",
+                (closure->message->types[i]) ?
+                 closure->message->types[i]->name :
+                  "[unknown]");
+            if (closure->args[i].n != 0)
+                fprintf(stderr, "%u", closure->args[i].n);
+            else
+                fprintf(stderr, "nil");
+            break;
+        case 'a':
+            fprintf(stderr, "array");
+            break;
+        case 'h':
+            fprintf(stderr, "fd %d", closure->args[i].h);
+            break;
+        }
+    return;
+}
+
 void isftclt(struct isftclosure *closure, struct isftobject *target, int send)
 {
     int i;
@@ -770,48 +827,7 @@ void isftclt(struct isftclosure *closure, struct isftobject *target, int send)
         if (i > 0) {
             fprintf(stderr, ", ");
         }
-        switch (arg.type) {
-            case 'u':
-                fprintf(stderr, "%u", closure->args[i].u);
-                break;
-            case 'i':
-                fprintf(stderr, "%d", closure->args[i].i);
-                break;
-            case 'f':
-                fprintf(stderr, "%f",
-                    isftfixedtodouble(closure->args[i].f));
-                break;
-            case 's':
-                if (closure->args[i].s)
-                    fprintf(stderr, "\"%s\"", closure->args[i].s);
-                else
-                    fprintf(stderr, "nil");
-                break;
-            case 'o':
-                if (closure->args[i].o)
-                    fprintf(stderr, "%s@%u",
-                        closure->args[i].o->interface->name,
-                        closure->args[i].o->id);
-                else
-                    fprintf(stderr, "nil");
-                break;
-            case 'n':
-                fprintf(stderr, "new id %s@",
-                    (closure->message->types[i]) ?
-                     closure->message->types[i]->name :
-                      "[unknown]");
-                if (closure->args[i].n != 0)
-                    fprintf(stderr, "%u", closure->args[i].n);
-                else
-                    fprintf(stderr, "nil");
-                break;
-            case 'a':
-                fprintf(stderr, "array");
-                break;
-            case 'h':
-                fprintf(stderr, "fd %d", closure->args[i].h);
-                break;
-        }
+        isftswitch3(arg);
     }
     if (1) {
         fprintf(stderr, ")\n");
