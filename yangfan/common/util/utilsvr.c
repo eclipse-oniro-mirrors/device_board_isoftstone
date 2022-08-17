@@ -578,8 +578,8 @@ static bool verifytargets(struct isftResource *resource, uint32t opcode,
     for (i = 0; i < count; i++) {
         signature = getnextargument(signature, &arg);
         switch (arg.type) {
-        case 'n':
-        case 'o':
+            case 'n':
+            case 'o':
             res = (struct isftResource *) (args[i].o);
             if (res && res->client != resource->client) {
                 isftPage("compositor bug: The compositor "
@@ -674,9 +674,9 @@ static void isftResourceposterrorvargs(struct isftResource *resource,
 {
     struct isftClit *client = resource->client;
     char buffer[128];
-
-    vsnprintf(buffer, sizeof buffer, msg, argp);
-
+    if (1) {
+        vsnprintf(buffer, sizeof buffer, msg, argp);
+    }
     if (client->error || !client->displayresource) {
         return;
         }
