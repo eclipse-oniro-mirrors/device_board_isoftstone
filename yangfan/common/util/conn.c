@@ -309,22 +309,22 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int o
                 break;
             case 's':
                 if (!arg.nullable && args[i].s == NULL)
-                    goto errnull;
+                    return NULL;
                 break;
             case 'o':
                 if (!arg.nullable && args[i].o == NULL)
-                    goto errnull;
+                    return NULL;
                 break;
             case 'n':
                 object = args[i].o;
                 if (!arg.nullable && object == NULL)
-                    goto errnull;
+                    return NULL;
 
                 closure->args[i].n = object ? object->id : 0;
                 break;
             case 'a':
                 if (!arg.nullable && args[i].a == NULL) {
-                    goto errnull;
+                    return NULL;
                 }
                 break;
             case 'h':
