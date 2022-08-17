@@ -848,7 +848,7 @@ static void launchenumerations(struct interface *interface)
                interface->uppercasename, e->uppercasename);
     }
 }
-static void launchstructs1()
+void launchstructs1()
 {
     enum side side;
         isftlistforeach(a, &m->arglist, link) {
@@ -1008,29 +1008,9 @@ static int versionfromsince(struct parsecontext *ctx, const char *since)
     }
     return version;
 }
-
-static void startelement(void data[], const char *elementname, const char **atts)
+void startelement1(const char **atts)
 {
-    struct parsecontext *ctx = data;
-    struct interface *interface;
-    struct message *message;
-    struct arg *arg;
-    struct enumeration *enumeration;
-    struct entry *entry;
-    struct description *description = NULL;
-    const char *name = NULL;
-    const char *type = NULL;
-    const char *interfacename = NULL;
-    const char *value = NULL;
-    const char *summary = NULL;
-    const char *since = NULL;
-    const char *allownull = NULL;
-    const char *enumerationname = NULL;
-    const char *bitfield = NULL;
-    int i, version = 0;
-
-    ctx->loc.linenumber = XMLGetCurrentLineNumber(ctx->parser);
-    for (i = 0; atts[i]; i += 2) {
+	for (i = 0; atts[i]; i += 2) {
         if (strcmp(atts[i], "name") == 0) {
             name = atts[i + 1];
         }
@@ -1065,6 +1045,29 @@ static void startelement(void data[], const char *elementname, const char **atts
             bitfield = atts[i + 1];
         }
     }
+}
+static void startelement(void data[], const char *elementname, const char **atts)
+{
+    struct parsecontext *ctx = data;
+    struct interface *interface;
+    struct message *message;
+    struct arg *arg;
+    struct enumeration *enumeration;
+    struct entry *entry;
+    struct description *description = NULL;
+    const char *name = NULL;
+    const char *type = NULL;
+    const char *interfacename = NULL;
+    const char *value = NULL;
+    const char *summary = NULL;
+    const char *since = NULL;
+    const char *allownull = NULL;
+    const char *enumerationname = NULL;
+    const char *bitfield = NULL;
+    int i, version = 0;
+
+    ctx->loc.linenumber = XMLGetCurrentLineNumber(ctx->parser);
+    startelement1(&(*atts));
 
     ctx->characterdatalength = 0;
     if (strcmp(elementname, "protocol") == 0) {
@@ -1090,7 +1093,11 @@ static void startelement(void data[], const char *elementname, const char **atts
         ctx->interface = interface;
         isftlistinsert(ctx->protocol->interfacelist.prev,
                        &interface->link);
-    } else if (strcmp(elementname, "request") == 0 ||
+    } 
+}
+static void startelement(void data[], const char *elementname, const char **atts)
+{
+	if (strcmp(elementname, "request") == 0 ||
            strcmp(elementname, "event") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no request name given");
@@ -1120,7 +1127,11 @@ static void startelement(void data[], const char *elementname, const char **atts
             fail(&ctx->loc, "destroy request should be destructor type");
         }
         ctx->message = message;
-    } else if (strcmp(elementname, "arg") == 0) {
+    }
+}
+static void startelement(void data[], const char *elementname, const char **atts)
+{
+	if (strcmp(elementname, "arg") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no argument name given");
         }
@@ -1175,7 +1186,11 @@ static void startelement(void data[], const char *elementname, const char **atts
 
         isftlistinsert(ctx->message->arglist.prev, &arg->link);
         ctx->message->argcount++;
-    } else if (strcmp(elementname, "enum") == 0) {
+    }
+}
+static void startelement(void data[], const char *elementname, const char **atts)
+{
+	if (strcmp(elementname, "enum") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no enum name given");
         }
@@ -1196,7 +1211,11 @@ static void startelement(void data[], const char *elementname, const char **atts
         isftlistinsert(ctx->interface->enumerationlist.prev,
                        &enumeration->link);
         ctx->enumeration = enumeration;
-    } else if (strcmp(elementname, "entry") == 0) {
+    }
+}
+static void startelement(void data[], const char *elementname, const char **atts)
+{
+	if (strcmp(elementname, "entry") == 0) {
         if (name == NULL) {
             fail(&ctx->loc, "no entry name given");
         }
@@ -1366,7 +1385,7 @@ static void characterdata(void data[], const XMLChar *s, int len)
     memcpy(ctx->characterdata + ctx->characterdatalength, s, len);
     ctx->characterdatalength += len;
 }
-static void launchheader1()
+void launchheader1()
 {
     enum side side;
     isftlistforeach(i, &protocol->interfacelist, link) {
@@ -1577,8 +1596,9 @@ static void launchmessages(const char *name, struct isftlist *messagelist,
     printf("};\n\n");
 }
 
-static void launchcode1( enum visibility vis)
+void launchcode1( )
 {
+	enum visibility vis;
     const char *symbolvisibility;
     printf("#include <stdlib.h>\n""#include <stdint.h>\n""#include \"wayland-util.h\"\n\n");
 
