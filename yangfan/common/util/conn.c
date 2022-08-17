@@ -74,7 +74,7 @@ int isftconnectionread(struct isftconnection *connection)
     return isftconnectionpendinginput(connection);
 }
 
-int isftconnectionwrite(struct isftconnection *connection, const void data, int count) // *
+int isftconnectionwrite(struct isftconnection *connection, const void *data, int count)
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
@@ -92,7 +92,7 @@ int isftconnectionwrite(struct isftconnection *connection, const void data, int 
     return 0;
 }
 
-int isftconnectionqueue(struct isftconnection *connection, const void data, int count)
+int isftconnectionqueue(struct isftconnection *connection, const void *data, int count)
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
@@ -117,7 +117,8 @@ int isftmessagecountarrays(const struct isftmessage *message)
     return arrays;
 }
 
-int isftconnectiongetfd(struct isftconnection *connection)
+int
+isftconnectiongetfd(struct isftconnection *connection)
 {
     return connection->fd;
 }
@@ -138,7 +139,7 @@ const char *
 getnextargument(const char *signature, struct argumentdetails *details)
 {
     details->nullable = 0;
-    for (; *signature; ++*signature) {
+    for (; *signature; ++signature) {
         switch (*signature) {     // switch Statement
             case 'i':
             case 'u':
@@ -163,7 +164,7 @@ getnextargument(const char *signature, struct argumentdetails *details)
 int argcountforsignature(const char *signature)
 {
     int count = 0;
-    for (; *signature; ++*signature) {
+    for (; *signature; ++signature) {
         switch (*signature) {
             case 'i':
             case 'u':
@@ -246,8 +247,8 @@ static void isftclosureclearfds(struct isftclosure *closure)
 }
 
 static struct isftclosure *
-isftclosureinit(const struct isftmessage *message, unsigned int size, int
-                *numarrays, union isftargument *args)
+isftclosureinit(const struct isftmessage *message, unsigned int size,
+                int *numarrays, union isftargument *args)
 {
     struct isftclosure *closure;
     int count;
@@ -283,7 +284,7 @@ isftclosureinit(const struct isftmessage *message, unsigned int size, int
     return closure;
 }
 
-struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned intopcode, union
+struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int opcode, union
                                        isftargument *args, const struct isftmessage *message)
 {
     struct isftclosure *closure;
@@ -291,14 +292,17 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned intop
     int i, count, fd, dupfd;
     const char *signature;
     struct argumentdetails arg;
+
     closure = isftclosureinit(message, 0, NULL, args);
     if (closure == NULL) {
         return NULL;
     }
     count = closure->count;
+
     signature = message->signature;
     for (i = 0; i < count; i++) {
         signature = getnextargument(signature, &arg);
+
         switch (arg.type) {
         case 'f':
         case 'u':
@@ -316,6 +320,7 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned intop
             object = args[i].o;
             if (!arg.nullable && object == NULL)
                 goto errnull;
+
             closure->args[i].n = object ? object->id : 0;
             break;
         case 'a':
@@ -327,14 +332,15 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned intop
             dupfd = isftosdupfdcloexec(fd, 0);
             if (dupfd < 0) {
                 isftclosuredestroy(closure);
-                isftlog("error marshalling arguments for %s: dup failed: %s\n", message->name, strerror(errno));
+                isftlog("error marshalling arguments for %s: dup failed: %s\n",message->
+                        name, strerror(errno));
                 return NULL;
             }
 		}
 	}
 }
-
-struct isftclosure * isftconnectiondemarshal(struct isftconnection *connection,
+struct isftclosure *
+sftconnectiondemarshal(struct isftconnection *connection,
             unsigned int size,
             struct isftmap *objects,
             const struct isftmessage *message)
@@ -348,6 +354,7 @@ struct isftclosure * isftconnectiondemarshal(struct isftconnection *connection,
     struct isftclosure *closure;
     struct isftarray *arrayextra;
 
+    /* Space for senderid and opcode */
     if (size < NUM2 * sizeof *p) {
         isftlog("message too short, invalid header\n");
         isftconnectionconsume(connection, size);
@@ -377,8 +384,8 @@ struct isftclosure * isftconnectiondemarshal(struct isftconnection *connection,
 
         if (arg.type != 'h' && p + 1 > end) {
             isftlog("message too short, "
-                    "object (%d), message %s(%s)\n", closure->senderid, message->
-                    name, message->signature);
+                   "object (%d), message %s(%s)\n",closure->senderid, message->
+                   name, message->signature);
             errno = EINVAL;
             goto err;
         }
@@ -513,9 +520,12 @@ bool
 isftobjectiszombie(struct isftmap *map, unsigned int id)
 {
     unsigned int flags;
+
+    /* Zombie objects only exist on the client side. */
     if (map->side == WLMAPSERVERSIDE)
         return false;
 
+    /* Zombie objects can only have been created by the client. */
     if (id >= WLSERVERIDSTART)
         return false;
 
@@ -533,10 +543,7 @@ struct isftbuffer {
     unsigned int head, tail;
 };
 
-unsigned int MASK(int i)
-{
-    return ((i) & 4095)
-}
+#define MASK(i) ((i) & 4095)
 
 #define MAXFDSOUT    28
 #define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
@@ -597,7 +604,9 @@ isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count)
     }
 }
 
-static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, int buffercount)
+static int
+serializeclosure(struct isftclosure *closure, unsigned int *buffer,
+          int buffercount)
 {
     const struct isftmessage *message = closure->message;
     unsigned int i, count, size;
@@ -752,13 +761,12 @@ void isftclt(struct isftclosure *closure, struct isftobject *target, int send) /
     clockgettime(CLOCKREALTIME, &tp);
     time = (tp.tvsec * 1000000L) + (tp.tvnsec / NUM1000);
 
-	if (1) {
-        fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
-            time / NUM1000,
-            send ? " -> " : "",
-            target->interface->name, target->id,
-            closure->message->name);
-	}
+    fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
+        time / NUM1000,
+        send ? " -> " : "",
+        target->interface->name, target->id,
+        closure->message->name);
+
     for (i = 0; i < closure->count; i++) {
         signature = getnextargument(signature, &arg);
         if (i > 0)
@@ -807,9 +815,8 @@ void isftclt(struct isftclosure *closure, struct isftobject *target, int send) /
                 break;
         }
     }
-    if (1) {
-        fprintf(stderr, ")\n");
-    }
+
+    fprintf(stderr, ")\n");
 }
 
 static int
@@ -831,6 +838,7 @@ isftclosureclosefds(struct isftclosure *closure)
 void
 isftclosuredestroy(struct isftclosure *closure)
 {
+    /* isftclosuredestroy has free() semantics */
     if (!closure)
         return;
 
@@ -900,7 +908,7 @@ isftconnectioncreate(int fd)
 static void
 closefds(struct isftbuffer *buffer, int max)
 {
-    int fds[sizeof(buffer->data) / sizeof(int)], i, count;
+    int fds[sizeof(buffer->data) / sizeof(int )], i, count;
     int size;
 
     size = isftbuffersize(buffer);
@@ -1080,8 +1088,8 @@ isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
                 if (object != NULL && message->types[i] != NULL &&
                     !isftinterfaceequal((object)->interface, message->types[i])) {
                     isftlog("invalid object (%u), type (%s), "
-                            "message %s(%s)\n", id, (object)->interface->name, message->
-                            name, message->signature);
+                           "message %s(%s)\n",id, (object)->interface->name,message->
+                           name, message->signature);
                     errno = EINVAL;
                     return -1;
                 }
@@ -1159,7 +1167,7 @@ isftclosureinvoke(struct isftclosure *closure, unsigned int flags,
     int count;
     fficif cif;
     ffitype *ffitypes[WLCLOSUREMAXARGS + 2];
-    void* ffiargs[WLCLOSUREMAXARGS + 2];
+    void * ffiargs[WLCLOSUREMAXARGS + 2];
     void (* const *implementation)(void);
 
     count = argcountforsignature(closure->message->signature);
