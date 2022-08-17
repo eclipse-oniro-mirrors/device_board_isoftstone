@@ -68,7 +68,7 @@ static void descdump(char *desc, const char *fmt, ...)
     vsnprintf(buf, sizeof buf, fmt, ap);
     }
     vaend(ap);
-    forxun(col,buf[]);
+    forxun(col,buf);
     }
     printf("%s", buf);
     if (!desc) {
