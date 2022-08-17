@@ -118,8 +118,7 @@ static void descdump(char *desc, const char *fmt, ...)
     putchar('\n');
 }
 
-static void attribute ((noreturn))
-fail(struct location *loc, const char *msg, ...)
+static void attribute (struct location *loc, const char *msg, ...)
 {
     valist ap;
 
@@ -1858,7 +1857,7 @@ int freeprotocol1(int argc, char *argv[])
 }
 int freeprotocolo(void)
 {
-	*argv += optind;
+    *argv += optind;
     *argc -= optind;
     if (help) {
         usage(EXITSUCCESS);
@@ -1900,7 +1899,7 @@ int freeprotocolo(void)
 }
 int freeprotocolu(void)
 {
-	bool help = false;
+    bool help = false;
     bool coreheaders = false;
     bool version = false;
     bool strict = false;
@@ -1912,7 +1911,7 @@ int freeprotocolu(void)
         PUBLICCODE,
         CODE,
     } mode;
-	switch (mode) {
+    switch (mode) {
         case CLIENTHEADER:
             launchheader(&protocol, CLIENT);
             break;
@@ -1934,10 +1933,8 @@ int freeprotocolu(void)
 }
 void freeprotocoli(void)
 {
-	
     XMLSetElementHandler(ctx.parser, startelement, endelement);
     XMLSetCharacterDataHandler(ctx.parser, characterdata);
-
     do {
         buf = XMLGetBuffer(ctx.parser, XMLBUFFERSIZE);
         len = fread(buf, 1, XMLBUFFERSIZE, input);
@@ -1956,10 +1953,7 @@ void freeprotocoli(void)
             exit(EXITFAILURE);
         }
     } while (len > 0);
-
     XMLParserFree(ctx.parser);
-
-
     freeprotocol(&protocol);
     if (1) {
         fclose(input);
@@ -1974,12 +1968,12 @@ int main(int argc, char *argv[])
     int len;
     void *buf;
     int opt;
-	freeprotocolo();
+    freeprotocolo();
     memset(&protocol, 0, sizeof protocol);
     isftlistinit(&protocol.interfacelist);
     protocol.coreheaders = coreheaders;
 
-	freeprotocol1();
+    freeprotocol1();
     memset(&ctx, 0, sizeof ctx);
     ctx.protocol = &protocol;
     if (input == stdin) {
@@ -1999,7 +1993,7 @@ int main(int argc, char *argv[])
             exit(EXITFAILURE);
         }
     }
-	freeprotocolu();
+    freeprotocolu();
     ctx.parser = XMLParserCreate(NULL);
     XMLSetUserData(ctx.parser, &ctx);
     if (ctx.parser == NULL) {
@@ -2007,6 +2001,6 @@ int main(int argc, char *argv[])
         fclose(input);
         exit(EXITFAILURE);
     }
-	freeprotocoli();
+    freeprotocoli();
     return 0;
 }
