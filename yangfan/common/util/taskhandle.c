@@ -97,7 +97,7 @@ static int isftTasksourcefiledespost(struct isftTasksource *source,
     return filedessource->func(filedessource->filedes, mask, source->data);
 }
 
-struct isftTasksourceinterface filedessourceinterface = {
+struct isftTasksourceinterface g_filedessourceinterface = {
     isftTasksourcefiledespost,
 };
 
@@ -152,7 +152,7 @@ static int nooppost(struct isftTasksource *source,
     return 0;
 }
 
-struct isftTasksourceinterface clockheapsourceinterface = {
+struct isftTasksourceinterface g_clockheapsourceinterface = {
     nooppost,
 };
 
@@ -391,7 +391,7 @@ static int isftTasksourceclockpost(struct isftTasksource *source,
     return clock->func(clock->base.data);
 }
 
-struct isftTasksourceinterface clocksourceinterface = {
+struct isftTasksourceinterface g_clocksourceinterface = {
     isftTasksourceclockpost,
 };
 
@@ -502,7 +502,7 @@ static int isftTasksourcesignalpost(struct isftTasksource *source,
         signalsource->base.data);
 }
 
-struct isftTasksourceinterface signalsourceinterface = {
+struct isftTasksourceinterface g_signalsourceinterface = {
     isftTasksourcesignalpost,
 };
 
@@ -541,7 +541,7 @@ struct isftTasksourceidle {
 
 /** \endcond */
 
-struct isftTasksourceinterface idlesourceinterface = {
+struct isftTasksourceinterface g_idlesourceinterface = {
     NULL,
 };
 
