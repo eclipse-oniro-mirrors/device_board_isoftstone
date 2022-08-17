@@ -27,8 +27,10 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
-#define TIMERREMOVED -2
-
+#define TIMERREMOVED (-2)
+#define NUM16 16
+#define NUM2 2
+#define NUM1000 1000
 
 struct isftTaskloop;
 struct isftTasksourceinterface;
@@ -75,9 +77,8 @@ struct isftTasksourcefiledes {
 
 /** \endcond */
 
-static int
-isftTasksourcefiledespost(struct isftTasksource *source,
-            struct selecttask *ep)
+static int isftTasksourcefiledespost(struct isftTasksource *source,
+    struct selecttask *ep)
 {
     struct isftTasksourcefiledes *filedessource = (struct isftTasksourcefiledes *) source;
     uint32t mask;
@@ -99,17 +100,17 @@ struct isftTasksourceinterface filedessourceinterface = {
     isftTasksourcefiledespost,
 };
 
-struct isftTasksource *
-isftTaskloopaddfiledes(struct isftTaskloop *loop,
-             int filedes, uint32t mask,
-             isftTaskloopfiledesfunct func,
-             void *data)
+struct isftTasksource *isftTaskloopaddfiledes(struct isftTaskloop *loop,
+    int filedes, uint32t mask,
+    isftTaskloopfiledesfunct func,
+    void *data)
 {
     struct isftTasksourcefiledes *source;
 
     source = malloc(sizeof *source);
-    if (source == NULL)
+    if (source == NULL) {
         return NULL;
+	}
 
     source->base.interface = &filedessourceinterface;
     source->base.filedes = isftosdupfiledescloexec(filedes, 0);
@@ -119,8 +120,7 @@ isftTaskloopaddfiledes(struct isftTaskloop *loop,
     return addsource(loop, &source->base, mask, data);
 }
 
- int
-isftTasksourcefiledesupdate(struct isftTasksource *source, uint32t mask)
+int isftTasksourcefiledesupdate(struct isftTasksource *source, uint32t mask)
 {
     struct isftTaskloop *loop = source->loop;
     struct selecttask ep;
@@ -145,9 +145,9 @@ struct isftTasksourceclock {
     int heapidx;
 };
 
-static int
-nooppost(struct isftTasksource *source,
-          struct selecttask *ep) {
+static int nooppost(struct isftTasksource *source,
+    struct selecttask *ep) 
+{
     return 0;
 }
 
@@ -155,8 +155,7 @@ struct isftTasksourceinterface clockheapsourceinterface = {
     nooppost,
 };
 
-static bool
-timelt(struct timespec ta, struct timespec tb)
+static bool timelt(struct timespec ta, struct timespec tb)
 {
     if (ta.tvsec != tb.tvsec) {
         return ta.tvsec < tb.tvsec;
@@ -164,8 +163,8 @@ timelt(struct timespec ta, struct timespec tb)
     return ta.tvnsec < tb.tvnsec;
 }
 
-static int
-setclock(int clockfiledes, struct timespec deadline) {
+static int setclock(int clockfiledes, struct timespec deadline) 
+{
     struct iclockspec its;
 
     its.itinterval.tvsec = 0;
@@ -174,8 +173,7 @@ setclock(int clockfiledes, struct timespec deadline) {
     return clockfiledessettime(clockfiledes, TFDTIMERABSTIME, &its, NULL);
 }
 
-static int
-clearclock(int clockfiledes)
+static int clearclock(int clockfiledes)
 {
     struct iclockspec its;
 
@@ -186,8 +184,7 @@ clearclock(int clockfiledes)
     return clockfiledessettime(clockfiledes, 0, &its, NULL);
 }
 
-static void
-isftClockheapinit(struct isftClockheap *clocks, struct isftTaskloop *loop)
+static void isftClockheapinit(struct isftClockheap *clocks, struct isftTaskloop *loop)
 {
     clocks->base.filedes = -1;
     clocks->base.data = NULL;
@@ -201,8 +198,7 @@ isftClockheapinit(struct isftClockheap *clocks, struct isftTaskloop *loop)
     loop->clocks.count = 0;
 }
 
-static void
-isftClockheaprelease(struct isftClockheap *clocks)
+static void isftClockheaprelease(struct isftClockheap *clocks)
 {
     if (clocks->base.filedes != -1) {
         close(clocks->base.filedes);
@@ -210,28 +206,26 @@ isftClockheaprelease(struct isftClockheap *clocks)
     free(clocks->data);
 }
 
-static void
-isftClockheapunreserve(struct isftClockheap *clocks)
+static void isftClockheapunreserve(struct isftClockheap *clocks)
 {
     struct isftTasksourceclock **n;
 
     clocks->count--;
 
-    if (clocks->space >= 16 && clocks->space >= 4 * clocks->count) {
-        n = realloc(clocks->data, (sizet)clocks->space / 2 * sizeof(*n));
+    if (clocks->space >= NUM16 && clocks->space >= 4 * clocks->count) {
+        n = realloc(clocks->data, (sizet)clocks->space / NUM2 * sizeof(*n));
         if (!n) {
-            isftlog("Reallocation failure when shrinking clock list");
-            return;
+        isftlog("Reallocation failure when shrinking clock list");
+        return;
         }
         clocks->data = n;
-        clocks->space = clocks->space / 2;
+        clocks->space = clocks->space / NUM2;
     }
 }
 
-static int
-heapset(struct isftTasksourceclock **data,
-     struct isftTasksourceclock *a,
-     int idx)
+static int heapset(struct isftTasksourceclock **data,
+    struct isftTasksourceclock *a,
+    int idx)
 {
     int tmp;
 
@@ -242,10 +236,9 @@ heapset(struct isftTasksourceclock **data,
     return tmp;
 }
 
-static void
-heapsiftdown(struct isftTasksourceclock **data,
-           int numactive,
-           struct isftTasksourceclock *source)
+static void heapsiftdown(struct isftTasksourceclock **data,
+    int numactive,
+    struct isftTasksourceclock *source)
 {
     struct isftTasksourceclock *child, *otherchild;
     int cursoridx;
@@ -263,12 +256,14 @@ heapsiftdown(struct isftTasksourceclock **data,
         child = data[lchildidx];
         if (lchildidx + 1 < numactive) {
             otherchild = data[lchildidx + 1];
-            if (timelt(otherchild->deadline, child->deadline))
+            if (timelt(otherchild->deadline, child->deadline)) {
                 child = otherchild;
+            }
         }
 
-        if (timelt(child->deadline, key))
+        if (timelt(child->deadline, key)) {
             cursoridx = heapset(data, child, cursoridx);
+        }
         else
             break;
     }
@@ -276,9 +271,8 @@ heapsiftdown(struct isftTasksourceclock **data,
     heapset(data, source, cursoridx);
 }
 
-static void
-heapsiftup(struct isftTasksourceclock **data,
-         struct isftTasksourceclock *source)
+static void heapsiftup(struct isftTasksourceclock **data,
+    struct isftTasksourceclock *source)
 {
     int cursoridx;
     struct timespec key;
@@ -289,8 +283,9 @@ heapsiftup(struct isftTasksourceclock **data,
         struct isftTasksourceclock *parent =
             data[(cursoridx - 1) / 2];
 
-        if (timelt(key, parent->deadline))
+        if (timelt(key, parent->deadline)) {
             cursoridx = heapset(data, parent, cursoridx);
+        }
         else
             break;
     }
@@ -298,9 +293,8 @@ heapsiftup(struct isftTasksourceclock **data,
 }
 
 /* requires clock be armed */
-static void
-isftClockheapdisarm(struct isftClockheap *clocks,
-             struct isftTasksourceclock *source)
+static void isftClockheapdisarm(struct isftClockheap *clocks,
+    struct isftTasksourceclock *source)
 {
     struct isftTasksourceclock *lastendevt;
     int oldsourceidx;
@@ -316,9 +310,9 @@ isftClockheapdisarm(struct isftClockheap *clocks,
     clocks->data[clocks->active - 1] = NULL;
     clocks->active--;
 
-    if (oldsourceidx == clocks->active)
+    if (oldsourceidx == clocks->active) {
         return;
-
+    }
     clocks->data[oldsourceidx] = lastendevt;
     lastendevt->heapidx = oldsourceidx;
 
@@ -329,10 +323,9 @@ isftClockheapdisarm(struct isftClockheap *clocks,
 }
 
 /* requires clock be disarmed */
-static void
-isftClockheaparm(struct isftClockheap *clocks,
-          struct isftTasksourceclock *source,
-          struct timespec deadline)
+static void isftClockheaparm(struct isftClockheap *clocks,
+    struct isftTasksourceclock *source,
+    struct timespec deadline)
 {
     assert(source->heapidx == -1);
 
@@ -344,8 +337,7 @@ isftClockheaparm(struct isftClockheap *clocks,
 }
 
 
-static int
-isftClockheappost(struct isftClockheap *clocks)
+static int isftClockheappost(struct isftClockheap *clocks)
 {
     struct timespec now;
     struct isftTasksourceclock *root;
@@ -355,26 +347,30 @@ isftClockheappost(struct isftClockheap *clocks)
 
     while (clocks->active > 0) {
         root = clocks->data[0];
-        if (timelt(now, root->deadline))
+        if (timelt(now, root->deadline)) {
             break;
+        }
 
         isftClockheapdisarm(clocks, root);
 
-        if (listcursor == NULL)
-            listcursor = root;
+        if (listcursor == NULL) {
+        listcursor = root;
+        }
         else
             listtail->nextdue = root;
         listtail = root;
     }
-    if (listtail)
+    if (listtail){
         listtail->nextdue = NULL;
+    }
 
     if (clocks->active > 0) {
         if (setclock(clocks->base.filedes, clocks->data[0]->deadline) < 0)
             return -1;
     } else {
-        if (clearclock(clocks->base.filedes) < 0)
+        if (clearclock(clocks->base.filedes) < 0) {
             return -1;
+        }
     }
 
     for (; listcursor; listcursor = listcursor->nextdue) {
@@ -385,9 +381,8 @@ isftClockheappost(struct isftClockheap *clocks)
     return 0;
 }
 
-static int
-isftTasksourceclockpost(struct isftTasksource *source,
-                   struct selecttask *ep)
+static int isftTasksourceclockpost(struct isftTasksource *source,
+    struct selecttask *ep)
 {
     struct isftTasksourceclock *clock;
 
@@ -400,15 +395,15 @@ struct isftTasksourceinterface clocksourceinterface = {
 };
 
 
- struct isftTasksource *
-isftTaskloopaddclock(struct isftTaskloop *loop,
-            isftTaskloopclockfunct func,
-            void *data)
+struct isftTasksource *isftTaskloopaddclock(struct isftTaskloop *loop,
+    isftTaskloopclockfunct func,
+    void *data)
 {
     struct isftTasksourceclock *source;
 
-    if (isftClockheapensureclockfiledes(&loop->clocks) < 0)
+    if (isftClockheapensureclockfiledes(&loop->clocks) < 0) {
         return NULL;
+    }
 
     source = malloc(sizeof *source);
     if (source == NULL)
@@ -434,8 +429,7 @@ isftTaskloopaddclock(struct isftTaskloop *loop,
 }
 
 
- int
-isftTasksourceclockupdate(struct isftTasksource *source, int msdelay)
+int isftTasksourceclockupdate(struct isftTasksource *source, int msdelay)
 {
     struct isftTasksourceclock *tsource =
         isftcontainerof(source, tsource, base);
@@ -446,8 +440,8 @@ isftTasksourceclockupdate(struct isftTasksource *source, int msdelay)
 
         clockgettime(CLOCKMONOTONIC, &deadline);
 
-        deadline.tvnsec += (msdelay % 1000) * 1000000L;
-        deadline.tvsec += msdelay / 1000;
+        deadline.tvnsec += (msdelay % NUM1000) * 1000000L;
+        deadline.tvsec += msdelay / NUM1000;
         if (deadline.tvnsec >= 1000000000L) {
             deadline.tvnsec -= 1000000000L;
             deadline.tvsec += 1;
@@ -468,8 +462,9 @@ isftTasksourceclockupdate(struct isftTasksource *source, int msdelay)
                 return -1;
         }
     } else {
-        if (tsource->heapidx == -1)
+        if (tsource->heapidx == -1) {
             return 0;
+        }
         isftClockheapdisarm(clocks, tsource);
 
         if (clocks->active == 0) {
@@ -489,9 +484,8 @@ struct isftTasksourcesignal {
 };
 
 
-static int
-isftTasksourcesignalpost(struct isftTasksource *source,
-                struct selecttask *ep)
+static int isftTasksourcesignalpost(struct isftTasksource *source,
+    struct selecttask *ep)
 {
     struct isftTasksourcesignal *signalsource =
         (struct isftTasksourcesignal *) source;
@@ -503,25 +497,25 @@ isftTasksourcesignalpost(struct isftTasksource *source,
         isftlog("signalfiledes read error: %s\n", strerror(errno));
 
     return signalsource->func(signalsource->signalnumber,
-                   signalsource->base.data);
+        signalsource->base.data);
 }
 
 struct isftTasksourceinterface signalsourceinterface = {
     isftTasksourcesignalpost,
 };
 
- struct isftTasksource *
-isftTaskloopaddsignal(struct isftTaskloop *loop,
-             int signalnumber,
-             isftTaskloopsignalfunct func,
-             void *data)
+struct isftTasksource *isftTaskloopaddsignal(struct isftTaskloop *loop,
+    int signalnumber,
+    isftTaskloopsignalfunct func,
+    void *data)
 {
     struct isftTasksourcesignal *source;
     sigsett mask;
 
     source = malloc(sizeof *source);
-    if (source == NULL)
+    if (source == NULL) {
         return NULL;
+    }
 
     source->base.interface = &signalsourceinterface;
     source->signalnumber = signalnumber;
@@ -549,16 +543,16 @@ struct isftTasksourceinterface idlesourceinterface = {
     NULL,
 };
 
- struct isftTasksource *
-isftTaskloopaddidle(struct isftTaskloop *loop,
-               isftTaskloopidlefunct func,
-               void *data)
+struct isftTasksource *isftTaskloopaddidle(struct isftTaskloop *loop,
+    isftTaskloopidlefunct func,
+    void *data)
 {
     struct isftTasksourceidle *source;
 
     source = malloc(sizeof *source);
-    if (source == NULL)
+    if (source == NULL) {
         return NULL;
+    }
 
     source->base.interface = &idlesourceinterface;
     source->base.loop = loop;
@@ -572,14 +566,12 @@ isftTaskloopaddidle(struct isftTaskloop *loop,
     return &source->base;
 }
 
- void
-isftTasksourcecheck(struct isftTasksource *source)
+void isftTasksourcecheck(struct isftTasksource *source)
 {
     isftlistinsert(source->loop->checklist.prev, &source->link);
 }
 
- int
-isftTasksourceremove(struct isftTasksource *source)
+int isftTasksourceremove(struct isftTasksource *source)
 {
     struct isftTaskloop *loop = source->loop;
 
@@ -608,8 +600,7 @@ isftTasksourceremove(struct isftTasksource *source)
     return 0;
 }
 
-static void
-isftTaskloopprocessdestroylist(struct isftTaskloop *loop)
+static void isftTaskloopprocessdestroylist(struct isftTaskloop *loop)
 {
     struct isftTasksource *source, *next;
 
@@ -619,14 +610,15 @@ isftTaskloopprocessdestroylist(struct isftTaskloop *loop)
     isftlistinit(&loop->destroylist);
 }
 
- struct isftTaskloop *
+    struct isftTaskloop *
 isftTaskloopcreate(void)
 {
     struct isftTaskloop *loop;
 
     loop = malloc(sizeof *loop);
-    if (loop == NULL)
+    if (loop == NULL) {
         return NULL;
+    }
 
     loop->selectfiledes = isftosselectcreatecloexec();
     if (loop->selectfiledes < 0) {
@@ -645,8 +637,7 @@ isftTaskloopcreate(void)
 }
 
 
- void
-isftTaskloopdestroy(struct isftTaskloop *loop)
+void isftTaskloopdestroy(struct isftTaskloop *loop)
 {
     isftsignalemit(&loop->destroysignal, loop);
 
@@ -656,8 +647,7 @@ isftTaskloopdestroy(struct isftTaskloop *loop)
     free(loop);
 }
 
-static bool
-postpostcheck(struct isftTaskloop *loop)
+static bool postpostcheck(struct isftTaskloop *loop)
 {
     struct selecttask ep;
     struct isftTasksource *source, *next;
@@ -679,22 +669,20 @@ postpostcheck(struct isftTaskloop *loop)
 }
 
 
- void
-isftTasklooppostidle(struct isftTaskloop *loop)
+void isftTasklooppostidle(struct isftTaskloop *loop)
 {
     struct isftTasksourceidle *source;
 
     while (!isftlistempty(&loop->idlelist)) {
         source = isftcontainerof(loop->idlelist.next,
-                     source, base.link);
+            source, base.link);
         source->func(source->base.data);
         isftTasksourceremove(&source->base);
     }
 }
 
 
- int
-isftTasklooppost(struct isftTaskloop *loop, int timeout)
+int isftTasklooppost(struct isftTaskloop *loop, int timeout)
 {
     struct selecttask ep[32];
     struct isftTasksource *source;
@@ -704,13 +692,15 @@ isftTasklooppost(struct isftTaskloop *loop, int timeout)
     isftTasklooppostidle(loop);
 
     count = selectwait(loop->selectfiledes, ep, ARRAYLENGTH(ep), timeout);
-    if (count < 0)
+    if (count < 0) {
         return -1;
+    }
 
     for (i = 0; i < count; i++) {
         source = ep[i].data.ptr;
-        if (source == &loop->clocks.base)
+        if (source == &loop->clocks.base) {
             hasclocks = true;
+        }
     }
 
     if (hasclocks) {
@@ -739,22 +729,19 @@ isftTasklooppost(struct isftTaskloop *loop, int timeout)
 }
 
 
- int
-isftTaskloopgetfiledes(struct isftTaskloop *loop)
+int isftTaskloopgetfiledes(struct isftTaskloop *loop)
 {
     return loop->selectfiledes;
 }
 
- void
-isftTaskloopadddestroylistener(struct isftTaskloop *loop,
-                   struct isftlistener *listener)
+void isftTaskloopadddestroylistener(struct isftTaskloop *loop,
+    struct isftlistener *listener)
 {
     isftsignaladd(&loop->destroysignal, listener);
 }
 
- struct isftlistener *
-isftTaskloopgetdestroylistener(struct isftTaskloop *loop,
-                   isftnotifyfunct notify)
+struct isftlistener *isftTaskloopgetdestroylistener(struct isftTaskloop *loop,
+    isftnotifyfunct notify)
 {
     return isftsignalget(&loop->destroysignal, notify);
 }
