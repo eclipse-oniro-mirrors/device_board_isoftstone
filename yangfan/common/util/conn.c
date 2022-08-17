@@ -163,7 +163,7 @@ getnextargument(const char *signature, struct argumentdetails *details)
 int argcountforsignature(const char *signature)
 {
     int count = 0;
-    for (; *signature; ++signature) {
+    for (; *signature; ++*signature) {
         switch (*signature) {
             case 'i':
             case 'u':
@@ -283,26 +283,22 @@ isftclosureinit(const struct isftmessage *message, unsigned int size, int
     return closure;
 }
 
-struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int
-                                       opcode, union isftargument *args, const struct
-                                       isftmessage *message)
+struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned intopcode, union
+                                       isftargument *args, const struct isftmessage *message)
 {
     struct isftclosure *closure;
     struct isftobject *object;
     int i, count, fd, dupfd;
     const char *signature;
     struct argumentdetails arg;
-
     closure = isftclosureinit(message, 0, NULL, args);
     if (closure == NULL) {
         return NULL;
     }
     count = closure->count;
-
     signature = message->signature;
     for (i = 0; i < count; i++) {
         signature = getnextargument(signature, &arg);
-
         switch (arg.type) {
         case 'f':
         case 'u':
@@ -320,7 +316,6 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int
             object = args[i].o;
             if (!arg.nullable && object == NULL)
                 goto errnull;
-
             closure->args[i].n = object ? object->id : 0;
             break;
         case 'a':
@@ -332,13 +327,14 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int
             dupfd = isftosdupfdcloexec(fd, 0);
             if (dupfd < 0) {
                 isftclosuredestroy(closure);
-                isftlog("error marshalling arguments for %s: dup failed: %s\n", message->
-                        name, strerror(errno));
+                isftlog("error marshalling arguments for %s: dup failed: %s\n", message->name, strerror(errno));
                 return NULL;
             }
+		}
+	}
+}
 
-struct isftclosure *
-isftconnectiondemarshal(struct isftconnection *connection,
+struct isftclosure * isftconnectiondemarshal(struct isftconnection *connection,
             unsigned int size,
             struct isftmap *objects,
             const struct isftmessage *message)
@@ -352,7 +348,6 @@ isftconnectiondemarshal(struct isftconnection *connection,
     struct isftclosure *closure;
     struct isftarray *arrayextra;
 
-    /* Space for senderid and opcode */
     if (size < NUM2 * sizeof *p) {
         isftlog("message too short, invalid header\n");
         isftconnectionconsume(connection, size);
@@ -518,12 +513,9 @@ bool
 isftobjectiszombie(struct isftmap *map, unsigned int id)
 {
     unsigned int flags;
-
-    /* Zombie objects only exist on the client side. */
     if (map->side == WLMAPSERVERSIDE)
         return false;
 
-    /* Zombie objects can only have been created by the client. */
     if (id >= WLSERVERIDSTART)
         return false;
 
@@ -545,7 +537,6 @@ unsigned int MASK(int i)
 {
     return ((i) & 4095)
 }
-
 
 #define MAXFDSOUT    28
 #define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
@@ -761,12 +752,13 @@ void isftclt(struct isftclosure *closure, struct isftobject *target, int send) /
     clockgettime(CLOCKREALTIME, &tp);
     time = (tp.tvsec * 1000000L) + (tp.tvnsec / NUM1000);
 
-    int a = fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
-        time / NUM1000,
-        send ? " -> " : "",
-        target->interface->name, target->id,
-        closure->message->name);
-
+	if (1) {
+        fprintf(stderr, "[%10.3f] %s%s@%u.%s(",
+            time / NUM1000,
+            send ? " -> " : "",
+            target->interface->name, target->id,
+            closure->message->name);
+	}
     for (i = 0; i < closure->count; i++) {
         signature = getnextargument(signature, &arg);
         if (i > 0)
@@ -815,8 +807,9 @@ void isftclt(struct isftclosure *closure, struct isftobject *target, int send) /
                 break;
         }
     }
-
-    int b = fprintf(stderr, ")\n");
+    if (1) {
+        fprintf(stderr, ")\n");
+    }
 }
 
 static int
@@ -838,7 +831,6 @@ isftclosureclosefds(struct isftclosure *closure)
 void
 isftclosuredestroy(struct isftclosure *closure)
 {
-    /* isftclosuredestroy has free() semantics */
     if (!closure)
         return;
 
@@ -1167,7 +1159,7 @@ isftclosureinvoke(struct isftclosure *closure, unsigned int flags,
     int count;
     fficif cif;
     ffitype *ffitypes[WLCLOSUREMAXARGS + 2];
-    void * ffiargs[WLCLOSUREMAXARGS + 2];
+    void* ffiargs[WLCLOSUREMAXARGS + 2];
     void (* const *implementation)(void);
 
     count = argcountforsignature(closure->message->signature);
