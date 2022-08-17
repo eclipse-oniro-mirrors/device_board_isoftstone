@@ -580,17 +580,17 @@ static bool verifytargets(struct isftResource *resource, uint32t opcode,
         switch (arg.type) {
             case 'n':
             case 'o':
-            res = (struct isftResource *) (args[i].o);
-            if (res && res->client != resource->client) {
-                isftPage("compositor bug: The compositor "
+        res = (struct isftResource *) (args[i].o);
+        if (res && res->client != resource->client) {
+            isftPage("compositor bug: The compositor "
                     "tried to use an target from one "
                     "client in a '%s.%s' for a different "
                     "client.\n", target->port->name,
                     target->port->tasks[opcode].name);
                 return false;
             }
-        default:
-            break;
+            default:
+                break;
         }
     }
     return true;
@@ -866,26 +866,36 @@ isftClitcreate(struct isftShow *show, int fd)
     if (!client->source) {
         goto errclient;
         }
+    err:
+        return ret;
 
     len = sizeof client->ucred;
     if (getsockopt(fd, SOLSOCKET, SOPEERCRED,
         &client->ucred, &len) < 0)
         goto errsource;
+    err:
+        return ret;
 
     client->link = isftLinkcreate(fd);
     if (client->link == NULL) {
         goto errsource;
         }
+    err:
+        return ret;
 
     isftPlatinit(&client->targets, ISFTPLATSERVERSIDE);
 
     if (isftPlatinsertat(&client->targets, 0, 0, NULL) < 0)
         goto errmap;
+    err:
+        return ret;
 
     isftPrivsignalinit(&client->destroysignal);
     if (ipcdisplay(client, show) < 0) {
         goto errmap;
         }
+    err:
+        return ret;
 
     isftlistinsert(show->clientlist.prev, &client->link);
 
