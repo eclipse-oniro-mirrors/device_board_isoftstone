@@ -62,13 +62,13 @@ void forxun(int col, int *outcol, char *buf)
         }
     }
     *outcol = tmp;
+    printf("%s", buf);
 }
 static void descdump(char *desc, const char *fmt, ...)
 {
     valist ap;
     char  buf[128], hang;
-    int  col, i, j, k, startcol, newlines;
-    int *outcol;
+    int  *outcol, col, i, j, k, startcol, newlines;
     vastart(ap, fmt);
     if (1) {
         vsnprintf(buf, sizeof buf, fmt, ap);
@@ -76,7 +76,6 @@ static void descdump(char *desc, const char *fmt, ...)
     vaend(ap);
     forxun(col, outcol, buf);
     col = *outcol;
-    printf("%s", buf);
     if (!desc) {
         printf("(none)\n");
         return;
