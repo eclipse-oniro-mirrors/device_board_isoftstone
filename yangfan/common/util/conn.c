@@ -339,6 +339,129 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int o
         }
     }
 }
+
+void isftswitch1(struct argumentdetails arg)
+{
+    struct argumentdetails arg;
+    switch (arg.type) {
+        case 'u':
+                closure->args[i].u = *p++;
+                break;
+        case 'i':
+            closure->args[i].i = *p++;
+            break;
+        case 'f':
+            closure->args[i].f = *p++;
+            break;
+        case 's':
+            length = *p++;
+
+            if (length == 0) {
+                closure->args[i].s = NULL;
+                break;
+            }
+            lengthinu32 = divroundup(length, sizeof *p);
+            if ((unsigned int) (end - p) < lengthinu32) {
+                isftlog("message too short, " "object (%d), message %s(%s)\n",
+                        closure->senderid, message->name, message->signature);
+                errno = EINVAL;
+                isftclosuredestroy(closure);
+                isftconnectionconsume(connection, size);
+            }
+            next = p + lengthinu32;
+
+            s = (char *) p;
+
+            if (length > 0 && s[length - 1] != '\0') {
+                isftlog("string not nul-terminated, "
+                    "message %s(%s)\n", message->
+                    name, message->signature);
+                errno = EINVAL;
+                isftclosuredestroy(closure);
+                isftconnectionconsume(connection, size);
+                }
+
+            closure->args[i].s = s;
+            p = next;
+            break;
+        case 'o':
+            id = *p++;
+            closure->args[i].n = id;
+
+            if (id == 0 && !arg.nullable) {
+                isftlog("NULL object received on non-nullable " "type, message %s(%s)\n", message->
+                        name, message->signature);
+                errno = EINVAL;
+                isftclosuredestroy(closure);
+                isftconnectionconsume(connection, size);
+            }
+            break;
+    return;
+}
+
+void isftswitch2(struct argumentdetails arg)
+{
+    struct argumentdetails arg;
+        case 'n':
+            id = *p++;
+            closure->args[i].n = id;
+
+            if (id == 0 && !arg.nullable) {
+                isftlog("NULL new ID received on non-nullable " "type, message %s(%s)\n", 
+                        message->name, message->signature);
+                errno = EINVAL;
+                isftclosuredestroy(closure);
+                isftconnectionconsume(connection, size);
+            }
+
+            if (isftmapreservenew(objects, id) < 0) {
+                isftlog("not a valid new object id (%u), " "message %s(%s)\n", id, message->name, message->signature);
+                errno = EINVAL;
+                isftclosuredestroy(closure);
+                isftconnectionconsume(connection, size);
+            }
+
+            break;
+        case 'a':
+            length = *p++;
+
+            lengthinu32 = divroundup(length, sizeof *p);
+            if ((unsigned int) (end - p) < lengthinu32) {
+                isftlog("message too short, " "object (%d), message %s(%s)\n", closure->senderid, message->
+                        name, message->signature);
+                errno = EINVAL;
+                isftclosuredestroy(closure);
+                isftconnectionconsume(connection, size);
+            }
+            next = p + lengthinu32;
+
+            arrayextra->size = length;
+            arrayextra->alloc = 0;
+            arrayextra->data = p;
+
+            closure->args[i].a = arrayextra++;
+            p = next;
+            break;
+        case 'h':
+            if (connection->fdsin.tail == connection->fdsin.head) {
+            isftlog("file descriptor expected, " "object (%d), message %s(%s)\n", closure->senderid, message->
+                    name, message->signature);
+                    errno = EINVAL;
+                    isftclosuredestroy(closure);
+                    isftconnectionconsume(connection, size);
+            }
+
+            isftbuffercopy(&connection->fdsin, &fd, sizeof fd);
+            connection->fdsin.tail += sizeof fd;
+            closure->args[i].h = fd;
+            break;
+        default:
+            isftabort("unknown type\n");
+            break;
+    }
+    return;
+}
+
 struct isftclosure *sftconnectiondemarshal(struct isftconnection *connection, unsigned int
                                            size, struct isftmap *objects, const struct
                                            isftmessage *message)
@@ -380,137 +503,19 @@ struct isftclosure *sftconnectiondemarshal(struct isftconnection *connection, un
         signature = getnextargument(signature, &arg);
 
         if (arg.type != 'h' && p + 1 > end) {
-            isftlog("message too short, "
-                    "object (%d), message %s(%s)\n", closure->senderid, message->
+            isftlog("message too short, " "object (%d), message %s(%s)\n", closure->senderid, message->
                     name, message->signature);
             errno = EINVAL;
-            goto err;
+            isftclosuredestroy(closure);
+            isftconnectionconsume(connection, size);
         }
-
-        switch (arg.type) {
-            case 'u':
-                    closure->args[i].u = *p++;
-                    break;
-            case 'i':
-                closure->args[i].i = *p++;
-                break;
-            case 'f':
-                closure->args[i].f = *p++;
-                break;
-            case 's':
-                length = *p++;
-
-                if (length == 0) {
-                    closure->args[i].s = NULL;
-                    break;
-                }
-                lengthinu32 = divroundup(length, sizeof *p);
-                if ((unsigned int) (end - p) < lengthinu32) {
-                    isftlog("message too short, "
-                        "object (%d), message %s(%s)\n",
-                        closure->senderid, message->
-                        name, message->signature);
-                    errno = EINVAL;
-                    goto err;
-                }
-                next = p + lengthinu32;
-
-                s = (char *) p;
-
-                if (length > 0 && s[length - 1] != '\0') {
-                    isftlog("string not nul-terminated, "
-                        "message %s(%s)\n", message->
-                        name, message->signature);
-                    errno = EINVAL;
-                    goto err;
-                }
-
-                closure->args[i].s = s;
-                p = next;
-                break;
-            case 'o':
-                id = *p++;
-                closure->args[i].n = id;
-
-                if (id == 0 && !arg.nullable) {
-                    isftlog("NULL object received on non-nullable "
-                        "type, message %s(%s)\n", message->
-                        name, message->signature);
-                    errno = EINVAL;
-                    goto err;
-                }
-                break;
-            case 'n':
-                id = *p++;
-                closure->args[i].n = id;
-
-                if (id == 0 && !arg.nullable) {
-                    isftlog("NULL new ID received on non-nullable "
-                        "type, message %s(%s)\n", message->
-                        name, message->signature);
-                    errno = EINVAL;
-                    goto err;
-                }
-
-                if (isftmapreservenew(objects, id) < 0) {
-                    isftlog("not a valid new object id (%u), "
-                        "message %s(%s)\n", id, message
-                        ->name, message->signature);
-                    errno = EINVAL;
-                    goto err;
-                }
-
-                break;
-            case 'a':
-                length = *p++;
-
-                lengthinu32 = divroundup(length, sizeof *p);
-                if ((unsigned int) (end - p) < lengthinu32) {
-                    isftlog("message too short, "
-                        "object (%d), message %s(%s)\n",
-                        closure->senderid, message->
-                        name, message->signature);
-                    errno = EINVAL;
-                    goto err;
-                }
-                next = p + lengthinu32;
-
-                arrayextra->size = length;
-                arrayextra->alloc = 0;
-                arrayextra->data = p;
-    
-                closure->args[i].a = arrayextra++;
-                p = next;
-                break;
-            case 'h':
-                if (connection->fdsin.tail == connection->fdsin.head) {
-                    isftlog("file descriptor expected, "
-                        "object (%d), message %s(%s)\n",
-                        closure->senderid, message->
-                        name, message->signature);
-                    errno = EINVAL;
-                    goto err;
-                }
-
-                isftbuffercopy(&connection->fdsin, &fd, sizeof fd);
-                connection->fdsin.tail += sizeof fd;
-                closure->args[i].h = fd;
-                break;
-            default:
-                isftabort("unknown type\n");
-                break;
-        }
+        isftswitch1(arg);
+        isftswitch2(arg);
     }
 
     isftconnectionconsume(connection, size);
 
     return closure;
-
- err:
-    isftclosuredestroy(closure);
-    isftconnectionconsume(connection, size);
-
-    return NULL;
 }
 
 bool isftobjectiszombie(struct isftmap *map, unsigned int id)
@@ -651,7 +656,6 @@ void isftswitch(struct argumentdetails arg);
         default:
             break;
     }
-
 }
 
 static int serializeclosure(struct isftclosure *closure, unsigned int *buffer, int buffercount)
