@@ -74,7 +74,7 @@ int isftconnectionread(struct isftconnection *connection)
     return isftconnectionpendinginput(connection);
 }
 
-int isftconnectionwrite(struct isftconnection *connection, const void *data, int count) // *
+int isftconnectionwrite(struct isftconnection *connection, const void data, int count) // *
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
@@ -92,7 +92,7 @@ int isftconnectionwrite(struct isftconnection *connection, const void *data, int
     return 0;
 }
 
-int isftconnectionqueue(struct isftconnection *connection, const void *data, int count)
+int isftconnectionqueue(struct isftconnection *connection, const void data, int count)
 {
     if (connection->out.head - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
@@ -284,7 +284,7 @@ isftclosureinit(const struct isftmessage *message, unsigned int size, int
 }
 
 struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int
-                                       opcode, union isftargument *args, const struct 
+                                       opcode, union isftargument *args, const struct
                                        isftmessage *message)
 {
     struct isftclosure *closure;
@@ -382,8 +382,8 @@ isftconnectiondemarshal(struct isftconnection *connection,
 
         if (arg.type != 'h' && p + 1 > end) {
             isftlog("message too short, "
-                   "object (%d), message %s(%s)\n", closure->senderid, message->
-                   name, message->signature);
+                    "object (%d), message %s(%s)\n", closure->senderid, message->
+                    name, message->signature);
             errno = EINVAL;
             goto err;
         }
@@ -545,7 +545,7 @@ unsigned int MASK(int i)
 {
     return ((i) & 4095)
 }
-// #define MASK(i) ((i) & 4095)
+
 
 #define MAXFDSOUT    28
 #define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
@@ -1088,8 +1088,8 @@ isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
                 if (object != NULL && message->types[i] != NULL &&
                     !isftinterfaceequal((object)->interface, message->types[i])) {
                     isftlog("invalid object (%u), type (%s), "
-                           "message %s(%s)\n", id, (object)->interface->name, message->
-                           name, message->signature);
+                            "message %s(%s)\n", id, (object)->interface->name, message->
+                            name, message->signature);
                     errno = EINVAL;
                     return -1;
                 }
