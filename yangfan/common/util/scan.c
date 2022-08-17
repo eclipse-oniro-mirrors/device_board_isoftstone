@@ -571,7 +571,7 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
     struct message *m;
     struct arg *a, *ret;
     int hasdestructor, hasdestroy;
-		printf("/** @ingroup iface%s */\n", interface->name);
+	printf("/** @ingroup iface%s */\n", interface->name);
     printf("static inline void\n"
            "%ssetuserdata(struct %s *%s, void *userdata)\n"
            "{\n"
@@ -662,6 +662,7 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
             printf("static inline void\n");
         }
 }
+}
 static void launchstubs(struct isftlist *messagelist, struct interface *interface)
 {
         printf("%s%s(struct %s *%s",
@@ -737,7 +738,6 @@ static void launchstubs(struct isftlist *messagelist, struct interface *interfac
 
         printf("}\n\n");
     }
-}
 
 static void launcheventwrappers(struct isftlist *messagelist, struct interface *interface)
 {
@@ -935,9 +935,7 @@ static void launchstructs(struct isftlist *messagelist, struct interface *interf
                "}\n\n",
                interface->name, interface->name, interface->name,
                indent(14 + strlen(interface->name)),
-               interface->name,
-               interface->name,
-               indent(37));
+               interface->name,interface->name,indent(37));
     }
 }
 
@@ -1525,10 +1523,7 @@ static void launchmessages(const char *name, struct isftlist *messagelist,
     if (isftlistempty(messagelist)) {
         return;
     }
-    printf("static const struct isftmessage "
-           "%s%s[] = {\n",
-           interface->name, suffix);
-
+    printf("static const struct isftmessage ""%s%s[] = {\n",interface->name, suffix);
     isftlistforeach(m, messagelist, link) {
         printf("\t{ \"%s\", \"", m->name);
         if (m->since > 1) {
