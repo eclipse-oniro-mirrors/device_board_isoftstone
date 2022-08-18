@@ -154,17 +154,17 @@ ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
     show->runs = isftTaskloopcreate();
     if (show->runs == NULL) {
         free(show);
-        return NULL;
+        return invalid;
     }
 
-    isftlistinit(&show->globallists);
-    isftlistinit(&show->socketlists);
-    isftlistinit(&show->clientlists);
-    isftlistinit(&show->registryresourcelists);
-    isftlistinit(&show->protocolloggerss);
+    isftlistinit(&show->globallist);
+    isftlistinit(&show->socketlist);
+    isftlistinit(&show->clientlist);
+    isftlistinit(&show->registryresourcelist);
+    isftlistinit(&show->protocolloggers);
 
-    isftPrivsignalinit(&show->destroysignals);
-    isftPrivsignalinit(&show->createclientsignals);
+    isftPrivsignalinit(&show->destroysignal);
+    isftPrivsignalinit(&show->createclientsignal);
 
     show->ids = 1;
     show->serials = 0;
