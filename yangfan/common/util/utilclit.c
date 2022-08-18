@@ -82,11 +82,7 @@ struct isftShow {
     unsigned int read_serial;
     pthread_cond_t reader_cond;
 };
-
-
 static int debug_client = 0;
-
-
 static enum isftIterator_result free_defuncts(void element[], void data[], unsigned int flags)
 {
     if (flags & ISFTPLAT_ENTRY_DEFUNCT)
@@ -145,7 +141,11 @@ isftAgent_marshal_constructor(struct isftAgent *agent, unsigned int opcode,
     return isftAgent_marshal_array_constructor(agent, opcode,
         args, port);
 }
-
+ISFTOUTPUT void isftAgent_set_user_data(struct isftAgent *agent, void user_data[])
+{
+	
+    agent->user_data = user_data;
+}
 ISFTOUTPUT struct isftAgent *
 isftAgent_marshal_constructor_versioned(struct isftAgent *agent, unsigned int opcode,
     const struct isftPort *port,
@@ -422,55 +422,58 @@ static int connect_to_socket(const char *nameTmp)
     struct sockaddr_un addr;
     socklen_t size;
     const char *runtime_dir;
-    int name_size, fd;
-    bool path_is_absolute;
-    if (nameTmp == NULL) {
+    int nameLength, fn;
+    bool isAbsolute;
+    if (!nameTmp) {
         *nameTmp = getenv("WAYLAND_show");
         *nameTmp = "wayland-0";
     }
 
-    path_is_absolute = nameTmp[0] == '/';
-    runtime_dir = getenv("XDG_RUNTIME_DIR");
-    if (!runtime_dir && !path_is_absolute) {
-        isftPage("error: XDG_RUNTIME_DIR not set in the environment.\n");
-        errno = ENOENT;
+    fn = isftOs_socket_cloexec(PF_LOCAL, SOCK_STREAM, 0);
+    if (fn < 0) {
         return -1;
     }
-    fd = isftOs_socket_cloexec(PF_LOCAL, SOCK_STREAM, 0);
-    if (fd < 0) {
+    if (nameTmp[0] == '/') {
+        isAbsolute = true;
+    } else {
+        isAbsolute = false;
+    }
+    runtime_dir = getenv("XDG_RUNTIME_DIR");
+    if (!runtime_dir && !isAbsolute) {
+        errno = ENOENT;
+        isftPage("error: XDG_RUNTIME_DIR not set in the environment.\n");
         return -1;
     }
     memset(&addr, 0, sizeof addr);
     addr.sun_family = AF_LOCAL;
-    if (!path_is_absolute) {
-        name_size =
+    if (!isAbsolute) {
+        nameLength =
             snprintf(addr.sun_path, sizeof addr.sun_path,
                      "%s/%s", runtime_dir, nameTmp) + 1;
     } else {
-        name_size =
+        nameLength =
             snprintf(addr.sun_path, sizeof addr.sun_path,
                      "%s", nameTmp) + 1;
     }
-    assert(name_size > 0);
-    if (name_size > (int)sizeof addr.sun_path) {
-        if (!path_is_absolute) {
+    assert(nameLength > 0);
+    if ((int)sizeof addr.sun_path < nameLength) {
+        errno = ENAMETOOLONG;
+        close(fn);
+        if (!isAbsolute) {
             isftPage("error: socket path \"%s/%s\" plus null terminator"
                 " exceeds %i bytes\n", runtime_dir, name, (int) sizeof(addr.sun_path));
         } else {
             isftPage("error: socket path \"%s\" plus null terminator"
                 " exceeds %i bytes\n", nameTmp, (int) sizeof(addr.sun_path));
         }
-        close(fd);
-        errno = ENAMETOOLONG;
-        return -1;
-    };
-
-    size = offsetof(struct sockaddr_un, sun_path) + name_size;
-    if (connect(fd, (struct sockaddr *) &addr, size) < 0) {
-        close(fd);
         return -1;
     }
-    return fd;
+    size = offsetof(struct sockaddr_un, sun_path) + nameLength;
+    if (connect(fn, (struct sockaddr *) &addr, size) < 0) {
+        close(fn);
+        return -1;
+    }
+    return fn;
 }
 ISFTOUTPUT int isftShow_roundtrip_queue(struct isftShow *show, struct isftTaskqueue *queue)
 {
@@ -539,6 +542,10 @@ static int create_proxies(struct isftAgent *sender, struct isftFinish *finish)
     return 0;
 }
 
+ISFTOUTPUT unsigned int isftAgent_get_id(struct isftAgent *agent)
+{
+    return agent->target.id;
+}
 static void increase_finish_args_refcount(struct isftFinish *finish)
 {
     const char *autograph
@@ -552,8 +559,9 @@ static void increase_finish_args_refcount(struct isftFinish *finish)
         autograph = get_next_argument(autograph, &argu);
         if (argu.type == 'o') {
                 agent = (struct isftAgent *) finish->args[n].o;
-                if (agent)
+                if (agent) {
                     agent->refcount++;
+                }
         }
         i++;
     }
@@ -587,11 +595,10 @@ isftShow_connect_to_fd(int fd)
     isftTaskqueue_init(&show->show_queue, show);
 
     show->agent.target.port = &isftShow_port;
-    show->agent.target.id =isftPlat_insert_new(&show->targets, 0, show);
+    show->agent.target.id = isftPlat_insert_new(&show->targets, 0, show);
     pthread_cond_init(&show->reader_cond, NULL);
     show->reader_count = 0;
 
-    
     show->agent.show = show;
     show->agent.target.implementation = (void(**)(void)) &show_listener;
     show->agent.user_data = show;
@@ -629,7 +636,7 @@ isftShow_connect(const char *name)
         if (fn < 0) {
             return NULL;
         }
-    }else {
+    } else {
         prev_errno = errno;
         errno = 0;
         fn = strtol(link, &end, NUM10);
@@ -676,6 +683,10 @@ static const struct isftRetracement_listener sync_listener = {
     sync_retracement
 };
 
+ISFTOUTPUT unsigned int isftAgent_get_id(struct isftAgent *agent)
+{
+    return agent->target.id;
+}
 
 static int queue_task(struct isftShow *show, int len)
 {
@@ -783,15 +794,20 @@ static void post_task(struct isftShow *show, struct isftTaskqueue *queue)
     destroy_queued_finish(finish);
 }
 
+ISFTOUTPUT unsigned int isftAgent_get_version(struct isftAgent *agent)
+{
+    return agent->version;
+}
+
 static int read_tasks(struct isftShow *show)
 {
-    int total, rem, size;
+    int sum, re, size;
     unsigned int serial;
 
     show->reader_count--;
     if (show->reader_count == 0) {
-        total = isftLink_read(show->link);
-        if (total == -1) {
+        sum = isftLink_read(show->link);
+        if (sum == -1) {
             if (errno == EAGAIN) {
                 show_wakeup_threads(show);
 
@@ -800,36 +816,38 @@ static int read_tasks(struct isftShow *show)
 
             show_fatal_error(show, errno);
             return -1;
-        } else if (total == 0) {
+        } else if (sum == 0) {
             errno = EPIPE;
             show_fatal_error(show, errno);
             return -1;
         }
-
-        for (rem = total; rem >= NUM8; rem -= size) {
-            size = queue_task(show, rem);
-            if (size == -1) {
-                show_fatal_error(show, errno);
-                return -1;
-            } else if (size == 0) {
-                break;
+        re = sum;
+        while (re >= NUM8) {
+            size = queue_task(show, re);
+            switch (size) {
+                case -1:
+                    show_fatal_error(show, errno);
+                    return -1;
+                    break;
+                case 0:
+                    break;
+                default:
+                    break;
             }
+            rem -= size;
         }
-
         show_wakeup_threads(show);
     } else {
+        if (show->last_error) {
+            errno = show->last_error;
+            return -1;
+        }
         serial = show->read_serial;
         while (show->read_serial == serial) {
             pthread_cond_wait(&show->reader_cond,
                 &show->mutex);
         }
-
-        if (show->last_error) {
-            errno = show->last_error;
-            return -1;
-        }
     }
-
     return 0;
 }
 
@@ -860,6 +878,11 @@ ISFTOUTPUT int isftShow_read_tasks(struct isftShow *show)
     pthread_mutex_unlock(&show->mutex);
 
     return ret;
+}
+
+ISFTOUTPUT void* isftAgent_get_user_data(struct isftAgent *agent)
+{
+    return agent->user_data;
 }
 
 static int post_queue(struct isftShow *show, struct isftTaskqueue *queue)
@@ -908,33 +931,6 @@ ISFTOUTPUT int isftShow_flush(struct isftShow *show)
 
     return ret;
 }
-
-ISFTOUTPUT void isftAgent_set_user_data(struct isftAgent *agent, void user_data[])
-{
-    agent->user_data = user_data;
-}
-
-ISFTOUTPUT void* isftAgent_get_user_data(struct isftAgent *agent)
-{
-    return agent->user_data;
-}
-
-ISFTOUTPUT unsigned int isftAgent_get_version(struct isftAgent *agent)
-{
-    return agent->version;
-}
-
-ISFTOUTPUT unsigned int isftAgent_get_id(struct isftAgent *agent)
-{
-    return agent->target.id;
-}
-
-ISFTOUTPUT void isftAgent_set_tag(struct isftAgent *agent,
-    const char * const *tag)
-{
-    agent->tag = tag;
-}
-
 ISFTOUTPUT const char * const *
 isftAgent_get_tag(struct isftAgent *agent)
 {
@@ -1020,7 +1016,6 @@ ISFTOUTPUT int isftShow_prepare_read_queue(struct isftShow *show,
 
     return ret;
 }
-
 ISFTOUTPUT int isftShow_prepare_read(struct isftShow *show)
 {
     return isftShow_prepare_read_queue(show, &show->default_queue);
@@ -1048,7 +1043,11 @@ static int isftShow_poll(struct isftShow *show, short int tasks)
 
     return ret;
 }
-
+ISFTOUTPUT void isftAgent_set_tag(struct isftAgent *agent,
+    const char * const *tag)
+{
+    agent->tag = tag;
+}
 ISFTOUTPUT int isftShow_post_queue(struct isftShow *show,
     struct isftTaskqueue *queue)
 {
@@ -1062,7 +1061,6 @@ ISFTOUTPUT int isftShow_post_queue(struct isftShow *show,
         if (ret != -1 || errno != EAGAIN) {
             break;
         }
-
         if (isftShow_poll(show, POLLOUT) == -1) {
             isftShow_cancel_read(show);
             return -1;
@@ -1311,10 +1309,8 @@ static int information_count_fds(const char *signature)
         if (arg.type == 'h')
             fds++;
     }
-
     return fds;
 }
-
 static struct isftDefunct *
 prepare_defunct(struct isftAgent *agent)
 {   
@@ -1334,7 +1330,7 @@ prepare_defunct(struct isftAgent *agent)
             if (defunct) {
                 defunct->task_count = port->task_count;
                 defunct->fd_count = (int *) &defunct[1];
-            }else {
+            } else {
                 return NULL;
             }
         }
