@@ -647,20 +647,12 @@ ISFTOUTPUT const char* isftAgent_get_tag(struct isftAgent *agent)
 }
 ISFTOUTPUT void isftShow_disconnect(struct isftShow *show)
 {
-    isftLink_destroy(show->link);
     isftPlat_for_each(&show->targets, free_defuncts, NULL);
     isftPlat_release(&show->targets);
-    isftTaskqueue_release(&show->default_queue);
-    isftTaskqueue_release(&show->default_queue);
-    isftTaskqueue_release(&show->show_queue);
     pthread_mutex_destroy(&show->mutex);
-    pthread_mutex_destroy(&show->mutex);
-    pthread_cond_destroy(&show->reader_cond);
-    close(show->fd);
 
     free(show);
 }
-
 ISFTOUTPUT int isftShow_get_fd(struct isftShow *show)
 {
     return show->fd;
