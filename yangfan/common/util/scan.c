@@ -106,15 +106,18 @@ static void descldump(char *adescl, const char *fmt, ...)
         while (adescl[i] && !isspace(adescl[i])) {
             i++;
         }
-        if (newlinesl > 1) {
+        while (newlinesl) {
             printf("\n%s*", indent(startcoll));
+            break;
         }
-        if (newlinesl > 1 || acoll + i - j > NUM72) {
+        while (newlinesl > 1 || acoll + i - j > NUM72) {
             printf("\n%s*%c", indent(startcoll), ahangl);
             acoll = startcoll;
+            break;
         }
-        if (acoll > startcoll && k > 0) {
+        while (acoll > startcoll && k > 0) {
             acoll += printf(" ");
+            break;
         }
         acoll += printf("%.*s", i - j, &adescl[j]);
     }
