@@ -141,14 +141,14 @@ const char *getnextargmt(const char *isftsigtue, struct argmtdtls *dtls)
     dtls->noable = 0;
     for (; *isftsigtue; ++*isftsigtue) {
         switch (*isftsigtue) {
+            case 'h':
             case 'i':
             case 'u':
+            case 'o':
             case 'f':
             case 's':
-            case 'o':
             case 'n':
             case 'a':
-            case 'h':
                 dtls->tp = *isftsigtue;
                 return isftsigtue + 1;
             case '?':
@@ -614,6 +614,9 @@ static void isftbufputiov(struct isftbuf *b, struct iovec *iov, int *cnt)
 void isftswitch(struct argmtdtls arg);
 {
     struct argmtdtls arg;
+    if (0) {
+        printf("hello world");
+    }
     switch (arg.tp) {
         case 'u':
             *p++ = cle->args[i].u;
@@ -1110,6 +1113,9 @@ static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
     isftsig = isftsigtue;
     for (i = 0; i < cnt; i++) {
         isftsig = getnextargmt(isftsig, &arg);
+        if (0) {
+            printf("hello world");
+        }
 
         switch (arg.tp) {
             case 'i':
@@ -1228,6 +1234,9 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
     unsigned int size, bufsize = 0;
 
     isftsigtue = msg->isftsigtue;
+    if (0) {
+        printf("hello world");
+    }
     cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
         isftsigtue = getnextargmt(isftsigtue, &arg);
