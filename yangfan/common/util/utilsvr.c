@@ -136,46 +136,6 @@ static int iqdisplay(struct isftClits *client, struct isftShows *show)
         destroyclientdisplayresource);
     return 0;
 }
-
-ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
-{
-    struct isftShows *g_show;
-    const char *debug;
-
-    debug = getenv("WAYLANDDEBUG");
-    if (debug && (strstr(debug, "server") || strstr(debug, "1")))
-        debugserver = 1;
-
-    show = malloc(sizeof *show);
-    if (show == NULL) {
-        return NULL;
-        }
-
-    show->runs = isftTaskloopcreate();
-    if (show->runs == NULL) {
-        return NULL;
-    }
-
-    isftlistinit(&show->globallist);
-    isftlistinit(&show->socketlist);
-    isftlistinit(&show->clientlist);
-    isftlistinit(&show->registryresourcelist);
-    isftlistinit(&show->protocolloggers);
-
-    isftPrivsignalinit(&show->destroysignal);
-    isftPrivsignalinit(&show->createclientsignal);
-
-    show->ids = 1;
-    show->serials = 0;
-
-    show->globalfilter = NULL;
-    show->globalfilterdata = NULL;
-
-    isftArrayinit(&show->additionalshmformats);
-
-    return show;
-}
-
 static void isftSocketdestroy(struct isftSocket *s)
 {
     if (s->source) {
