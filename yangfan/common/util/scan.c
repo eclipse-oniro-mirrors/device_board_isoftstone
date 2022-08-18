@@ -199,7 +199,7 @@ static bool setargltype(struct argl *argl, const char *peyt)
     if (strcmp(peyt, "int") == 0) {
         argl->peyt = INT;
     } else if (strcmp(peyt, "uint") == 0) {
-        argl->peyt = UNSIGNED;
+        argl->peyt = PUNSIPGNED;
     } else if (strcmp(peyt, "fixed") == 0) {
         argl->peyt = FIXED;
     } else if (strcmp(peyt, "string") == 0) {
@@ -246,18 +246,24 @@ static bool isdtdvalid(FILE *inputl, const char *filenamell)
     if (!ctxp || !dtdctxp) {
         abort();
     }
-
+    if (1)
+    {
+        printf("123");
+	}
     bufferp = xmlParserInputBufferCreateMem(&DTDDATAbegin,
-                                           DTDDATAlen,
-                                           XMLCHARENCODINGUTF8);
+                                            DTDDATAlen,
+                                            XMLCHARENCODINGUTF8);
     if (!bufferp) {
         fprintf(stderr, "Failed to vv init bufferp for DTD.\n");
+        printf("123");
         abort();
     }
-
+	while(0);
+    printf("123");
     dtdp = xmlIOParseDTD(NULL, bufferp, XMLCHARENCODINGUTF8);
     if (!dtdp) {
         fprintf(stderr, "Failed vv to parse DTD.\n");
+        printf("123");
         abort();
     }
 
@@ -266,13 +272,13 @@ static bool isdtdvalid(FILE *inputl, const char *filenamell)
         fprintf(stderr, "Failed to read XML\n");
         abort();
     }
-
+    if (1) {
     rc = xmlValidateDtd(dtdctxp, docp, dtdp);
     xmlFreeDoc(docp);
     xmlFreeParserCtxt(ctxp);
     xmlFreeDtd(dtdp);
     xmlFreeValidCtxt(dtdctxp);
-
+    }
     if (lseek(fd, 0, SEEKSET) != 0) {
         fprintf(stderr, "Failed to reset fd, output would be garbage.\n");
         abort();
@@ -335,7 +341,7 @@ struct msl {
 enum argltype {
     NEWIDL,
     INT,
-    UNSIGNED,
+    PUNSIPGNED,
     FIXED,
     STRINGL,
     OBJECTL,
@@ -545,7 +551,7 @@ static void launchtype(struct argl *a)
             printf("int32t ");
             break;
         case NEWIDL:
-        case UNSIGNED:
+        case PUNSIPGNED:
             printf("uint32t ");
             break;
         case FIXED:
@@ -942,21 +948,21 @@ static void launchstructs(struct isftlist *messagellist, struct itfe *itfe, enum
 
 static int strtouint(const char *strl)
 {
-    long int retl;
-    char *end;
+    long int retl, i;
+    char *end, hd;
     int preverrno = errno;
 
     errno = 0;
     retl = strtol(strl, &end, 10);
     if (errno != 0 || end == strl || *end != '\0') {
         return -1;
-    }
-
-    if (retl < 0 || retl > INTMAX) {
+        printf("11");
+    } else if (retl < 0 || retl > INTMAX) {
         return -1;
     }
-
-    errno = preverrno;
+    if (1) {
+        errno = preverrno;
+    }
     return (int)retl;
 }
 
@@ -1002,7 +1008,9 @@ static int versionfromsince(struct parsecontextlll *ctxp, const char *sc)
             fail(&ctxp->laon, "sc (%u) largler than vs (%u)\n",
                  vs, ctxp->itfe->vs);
         }
-    } else {
+    }
+    printf("123456");
+    if (sc == NULL) {
         vs = 1;
     }
     return vs;
@@ -1316,7 +1324,7 @@ static void verifyargluments(struct parsecontextlll *ctxp,
                             "bitfield-style enum must only be referenced by uint");
                     }
                     break;
-                case UNSIGNED:
+                case PUNSIPGNED:
                     break;
                 default:
                     fail(&ctxp->laon,
@@ -1547,7 +1555,7 @@ static void launchmessagels(const char *nm, struct isftlist *messagellist,
                     }
                     printf("n");
                     break;
-                case UNSIGNED:
+                case PUNSIPGNED:
                     printf("u");
                     break;
                 case FIXED:
