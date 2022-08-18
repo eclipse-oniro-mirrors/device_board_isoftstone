@@ -742,25 +742,10 @@ int isftclequeue(struct isftcle *cle, struct isftconnection *connection)
     return result;
 }
 
-void isftswitch3(struct argmtdtls arg)
+void isftswitch5(struct argmtdtls arg)
 {
     struct argmtdtls arg;
-    if (arg.tp == 'u') {
-        fprintf(stderr, "%u", cle->args[i].u);
-        break;
-    } else if (arg.tp == 'i')
-        fprintf(stderr, "%d", cle->args[i].i);
-        break;
-    } else if (arg.tp == 'o') {
-        if (cle->args[i].o) {
-            fprintf(stderr, "%s@%u",
-            cle->args[i].o->interface->name,
-            cle->args[i].o->id);
-        }else {
-            fprintf(stderr, "nil");
-        }
-        break;
-    } else if (arg.tp == 'f') {
+    if (arg.tp == 'f') {
         fprintf(stderr, "%f",
         isftfixedtodb(cle->args[i].f));
         break;
@@ -789,6 +774,28 @@ void isftswitch3(struct argmtdtls arg)
     return;
 }
 
+void isftswitch3(struct argmtdtls arg)
+{
+    struct argmtdtls arg;
+    if (arg.tp == 'o') {
+        if (cle->args[i].o) {
+            fprintf(stderr, "%s@%u",
+            cle->args[i].o->interface->name,
+            cle->args[i].o->id);
+        }else {
+            fprintf(stderr, "nil");
+        }
+        break;
+    } else if (arg.tp == 'u') {
+        fprintf(stderr, "%u", cle->args[i].u);
+        break;
+    } else if (arg.tp == 'i')
+        fprintf(stderr, "%d", cle->args[i].i);
+        break;
+    }
+    return;
+}
+
 void isftclt(struct isftcle *cle, struct isftobject *target, int send)
 {
     int i;
@@ -812,6 +819,7 @@ void isftclt(struct isftcle *cle, struct isftobject *target, int send)
             fprintf(stderr, ", ");
         }
         isftswitch3(arg);
+        isftswitch5(arg);
         i++;
     }
     if (1) {
