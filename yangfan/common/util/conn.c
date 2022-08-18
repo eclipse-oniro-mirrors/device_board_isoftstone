@@ -789,7 +789,7 @@ void isftswitch3(struct argmtdtls arg)
     } else if (arg.tp == 'u') {
         fprintf(stderr, "%u", cle->args[i].u);
         break;
-    } else if (arg.tp == 'i')
+    } else if (arg.tp == 'i') {
         fprintf(stderr, "%d", cle->args[i].i);
         break;
     }
