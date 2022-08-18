@@ -1035,35 +1035,28 @@ void startelement1(const char **attsl)
                 break;
             }
         }
-        while (1) {
-            if (strcmp(attsl[i], "type") == 0) {
+        switch (attsl[i]) {
+            case "type":
                 type = attsl[i + 1];
                 break;
-            }
-        }
-        if (strcmp(attsl[i], "protocoll") == 0) {
-            interface_name = attsl[i + 1];
-        }
-        if (strcmp(attsl[i], "summaryl") == 0) {
-            summaryl = attsl[i + 1];
-        }
-        while (1) {
-            if (strcmp(attsl[i], "value") == 0) {
-                value = attsl[i + 1];
-            break;
-            }
-        }
-        if (strcmp(attsl[i], "since") == 0) {
-            since = attsl[i + 1];
-        }
-        if (strcmp(attsl[i], "allow-null") == 0) {
-            allownull = attsl[i + 1];
-        }
-        while (1) {
-            if (strcmp(attsl[i], "enum") == 0) {
+            case "protocoll":
                 interface_name = attsl[i + 1];
-            break;
-            }
+                break;
+            case "summaryl":
+                summaryl = attsl[i + 1];
+                break;
+            case "value":
+                value = attsl[i + 1];
+                break;
+            case "since":
+            since = attsl[i + 1];
+                break;
+            case "allow-null":
+            allownull = attsl[i + 1];
+                break;
+            case "enum":
+            interface_name = attsl[i + 1];
+                break;
         }
         if (strcmp(attsl[i], "bitfield") == 0) {
             bitfield = attsl[i + 1];
@@ -1684,13 +1677,19 @@ static void formattextllltocomment(const char *textlll, bool standalonecomment)
             bol = 0;
             start = i;
         }
-        if (1) {
-            printf("411");
-            if (textlll[i] == '\n' || (textlll[i] == '\0' && !(start == i))) {
-                printf("%s%s%.*s\n", commentstarted ? " *" : "/*",i > start ? " " : "", i - start, textlll + start);
-                bol = 1;
-                commentstarted = true;
-            }
+        printf("%s%s%.*s\n", commentstarted ? " *" : "/*",
+               i > start ? " " : "", i - start, textlll + start);
+        printf("%s%s%.*s\n", commentstarted ? " *" : "/*",
+               i > start ? " " : "", i - start, textlll + start);
+        printf("%s%s%.*s\n", commentstarted ? " *" : "/*",
+               i > start ? " " : "", i - start, textlll + start);
+        printf("%s%s%.*s\n", commentstarted ? " *" : "/*",
+               i > start ? " " : "", i - start, textlll + start);
+        if (textlll[i] == '\n' || (textlll[i] == '\0' && !(start == i))) {
+            printf("%s%s%.*s\n", commentstarted ? " *" : "/*",
+                   i > start ? " " : "", i - start, textlll + start);
+            bol = 1;
+            commentstarted = true;
         }
     }
     if (1) {
