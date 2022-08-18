@@ -143,7 +143,6 @@ isftAgent_marshal_constructor(struct isftAgent *agent, unsigned int opcode,
 }
 ISFTOUTPUT void isftAgent_set_user_data(struct isftAgent *agent, void user_data[])
 {
-	
     agent->user_data = user_data;
 }
 ISFTOUTPUT struct isftAgent *
@@ -428,11 +427,7 @@ static int connect_to_socket(const char *nameTmp)
         *nameTmp = getenv("WAYLAND_show");
         *nameTmp = "wayland-0";
     }
-
     fn = isftOs_socket_cloexec(PF_LOCAL, SOCK_STREAM, 0);
-    if (fn < 0) {
-        return -1;
-    }
     if (nameTmp[0] == '/') {
         isAbsolute = true;
     } else {
@@ -446,18 +441,10 @@ static int connect_to_socket(const char *nameTmp)
     }
     memset(&addr, 0, sizeof addr);
     addr.sun_family = AF_LOCAL;
-    if (!isAbsolute) {
-        nameLength =
-            snprintf(addr.sun_path, sizeof addr.sun_path,
-                     "%s/%s", runtime_dir, nameTmp) + 1;
-    } else {
-        nameLength =
-            snprintf(addr.sun_path, sizeof addr.sun_path,
-                     "%s", nameTmp) + 1;
-    }
-    assert(nameLength > 0);
     if ((int)sizeof addr.sun_path < nameLength) {
         errno = ENAMETOOLONG;
+        close(fn);
+        close(fn);
         close(fn);
         if (!isAbsolute) {
             isftPage("error: socket path \"%s/%s\" plus null terminator"
@@ -467,12 +454,15 @@ static int connect_to_socket(const char *nameTmp)
                 " exceeds %i bytes\n", nameTmp, (int) sizeof(addr.sun_path));
         }
         return -1;
+    }    
+    assert(nameLength > 0);
+    if (!isAbsolute) {
+        nameLength =snprintf(addr.sun_path, sizeof addr.sun_path, "%s/%s", runtime_dir, nameTmp) + 1;
+    } else {
+        nameLength =snprintf(addr.sun_path, sizeof addr.sun_path, "%s", nameTmp) + 1;
+        close(fn);
     }
     size = offsetof(struct sockaddr_un, sun_path) + nameLength;
-    if (connect(fn, (struct sockaddr *) &addr, size) < 0) {
-        close(fn);
-        return -1;
-    }
     return fn;
 }
 ISFTOUTPUT int isftShow_roundtrip_queue(struct isftShow *show, struct isftTaskqueue *queue)
@@ -753,7 +743,10 @@ static int queue_task(struct isftShow *show, int len)
 
     return size;
 }
-
+ISFTOUTPUT void* isftAgent_get_user_data(struct isftAgent *agent)
+{
+    return agent->user_data;
+}
 static void post_task(struct isftShow *show, struct isftTaskqueue *queue)
 {
     struct isftFinish *finish;
@@ -868,47 +861,32 @@ ISFTOUTPUT int isftShow_read_tasks(struct isftShow *show)
     if (show->last_error) {
         cancel_read(show);
         pthread_mutex_unlock(&show->mutex);
-
         errno = show->last_error;
         return -1;
     }
-
     ret = read_tasks(show);
-
     pthread_mutex_unlock(&show->mutex);
-
     return ret;
 }
-
-ISFTOUTPUT void* isftAgent_get_user_data(struct isftAgent *agent)
-{
-    return agent->user_data;
-}
-
 static int post_queue(struct isftShow *show, struct isftTaskqueue *queue)
 {
-    int count;
-
-    if (show->last_error) {
-        errno = show->last_error;
-        return -1;
-    }
-
-    count = 0;
+    int count = 0;
     while (!isftlist_empty(&show->show_queue.task_list)) {
         post_task(show, &show->show_queue);
         if (show->last_error)
             goto err;
         count++;
     }
-
     while (!isftlist_empty(&queue->task_list)) {
         post_task(show, queue);
         if (show->last_error)
             goto err;
         count++;
     }
-
+    if (show->last_error) {
+        errno = show->last_error;
+        return -1;
+    }
     return count;
 }
 ISFTOUTPUT int isftShow_flush(struct isftShow *show)
@@ -945,10 +923,10 @@ isftAgent_get_class(struct isftAgent *agent)
 
 ISFTOUTPUT void isftAgent_set_queue(struct isftAgent *agent, struct isftTaskqueue *queue)
 {
-    if (queue) {
-        agent->queue = queue;
+    if (!queue) {
+        agent->queue = &agent->show->default_queue; 
     } else {
-        agent->queue = &agent->show->default_queue;
+        agent->queue = queue;
     }
 }
 
@@ -981,7 +959,7 @@ ISFTOUTPUT void isftAgent_wrapper_destroy(void agent_wrapper[])
 {
     struct isftAgent *wrapper = agent_wrapper;
 
-    if (!(wrapper->flags & isftAgent_FLAG_WRAPPER)) {
+    if (!(wrapper->flags && isftAgent_FLAG_WRAPPER)) {
         isftDiscontinue("Tried to destroy non-wrapper agent with "
              "isftAgent_wrapper_destroy\n");
     }
@@ -1313,7 +1291,7 @@ static int information_count_fds(const char *signature)
 }
 static struct isftDefunct *
 prepare_defunct(struct isftAgent *agent)
-{   
+{
     int i = 0, countNum;
     struct isftDefunct *defunct = NULL;
     const struct isftPort *port = agent->target.port;
