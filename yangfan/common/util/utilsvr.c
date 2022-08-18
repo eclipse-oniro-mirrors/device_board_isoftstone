@@ -53,7 +53,7 @@ struct isftResource {
     void *data;
     int version;
     isftDistributorfunct distributor;
-    struct isftPrivsignal destroysignals;
+    struct isftPrivsignal destroysignal;
 };
 
 struct isftAgreementlogger {
@@ -79,27 +79,27 @@ struct isftClit {
     struct isftResource *displayresource;
     struct isftlist link;
     struct isftPlat targets;
-    struct isftPrivsignal destroysignals;
+    struct isftPrivsignal destroysignal;
     struct ucred ucred;
     int error;
     struct isftPrivsignal resourcecreatedsignal;
 };
 
 struct isftShow {
-    struct isftTaskloop *runs;
+    struct isftTaskloop *loop;
     int run;
 
     uint32t id;
     uint32t serial;
 
-    struct isftlist registryresourcelists;
-    struct isftlist globallists;
-    struct isftlist socketlists;
-    struct isftlist clientlists;
-    struct isftlist protocolloggerss;
+    struct isftlist registryresourcelist;
+    struct isftlist globallist;
+    struct isftlist socketlist;
+    struct isftlist clientlist;
+    struct isftlist protocolloggers;
 
-    struct isftPrivsignal destroysignals;
-    struct isftPrivsignal createclientsignals;
+    struct isftPrivsignal destroysignal;
+    struct isftPrivsignal createclientsignal;
 
     struct isftArray additionalshmformats;
 
@@ -151,23 +151,23 @@ ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
         return NULL;
         }
 
-    show->runs = isftTaskloopcreate();
-    if (show->runs == NULL) {
+    show->loop = isftTaskloopcreate();
+    if (show->loop == NULL) {
         free(show);
         return NULL;
     }
 
-    isftlistinit(&show->globallists);
-    isftlistinit(&show->socketlists);
-    isftlistinit(&show->clientlists);
-    isftlistinit(&show->registryresourcelists);
-    isftlistinit(&show->protocolloggerss);
+    isftlistinit(&show->globallist);
+    isftlistinit(&show->socketlist);
+    isftlistinit(&show->clientlist);
+    isftlistinit(&show->registryresourcelist);
+    isftlistinit(&show->protocolloggers);
 
-    isftPrivsignalinit(&show->destroysignals);
-    isftPrivsignalinit(&show->createclientsignals);
+    isftPrivsignalinit(&show->destroysignal);
+    isftPrivsignalinit(&show->createclientsignal);
 
-    show->ids = 1;
-    show->serials = 0;
+    show->id = 1;
+    show->serial = 0;
 
     show->globalfilter = NULL;
     show->globalfilterdata = NULL;
@@ -219,19 +219,19 @@ ISFTOUTPUT void isftShowdestroy(struct isftShow *show)
     struct isftSocket *s, *next;
     struct isftHolistic *holistic, *gnext;
 
-    isftPrivsignalfinalemit(&show->destroysignals, show);
+    isftPrivsignalfinalemit(&show->destroysignal, show);
 
-    isftlistforeachsafe(s, next, &show->socketlists, link) {
+    isftlistforeachsafe(s, next, &show->socketlist, link) {
         isftSocketdestroy(s);
     }
-    isftTaskloopdestroy(show->runs);
+    isftTaskloopdestroy(show->loop);
 
-    isftlistforeachsafe(holistic, gnext, &show->globallists, link)
+    isftlistforeachsafe(holistic, gnext, &show->globallist, link)
         free(holistic);
 
     isftArrayrelease(&show->additionalshmformats);
 
-    isftlistremove(&show->protocolloggerss);
+    isftlistremove(&show->protocolloggers);
 
     free(show);
 }
@@ -278,9 +278,9 @@ isftHolisticcreate(struct isftShow *show,
     holistic->data = data;
     holistic->ipc = ipc;
     holistic->removed = false;
-    isftlistinsert(show->globallists.prev, &holistic->link);
+    isftlistinsert(show->globallist.prev, &holistic->link);
 
-    isftlistforeach(resource, &show->registryresourcelists, link)
+    isftlistforeach(resource, &show->registryresourcelist, link)
         isftResourceposttask(resource,
             WLREGISTRYGLOBAL,
             holistic->name,
@@ -300,7 +300,7 @@ ISFTOUTPUT void isftHolisticremove(struct isftHolistic *holistic)
              "holistic '%s@%"PRIu32"'", holistic->port->name,
              holistic->name);
 
-    isftlistforeach(resource, &show->registryresourcelists, link)
+    isftlistforeach(resource, &show->registryresourcelist, link)
         isftResourceposttask(resource, WLREGISTRYGLOBALREMOVE,
             holistic->name);
 
@@ -349,7 +349,7 @@ isftShownextserial(struct isftShow *show)
 ISFTOUTPUT struct isftTaskloop *
 isftShowgettaskloop(struct isftShow *show)
 {
-    return show->runs;
+    return show->loop;
 }
 
 ISFTOUTPUT void isftShowterminate(struct isftShow *show)
@@ -363,7 +363,7 @@ ISFTOUTPUT void isftShowrun(struct isftShow *show)
 
     while (show->run) {
         isftShowflushclients(show);
-        isftTasklooppost(show->runs, -1);
+        isftTasklooppost(show->loop, -1);
     }
 }
 
@@ -372,7 +372,7 @@ ISFTOUTPUT void isftShowflushclients(struct isftShow *show)
     struct isftClit *client, *next;
     int ret;
 
-    isftlistforeachsafe(client, next, &show->clientlists, link) {
+    isftlistforeachsafe(client, next, &show->clientlist, link) {
         ret = isftLinkflush(client->link);
         if (ret < 0 && errno == EAGAIN) {
             isftTasksourcefdupdate(client->source,
@@ -390,8 +390,8 @@ ISFTOUTPUT void isftShowdestroyclients(struct isftShow *show)
     struct isftClit *client;
 
     isftlistinit(&tmpclientlist);
-    isftlistinsertlist(&tmpclientlist, &show->clientlists);
-    isftlistinit(&show->clientlists);
+    isftlistinsertlist(&tmpclientlist, &show->clientlist);
+    isftlistinit(&show->clientlist);
 
     while (!isftlistempty(&tmpclientlist)) {
         pos = tmpclientlist.next;
@@ -400,7 +400,7 @@ ISFTOUTPUT void isftShowdestroyclients(struct isftShow *show)
         isftClitdestroy(client);
     }
 
-    if (!isftlistempty(&show->clientlists)) {
+    if (!isftlistempty(&show->clientlist)) {
         isftPage("isftShowdestroyclients: cannot destroy all clients because "
                "new ones were created by destroy callbacks\n");
     }
@@ -524,14 +524,14 @@ static int isftShowaddsocket(struct isftShow *show, struct isftSocket *s)
         return -1;
     }
 
-    s->source = isftTaskloopaddfd(show->runs, s->fd,
+    s->source = isftTaskloopaddfd(show->loop, s->fd,
         isftTaskREADABLE,
         socketdata, show);
     if (s->source == NULL) {
         return -1;
     }
 
-    isftlistinsert(show->socketlists.prev, &s->link);
+    isftlistinsert(show->socketlist.prev, &s->link);
     return 0;
 }
 
@@ -548,14 +548,14 @@ static void inforclosure(struct isftResource *resource,
     if (debugserver)
         isftFinishprint(closure, target, send);
 
-    if (!isftlistempty(&show->protocolloggerss)) {
+    if (!isftlistempty(&show->protocolloggers)) {
         information.resource = resource;
         information.informationopcode = closure->opcode;
         information.information = closure->information;
         information.argumentscount = closure->count;
         information.arguments = closure->args;
         isftlistforeach(protocollogger,
-            &show->protocolloggerss, link) {
+            &show->protocolloggers, link) {
             protocollogger->func(protocollogger->userdata,
                 send ? isftAgreementLOGGERTASK :
                              ISFTAGREEMENTLOGGERREQUEST,
@@ -842,7 +842,7 @@ isftClitcreate(struct isftShow *show, int fd)
 
     isftPrivsignalinit(&client->resourcecreatedsignal);
     client->show = show;
-    client->source = isftTaskloopaddfd(show->runs, fd,
+    client->source = isftTaskloopaddfd(show->loop, fd,
         isftTaskREADABLE,
         isftClitlinkdata, client);
 
@@ -877,7 +877,7 @@ isftClitcreate(struct isftShow *show, int fd)
     err:
         return ret;
 
-    isftPrivsignalinit(&client->destroysignals);
+    isftPrivsignalinit(&client->destroysignal);
     if (ipcdisplay(client, show) < 0) {
         isftPlatrelease(&client->targets);
         isftLinkdestroy(client->link);
@@ -885,9 +885,9 @@ isftClitcreate(struct isftShow *show, int fd)
     err:
         return ret;
 
-    isftlistinsert(show->clientlists.prev, &client->link);
+    isftlistinsert(show->clientlist.prev, &client->link);
 
-    isftPrivsignalemit(&show->createclientsignals, client);
+    isftPrivsignalemit(&show->createclientsignal, client);
 
     return client;
 
@@ -965,7 +965,7 @@ static enum isftIteratorresult destroyresource(void element[], void data[], uint
     isftSignalemit(&resource->deprecateddestroysignal, resource);
 
     if (!resourceisdeprecated(resource))
-        isftPrivsignalfinalemit(&resource->destroysignals, resource);
+        isftPrivsignalfinalemit(&resource->destroysignal, resource);
 
     if (resource->destroy)
         resource->destroy(resource);
@@ -1075,7 +1075,7 @@ ISFTOUTPUT void isftResourceadddestroylistener(struct isftResource *resource,
     if (resourceisdeprecated(resource))
         isftSignaladd(&resource->deprecateddestroysignal, listener);
     else
-        isftPrivsignaladd(&resource->destroysignals, listener);
+        isftPrivsignaladd(&resource->destroysignal, listener);
 }
 
 ISFTOUTPUT struct isftListener *
@@ -1084,7 +1084,7 @@ isftResourcegetdestroylistener(struct isftResource *resource,
 {
     if (resourceisdeprecated(resource))
         return isftSignalget(&resource->deprecateddestroysignal, notify);
-    return isftPrivsignalget(&resource->destroysignals, notify);
+    return isftPrivsignalget(&resource->destroysignal, notify);
 }
 
 ISFTOUTPUT const char *
@@ -1096,21 +1096,21 @@ isftResourcegetclass(struct isftResource *resource)
 ISFTOUTPUT void isftClitadddestroylistener(struct isftClit *client,
     struct isftListener *listener)
 {
-    isftPrivsignaladd(&client->destroysignals, listener);
+    isftPrivsignaladd(&client->destroysignal, listener);
 }
 
 ISFTOUTPUT struct isftListener *
 isftClitgetdestroylistener(struct isftClit *client,
     isftNotifyfunct notify)
 {
-    return isftPrivsignalget(&client->destroysignals, notify);
+    return isftPrivsignalget(&client->destroysignal, notify);
 }
 
 ISFTOUTPUT void isftClitdestroy(struct isftClit *client)
 {
     uint32t serial = 0;
 
-    isftPrivsignalfinalemit(&client->destroysignals, client);
+    isftPrivsignalfinalemit(&client->destroysignal, client);
 
     isftClitflush(client);
     isftPlatforeach(&client->targets, destroyresource, &serial);
@@ -1138,11 +1138,11 @@ static void registryipc(struct isftClit *client,
     struct isftHolistic *holistic;
     struct isftShow *show = resource->data;
 
-    isftlistforeach(holistic, &show->globallists, link)
+    isftlistforeach(holistic, &show->globallist, link)
         if (holistic->name == name)
             break;
 
-    if (&holistic->link == &show->globallists)
+    if (&holistic->link == &show->globallist)
         isftResourceposterror(resource,
             ISFTSHOWERRORINVALIDOBJECT,
             "invalid holistic %s (%d)", port, name);
@@ -1214,10 +1214,10 @@ static void displaygetregistry(struct isftClit *client,
         &registryport,
         show, unipcresource);
 
-    isftlistinsert(&show->registryresourcelists,
+    isftlistinsert(&show->registryresourcelist,
         &registryresource->link);
 
-    isftlistforeach(holistic, &show->globallists, link)
+    isftlistforeach(holistic, &show->globallist, link)
         if (isftHolisticisvisible(client, holistic) && !holistic->removed)
             isftResourceposttask(registryresource,
                 WLREGISTRYGLOBAL,
@@ -1287,7 +1287,7 @@ ISFTOUTPUT int isftShowaddsocketfd(struct isftShow *show, int sockfd)
         return -1;
         }
 
-    s->source = isftTaskloopaddfd(show->runs, sockfd,
+    s->source = isftTaskloopaddfd(show->loop, sockfd,
         isftTaskREADABLE,
         socketdata, show);
     if (s->source == NULL) {
@@ -1298,7 +1298,7 @@ ISFTOUTPUT int isftShowaddsocketfd(struct isftShow *show, int sockfd)
 
     s->fd = sockfd;
 
-    isftlistinsert(show->socketlists.prev, &s->link);
+    isftlistinsert(show->socketlist.prev, &s->link);
 
     return 0;
 }
@@ -1340,20 +1340,20 @@ ISFTOUTPUT int isftShowaddsocket(struct isftShow *show, char *name)
 ISFTOUTPUT void isftShowadddestroylistener(struct isftShow *show,
     struct isftListener *listener)
 {
-    isftPrivsignaladd(&show->destroysignals, listener);
+    isftPrivsignaladd(&show->destroysignal, listener);
 }
 
 ISFTOUTPUT void isftShowaddclientcreatedlistener(struct isftShow *show,
     struct isftListener *listener)
 {
-    isftPrivsignaladd(&show->createclientsignals, listener);
+    isftPrivsignaladd(&show->createclientsignal, listener);
 }
 
 ISFTOUTPUT struct isftListener *
 isftShowgetdestroylistener(struct isftShow *show,
     isftNotifyfunct notify)
 {
-    return isftPrivsignalget(&show->destroysignals, notify);
+    return isftPrivsignalget(&show->destroysignal, notify);
 }
 
 ISFTOUTPUT void isftResourcesetimplementation(struct isftResource *resource,
@@ -1397,7 +1397,7 @@ isftResourcecreate(struct isftClit *client,
     resource->target.implementation = NULL;
 
     isftSignalinit(&resource->deprecateddestroysignal);
-    isftPrivsignalinit(&resource->destroysignals);
+    isftPrivsignalinit(&resource->destroysignal);
 
     resource->destroy = NULL;
     resource->client = client;
@@ -1502,7 +1502,7 @@ isftShowaddprotocollogger(struct isftShow *show,
 
     logger->func = func;
     logger->userdata = userdata;
-    isftlistinsert(&show->protocolloggerss, &logger->link);
+    isftlistinsert(&show->protocolloggers, &logger->link);
 
     return logger;
 }
@@ -1533,7 +1533,7 @@ isftShowgetadditionalshmformats(struct isftShow *show)
 ISFTOUTPUT struct isftlist *
 isftShowgetclientlist(struct isftShow *show)
 {
-    return &show->clientlists;
+    return &show->clientlist;
 }
 
 ISFTOUTPUT struct isftlist *

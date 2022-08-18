@@ -64,14 +64,14 @@ struct isftShow {
     struct isftAgent agent;
     struct isftLink *link;
 
-    int last_error;
+    int final_error;
 
     struct {
         unsigned int code;
         const struct isftPort *port;
 
         unsigned int id;
-    } protocol_error;
+    } protocol_err;
     int fd;
     struct isftPlat targets;
     struct isftTaskqueue show_queue;
@@ -342,7 +342,7 @@ create_outgoing_agent(struct isftAgent *agent, const struct isftInformation *inf
 {
     int i, count;
     const char *signature;
-    struct argument_details arg;
+    struct detailed_argu argu;
     struct isftAgent *new_agent = NULL;
 
     signature = information->signature;
@@ -519,28 +519,28 @@ ISFTOUTPUT int isftShow_roundtrip(struct isftShow *show)
 static int create_proxies(struct isftAgent *sender, struct isftFinish *finish)
 {
     struct isftAgent *agent;
-    const char *signature;
-    struct argument_details arg;
-    unsigned int id;
-    int i;
-    int count;
+    const char *autograph;
+    struct detailed_argu argu;
+    unsigned int idNum;
+    int j;
+    int numSum;
 
-    signature = finish->information->signature;
-    count = arg_count_for_signature(signature);
-    for (i = 0; i < count; i++) {
-        signature = get_next_argument(signature, &arg);
-        switch (arg.type) {
+    autograph = finish->information->signature;
+    numSum = arg_count_for_signature(autograph);
+    for (j = 0; j < numSum; j++) {
+        autograph = get_next_argument(autograph, &argu);
+        switch (argu.type) {
             case 'n':
-                id = finish->args[i].n;
+                idNum = finish->args[j].n;
                 if (id == 0) {
-                    finish->args[i].o = NULL;
+                    finish->args[j].o = NULL;
                     break;
                 }
-                agent = isftAgent_create_for_id(sender, id,
-                finish->information->types[i]);
+                agent = isftAgent_create_for_id(sender, idNum,
+                finish->information->types[j]);
                 if (agent == NULL)
                     return -1;
-                finish->args[i].o = (struct isftTarget *)agent;
+                finish->args[j].o = (struct isftTarget *)agent;
                 break;
             default:
                 break;
@@ -552,16 +552,16 @@ static int create_proxies(struct isftAgent *sender, struct isftFinish *finish)
 
 static void increase_finish_args_refcount(struct isftFinish *finish)
 {
-    const char *signature;
-    struct argument_details arg;
-    int i, count;
+    const char *autograph
+    struct detailed_argu argu;
+    int i, numSum;
     struct isftAgent *agent;
 
-    signature = finish->information->signature;
-    count = arg_count_for_signature(signature);
-    for (i = 0; i < count; i++) {
-        signature = get_next_argument(signature, &arg);
-        switch (arg.type) {
+    autograph = finish->information->signature;
+    numSum = arg_count_for_signature(autograph);
+    for (i = 0; i < numSum; i++) {
+        autograph = get_next_argument(autograph, &argu);
+        switch (argu.type) {
             case 'n':
             case 'o':
                 agent = (struct isftAgent *) finish->args[i].o;
@@ -971,27 +971,27 @@ ISFTOUTPUT void isftAgent_set_queue(struct isftAgent *agent, struct isftTaskqueu
     }
 }
 
-ISFTOUTPUT void* isftAgent_create_wrapper(void agent[])
+ISFTOUTPUT void* isftAgent_create_wrapper(void proxy[])
 {
-    struct isftAgent *wrapped_agent = agent;
-    struct isftAgent *wrapper;
+    struct isftAgent *packaged_proxy = proxy;
+    struct isftAgent *package;
 
-    wrapper = zalloc(sizeof *wrapper);
-    if (!wrapper) {
+    package = zalloc(sizeof *package);
+    if (!package) {
         return NULL;
     }
 
-    pthread_mutex_lock(&wrapped_agent->show->mutex);
+    pthread_mutex_lock(&packaged_proxy->show->mutex);
 
-    wrapper->target.port = wrapped_agent->target.port;
-    wrapper->target.id = wrapped_agent->target.id;
-    wrapper->version = wrapped_agent->version;
-    wrapper->show = wrapped_agent->show;
-    wrapper->queue = wrapped_agent->queue;
-    wrapper->flags = isftAgent_FLAG_WRAPPER;
-    wrapper->refcount = 1;
+    package->target.port = packaged_proxy->target.port;
+    package->target.id = packaged_proxy->target.id;
+    package->version = packaged_proxy->version;
+    package->show = packaged_proxy->show;
+    package->queue = packaged_proxy->queue;
+    package->flags = isftAgent_FLAG_WRAPPER;
+    package->refcount = 1;
 
-    pthread_mutex_unlock(&wrapped_agent->show->mutex);
+    pthread_mutex_unlock(&packaged_proxy->show->mutex);
 
     return wrapper;
 }
@@ -1182,10 +1182,10 @@ static void show_fatal_error(struct isftShow *show, int err)
     show_wakeup_threads(show);
 }
 
-static void show_protocol_error(struct isftShow *show, unsigned int code,
-    unsigned int id, const struct isftPort *intf)
+static void show_protocol_error(struct isftShow *show, unsigned int number,
+    unsigned int idNUm, const struct isftPort *intf)
 {
-    int err;
+    int errStatus;
 
     if (show->last_error) {
         return;
@@ -1195,28 +1195,28 @@ static void show_protocol_error(struct isftShow *show, unsigned int code,
         switch (code) {
             case ISFTSHOW_ERROR_INVALID_TARGET:
             case ISFTSHOW_ERROR_INVALID_METHOD:
-                err = EINVAL;
+                errStatus = EINVAL;
                 break;
             case ISFTSHOW_ERROR_NO_MEMORY:
-                err = ENOMEM;
+                errStatus = ENOMEM;
                 break;
             case ISFTSHOW_ERROR_IMPLEMENTATION:
-                err = EPROTO;
+                errStatus = EPROTO;
                 break;
             default:
-                err = EFAULT;
+                errStatus = EFAULT;
         }
     } else {
-        err = EPROTO;
+        errStatus = EPROTO;
     }
 
     pthread_mutex_lock(&show->mutex);
 
-    show->last_error = err;
+    show->final_error_error = errStatus;
 
-    show->protocol_error.code = code;
-    show->protocol_error.id = id;
-    show->protocol_error.port = intf;
+    show->protocol_err.code = number;
+    show->protocol_err.id = idNum;
+    show->protocol_err.port = intf;
 
     pthread_mutex_unlock(&show->mutex);
 }
@@ -1240,16 +1240,16 @@ static void isftAgent_unref(struct isftAgent *agent)
 
 static void validate_finish_targets(struct isftFinish *finish)
 {
-    const char *signature;
-    struct argument_details arg;
-    int i, count;
+    const char *autograph;
+    struct detailed_argu argu;
+    int i, countNum;
     struct isftAgent *agent;
 
-    signature = finish->information->signature;
-    count = arg_count_for_signature(signature);
-    for (i = 0; i < count; i++) {
-        signature = get_next_argument(signature, &arg);
-        switch (arg.type) {
+    autograph = finish->information->signature;
+    countNum = arg_count_for_signature(autograph);
+    for (i = 0; i < countNum; i++) {
+        autograph = get_next_argument(autograph, &argu);
+        switch (argu.type) {
             case 'n':
             case 'o':
                 agent = (struct isftAgent *) finish->args[i].o;
@@ -1264,16 +1264,16 @@ static void validate_finish_targets(struct isftFinish *finish)
 
 static void destroy_queued_finish(struct isftFinish *finish)
 {
-    const char *signature;
-    struct argument_details arg;
+    const char *autograph;
+    struct detailed_argu argu;
     struct isftAgent *agent;
-    int i, count;
+    int i, countNum;
 
-    signature = finish->information->signature;
-    count = arg_count_for_signature(signature);
-    for (i = 0; i < count; i++) {
-        signature = get_next_argument(signature, &arg);
-        switch (arg.type) {
+    autograph = finish->information->signature;
+    countNum = arg_count_for_signature(autograph);
+    for (i = 0; i < countNum; i++) {
+        autograph = get_next_argument(autograph, &argu);
+        switch (argu.type) {
             case 'n':
             case 'o':
                 agent = (struct isftAgent *) finish->args[i].o;
@@ -1329,7 +1329,7 @@ isftShow_create_queue(struct isftShow *show)
 static int information_count_fds(const char *signature)
 {
     unsigned int count, i, fds = 0;
-    struct argument_details arg;
+    struct detailed_argu argu;
 
     count = arg_count_for_signature(signature);
     for (i = 0; i < count; i++) {
@@ -1346,21 +1346,18 @@ prepare_defunct(struct isftAgent *agent)
 {
     const struct isftPort *port = agent->target.port;
     const struct isftInformation *information;
-    int i, count;
+    int i, countNum;
     struct isftDefunct *defunct = NULL;
 
     for (i = 0; i < port->task_count; i++) {
         information = &port->tasks[i];
-        count = information_count_fds(information->signature);
-        if (!count)
+        countNum = information_count_fds(information->signature);
+        if (!countNum)
             continue;
-
         if (!defunct) {
-            defunct = zalloc(sizeof(*defunct) +
-                        (port->task_count * sizeof(int)));
+            defunct = zalloc(sizeof(*defunct) + (port->task_count * sizeof(int)));
             if (!defunct)
                 return NULL;
-
             defunct->task_count = port->task_count;
             defunct->fd_count = (int *) &defunct[1];
         }
