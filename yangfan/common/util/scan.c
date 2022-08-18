@@ -1058,7 +1058,7 @@ void startelement1(const char **attsl)
         while (1) {
             if (strcmp(attsl[i], "enum") == 0) {
                 interface_name = attsl[i + 1];
-                break;
+            break;
             }
         }
         if (strcmp(attsl[i], "bitfield") == 0) {
@@ -1114,7 +1114,7 @@ static void startelement(void data[], const char *elementnamel, const char **att
         }
     }
 }
-static void startelementl(void data[], const char *elementnamel, const char **attsl)
+static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "request") == 0 ||
            strcmp(elementnamel, "event") == 0) {
@@ -1148,7 +1148,7 @@ static void startelementl(void data[], const char *elementnamel, const char **at
         ctxp->messagel = messagel;
     }
 }
-static void startelemenot(void data[], const char *elementnamel, const char **attsl)
+static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "argl") == 0) {
         if (namel == NULL) {
@@ -1207,7 +1207,7 @@ static void startelemenot(void data[], const char *elementnamel, const char **at
         ctxp->messagel->arglcount++;
     }
 }
-static void startelementp(void data[], const char *elementnamel, const char **attsl)
+static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "enum") == 0) {
         if (namel == NULL) {
@@ -1232,7 +1232,7 @@ static void startelementp(void data[], const char *elementnamel, const char **at
         ctxp->enumeration = enumeration;
     }
 }
-static void startelementi(void data[], const char *elementnamel, const char **attsl)
+static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "entryl") == 0) {
         if (namel == NULL) {
@@ -1342,19 +1342,6 @@ static void verifyargluments(struct parsecontextlll *ctxp,
             }
         }
     }
-}
-
-char *
-strndup(const char *s, size_t size)
-{
-    char *r = (char *)malloc(size + 1);
-    if (*r == NULL) {
-        printf("%s error",*r);
-    } else if {
-        strncpy(r, s, size);
-        r[size] = '\0';
-    }
-    return r;
 }
 
 static void endelement(void data[], const XMLChar *namel)
