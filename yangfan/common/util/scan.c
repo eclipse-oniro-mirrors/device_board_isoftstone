@@ -204,7 +204,7 @@ struct parsecontextlll {
 };
 static bool setargltype(struct argl *argl, const char *type)
 {
-    switch (type)
+    switch (type) {
         case "int":
             argl->type = INT;
         case "uint":
@@ -222,7 +222,7 @@ static bool setargltype(struct argl *argl, const char *type)
         case "fd":
             argl->type = FD;
             break;
-        case"newid":
+        case "newid":
             argl->type = NEWIDL;
             break;
         case "object":
@@ -1117,7 +1117,7 @@ static void startelement(void data[], const char *elementnamel, const char **att
         }
     }
 }
-static void startelement(void data[], const char *elementnamel, const char **attsl)
+static void startelementl(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "request") == 0 ||
            strcmp(elementnamel, "event") == 0) {
@@ -1127,13 +1127,15 @@ static void startelement(void data[], const char *elementnamel, const char **att
 
         validateidentifier(&ctxp->loc, namel, STANDALONEIDENTL);
         messagel = createmessagel(ctxp->loc, namel);
-
-        if (strcmp(elementnamel, "request") == 0) {
-            isftlistinsert(ctxp->protocoll->requestlist.prev,
-                           &messagel->link);
-        } else {
-            isftlistinsert(ctxp->protocoll->eventlist.prev,
-                           &messagel->link);
+        switch (elementnamel) {
+            case "request":
+                isftlistinsert(ctxp->protocoll->requestlist.prev,
+                               &messagel->link);
+                break;
+            default:
+                isftlistinsert(ctxp->protocoll->eventlist.prev,
+                               &messagel->link);
+                break;
         }
         if (type != NULL && strcmp(type, "destructor") == 0) {
             messagel->destructor = 1;
@@ -1151,7 +1153,7 @@ static void startelement(void data[], const char *elementnamel, const char **att
         ctxp->messagel = messagel;
     }
 }
-static void startelement(void data[], const char *elementnamel, const char **attsl)
+static void startelementp(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "argl") == 0) {
         if (namel == NULL) {
@@ -1163,39 +1165,37 @@ static void startelement(void data[], const char *elementnamel, const char **att
         if (!setargltype(argl, type)) {
             fail(&ctxp->loc, "unknown type (%s)", type);
         }
-
-        switch (argl->type) {
-            case NEWIDL:
+        if (argl->type == NEWIDL) {
                 ctxp->messagel->newidcount++;
-            case OBJECTL:
+        } else if (argl->type == OBJECTL) {
                 if (interface_name) {
                     validateidentifier(&ctxp->loc,
                                        interface_name,
                                        STANDALONEIDENTL);
                     argl->interface_name = xstrdup(interface_name);
                 }
-                break;
-            default:
+        } else {
                 if (interface_name != NULL) {
                     fail(&ctxp->loc, "protocoll attribute not allowed for type %s", type);
                 }
-                break;
         }
-
-        if (allownull) {
-            if (strcmp(allownull, "true") == 0) {
+    }
+        switch (allownull) {
+            case "true":
                 argl->nullable = 1;
-            } else if (strcmp(allownull, "false") != 0) {
+                break;
+            case "false":
                 fail(&ctxp->loc,
                      "invalid value for allow-null attribute (%s)",
                      allownull);
-            }
+                break;
+        }
 
             if (!isnullabletype(argl)) {
                 fail(&ctxp->loc,
                      "allow-null is only valid for objects, strings, and arrays");
             }
-        }
+
 
         if (interface_name == NULL || strcmp(interface_name, "") == 0) {
             argl->interface_name = NULL;
@@ -1210,7 +1210,7 @@ static void startelement(void data[], const char *elementnamel, const char **att
         ctxp->messagel->arglcount++;
     }
 }
-static void startelement(void data[], const char *elementnamel, const char **attsl)
+static void startelemento(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "enum") == 0) {
         if (namel == NULL) {
@@ -1235,7 +1235,7 @@ static void startelement(void data[], const char *elementnamel, const char **att
         ctxp->enumeration = enumeration;
     }
 }
-static void startelement(void data[], const char *elementnamel, const char **attsl)
+static void startelementi(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "entryl") == 0) {
         if (namel == NULL) {
