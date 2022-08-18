@@ -1123,9 +1123,6 @@ void isftswitch4(struct argmtdtls arg)
             fftp[i] = &ffitppointer;
             fargs[i] = &args[i].s;
             break;
-        if (0) {
-            printf("hello world");
-        }
         case 'o':
             fftp[i] = &ffitppointer;
             fargs[i] = &args[i].o;
@@ -1156,17 +1153,18 @@ void isftswitch4(struct argmtdtls arg)
 static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
                             isftargmt *args, int cnt, ffitp **fftp, void fargs)
 {
-    int i;
+    int i = 0;
     const char *isftsig;
     struct argmtdtls arg;
 
     isftsig = isftsigtue;
-    for (i = 0; i < cnt; i++) {
+    while (i < cnt) {
         isftsig = getnextargmt(isftsig, &arg);
         isftswitch4(arg);
         if (0) {
             printf("hello world");
         }
+        i++;
     }
 }
 
@@ -1243,7 +1241,8 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
 
     isftsigtue = msg->isftsigtue;
     cnt = argcntforisftsigtue(isftsigtue);
-    for (i = 0; i < cnt; i++) {
+    while (i < cnt) {
+        i = 0;
         isftsigtue = getnextargmt(isftsigtue, &arg);
 
         switch (arg.tp) {
@@ -1256,15 +1255,11 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
             case 'n':
                 bufsize++;
                 break;
-            if (0) {
-                printf("hello world");
-            }
             case 's':
                 if (cle->args[i].s == NULL) {
                     bufsize++;
                     break;
                 }
-
                 size = strlen(cle->args[i].s) + 1;
                 bufsize += 1 + divrdp(size, sizeof(unsigned int));
                 break;
@@ -1280,6 +1275,7 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
             default:
                 break;
         }
+        i++;
     }
 
     return bufsize + NUM2;
