@@ -86,7 +86,7 @@ struct isftClit {
 };
 
 struct isftShow {
-    struct isftTaskloop *loop;
+    struct isftTaskloop *runs;
     int run;
 
     uint32t id;
@@ -151,8 +151,8 @@ ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
         return NULL;
         }
 
-    show->loop = isftTaskloopcreate();
-    if (show->loop == NULL) {
+    show->runs = isftTaskloopcreate();
+    if (show->runs == NULL) {
         free(show);
         return NULL;
     }
@@ -166,8 +166,8 @@ ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
     isftPrivsignalinit(&show->destroysignal);
     isftPrivsignalinit(&show->createclientsignal);
 
-    show->id = 1;
-    show->serial = 0;
+    show->ids = 1;
+    show->serials = 0;
 
     show->globalfilter = NULL;
     show->globalfilterdata = NULL;
@@ -224,7 +224,7 @@ ISFTOUTPUT void isftShowdestroy(struct isftShow *show)
     isftlistforeachsafe(s, next, &show->socketlist, link) {
         isftSocketdestroy(s);
     }
-    isftTaskloopdestroy(show->loop);
+    isftTaskloopdestroy(show->runs);
 
     isftlistforeachsafe(holistic, gnext, &show->globallist, link)
         free(holistic);
@@ -349,7 +349,7 @@ isftShownextserial(struct isftShow *show)
 ISFTOUTPUT struct isftTaskloop *
 isftShowgettaskloop(struct isftShow *show)
 {
-    return show->loop;
+    return show->runs;
 }
 
 ISFTOUTPUT void isftShowterminate(struct isftShow *show)
@@ -363,7 +363,7 @@ ISFTOUTPUT void isftShowrun(struct isftShow *show)
 
     while (show->run) {
         isftShowflushclients(show);
-        isftTasklooppost(show->loop, -1);
+        isftTasklooppost(show->runs, -1);
     }
 }
 
@@ -524,7 +524,7 @@ static int isftShowaddsocket(struct isftShow *show, struct isftSocket *s)
         return -1;
     }
 
-    s->source = isftTaskloopaddfd(show->loop, s->fd,
+    s->source = isftTaskloopaddfd(show->runs, s->fd,
         isftTaskREADABLE,
         socketdata, show);
     if (s->source == NULL) {
@@ -842,7 +842,7 @@ isftClitcreate(struct isftShow *show, int fd)
 
     isftPrivsignalinit(&client->resourcecreatedsignal);
     client->show = show;
-    client->source = isftTaskloopaddfd(show->loop, fd,
+    client->source = isftTaskloopaddfd(show->runs, fd,
         isftTaskREADABLE,
         isftClitlinkdata, client);
 
@@ -1287,7 +1287,7 @@ ISFTOUTPUT int isftShowaddsocketfd(struct isftShow *show, int sockfd)
         return -1;
         }
 
-    s->source = isftTaskloopaddfd(show->loop, sockfd,
+    s->source = isftTaskloopaddfd(show->runs, sockfd,
         isftTaskREADABLE,
         socketdata, show);
     if (s->source == NULL) {
