@@ -1106,48 +1106,39 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
 void isftswitch4(struct argmtdtls arg)
 {
     struct argmtdtls arg;
-    switch (arg.tp) {
-        case 'i':
-            fftp[i] = &fftpint32;
-            fargs[i] = &args[i].i;
-            break;
-        case 'u':
-            fftp[i] = &ffitpuint32;
-            fargs[i] = &args[i].u;
-            break;
-        case 'f':
-            fftp[i] = &fftpint32;
-            fargs[i] = &args[i].f;
-            break;
-        case 's':
-            fftp[i] = &ffitppointer;
-            fargs[i] = &args[i].s;
-            break;
-        case 'o':
+    if ('i' == arg.tp) {
+        fftp[i] = &fftpint32;
+        fargs[i] = &args[i].i;
+    } else if ('u' == arg.tp) {
+        fftp[i] = &ffitpuint32;
+        fargs[i] = &args[i].u;
+    } else if ('f' == arg.tp) {
+        fftp[i] = &fftpint32;
+        fargs[i] = &args[i].f;
+    } else if ('s' == arg.tp) {
+        fftp[i] = &ffitppointer;
+        fargs[i] = &args[i].s;
+    } else if ('o' == arg.tp) {
+        fftp[i] = &ffitppointer;
+        fargs[i] = &args[i].o;
+    } else if ('n' == arg.tp) {
+        if (flags & WLCLOSUREINVOKECLIENT) {
             fftp[i] = &ffitppointer;
             fargs[i] = &args[i].o;
-            break;
-        case 'n':
-            if (flags & WLCLOSUREINVOKECLIENT) {
-                fftp[i] = &ffitppointer;
-                fargs[i] = &args[i].o;
-            } else {
-                fftp[i] = &ffitpuint32;
-                fargs[i] = &args[i].n;
-            }
-            break;
-        case 'a':
-            fftp[i] = &ffitppointer;
-            fargs[i] = &args[i].a;
-            break;
-        case 'h':
-            fftp[i] = &fftpint32;
-            fargs[i] = &args[i].h;
-            break;
-        default:
-            isftabt("unknown tp\n");
-            break;
+        } else {
+            fftp[i] = &ffitpuint32;
+            fargs[i] = &args[i].n;
+        }
+    } else if ('a' == arg.tp) {
+        fftp[i] = &ffitppointer;
+        fargs[i] = &args[i].a;
+    } else if ('h' == arg.tp) {
+        fftp[i] = &fftpint32;
+        fargs[i] = &args[i].h;
+    } else {
+        isftabt("unknown tp\n");
     }
+    return;
 }
 
 static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
