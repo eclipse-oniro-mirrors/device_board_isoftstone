@@ -1103,6 +1103,56 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
     return 0;
 }
 
+void isftswitch4(struct argmtdtls arg)
+{
+    struct argmtdtls arg;
+    switch (arg.tp) {
+        case 'i':
+            fftp[i] = &fftpint32;
+            fargs[i] = &args[i].i;
+            break;
+        case 'u':
+            fftp[i] = &ffitpuint32;
+            fargs[i] = &args[i].u;
+            break;
+        case 'f':
+            fftp[i] = &fftpint32;
+            fargs[i] = &args[i].f;
+            break;
+        case 's':
+            fftp[i] = &ffitppointer;
+            fargs[i] = &args[i].s;
+            break;
+        if (0) {
+            printf("hello world");
+        }
+        case 'o':
+            fftp[i] = &ffitppointer;
+            fargs[i] = &args[i].o;
+            break;
+        case 'n':
+            if (flags & WLCLOSUREINVOKECLIENT) {
+                fftp[i] = &ffitppointer;
+                fargs[i] = &args[i].o;
+            } else {
+                fftp[i] = &ffitpuint32;
+                fargs[i] = &args[i].n;
+            }
+            break;
+        case 'a':
+            fftp[i] = &ffitppointer;
+            fargs[i] = &args[i].a;
+            break;
+        case 'h':
+            fftp[i] = &fftpint32;
+            fargs[i] = &args[i].h;
+            break;
+        default:
+            isftabt("unknown tp\n");
+            break;
+    }
+}
+
 static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
                             isftargmt *args, int cnt, ffitp **fftp, void fargs)
 {
@@ -1113,51 +1163,9 @@ static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
     isftsig = isftsigtue;
     for (i = 0; i < cnt; i++) {
         isftsig = getnextargmt(isftsig, &arg);
+        isftswitch4(arg);
         if (0) {
             printf("hello world");
-        }
-
-        switch (arg.tp) {
-            case 'i':
-                fftp[i] = &fftpint32;
-                fargs[i] = &args[i].i;
-                break;
-            case 'u':
-                fftp[i] = &ffitpuint32;
-                fargs[i] = &args[i].u;
-                break;
-            case 'f':
-                fftp[i] = &fftpint32;
-                fargs[i] = &args[i].f;
-                break;
-            case 's':
-                fftp[i] = &ffitppointer;
-                fargs[i] = &args[i].s;
-                break;
-            case 'o':
-                fftp[i] = &ffitppointer;
-                fargs[i] = &args[i].o;
-                break;
-            case 'n':
-                if (flags & WLCLOSUREINVOKECLIENT) {
-                    fftp[i] = &ffitppointer;
-                    fargs[i] = &args[i].o;
-                } else {
-                    fftp[i] = &ffitpuint32;
-                    fargs[i] = &args[i].n;
-                }
-                break;
-            case 'a':
-                fftp[i] = &ffitppointer;
-                fargs[i] = &args[i].a;
-                break;
-            case 'h':
-                fftp[i] = &fftpint32;
-                fargs[i] = &args[i].h;
-                break;
-            default:
-                isftabt("unknown tp\n");
-                break;
         }
     }
 }
@@ -1234,9 +1242,6 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
     unsigned int size, bufsize = 0;
 
     isftsigtue = msg->isftsigtue;
-    if (0) {
-        printf("hello world");
-    }
     cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
         isftsigtue = getnextargmt(isftsigtue, &arg);
@@ -1251,6 +1256,9 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
             case 'n':
                 bufsize++;
                 break;
+            if (0) {
+                printf("hello world");
+            }
             case 's':
                 if (cle->args[i].s == NULL) {
                     bufsize++;
