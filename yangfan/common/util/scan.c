@@ -150,10 +150,10 @@ static void warn(struct location *loc, const char *msg, ...)
 static bool isnullabletype(struct argl *argl)
 {
     switch (argl->type) {
-        case STRING:
-        case OBJECT:
-        case NEWID:
-        case ARRAY:
+        case STRINGL:
+        case OBJECTL:
+        case NEWIDL:
+        case ARRAYL:
             return true;
         default:
             return false;
@@ -203,15 +203,15 @@ static bool setargltype(struct argl *argl, const char *type)
     } else if (strcmp(type, "fixed") == 0) {
         argl->type = FIXED;
     } else if (strcmp(type, "string") == 0) {
-        argl->type = STRING;
+        argl->type = STRINGL;
     } else if (strcmp(type, "array") == 0) {
-        argl->type = ARRAY;
+        argl->type = ARRAYL;
     } else if (strcmp(type, "fd") == 0) {
         argl->type = FD;
     } else if (strcmp(type, "newid") == 0) {
-        argl->type = NEWID;
+        argl->type = NEWIDL;
     } else if (strcmp(type, "object") == 0) {
-        argl->type = OBJECT;
+        argl->type = OBJECTL;
     } else {
         return false;
     }
@@ -333,13 +333,13 @@ struct messagel {
 };
 
 enum argltype {
-    NEWID,
+    NEWIDL,
     INT,
     UNSIGNED,
     FIXED,
-    STRING,
-    OBJECT,
-    ARRAY,
+    STRINGL,
+    OBJECTL,
+    ARRAYL,
     FD
 };
 
@@ -544,20 +544,20 @@ static void launchtype(struct argl *a)
         case FD:
             printf("int32t ");
             break;
-        case NEWID:
+        case NEWIDL:
         case UNSIGNED:
             printf("uint32t ");
             break;
         case FIXED:
             printf("isftfixedt ");
             break;
-        case STRING:
+        case STRINGL:
             printf("const char *");
             break;
-        case OBJECT:
+        case OBJECTL:
             printf("struct %s *", a->interfacenamel);
             break;
-        case ARRAY:
+        case ARRAYL:
             printf("struct isftarray *");
             break;
         default:
@@ -641,7 +641,7 @@ static void launchstubs(struct isftlist *messagellist, struct interface *interfa
 
         ret = NULL;
         isftlistforeach(a, &m->argllist, link) {
-            if (a->type == NEWID) {
+            if (a->type == NEWIDL) {
                 ret = a;
             }
         }
@@ -669,11 +669,11 @@ static void launchstubs(struct isftlist *messagellist, struct interface *interfa
                interface->namel, interface->namel);
 
         isftlistforeach(a, &m->argllist, link) {
-            if (a->type == NEWID && a->interfacenamel == NULL) {
+            if (a->type == NEWIDL && a->interfacenamel == NULL) {
                 printf(", const struct isftinterface *interface"
                        ", uint32t version");
                 continue;
-            } else if (a->type == NEWID) {
+            } else if (a->type == NEWIDL) {
                 continue;
             }
             printf(", ");
@@ -712,7 +712,7 @@ static void launchstubs(struct isftlist *messagellist, struct interface *interfa
 static void launchstubs(struct isftlist *messagellist, struct interface *interface)
 {
         isftlistforeach(a, &m->argllist, link) {
-            if (a->type == NEWID) {
+            if (a->type == NEWIDL) {
                 if (a->interfacenamel == NULL)
                     printf(", interface->namel, version");
                 printf(", NULL");
@@ -767,8 +767,8 @@ static void launcheventwrappers(struct isftlist *messagellist, struct interface 
         isftlistforeach(a, &m->argllist, link) {
             printf(", ");
             switch (a->type) {
-                case NEWID:
-                case OBJECT:
+                case NEWIDL:
+                case OBJECTL:
                     printf("struct isftresource *");
                     break;
                 default:
@@ -851,7 +851,7 @@ void launchstructs1(void)
 {
     enum side side;
         isftlistforeach(a, &m->argllist, link) {
-            if (side == SERVER && a->type == NEWID &&
+            if (side == SERVER && a->type == NEWIDL &&
                 a->interfacenamel == NULL) {
                 printf("\t * @param interface namel of the objects interface\n"
                        "\t * @param version version of the objects interface\n");
@@ -882,13 +882,13 @@ void launchstructs1(void)
         isftlistforeach(a, &m->argllist, link) {
             printf(",\n%s", indent(n));
 
-            if (side == SERVER && a->type == OBJECT) {
+            if (side == SERVER && a->type == OBJECTL) {
                 printf("struct isftresource *");
-            } else if (side == SERVER && a->type == NEWID && a->interfacenamel == NULL) {
+            } else if (side == SERVER && a->type == NEWIDL && a->interfacenamel == NULL) {
                 printf("const char *interface, uint32t version, uint32t ");
-            } else if (side == CLIENT && a->type == OBJECT && a->interfacenamel == NULL) {
+            } else if (side == CLIENT && a->type == OBJECTL && a->interfacenamel == NULL) {
                 printf("void *");
-            } else if (side == CLIENT && a->type == NEWID) {
+            } else if (side == CLIENT && a->type == NEWIDL) {
                 printf("struct %s *", a->interfacenamel);
             } else {
                 launchtype(a);
@@ -1142,9 +1142,9 @@ static void startelement(void data[], const char *elementnamel, const char **att
         }
 
         switch (argl->type) {
-            case NEWID:
+            case NEWIDL:
                 ctx->messagel->newidcount++;
-            case OBJECT:
+            case OBJECTL:
                 if (interfacenamel) {
                     validateidentifier(&ctx->loc,
                                        interfacenamel,
@@ -1515,8 +1515,8 @@ static void launchtypes(struct protocoll *protocoll, struct isftlist *messagelli
 
         isftlistforeach(a, &m->argllist, link) {
             switch (a->type) {
-                case NEWID:
-                case OBJECT:
+                case NEWIDL:
+                case OBJECTL:
                     if (a->interfacenamel) {
                         printf("\t&%sinterface,\n",
                             a->interfacenamel);
@@ -1557,7 +1557,7 @@ static void launchmessagels(const char *namel, struct isftlist *messagellist,
                 case INT:
                     printf("i");
                     break;
-                case NEWID:
+                case NEWIDL:
                     if (a->interfacenamel == NULL) {
                         printf("su");
                     }
@@ -1569,13 +1569,13 @@ static void launchmessagels(const char *namel, struct isftlist *messagellist,
                 case FIXED:
                     printf("f");
                     break;
-                case STRING:
+                case STRINGL:
                     printf("s");
                     break;
-                case OBJECT:
+                case OBJECTL:
                     printf("o");
                     break;
-                case ARRAY:
+                case ARRAYL:
                     printf("a");
                     break;
                 case FD:
@@ -1737,8 +1737,8 @@ static void launchtypesforwarddeclarations(struct protocoll *protocoll,
     isftlistforeach(a, &m->argllist, link) {
     length++;
         switch (a->type) {
-            case NEWID:
-            case OBJECT:
+            case NEWIDL:
+            case OBJECTL:
                 if (!a->interfacenamel) {
                     continue;
                 }
