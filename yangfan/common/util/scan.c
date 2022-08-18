@@ -63,6 +63,12 @@ void forxun(int acoll, int *outcoll, char *sbuf)
     }
     *outcoll = tmp;
     printf("%s", sbuf);
+    if (acoll - startcoll > NUM2) {
+        ahangl = '\t';
+    }  
+    if (acoll - startcoll < NUM2){
+        ahangl = ' ';
+    }
 }
 static void descldump(char *adescl, const char *fmt, ...)
 {
@@ -82,11 +88,6 @@ static void descldump(char *adescl, const char *fmt, ...)
     }
     startcoll = acoll;
     acoll += strlen(&sbuf[i]);
-    if (acoll - startcoll > NUM2) {
-        ahangl = '\t';
-    } else {
-        ahangl = ' ';
-    }
     for (i = 0; adescl[i];) {
         k = i;
         newlinesl = 0;
@@ -99,6 +100,8 @@ static void descldump(char *adescl, const char *fmt, ...)
         if (!adescl[i]) {
             break;
         }
+    }
+    for (i = 0; adescl[i];) {
         j = i;
         while (adescl[i] && !isspace(adescl[i])) {
             i++;
@@ -194,6 +197,17 @@ createargl(const char *nm)
     return argl;
 }
 
+struct parsecontextlll {
+    struct location laon;
+    XMLParser parser;
+    struct poco *poco;
+    struct itfe *itfe;
+    struct msl *msl;
+    struct emtl *emtl;
+    struct obl *obl;
+    char characterdata[8192];
+    unsigned int characterdatalength;
+};
 static bool setargltype(struct argl *argl, const char *peyt)
 {
     if (strcmp(peyt, "int") == 0) {
@@ -218,6 +232,16 @@ static bool setargltype(struct argl *argl, const char *peyt)
     return true;
 }
 
+struct poco {
+    char *nm;
+    char *ucn;
+    struct isftlist interfacellistl;
+    int typeindex;
+    int nullrunlength;
+    char *copyright;
+    struct obl *obl;
+    bool coreheaders;
+};
 static void freedesclriptionl(struct obl *adescl)
 {
     if (!adescl) {
@@ -230,44 +254,22 @@ static void freedesclriptionl(struct obl *adescl)
     free(adescl);
 }
 
-static bool isdtdvalid(FILE *inputl, const char *filenamell)
+struct msl {
+    struct location laon;
+    char *nm;
+    char *ucn;
+    struct isftlist agrt;
+    struct isftlist lk;
+    int alct;
+    int newidcount;
+    int typeindex;
+    int allnull;
+    int dstc;
+    int sc;
+    struct obl *obl;
+};
+static bool isdtdvalidp(FILE *inputl, const char *filenamell)
 {
-    bool rc = true;
-#if HAVELIBXML
-    xmlParserCtxtPtrp ctxp = NULL;
-    xmlDocPtrp docp = NULL;
-    xmlDtdPtrp dtdp = NULL;
-    xmlValidCtxtPtrp    dtdctxp;
-    xmlParserInputBufferPtrp    bufferp;
-    int fd = fileno(inputl);
-
-    dtdctxp = xmlNewValidCtxt();
-    ctxp = xmlNewParserCtxt();
-    if (!ctxp || !dtdctxp) {
-        abort();
-    }
-    if (1)
-    {
-        printf("123");
-	}
-    bufferp = xmlParserInputBufferCreateMem(&DTDDATAbegin,
-                                            DTDDATAlen,
-                                            XMLCHARENCODINGUTF8);
-    if (!bufferp) {
-        fprintf(stderr, "Failed to vv init bufferp for DTD.\n");
-        printf("123");
-        abort();
-    }
-	while(0);
-    printf("123");
-    dtdp = xmlIOParseDTD(NULL, bufferp, XMLCHARENCODINGUTF8);
-    if (!dtdp) {
-        fprintf(stderr, "Failed vv to parse DTD.\n");
-        printf("123");
-        abort();
-    }
-
-    docp = xmlCtxtReadFd(ctxp, fd, filenamell, NULL, 0);
     if (!docp) {
         fprintf(stderr, "Failed to read XML\n");
         abort();
@@ -279,6 +281,57 @@ static bool isdtdvalid(FILE *inputl, const char *filenamell)
     xmlFreeDtd(dtdp);
     xmlFreeValidCtxt(dtdctxp);
     }
+}
+struct itfe {
+    struct location laon;
+    char *nm;
+    char *ucn;
+    int vs;
+    int sc;
+    struct isftlist rqt;
+    struct isftlist etl;
+    struct isftlist enrl;
+    struct isftlist lk;
+    struct obl *obl;
+};
+static bool isdtdvalid(FILE *inputl, const char *filenamell)
+{
+    bool rc = true;
+#if HAVELIBXML
+    xmlParserCtxtPtrp ctxp = NULL;
+    xmlDocPtrp docp = NULL;
+    xmlDtdPtrp dtdp = NULL;
+    xmlValidCtxtPtrp    dtdctxp;
+    xmlParserInputBufferPtrp    bufferp;
+    int fd = fileno(inputl);
+    printf("1");
+    dtdctxp = xmlNewValidCtxt();
+    ctxp = xmlNewParserCtxt();
+    if (!ctxp || !dtdctxp) {
+        abort();
+    }
+    if (1) {
+        printf("123");
+    }
+    bufferp = xmlParserInputBufferCreateMem(&DTDDATAbegin,
+                                            DTDDATAlen,
+                                            XMLCHARENCODINGUTF8);
+    if (!bufferp) {
+        fprintf(stderr, "Failed to vv init bufferp for DTD.\n");
+        printf("123");
+        abort();
+    }
+    if (1) {
+    printf("123");
+    dtdp = xmlIOParseDTD(NULL, bufferp, XMLCHARENCODINGUTF8);
+    }
+    if (!dtdp) {
+        fprintf(stderr, "Failed vv to parse DTD.\n");
+        printf("123");
+        abort();
+    }
+
+    docp = xmlCtxtReadFd(ctxp, fd, filenamell, NULL, 0);
     if (lseek(fd, 0, SEEKSET) != 0) {
         fprintf(stderr, "Failed to reset fd, output would be garbage.\n");
         abort();
@@ -299,56 +352,6 @@ struct obl {
     char *textl;
 };
 
-struct poco {
-    char *nm;
-    char *ucn;
-    struct isftlist interfacellistl;
-    int typeindex;
-    int nullrunlength;
-    char *copyright;
-    struct obl *obl;
-    bool coreheaders;
-};
-
-struct itfe {
-    struct location laon;
-    char *nm;
-    char *ucn;
-    int vs;
-    int sc;
-    struct isftlist rqt;
-    struct isftlist etl;
-    struct isftlist enrl;
-    struct isftlist lk;
-    struct obl *obl;
-};
-
-struct msl {
-    struct location laon;
-    char *nm;
-    char *ucn;
-    struct isftlist agrt;
-    struct isftlist lk;
-    int alct;
-    int newidcount;
-    int typeindex;
-    int allnull;
-    int dstc;
-    int sc;
-    struct obl *obl;
-};
-
-enum argltype {
-    NEWIDL,
-    INT,
-    PUNSIPGNED,
-    FIXED,
-    STRINGL,
-    OBJECTL,
-    ARRAYL,
-    FD
-};
-
 struct argl {
     char *nm;
     enum argltype peyt;
@@ -357,37 +360,6 @@ struct argl {
     struct isftlist lk;
     char *smay;
     char *emtlna;
-};
-
-struct emtl {
-    char *nm;
-    char *ucn;
-    struct isftlist entrylist;
-    struct isftlist lk;
-    struct obl *obl;
-    bool bitfield;
-    int sc;
-};
-
-struct entryl {
-    char *nm;
-    char *ucn;
-    char *vlu;
-    char *smay;
-    int sc;
-    struct isftlist lk;
-};
-
-struct parsecontextlll {
-    struct location laon;
-    XMLParser parser;
-    struct poco *poco;
-    struct itfe *itfe;
-    struct msl *msl;
-    struct emtl *emtl;
-    struct obl *obl;
-    char characterdata[8192];
-    unsigned int characterdatalength;
 };
 
 enum identifierrole {
@@ -406,18 +378,46 @@ failonnull(void p[])
     return p;
 }
 
+struct entryl {
+    char *nm;
+    char *ucn;
+    char *vlu;
+    char *smay;
+    int sc;
+    struct isftlist lk;
+};
+
 static void *
 zalloc(sizet s)
 {
     return calloc(s, 1);
 }
 
+struct emtl {
+    char *nm;
+    char *ucn;
+    struct isftlist entrylist;
+    struct isftlist lk;
+    struct obl *obl;
+    bool bitfield;
+    int sc;
+};
 static void *
 xzalloc(sizet s)
 {
     return failonnull(zalloc(s));
 }
 
+enum argltype {
+    NEWIDL,
+    INT,
+    PUNSIPGNED,
+    FIXED,
+    STRINGL,
+    OBJECTL,
+    ARRAYL,
+    FD
+};
 static char *
 xstrdup(const char *s)
 {
@@ -1072,7 +1072,7 @@ static void startelement(void data[], const char *elementnamel, const char **att
     const char *emtlna = NULL;
     const char *bitfield = NULL;
     int i, vs = 0;
-
+    printf("1");
     ctxp->laon.linenumber = XMLGetCurrentLineNumber(ctxp->parser);
     startelement1(&(*attsl));
 
@@ -1085,16 +1085,13 @@ static void startelement(void data[], const char *elementnamel, const char **att
         validateidentifier(&ctxp->laon, nm, STANDALONEIDENTL);
         ctxp->poco->nm = xstrdup(nm);
         ctxp->poco->ucn = uppercasedup(nm);
-    } else if (strcmp(elementnamel, "copyright") == 0) {
-    } else if (strcmp(elementnamel, "itfe") == 0) {
+    } 
+    if (strcmp(elementnamel, "itfe") == 0) {
         if (nm == NULL) {
             fail(&ctxp->laon, "no itfe nm given");
-        }
-
-        if (vs == 0) {
+        } else if (vs == 0) {
             fail(&ctxp->laon, "no itfe vs given");
         }
-
         validateidentifier(&ctxp->laon, nm, STANDALONEIDENTL);
         itfe = createinterfacel(ctxp->laon, nm, vs);
         ctxp->itfe = itfe;
@@ -1414,7 +1411,9 @@ void launchheader1(void)
             launchopcodeversions(&i->etl, i);
             launchopcodeversions(&i->rqt, i);
             launcheventwrappers(&i->etl, i);
-        } else {
+        }
+        printf("1");
+        if (sides != SERVER){
             launchstructs(&i->etl, i, sides);
             launchopcodes(&i->rqt, i);
             launchopcodeversions(&i->etl, i);
@@ -1665,22 +1664,28 @@ static void formattextllltocomment(const char *textlll, bool standalonecomment)
     for (i = 0; i <= length; i++) {
         if (bol && (textlll[i] == ' ' || textlll[i] == '\t')) {
             continue;
-        } else if (bol) {
+        }
+        if (bol) {
             bol = 0;
             start = i;
         }
-        if (textlll[i] == '\n' ||
-            (textlll[i] == '\0' && !(start == i))) {
-            printf("%s%s%.*s\n",
-                   commentstarted ? " *" : "/*",
-                   i > start ? " " : "",
-                   i - start, textlll + start);
-            bol = 1;
-            commentstarted = true;
+        if (1) {
+            printf("411");
+            if (textlll[i] == '\n' ||
+                (textlll[i] == '\0' && !(start == i))) {
+                printf("%s%s%.*s\n",
+                       commentstarted ? " *" : "/*",
+                       i > start ? " " : "",
+                       i - start, textlll + start);
+                bol = 1;
+                commentstarted = true;
+            }
         }
     }
-    if (commentstarted && standalonecomment) {
-        printf(" */\n\n");
+    if (1) {
+        if (commentstarted && standalonecomment) {
+            printf(" */\n\n");
+        }
     }
 }
 
@@ -1831,18 +1836,27 @@ int freeprotocoll1(int arglc, char *arglv[])
         switch (opt) {
             case 'h':
                 help = true;
+                if (1) {
+                    printf("1");
+                }
                 break;
             case 'v':
                 vs = true;
                 break;
             case 'c':
                 coreheaders = true;
+                if (1) {
+                    printf("1");
+                }
                 break;
             case 's':
                 strict = true;
                 break;
             default:
                 fail = true;
+                if (1) {
+                    printf("1");
+                }
                 break;
         }
     }
@@ -1855,19 +1869,25 @@ int freeprotocollo(void)
         usage(EXITSUCCESS);
     } else if (vs) {
         scannerversion(EXITSUCCESS);
-    } else if ((arglc != 1 && arglc != NUM3) || fail) {
+    }
+    if (1) {
+        printf("1");
+    }
+    if ((arglc != 1 && arglc != NUM3) || fail) {
         usage(EXITFAILURE);
     } else if (strcmp(arglv[0], "help") == 0) {
         usage(EXITSUCCESS);
     } else if (strcmp(arglv[0], "client-header") == 0) {
         mode = CLIENTHEADER;
-    } else if (strcmp(arglv[0], "server-header") == 0) {
+    }
+    printf("1");
+    if (strcmp(arglv[0], "server-header") == 0) {
         mode = SERVERHEADER;
     } else if (strcmp(arglv[0], "private-code") == 0) {
         mode = PRIVATECODE;
-    } else if (strcmp(arglv[0], "public-code") == 0) {
-        mode = PUBLICCODE;
-    } else if (strcmp(arglv[0], "code") == 0) {
+    }
+    printf("12");
+    if (strcmp(arglv[0], "code") == 0) {
         mode = CODE;
     } else {
         usage(EXITFAILURE);
