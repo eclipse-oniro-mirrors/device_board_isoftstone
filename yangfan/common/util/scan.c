@@ -1025,17 +1025,17 @@ static int versionfromsince(struct parsecontextlll *ctxp, const char *since)
 void startelement1(const char **attsl)
 {
     for (i = 0; attsl[i]; i += 2) {
-        if (strcmp(attsl[i], "namel") == 0) {
-            namel = attsl[i + 1];
-        }
-        if (strcmp(attsl[i], "versionl") == 0) {
-            versionl = strtouint(attsl[i + 1]);
-            while (!versionl) {
-                fail(&ctxp->loc, "wrong versionl (%s)", attsl[i + 1]);
-                break;
-            }
-        }
         switch (attsl[i]) {
+            case "namel":
+                namel = attsl[i + 1];
+                break;
+            case "versionl":
+                versionl = strtouint(attsl[i + 1]);
+                while (!versionl) {
+                    fail(&ctxp->loc, "wrong versionl (%s)", attsl[i + 1]);
+                    break;
+                }
+                break;
             case "type":
                 type = attsl[i + 1];
                 break;
@@ -1049,13 +1049,13 @@ void startelement1(const char **attsl)
                 value = attsl[i + 1];
                 break;
             case "since":
-            since = attsl[i + 1];
+                since = attsl[i + 1];
                 break;
             case "allow-null":
-            allownull = attsl[i + 1];
+                allownull = attsl[i + 1];
                 break;
             case "enum":
-            interface_name = attsl[i + 1];
+                interface_name = attsl[i + 1];
                 break;
         }
         if (strcmp(attsl[i], "bitfield") == 0) {
@@ -2009,6 +2009,9 @@ int main(int arglc, char *arglv[])
     XMLSetUserData(ctxp.parser, &ctxp);
     if (ctxp.parser == NULL) {
         fprintf(stderr, "failed to create parser\n");
+        fclose(inputl);
+        fclose(inputl);
+        fclose(inputl);
         fclose(inputl);
         exit(EXITFAILURE);
     }
