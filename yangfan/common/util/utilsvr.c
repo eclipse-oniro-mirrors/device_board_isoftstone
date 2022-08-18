@@ -123,19 +123,6 @@ static void destroyclientdisplayresource(struct isftResource *resource)
     resource->client->displayresource = NULL;
 }
 
-static int ipcdisplay(struct isftClit *client, struct isftShow *show)
-{
-    client->displayresource =
-        isftResourcecreate(client, &isftShowport, 1, 1);
-    if (client->displayresource == NULL) {
-        return -1;
-    }
-    isftResourcesetimplementation(client->displayresource,
-        &displayport, show,
-        destroyclientdisplayresource);
-    return 0;
-}
-
 ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
 {
     struct isftShow *g_show;
