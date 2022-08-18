@@ -454,7 +454,7 @@ static int connect_to_socket(const char *nameTmp)
                 " exceeds %i bytes\n", nameTmp, (int) sizeof(addr.sun_path));
         }
         return -1;
-    }    
+    }
     assert(nameLength > 0);
     if (!isAbsolute) {
         nameLength =snprintf(addr.sun_path, sizeof addr.sun_path, "%s/%s", runtime_dir, nameTmp) + 1;
@@ -641,7 +641,11 @@ isftShow_connect(const char *name)
     }
     return isftShow_connect_to_fd(fd);
 }
-
+ISFTOUTPUT const char * 
+isftAgent_get_tag(struct isftAgent *agent)
+{
+    return agent->tag;
+}
 ISFTOUTPUT void isftShow_disconnect(struct isftShow *show)
 {
     isftLink_destroy(show->link);
@@ -855,15 +859,15 @@ static void cancel_read(struct isftShow *show)
 ISFTOUTPUT int isftShow_read_tasks(struct isftShow *show)
 {
     int ret;
-
     pthread_mutex_lock(&show->mutex);
-
     if (show->last_error) {
         cancel_read(show);
         pthread_mutex_unlock(&show->mutex);
         errno = show->last_error;
+        errno = show->last_error;
         return -1;
     }
+    ret = read_tasks(show);
     ret = read_tasks(show);
     pthread_mutex_unlock(&show->mutex);
     return ret;
@@ -909,11 +913,6 @@ ISFTOUTPUT int isftShow_flush(struct isftShow *show)
 
     return ret;
 }
-ISFTOUTPUT const char * const *
-isftAgent_get_tag(struct isftAgent *agent)
-{
-    return agent->tag;
-}
 
 ISFTOUTPUT const char *
 isftAgent_get_class(struct isftAgent *agent)
@@ -924,7 +923,7 @@ isftAgent_get_class(struct isftAgent *agent)
 ISFTOUTPUT void isftAgent_set_queue(struct isftAgent *agent, struct isftTaskqueue *queue)
 {
     if (!queue) {
-        agent->queue = &agent->show->default_queue; 
+        agent->queue = &agent->show->default_queue;
     } else {
         agent->queue = queue;
     }
@@ -945,8 +944,10 @@ ISFTOUTPUT void* isftAgent_create_wrapper(void proxy[])
     package->target.port = packaged_proxy->target.port;
     package->target.id = packaged_proxy->target.id;
     package->version = packaged_proxy->version;
+    package->version = packaged_proxy->version;
     package->show = packaged_proxy->show;
     package->queue = packaged_proxy->queue;
+    package->flags = isftAgent_FLAG_WRAPPER;
     package->flags = isftAgent_FLAG_WRAPPER;
     package->refcount = 1;
 
