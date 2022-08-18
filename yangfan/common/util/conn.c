@@ -31,7 +31,8 @@
 #define NUM16 16
 #define NUM1000 1000
 #define NUM4096 4096
-
+#define MAXFDSOUT    28
+#define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
 unsigned int isftconnectionpendinginput(struct isftconnection *connection)
 {
     return isftbuffersize(&connection->in);
@@ -70,14 +71,14 @@ int isftconnectionread(struct isftconnection *connection)
     if (ret) {
         return -1;
     }
-    connection->in.head += len;
+    connection->in.hd += len;
 
     return isftconnectionpendinginput(connection);
 }
 
 int isftconnectionwrite(struct isftconnection *connection, const void data, int count)
 {
-    if (connection->out.head - connection->out.tail +
+    if (connection->out.hd - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
         connection->wantflush = 1;
         if (isftconnectionflush(connection) < 0) {
@@ -95,7 +96,7 @@ int isftconnectionwrite(struct isftconnection *connection, const void data, int 
 
 int isftconnectionqueue(struct isftconnection *connection, const void data, int count)
 {
-    if (connection->out.head - connection->out.tail +
+    if (connection->out.hd - connection->out.tail +
         count > ARRAYLENGTH(connection->out.data)) {
         connection->wantflush = 1;
         if (isftconnectionflush(connection) < 0) {
@@ -338,6 +339,7 @@ struct isftclosure *isftclosuremarshal(struct isftobject *sender, unsigned int o
             }
         }
     }
+    return;
 }
 
 void isftswitch0(struct argumentdetails arg)
@@ -451,7 +453,7 @@ void isftswitch2(struct argumentdetails arg)
             p = next;
             break;
         case 'h':
-            if (connection->fdsin.tail == connection->fdsin.head) {
+            if (connection->fdsin.tail == connection->fdsin.hd) {
             isftlog("file descriptor expected, " "object (%d), message %s(%s)\n", closure->senderid, message->
                     name, message->signature);
                     errno = EINVAL;
@@ -484,7 +486,7 @@ struct isftclosure *sftconnectiondemarshal(struct isftconnection *connection, un
     struct isftarray *arrayextra;
 
     if (size < NUM2 * sizeof *p) {
-        isftlog("message too short, invalid header\n");
+        isftlog("message too short, invalid hder\n");
         isftconnectionconsume(connection, size);
         errno = EINVAL;
         return NULL;
@@ -548,16 +550,13 @@ unsigned int divroundup(unsigned int n, int a)
 
 struct isftbuffer {
     char data[4096];
-    unsigned int head, tail;
+    unsigned int hd, tail;
 };
 
 int MASK(i)
 {
     return ((i) & NUM4096);
 }
-
-#define MAXFDSOUT    28
-#define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
 
 struct isftconnection {
     struct isftbuffer in, out;
@@ -568,7 +567,8 @@ struct isftconnection {
 
 static int isftbufferput(struct isftbuffer *b, const void data, int count)
 {
-    unsigned int head, size;
+    unsigned int hd;
+    unsigned int size;
 
     if (count > sizeof(b->data)) {
         isftlog("Data too big for buffer (%d > %d).\n", count, sizeof(b->data));
@@ -576,37 +576,37 @@ static int isftbufferput(struct isftbuffer *b, const void data, int count)
         return -1;
     }
 
-    head = MASK(b->head);
-    if (head + count <= sizeof b->data) {
-        memcpy(b->data + head, data, count);
+    hd = MASK(b->hd);
+    if (hd + count <= sizeof b->data) {
+        memcpy(b->data + hd, data, count);
     } else {
-        size = sizeof b->data - head;
-        memcpy(b->data + head, data, size);
+        size = sizeof b->data - hd;
+        memcpy(b->data + hd, data, size);
         memcpy(b->data, (const char *) data + size, count - size);
     }
 
-    b->head += count;
+    b->hd += count;
 
     return 0;
 }
 
 static void isftbufferputiov(struct isftbuffer *b, struct iovec *iov, int *count)
 {
-    unsigned int head, tail;
+    unsigned int hd, tail;
 
-    head = MASK(b->head);
+    hd = MASK(b->hd);
     tail = MASK(b->tail);
-    if (head < tail) {
-        iov[0].iovbase = b->data + head;
-        iov[0].iovlen = tail - head;
+    if (hd < tail) {
+        iov[0].iovbase = b->data + hd;
+        iov[0].iovlen = tail - hd;
         *count = 1;
     } else if (tail == 0) {
-        iov[0].iovbase = b->data + head;
-        iov[0].iovlen = sizeof b->data - head;
+        iov[0].iovbase = b->data + hd;
+        iov[0].iovlen = sizeof b->data - hd;
         *count = 1;
     } else {
-        iov[0].iovbase = b->data + head;
-        iov[0].iovlen = sizeof b->data - head;
+        iov[0].iovbase = b->data + hd;
+        iov[0].iovlen = sizeof b->data - hd;
         iov[1].iovbase = b->data;
         iov[1].iovlen = tail;
         *count = NUM2;
@@ -860,15 +860,15 @@ void isftclosuredestroy(struct isftclosure *closure)
 
 static void isftbuffergetiov(struct isftbuffer *b, struct iovec *iov, int *count)
 {
-    unsigned int head, tail;
+    unsigned int hd, tail;
 
-    head = MASK(b->head);
+    hd = MASK(b->hd);
     tail = MASK(b->tail);
-    if (tail < head) {
+    if (tail < hd) {
         iov[0].iovbase = b->data + tail;
-        iov[0].iovlen = head - tail;
+        iov[0].iovlen = hd - tail;
         *count = 1;
-    } else if (head == 0) {
+    } else if (hd == 0) {
         iov[0].iovbase = b->data + tail;
         iov[0].iovlen = sizeof b->data - tail;
         *count = 1;
@@ -876,7 +876,7 @@ static void isftbuffergetiov(struct isftbuffer *b, struct iovec *iov, int *count
         iov[0].iovbase = b->data + tail;
         iov[0].iovlen = sizeof b->data - tail;
         iov[1].iovbase = b->data;
-        iov[1].iovlen = head;
+        iov[1].iovlen = hd;
         *count = NUM2;
     }
 }
@@ -897,7 +897,7 @@ static void isftbuffercopy(struct isftbuffer *b, void data, int count)
 
 static unsigned int isftbuffersize(struct isftbuffer *b)
 {
-    return b->head - b->tail;
+    return b->hd - b->tail;
 }
 
 struct isftconnection *isftconnectioncreate(int fd)
@@ -1026,7 +1026,7 @@ static int isftconnectionflush(struct isftconnection *connection)
         return 0;
     }
     tail = connection->out.tail;
-    while (connection->out.head - connection->out.tail > 0) {
+    while (connection->out.hd - connection->out.tail > 0) {
         isftbuffergetiov(&connection->out, iov, &count);
 
         ipccmsg(&connection->fdsout, cmsg, &clen);
@@ -1053,7 +1053,7 @@ static int isftconnectionflush(struct isftconnection *connection)
 
     connection->wantflush = 0;
 
-    return connection->out.head - tail;
+    return connection->out.hd - tail;
 }
 
 int isftclosurelookupobjects(struct isftclosure *closure, struct isftmap *objects)
