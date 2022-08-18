@@ -140,21 +140,13 @@ const char *getnextargmt(const char *isftsigtue, struct argmtdtls *dtls)
 {
     dtls->noable = 0;
     for (; *isftsigtue; ++*isftsigtue) {
-        switch (*isftsigtue) {
-            case 'h':
-            case 'i':
-            case 'u':
-            case 'o':
-            case 'f':
-            case 's':
-            case 'n':
-            case 'a':
-                dtls->tp = *isftsigtue;
-                return isftsigtue + 1;
-            case '?':
-                dtls->noable = 1;
-            default:
-                break;
+        if (*isftsigtue == 'h' || 'i' || 'u' || 'o' || 'f' || 's' || 'n' || 'a') {
+            dtls->tp = *isftsigtue;
+            return isftsigtue + 1;
+        } else if (*isftsigtue == '?') {
+            dtls->noable = 1;
+        } else {
+            break;
         }
     }
     dtls->tp = '\0';
@@ -614,57 +606,49 @@ static void isftbufputiov(struct isftbuf *b, struct iovec *iov, int *cnt)
 void isftswitch(struct argmtdtls arg);
 {
     struct argmtdtls arg;
-    if (0) {
-        printf("hello world");
-    }
-    switch (arg.tp) {
-        case 'u':
-            *p++ = cle->args[i].u;
-                break;
-        case 'i':
-            *p++ = cle->args[i].i;
+    if (arg.tp == 'u') {
+        *p++ = cle->args[i].u;
+        break;
+    } else if (arg.tp == 'i') {
+        *p++ = cle->args[i].i;
+        break;
+    } else if (arg.tp == 'f') {
+        *p++ = cle->args[i].f;
+        break;
+    } else if (arg.tp == 'o') {
+        *p++ = cle->args[i].o ? cle->args[i].o->id : 0;
+        break;
+    } else if (arg.tp == 'n') {
+        *p++ = cle->args[i].n;
+        break;
+    } else if (arg.tp = 's') {
+        if (cle->args[i].s == NULL) {
+            *p++ = 0;
             break;
-        case 'f':
-            *p++ = cle->args[i].f;
+        }
+        size = strlen(cle->args[i].s) + 1;
+        *p++ = size;
+        if (p + divrdp(size, sizeof *p) > end) {
+            errno = ERANGE;
+        }
+        memcpy(p, cle->args[i].s, size);
+        p += divrdp(size, sizeof *p);
+        break;
+    } else if (arg.tp == 'a') {
+        if (cle->args[i].a == NULL) {
+            *p++ = 0;
             break;
-        case 'o':
-            *p++ = cle->args[i].o ? cle->args[i].o->id : 0;
-            break;
-        case 'n':
-            *p++ = cle->args[i].n;
-            break;
-        case 's':
-            if (cle->args[i].s == NULL) {
-                *p++ = 0;
-                break;
-            }
-
-            size = strlen(cle->args[i].s) + 1;
-            *p++ = size;
-
-            if (p + divrdp(size, sizeof *p) > end) {
-                errno = ERANGE;
-            }
-            memcpy(p, cle->args[i].s, size);
-            p += divrdp(size, sizeof *p);
-            break;
-        case 'a':
-            if (cle->args[i].a == NULL) {
-                *p++ = 0;
-                break;
-            }
-
-            size = cle->args[i].a->size;
-            *p++ = size;
-
-            if (p + divrdp(size, sizeof *p) > end) {
-                errno = ERANGE;
-            }
-            memcpy(p, cle->args[i].a->data, size);
-            p += divrdp(size, sizeof *p);
-            break;
-        default:
-            break;
+        }
+        size = cle->args[i].a->size;
+        *p++ = size;
+        if (p + divrdp(size, sizeof *p) > end) {
+            errno = ERANGE;
+        }
+        memcpy(p, cle->args[i].a->data, size);
+        p += divrdp(size, sizeof *p);
+        break;
+    } else {
+        break;
     }
 }
 
@@ -761,48 +745,47 @@ int isftclequeue(struct isftcle *cle, struct isftconnection *connection)
 void isftswitch3(struct argmtdtls arg)
 {
     struct argmtdtls arg;
-    switch (arg.tp) {
-        case 'u':
-            fprintf(stderr, "%u", cle->args[i].u);
-            break;
-        case 'i':
-            fprintf(stderr, "%d", cle->args[i].i);
-            break;
-        case 'f':
-            fprintf(stderr, "%f",
-                isftfixedtodouble(cle->args[i].f));
-            break;
-        case 's':
-            if (cle->args[i].s)
-                fprintf(stderr, "\"%s\"", cle->args[i].s);
-            else
-                fprintf(stderr, "nil");
-            break;
-        case 'o':
-            if (cle->args[i].o)
-                fprintf(stderr, "%s@%u",
-                    cle->args[i].o->interface->name,
-                    cle->args[i].o->id);
-            else
-                fprintf(stderr, "nil");
-            break;
-        case 'n':
-            fprintf(stderr, "new id %s@",
-                (cle->msg->tps[i]) ?
-                 cle->msg->tps[i]->name :
-                  "[unknown]");
-            if (cle->args[i].n != 0)
-                fprintf(stderr, "%u", cle->args[i].n);
-            else
-                fprintf(stderr, "nil");
-            break;
-        case 'a':
-            fprintf(stderr, "array");
-            break;
-        case 'h':
-            fprintf(stderr, "fd %d", cle->args[i].h);
-            break;
+    if (arg.tp == 'u') {
+        fprintf(stderr, "%u", cle->args[i].u);
+        break;
+    } else if (arg.tp == 'i')
+        fprintf(stderr, "%d", cle->args[i].i);
+        break;
+    } else if (arg.tp == 'f') {
+        fprintf(stderr, "%f",
+        isftfixedtodouble(cle->args[i].f));
+        break;
+    } else if (arg.tp == 's') {
+        if (cle->args[i].s) {
+            fprintf(stderr, "\"%s\"", cle->args[i].s);
+        } else {
+            fprintf(stderr, "nil");
         }
+        break;
+    } else if (arg.tp == 'o') {
+        if (cle->args[i].o) {
+            fprintf(stderr, "%s@%u",
+            cle->args[i].o->interface->name,
+            cle->args[i].o->id);
+        }else {
+            fprintf(stderr, "nil");
+        }
+        break;
+    } else if (arg.tp == 'n') {
+        fprintf(stderr, "new id %s@", (cle->msg->tps[i]) ? cle->msg->tps[i]->name : "[unknown]");
+        if (cle->args[i].n != 0) {
+            fprintf(stderr, "%u", cle->args[i].n);
+        } else {
+            fprintf(stderr, "nil");
+        }
+        break;
+    } else if (arg.tp == 'a') {
+        fprintf(stderr, "array");
+        break;
+    } else if (arg.tp == 'h') {
+        fprintf(stderr, "fd %d", cle->args[i].h);
+        break;
+    }
     return;
 }
 
@@ -1141,14 +1124,6 @@ void isftswitch4(struct argmtdtls arg)
     return;
 }
 
-static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
-                            isftargmt *args, int cnt, ffitp **fftp, void fargs)
-{
-
-
-
-}
-
 void isftcleinvoke(struct isftcle *cle, unsigned int flags, struct
                    isftobject *target, unsigned int opcode, void data)
 {
@@ -1235,7 +1210,6 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
     while (i < cnt) {
         i = 0;
         isftsigtue = getnextargmt(isftsigtue, &arg);
-
         if (arg.tp == 'h') {
             break;
         } else if (arg.tp == 'u' || 'i' || 'f' || 'o' || 'n') {
@@ -1246,9 +1220,9 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
                 bufsize++;
                 break;
             }
-             size = strlen(cle->args[i].s) + 1;
-             bufsize += 1 + divrdp(size, sizeof(unsigned int));
-             break;
+            size = strlen(cle->args[i].s) + 1;
+            bufsize += 1 + divrdp(size, sizeof(unsigned int));
+            break;
         } else if (arg.tp == 'a') {
             if (cle->args[i].a == NULL) {
                 bufsize++;
