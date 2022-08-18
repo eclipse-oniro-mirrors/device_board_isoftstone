@@ -22,7 +22,7 @@
 #include <sys/uio.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/types.h>
+#include <sys/tps.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <ffi.h>
@@ -136,9 +136,9 @@ static int isftconnectionputfd(struct isftconnection *connection, int  fd)
     return isftbufput(&connection->fdsout, &fd, sizeof fd);
 }
 
-const char *getnextargument(const char *isftsigtue, struct argmtdtls *details)
+const char *getnextargmt(const char *isftsigtue, struct argmtdtls *dtls)
 {
-    details->nullable = 0;
+    dtls->noable = 0;
     for (; *isftsigtue; ++*isftsigtue) {
         switch (*isftsigtue) {
             case 'i':
@@ -149,15 +149,15 @@ const char *getnextargument(const char *isftsigtue, struct argmtdtls *details)
             case 'n':
             case 'a':
             case 'h':
-                details->type = *isftsigtue;
+                dtls->tp = *isftsigtue;
                 return isftsigtue + 1;
             case '?':
-                details->nullable = 1;
+                dtls->noable = 1;
             default:
                 break;
         }
     }
-    details->type = '\0';
+    dtls->tp = '\0';
     return isftsigtue;
 }
 
@@ -192,7 +192,7 @@ int isftmsggetsince(const struct isftmsg *msg)
     return since;
 }
 
-void isftargumentfromvalist(const char *isftsigtue, union isftargument *args, int cnt, valist ap)
+void isftargmtfromvalist(const char *isftsigtue, union isftargmt *args, int cnt, valist ap)
 {
     int i;
     const char *isftsig;
@@ -200,9 +200,9 @@ void isftargumentfromvalist(const char *isftsigtue, union isftargument *args, in
 
     isftsig = isftsigtue;
     for (i = 0; i < cnt; i++) {
-        isftsig = getnextargument(isftsig, &arg);
+        isftsig = getnextargmt(isftsig, &arg);
 
-        switch (arg.type) {
+        switch (arg.tp) {
             case 'i':
                 args[i].i = vaarg(ap, int);
                 break;
@@ -240,14 +240,14 @@ static void isftcleclearfds(struct isftcle *cle)
     int i;
 
     for (i = 0; i < cle->cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
-        if (arg.type == 'h')
+        isftsigtue = getnextargmt(isftsigtue, &arg);
+        if (arg.tp == 'h')
             cle->args[i].h = -1;
     }
 }
 
 static struct isftcle *isftcleinit(const struct isftmsg *msg, unsigned int
-                                   size, int *numarrays, union isftargument *args)
+                                   size, int *numarrays, union isftargmt *args)
 {
     struct isftcle *cle;
     int cnt;
@@ -284,7 +284,7 @@ static struct isftcle *isftcleinit(const struct isftmsg *msg, unsigned int
 }
 
 struct isftcle *isftclemarshal(struct isftobject *sender, unsigned int opcode, union
-                               isftargument *args, const struct isftmsg *msg)
+                               isftargmt *args, const struct isftmsg *msg)
 {
     struct isftcle *cle;
     struct isftobject *object;
@@ -300,30 +300,30 @@ struct isftcle *isftclemarshal(struct isftobject *sender, unsigned int opcode, u
 
     isftsigtue = msg->isftsigtue;
     for (i = 0; i < cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
+        isftsigtue = getnextargmt(isftsigtue, &arg);
 
-        switch (arg.type) {
+        switch (arg.tp) {
             case 'f':
             case 'u':
             case 'i':
                 break;
             case 's':
-                if (!arg.nullable && args[i].s == NULL)
+                if (!arg.noable && args[i].s == NULL)
                     return NULL;
                 break;
             case 'o':
-                if (!arg.nullable && args[i].o == NULL)
+                if (!arg.noable && args[i].o == NULL)
                     return NULL;
                 break;
             case 'n':
                 object = args[i].o;
-                if (!arg.nullable && object == NULL)
+                if (!arg.noable && object == NULL)
                     return NULL;
 
                 cle->args[i].n = object ? object->id : 0;
                 break;
             case 'a':
-                if (!arg.nullable && args[i].a == NULL) {
+                if (!arg.noable && args[i].a == NULL) {
                     return NULL;
                 }
                 break;
@@ -332,7 +332,7 @@ struct isftcle *isftclemarshal(struct isftobject *sender, unsigned int opcode, u
                 dupfd = isftosdupfdcloexec(fd, 0);
                 if (dupfd < 0) {
                     isftcledestroy(cle);
-                    isftlog("error marshalling arguments for %s: dup failed: %s\n", msg->
+                    isftlog("error marshalling argmts for %s: dup failed: %s\n", msg->
                             name, strerror(errno));
                 return NULL;
             }
@@ -344,7 +344,7 @@ struct isftcle *isftclemarshal(struct isftobject *sender, unsigned int opcode, u
 void isftswitch0(struct argmtdtls arg)
 {
     struct argmtdtls arg;
-    switch (arg.type) {
+    switch (arg.tp) {
         case 'u':
                 cle->args[i].u = *p++;
                 break;
@@ -360,7 +360,7 @@ void isftswitch0(struct argmtdtls arg)
 void isftswitch1(struct argmtdtls arg)
 {
     struct argmtdtls arg;
-    switch (arg.type) {
+    switch (arg.tp) {
         case 's':
             length = *p++;
 
@@ -396,8 +396,8 @@ void isftswitch1(struct argmtdtls arg)
             id = *p++;
             cle->args[i].n = id;
 
-            if (id == 0 && !arg.nullable) {
-                isftlog("NULL object received on non-nullable " "type, msg %s(%s)\n", msg->
+            if (id == 0 && !arg.noable) {
+                isftlog("NULL object received on non-noable " "tp, msg %s(%s)\n", msg->
                         name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
@@ -415,8 +415,8 @@ void isftswitch2(struct argmtdtls arg)
             id = *p++;
             cle->args[i].n = id;
 
-            if (id == 0 && !arg.nullable) {
-                isftlog("NULL new ID received on non-nullable " "type, msg %s(%s)\n",
+            if (id == 0 && !arg.noable) {
+                isftlog("NULL new ID received on non-noable " "tp, msg %s(%s)\n",
                         msg->name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
@@ -465,7 +465,7 @@ void isftswitch2(struct argmtdtls arg)
             cle->args[i].h = fd;
             break;
         default:
-            isftabt("unknown type\n");
+            isftabt("unknown tp\n");
             break;
     }
     return;
@@ -508,9 +508,9 @@ struct isftcle *sftconnectiondemarshal(struct isftconnection *connection, unsign
 
     isftsigtue = msg->isftsigtue;
     for (i = 0; i < cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
+        isftsigtue = getnextargmt(isftsigtue, &arg);
 
-        if (arg.type != 'h' && p + 1 > end) {
+        if (arg.tp != 'h' && p + 1 > end) {
             isftlog("msg too short, " "object (%d), msg %s(%s)\n", cle->senderid, msg->
                     name, msg->isftsigtue);
             errno = EINVAL;
@@ -614,7 +614,7 @@ static void isftbufputiov(struct isftbuf *b, struct iovec *iov, int *cnt)
 void isftswitch(struct argmtdtls arg);
 {
     struct argmtdtls arg;
-    switch (arg.type) {
+    switch (arg.tp) {
         case 'u':
             *p++ = cle->args[i].u;
                 break;
@@ -682,9 +682,9 @@ static int serializecle(struct isftcle *cle, unsigned int *buf, int bufcnt)
     isftsigtue = msg->isftsigtue;
     cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
+        isftsigtue = getnextargmt(isftsigtue, &arg);
 
-        if (arg.type == 'h') {
+        if (arg.tp == 'h') {
             continue;
         }
         if (p + 1 > end) {
@@ -758,7 +758,7 @@ int isftclequeue(struct isftcle *cle, struct isftconnection *connection)
 void isftswitch3(struct argmtdtls arg)
 {
     struct argmtdtls arg;
-    switch (arg.type) {
+    switch (arg.tp) {
         case 'u':
             fprintf(stderr, "%u", cle->args[i].u);
             break;
@@ -785,8 +785,8 @@ void isftswitch3(struct argmtdtls arg)
             break;
         case 'n':
             fprintf(stderr, "new id %s@",
-                (cle->msg->types[i]) ?
-                 cle->msg->types[i]->name :
+                (cle->msg->tps[i]) ?
+                 cle->msg->tps[i]->name :
                   "[unknown]");
             if (cle->args[i].n != 0)
                 fprintf(stderr, "%u", cle->args[i].n);
@@ -821,7 +821,7 @@ void isftclt(struct isftcle *cle, struct isftobject *target, int send)
             cle->msg->name);
     }
     for (i = 0; i < cle->cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
+        isftsigtue = getnextargmt(isftsigtue, &arg);
         if (i > 0) {
             fprintf(stderr, ", ");
         }
@@ -839,8 +839,8 @@ static int isftcleclosefds(struct isftcle *cle)
     const char *isftsigtue = cle->msg->isftsigtue;
 
     for (i = 0; i < cle->cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
-        if (arg.type == 'h' && cle->args[i].h != -1) {
+        isftsigtue = getnextargmt(isftsigtue, &arg);
+        if (arg.tp == 'h' && cle->args[i].h != -1) {
             close(cle->args[i].h);
         }
     }
@@ -970,7 +970,7 @@ static void ipccmsg(struct isftbuf *buf, char *data, int *clen)
     if (size > 0) {
         cmsg = (struct cmsghdr *) data;
         cmsg->cmsglevel = SOLSOCKET;
-        cmsg->cmsgtype = SCMRIGHTS;
+        cmsg->cmsgtp = SCMRIGHTS;
         cmsg->cmsglen = CMSGLEN(size);
         isftbufcopy(buf, CMSGDATA(cmsg), size);
         *clen = cmsg->cmsglen;
@@ -988,7 +988,7 @@ static int decodecmsg(struct isftbuf *buf, struct msghdr *msg)
     for (cmsg = CMSGFIRSTHDR(msg); cmsg != NULL;
          cmsg = CMSGNXTHDR(msg, cmsg)) {
         if (cmsg->cmsglevel != SOLSOCKET ||
-            cmsg->cmsgtype != SCMRIGHTS) {
+            cmsg->cmsgtp != SCMRIGHTS) {
             continue;
         }
         size = cmsg->cmsglen - CMSGLEN(0);
@@ -1067,8 +1067,8 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
     isftsigtue = msg->isftsigtue;
     cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
-        switch (arg.type) {
+        isftsigtue = getnextargmt(isftsigtue, &arg);
+        switch (arg.tp) {
             case 'o':
                 id = cle->args[i].n;
                 cle->args[i].o = NULL;
@@ -1083,9 +1083,9 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
                     return -1;
                 }
 
-                if (object != NULL && msg->types[i] != NULL &&
-                    !isftinterfaceequal((object)->interface, msg->types[i])) {
-                    isftlog("invalid object (%u), type (%s), "
+                if (object != NULL && msg->tps[i] != NULL &&
+                    !isftinterfaceequal((object)->interface, msg->tps[i])) {
+                    isftlog("invalid object (%u), tp (%s), "
                             "msg %s(%s)\n", id, (object)->interface->name, msg->
                             name, msg->isftsigtue);
                     errno = EINVAL;
@@ -1101,7 +1101,7 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
 }
 
 static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
-                            isftargument *args, int cnt, ffitype **fftp, void fargs)
+                            isftargmt *args, int cnt, ffitp **fftp, void fargs)
 {
     int i;
     const char *isftsig;
@@ -1109,15 +1109,15 @@ static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
 
     isftsig = isftsigtue;
     for (i = 0; i < cnt; i++) {
-        isftsig = getnextargument(isftsig, &arg);
+        isftsig = getnextargmt(isftsig, &arg);
 
-        switch (arg.type) {
+        switch (arg.tp) {
             case 'i':
                 fftp[i] = &fftpint32;
                 fargs[i] = &args[i].i;
                 break;
             case 'u':
-                fftp[i] = &ffitypeuint32;
+                fftp[i] = &ffitpuint32;
                 fargs[i] = &args[i].u;
                 break;
             case 'f':
@@ -1125,24 +1125,24 @@ static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
                 fargs[i] = &args[i].f;
                 break;
             case 's':
-                fftp[i] = &ffitypepointer;
+                fftp[i] = &ffitppointer;
                 fargs[i] = &args[i].s;
                 break;
             case 'o':
-                fftp[i] = &ffitypepointer;
+                fftp[i] = &ffitppointer;
                 fargs[i] = &args[i].o;
                 break;
             case 'n':
                 if (flags & WLCLOSUREINVOKECLIENT) {
-                    fftp[i] = &ffitypepointer;
+                    fftp[i] = &ffitppointer;
                     fargs[i] = &args[i].o;
                 } else {
-                    fftp[i] = &ffitypeuint32;
+                    fftp[i] = &ffitpuint32;
                     fargs[i] = &args[i].n;
                 }
                 break;
             case 'a':
-                fftp[i] = &ffitypepointer;
+                fftp[i] = &ffitppointer;
                 fargs[i] = &args[i].a;
                 break;
             case 'h':
@@ -1150,7 +1150,7 @@ static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
                 fargs[i] = &args[i].h;
                 break;
             default:
-                isftabt("unknown type\n");
+                isftabt("unknown tp\n");
                 break;
         }
     }
@@ -1161,21 +1161,21 @@ void isftcleinvoke(struct isftcle *cle, unsigned int flags, struct
 {
     int cnt;
     fficif cif;
-    ffitype *fftp[WLCLOSUREMAXARGS + 2];
+    ffitp *fftp[WLCLOSUREMAXARGS + 2];
     void *fargs[WLCLOSUREMAXARGS + 2];
     void (* const *implementation)(void);
 
     cnt = argcntforisftsigtue(cle->msg->isftsigtue);
 
-    fftp[0] = &ffitypepointer;
+    fftp[0] = &ffitppointer;
     fargs[0] = &data;
-    fftp[1] = &ffitypepointer;
+    fftp[1] = &ffitppointer;
     fargs[1] = &target;
 
     isftcovargwoffi(cle->msg->isftsigtue, flags, cle->
                  args, cnt, fftp + NUM2, fargs + NUM2);
 
-    ffiprepcif(& cif, FFIDEFAULTABI, cnt + NUM2, & ffitypevoid, fftp);
+    ffiprepcif(& cif, FFIDEFAULTABI, cnt + NUM2, & ffitpvoid, fftp);
     implementation = target->implementation;
     if (!implementation[opcode]) {
         isftabt("listener function for opcode %u of %s is NULL\n", opcode, target->
@@ -1203,8 +1203,8 @@ static int copyfdstoconnection(struct isftcle *cle, struct isftconnection *conne
 
     cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
-        if (arg.type != 'h') {
+        isftsigtue = getnextargmt(isftsigtue, &arg);
+        if (arg.tp != 'h') {
             continue;
         }
         fd = cle->args[i].h;
@@ -1230,9 +1230,9 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
     isftsigtue = msg->isftsigtue;
     cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        isftsigtue = getnextargument(isftsigtue, &arg);
+        isftsigtue = getnextargmt(isftsigtue, &arg);
 
-        switch (arg.type) {
+        switch (arg.tp) {
             case 'h':
                 break;
             case 'u':
