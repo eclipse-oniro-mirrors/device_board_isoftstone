@@ -111,8 +111,8 @@ int isftmsgcntarrays(const struct isftmsg *msg)
 {
     int i, arrays;
 
-    for (i = 0, arrays = 0; msg->signature[i]; i++) {
-        if (msg->signature[i] == 'a')
+    for (i = 0, arrays = 0; msg->isftsigtue[i]; i++) {
+        if (msg->isftsigtue[i] == 'a')
             arrays++;
     }
 
@@ -136,11 +136,11 @@ static int isftconnectionputfd(struct isftconnection *connection, int  fd)
     return isftbufput(&connection->fdsout, &fd, sizeof fd);
 }
 
-const char *getnextargument(const char *signature, struct argumentdetails *details)
+const char *getnextargument(const char *isftsigtue, struct argmtdtls *details)
 {
     details->nullable = 0;
-    for (; *signature; ++*signature) {
-        switch (*signature) {
+    for (; *isftsigtue; ++*isftsigtue) {
+        switch (*isftsigtue) {
             case 'i':
             case 'u':
             case 'f':
@@ -149,8 +149,8 @@ const char *getnextargument(const char *signature, struct argumentdetails *detai
             case 'n':
             case 'a':
             case 'h':
-                details->type = *signature;
-                return signature + 1;
+                details->type = *isftsigtue;
+                return isftsigtue + 1;
             case '?':
                 details->nullable = 1;
             default:
@@ -158,14 +158,14 @@ const char *getnextargument(const char *signature, struct argumentdetails *detai
         }
     }
     details->type = '\0';
-    return signature;
+    return isftsigtue;
 }
 
-int argcntforsignature(const char *signature)
+int argcntforisftsigtue(const char *isftsigtue)
 {
     int cnt = 0;
-    for (; *signature; ++*signature) {
-        switch (*signature) {
+    for (; *isftsigtue; ++*isftsigtue) {
+        switch (*isftsigtue) {
             case 'i':
             case 'u':
             case 'f':
@@ -185,20 +185,20 @@ int argcntforsignature(const char *signature)
 int isftmsggetsince(const struct isftmsg *msg)
 {
     int since;
-    since = atoi(msg->signature);
+    since = atoi(msg->isftsigtue);
     if (since == 0) {
         since = 1;
     }
     return since;
 }
 
-void isftargumentfromvalist(const char *signature, union isftargument *args, int cnt, valist ap)
+void isftargumentfromvalist(const char *isftsigtue, union isftargument *args, int cnt, valist ap)
 {
     int i;
     const char *isftsig;
-    struct argumentdetails arg;
+    struct argmtdtls arg;
 
-    isftsig = signature;
+    isftsig = isftsigtue;
     for (i = 0; i < cnt; i++) {
         isftsig = getnextargument(isftsig, &arg);
 
@@ -235,24 +235,24 @@ void isftargumentfromvalist(const char *signature, union isftargument *args, int
 
 static void isftcleclearfds(struct isftcle *cle)
 {
-    const char *signature = cle->msg->signature;
-    struct argumentdetails arg;
+    const char *isftsigtue = cle->msg->isftsigtue;
+    struct argmtdtls arg;
     int i;
 
     for (i = 0; i < cle->cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
         if (arg.type == 'h')
             cle->args[i].h = -1;
     }
 }
 
 static struct isftcle *isftcleinit(const struct isftmsg *msg, unsigned int
-                                           size, int *numarrays, union isftargument *args)
+                                   size, int *numarrays, union isftargument *args)
 {
     struct isftcle *cle;
     int cnt;
 
-    cnt = argcntforsignature(msg->signature);
+    cnt = argcntforisftsigtue(msg->isftsigtue);
     if (cnt > WLCLOSUREMAXARGS) {
         isftlog("too many args (%d)\n", cnt);
         errno = EINVAL;
@@ -284,13 +284,13 @@ static struct isftcle *isftcleinit(const struct isftmsg *msg, unsigned int
 }
 
 struct isftcle *isftclemarshal(struct isftobject *sender, unsigned int opcode, union
-                                       isftargument *args, const struct isftmsg *msg)
+                               isftargument *args, const struct isftmsg *msg)
 {
     struct isftcle *cle;
     struct isftobject *object;
     int i, cnt, fd, dupfd;
-    const char *signature;
-    struct argumentdetails arg;
+    const char *isftsigtue;
+    struct argmtdtls arg;
 
     cle = isftcleinit(msg, 0, NULL, args);
     if (cle == NULL) {
@@ -298,9 +298,9 @@ struct isftcle *isftclemarshal(struct isftobject *sender, unsigned int opcode, u
     }
     cnt = cle->cnt;
 
-    signature = msg->signature;
+    isftsigtue = msg->isftsigtue;
     for (i = 0; i < cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
 
         switch (arg.type) {
             case 'f':
@@ -341,9 +341,9 @@ struct isftcle *isftclemarshal(struct isftobject *sender, unsigned int opcode, u
     return;
 }
 
-void isftswitch0(struct argumentdetails arg)
+void isftswitch0(struct argmtdtls arg)
 {
-    struct argumentdetails arg;
+    struct argmtdtls arg;
     switch (arg.type) {
         case 'u':
                 cle->args[i].u = *p++;
@@ -357,9 +357,9 @@ void isftswitch0(struct argumentdetails arg)
     }
     return;
 }
-void isftswitch1(struct argumentdetails arg)
+void isftswitch1(struct argmtdtls arg)
 {
-    struct argumentdetails arg;
+    struct argmtdtls arg;
     switch (arg.type) {
         case 's':
             length = *p++;
@@ -371,7 +371,7 @@ void isftswitch1(struct argumentdetails arg)
             lengthinu32 = divrdp(length, sizeof *p);
             if ((unsigned int) (end - p) < lengthinu32) {
                 isftlog("msg too short, " "object (%d), msg %s(%s)\n",
-                        cle->senderid, msg->name, msg->signature);
+                        cle->senderid, msg->name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
                 isftconnectionconsume(connection, size);
@@ -383,7 +383,7 @@ void isftswitch1(struct argumentdetails arg)
             if (length > 0 && s[length - 1] != '\0') {
                 isftlog("string not nul-terminated, "
                     "msg %s(%s)\n", msg->
-                    name, msg->signature);
+                    name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
                 isftconnectionconsume(connection, size);
@@ -398,7 +398,7 @@ void isftswitch1(struct argumentdetails arg)
 
             if (id == 0 && !arg.nullable) {
                 isftlog("NULL object received on non-nullable " "type, msg %s(%s)\n", msg->
-                        name, msg->signature);
+                        name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
                 isftconnectionconsume(connection, size);
@@ -408,23 +408,23 @@ void isftswitch1(struct argumentdetails arg)
     return;
 }
 
-void isftswitch2(struct argumentdetails arg)
+void isftswitch2(struct argmtdtls arg)
 {
-    struct argumentdetails arg;
+    struct argmtdtls arg;
         case 'n':
             id = *p++;
             cle->args[i].n = id;
 
             if (id == 0 && !arg.nullable) {
                 isftlog("NULL new ID received on non-nullable " "type, msg %s(%s)\n",
-                        msg->name, msg->signature);
+                        msg->name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
                 isftconnectionconsume(connection, size);
             }
 
             if (isftmapreservenew(objects, id) < 0) {
-                isftlog("not a valid new object id (%u), " "msg %s(%s)\n", id, msg->name, msg->signature);
+                isftlog("not a valid new object id (%u), " "msg %s(%s)\n", id, msg->name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
                 isftconnectionconsume(connection, size);
@@ -437,7 +437,7 @@ void isftswitch2(struct argumentdetails arg)
             lengthinu32 = divrdp(length, sizeof *p);
             if ((unsigned int) (end - p) < lengthinu32) {
                 isftlog("msg too short, " "object (%d), msg %s(%s)\n", cle->senderid, msg->
-                        name, msg->signature);
+                        name, msg->isftsigtue);
                 errno = EINVAL;
                 isftcledestroy(cle);
                 isftconnectionconsume(connection, size);
@@ -454,7 +454,7 @@ void isftswitch2(struct argumentdetails arg)
         case 'h':
             if (connection->fdsin.tail == connection->fdsin.hd) {
             isftlog("file descriptor expected, " "object (%d), msg %s(%s)\n", cle->senderid, msg->
-                    name, msg->signature);
+                    name, msg->isftsigtue);
                     errno = EINVAL;
                     isftcledestroy(cle);
                     isftconnectionconsume(connection, size);
@@ -472,15 +472,14 @@ void isftswitch2(struct argumentdetails arg)
 }
 
 struct isftcle *sftconnectiondemarshal(struct isftconnection *connection, unsigned int
-                                           size, struct isftmap *objects, const struct
-                                           isftmsg *msg)
+                                       size, struct isftmap *objects, const struct isftmsg *msg)
 {
     unsigned int *p, *next, *end, length, lengthinu32, id;
     int fd;
     char *s;
     int i, cnt, numarrays;
-    const char *signature;
-    struct argumentdetails arg;
+    const char *isftsigtue;
+    struct argmtdtls arg;
     struct isftcle *cle;
     struct isftarray *arrayextra;
 
@@ -507,13 +506,13 @@ struct isftcle *sftconnectiondemarshal(struct isftconnection *connection, unsign
     cle->senderid = *p++;
     cle->opcode = *p++ & 0x0000ffff;
 
-    signature = msg->signature;
+    isftsigtue = msg->isftsigtue;
     for (i = 0; i < cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
 
         if (arg.type != 'h' && p + 1 > end) {
             isftlog("msg too short, " "object (%d), msg %s(%s)\n", cle->senderid, msg->
-                    name, msg->signature);
+                    name, msg->isftsigtue);
             errno = EINVAL;
             isftcledestroy(cle);
             isftconnectionconsume(connection, size);
@@ -612,9 +611,9 @@ static void isftbufputiov(struct isftbuf *b, struct iovec *iov, int *cnt)
     }
 }
 
-void isftswitch(struct argumentdetails arg);
+void isftswitch(struct argmtdtls arg);
 {
-    struct argumentdetails arg;
+    struct argmtdtls arg;
     switch (arg.type) {
         case 'u':
             *p++ = cle->args[i].u;
@@ -671,8 +670,8 @@ static int serializecle(struct isftcle *cle, unsigned int *buf, int bufcnt)
     const struct isftmsg *msg = cle->msg;
     unsigned int i, cnt, size;
     unsigned int *p, *end;
-    struct argumentdetails arg;
-    const char *signature;
+    struct argmtdtls arg;
+    const char *isftsigtue;
 
     if (bufcnt < NUM2) {
         errno = ERANGE;
@@ -680,10 +679,10 @@ static int serializecle(struct isftcle *cle, unsigned int *buf, int bufcnt)
     p = buf + NUM2;
     end = buf + bufcnt;
 
-    signature = msg->signature;
-    cnt = argcntforsignature(signature);
+    isftsigtue = msg->isftsigtue;
+    cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
 
         if (arg.type == 'h') {
             continue;
@@ -756,9 +755,9 @@ int isftclequeue(struct isftcle *cle, struct isftconnection *connection)
     return result;
 }
 
-void isftswitch3(struct argumentdetails arg)
+void isftswitch3(struct argmtdtls arg)
 {
-    struct argumentdetails arg;
+    struct argmtdtls arg;
     switch (arg.type) {
         case 'u':
             fprintf(stderr, "%u", cle->args[i].u);
@@ -807,8 +806,8 @@ void isftswitch3(struct argumentdetails arg)
 void isftclt(struct isftcle *cle, struct isftobject *target, int send)
 {
     int i;
-    struct argumentdetails arg;
-    const char *signature = cle->msg->signature;
+    struct argmtdtls arg;
+    const char *isftsigtue = cle->msg->isftsigtue;
     struct timespec tp;
     unsigned int time;
 
@@ -822,7 +821,7 @@ void isftclt(struct isftcle *cle, struct isftobject *target, int send)
             cle->msg->name);
     }
     for (i = 0; i < cle->cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
         if (i > 0) {
             fprintf(stderr, ", ");
         }
@@ -836,11 +835,11 @@ void isftclt(struct isftcle *cle, struct isftobject *target, int send)
 static int isftcleclosefds(struct isftcle *cle)
 {
     int i;
-    struct argumentdetails arg;
-    const char *signature = cle->msg->signature;
+    struct argmtdtls arg;
+    const char *isftsigtue = cle->msg->isftsigtue;
 
     for (i = 0; i < cle->cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
         if (arg.type == 'h' && cle->args[i].h != -1) {
             close(cle->args[i].h);
         }
@@ -1059,16 +1058,16 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
 {
     struct isftobject *object;
     const struct isftmsg *msg;
-    const char *signature;
-    struct argumentdetails arg;
+    const char *isftsigtue;
+    struct argmtdtls arg;
     int i, cnt;
     unsigned int id;
 
     msg = cle->msg;
-    signature = msg->signature;
-    cnt = argcntforsignature(signature);
+    isftsigtue = msg->isftsigtue;
+    cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
         switch (arg.type) {
             case 'o':
                 id = cle->args[i].n;
@@ -1079,7 +1078,7 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
                     object = NULL;
                 } else if (object == NULL && id != 0) {
                     isftlog("unknown object (%u), msg %s(%s)\n", id, msg
-                           ->name, msg->signature);
+                           ->name, msg->isftsigtue);
                     errno = EINVAL;
                     return -1;
                 }
@@ -1088,7 +1087,7 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
                     !isftinterfaceequal((object)->interface, msg->types[i])) {
                     isftlog("invalid object (%u), type (%s), "
                             "msg %s(%s)\n", id, (object)->interface->name, msg->
-                            name, msg->signature);
+                            name, msg->isftsigtue);
                     errno = EINVAL;
                     return -1;
                 }
@@ -1101,54 +1100,54 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
     return 0;
 }
 
-static void isftcovargwoffi(const char *signature, unsigned int flags, union
-                                  isftargument *args, int cnt, ffitype **ffitypes, void ffiargs)
+static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
+                            isftargument *args, int cnt, ffitype **fftp, void fargs)
 {
     int i;
     const char *isftsig;
-    struct argumentdetails arg;
+    struct argmtdtls arg;
 
-    isftsig = signature;
+    isftsig = isftsigtue;
     for (i = 0; i < cnt; i++) {
         isftsig = getnextargument(isftsig, &arg);
 
         switch (arg.type) {
             case 'i':
-                ffitypes[i] = &ffitypesint32;
-                ffiargs[i] = &args[i].i;
+                fftp[i] = &fftpint32;
+                fargs[i] = &args[i].i;
                 break;
             case 'u':
-                ffitypes[i] = &ffitypeuint32;
-                ffiargs[i] = &args[i].u;
+                fftp[i] = &ffitypeuint32;
+                fargs[i] = &args[i].u;
                 break;
             case 'f':
-                ffitypes[i] = &ffitypesint32;
-                ffiargs[i] = &args[i].f;
+                fftp[i] = &fftpint32;
+                fargs[i] = &args[i].f;
                 break;
             case 's':
-                ffitypes[i] = &ffitypepointer;
-                ffiargs[i] = &args[i].s;
+                fftp[i] = &ffitypepointer;
+                fargs[i] = &args[i].s;
                 break;
             case 'o':
-                ffitypes[i] = &ffitypepointer;
-                ffiargs[i] = &args[i].o;
+                fftp[i] = &ffitypepointer;
+                fargs[i] = &args[i].o;
                 break;
             case 'n':
                 if (flags & WLCLOSUREINVOKECLIENT) {
-                    ffitypes[i] = &ffitypepointer;
-                    ffiargs[i] = &args[i].o;
+                    fftp[i] = &ffitypepointer;
+                    fargs[i] = &args[i].o;
                 } else {
-                    ffitypes[i] = &ffitypeuint32;
-                    ffiargs[i] = &args[i].n;
+                    fftp[i] = &ffitypeuint32;
+                    fargs[i] = &args[i].n;
                 }
                 break;
             case 'a':
-                ffitypes[i] = &ffitypepointer;
-                ffiargs[i] = &args[i].a;
+                fftp[i] = &ffitypepointer;
+                fargs[i] = &args[i].a;
                 break;
             case 'h':
-                ffitypes[i] = &ffitypesint32;
-                ffiargs[i] = &args[i].h;
+                fftp[i] = &fftpint32;
+                fargs[i] = &args[i].h;
                 break;
             default:
                 isftabt("unknown type\n");
@@ -1158,37 +1157,37 @@ static void isftcovargwoffi(const char *signature, unsigned int flags, union
 }
 
 void isftcleinvoke(struct isftcle *cle, unsigned int flags, struct
-                       isftobject *target, unsigned int opcode, void data)
+                   isftobject *target, unsigned int opcode, void data)
 {
     int cnt;
     fficif cif;
-    ffitype *ffitypes[WLCLOSUREMAXARGS + 2];
-    void *ffiargs[WLCLOSUREMAXARGS + 2];
+    ffitype *fftp[WLCLOSUREMAXARGS + 2];
+    void *fargs[WLCLOSUREMAXARGS + 2];
     void (* const *implementation)(void);
 
-    cnt = argcntforsignature(cle->msg->signature);
+    cnt = argcntforisftsigtue(cle->msg->isftsigtue);
 
-    ffitypes[0] = &ffitypepointer;
-    ffiargs[0] = &data;
-    ffitypes[1] = &ffitypepointer;
-    ffiargs[1] = &target;
+    fftp[0] = &ffitypepointer;
+    fargs[0] = &data;
+    fftp[1] = &ffitypepointer;
+    fargs[1] = &target;
 
-    isftcovargwoffi(cle->msg->signature, flags, cle->
-                 args, cnt, ffitypes + NUM2, ffiargs + NUM2);
+    isftcovargwoffi(cle->msg->isftsigtue, flags, cle->
+                 args, cnt, fftp + NUM2, fargs + NUM2);
 
-    ffiprepcif(& cif, FFIDEFAULTABI, cnt + NUM2, & ffitypevoid, ffitypes);
+    ffiprepcif(& cif, FFIDEFAULTABI, cnt + NUM2, & ffitypevoid, fftp);
     implementation = target->implementation;
     if (!implementation[opcode]) {
         isftabt("listener function for opcode %u of %s is NULL\n", opcode, target->
                   interface->name);
     }
-    fficall(&cif, implementation[opcode], NULL, ffiargs);
+    fficall(&cif, implementation[opcode], NULL, fargs);
 
     isftcleclearfds(cle);
 }
 
 void isftcledispatch(struct isftcle *cle, isftdispatcherfunct dispatcher, struct
-                         isftobject *target, unsigned int opcode)
+                     isftobject *target, unsigned int opcode)
 {
     dispatcher(target->implementation, target, opcode, cle->msg, cle->args);
     isftcleclearfds(cle);
@@ -1198,13 +1197,13 @@ static int copyfdstoconnection(struct isftcle *cle, struct isftconnection *conne
 {
     const struct isftmsg *msg = cle->msg;
     unsigned int i, cnt;
-    struct argumentdetails arg;
-    const char *signature = msg->signature;
+    struct argmtdtls arg;
+    const char *isftsigtue = msg->isftsigtue;
     int fd;
 
-    cnt = argcntforsignature(signature);
+    cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
         if (arg.type != 'h') {
             continue;
         }
@@ -1224,14 +1223,14 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
 {
     const struct isftmsg *msg = cle->msg;
     int i, cnt;
-    struct argumentdetails arg;
-    const char *signature;
+    struct argmtdtls arg;
+    const char *isftsigtue;
     unsigned int size, bufsize = 0;
 
-    signature = msg->signature;
-    cnt = argcntforsignature(signature);
+    isftsigtue = msg->isftsigtue;
+    cnt = argcntforisftsigtue(isftsigtue);
     for (i = 0; i < cnt; i++) {
-        signature = getnextargument(signature, &arg);
+        isftsigtue = getnextargument(isftsigtue, &arg);
 
         switch (arg.type) {
             case 'h':
