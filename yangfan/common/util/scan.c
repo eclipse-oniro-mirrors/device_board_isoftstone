@@ -65,8 +65,8 @@ void forxun(int acoll, int *outcoll, char *sbuf)
     printf("%s", sbuf);
     if (acoll - startcoll > NUM2) {
         ahangl = '\t';
-    }  
-    if (acoll - startcoll < NUM2){
+    }
+    if (acoll - startcoll < NUM2) {
         ahangl = ' ';
     }
 }
@@ -121,14 +121,14 @@ static void descldump(char *adescl, const char *fmt, ...)
     putchar('\n');
 }
 
-static void attribute (struct location *laon, const char *msg, ...)
+static void attribute (struct location *loc, const char *msg, ...)
 {
     valist ap;
 
     vastart(ap, msg);
     if (1) {
     fprintf(stderr, "%s:%d: error: ",
-        laon->filenamell, laon->linenumber);
+        loc->filenamell, loc->linenumber);
     vfprintf(stderr, msg, ap);
     fprintf(stderr, "\n");
     }
@@ -136,14 +136,14 @@ static void attribute (struct location *laon, const char *msg, ...)
     exit(EXITFAILURE);
 }
 
-static void warn(struct location *laon, const char *msg, ...)
+static void warn(struct location *loc, const char *msg, ...)
 {
     valist ap;
 
     vastart(ap, msg);
     if (1) {
     fprintf(stderr, "%s:%d: warning: ",
-        laon->filenamell, laon->linenumber);
+        loc->filenamell, loc->linenumber);
     vfprintf(stderr, msg, ap);
     fprintf(stderr, "\n");
     }
@@ -163,48 +163,48 @@ static bool isnullabletype(struct argl *argl)
     }
 }
 
-static struct msl *
-createmessagel(struct location laon, const char *nm)
+static struct messagel *
+createmessagel(struct location loc, const char *namel)
 {
-    struct msl *msl;
+    struct messagel *messagel;
 
-    msl = xzalloc(sizeof *msl);
-    msl->laon = laon;
-    msl->nm = xstrdup(nm);
-    msl->ucn = uppercasedup(nm);
-    isftlistinit(&msl->agrt);
+    messagel = xzalloc(sizeof *messagel);
+    messagel->loc = loc;
+    messagel->namel = xstrdup(namel);
+    messagel->uppercasenamel = uppercasedup(namel);
+    isftlistinit(&messagel->agrt);
 
-    return msl;
+    return messagel;
 }
 
 static void freeargl(struct argl *argl)
 {
-    free(argl->nm);
+    free(argl->namel);
     free(argl->ifnm);
-    free(argl->smay);
+    free(argl->summaryl);
     free(argl->emtlna);
     free(argl);
 }
 
 static struct argl *
-createargl(const char *nm)
+createargl(const char *namel)
 {
     struct argl *argl;
 
     argl = xzalloc(sizeof *argl);
-    argl->nm = xstrdup(nm);
+    argl->namel = xstrdup(namel);
 
     return argl;
 }
 
 struct parsecontextlll {
-    struct location laon;
+    struct location loc;
     XMLParser parser;
-    struct poco *poco;
-    struct itfe *itfe;
-    struct msl *msl;
-    struct emtl *emtl;
-    struct obl *obl;
+    struct protocoll *protocoll;
+    struct protocoll *protocoll;
+    struct messagel *messagel;
+    struct enumeration *enumeration;
+    struct desclription *desclription;
     char characterdata[8192];
     unsigned int characterdatalength;
 };
@@ -232,41 +232,41 @@ static bool setargltype(struct argl *argl, const char *peyt)
     return true;
 }
 
-struct poco {
-    char *nm;
-    char *ucn;
+struct protocoll {
+    char *namel;
+    char *uppercasenamel;
     struct isftlist interfacellistl;
     int typeindex;
     int nullrunlength;
     char *copyright;
-    struct obl *obl;
+    struct desclription *desclription;
     bool coreheaders;
 };
-static void freedesclriptionl(struct obl *adescl)
+static void freedesclriptionl(struct desclription *adescl)
 {
     if (!adescl) {
         return;
     }
 
-    free(adescl->smay);
+    free(adescl->summaryl);
     free(adescl->textlll);
 
     free(adescl);
 }
 
-struct msl {
-    struct location laon;
-    char *nm;
-    char *ucn;
+struct messagel {
+    struct location loc;
+    char *namel;
+    char *uppercasenamel;
     struct isftlist agrt;
-    struct isftlist lk;
-    int alct;
+    struct isftlist link;
+    int arglcount;
     int newidcount;
     int typeindex;
     int allnull;
-    int dstc;
-    int sc;
-    struct obl *obl;
+    int destructor;
+    int since;
+    struct desclription *desclription;
 };
 static bool isdtdvalidp(FILE *inputl, const char *filenamell)
 {
@@ -282,17 +282,17 @@ static bool isdtdvalidp(FILE *inputl, const char *filenamell)
     xmlFreeValidCtxt(dtdctxp);
     }
 }
-struct itfe {
-    struct location laon;
-    char *nm;
-    char *ucn;
-    int vs;
-    int sc;
-    struct isftlist rqt;
-    struct isftlist etl;
-    struct isftlist enrl;
-    struct isftlist lk;
-    struct obl *obl;
+struct protocoll {
+    struct location loc;
+    char *namel;
+    char *uppercasenamel;
+    int versionl;
+    int since;
+    struct isftlist requestlist;
+    struct isftlist eventlist;
+    struct isftlist enumerationlist;
+    struct isftlist link;
+    struct desclription *desclription;
 };
 static bool isdtdvalid(FILE *inputl, const char *filenamell)
 {
@@ -347,18 +347,18 @@ struct location {
     int linenumber;
 };
 
-struct obl {
-    char *smay;
+struct desclription {
+    char *summaryl;
     char *textl;
 };
 
 struct argl {
-    char *nm;
+    char *namel;
     enum argltype peyt;
     int nullable;
     char *ifnm;
-    struct isftlist lk;
-    char *smay;
+    struct isftlist link;
+    char *summaryl;
     char *emtlna;
 };
 
@@ -379,12 +379,12 @@ failonnull(void p[])
 }
 
 struct entryl {
-    char *nm;
-    char *ucn;
-    char *vlu;
-    char *smay;
-    int sc;
-    struct isftlist lk;
+    char *namel;
+    char *uppercasenamel;
+    char *value;
+    char *summaryl;
+    int since;
+    struct isftlist link;
 };
 
 static void *
@@ -393,14 +393,14 @@ zalloc(sizet s)
     return calloc(s, 1);
 }
 
-struct emtl {
-    char *nm;
-    char *ucn;
+struct enumeration {
+    char *namel;
+    char *uppercasenamel;
     struct isftlist entrylist;
-    struct isftlist lk;
-    struct obl *obl;
+    struct isftlist link;
+    struct desclription *desclription;
     bool bitfield;
-    int sc;
+    int since;
 };
 static void *
 xzalloc(sizet s)
@@ -440,107 +440,107 @@ uppercasedup(const char *src)
 }
 
 
-static void freemessagel(struct msl *msl)
+static void freemessagel(struct messagel *messagel)
 {
     struct argl *a, *anext;
 
-    free(msl->nm);
-    free(msl->ucn);
-    freedesclriptionl(msl->obl);
+    free(messagel->namel);
+    free(messagel->uppercasenamel);
+    freedesclriptionl(messagel->desclription);
 
-    isftlistforeachsafe(a, anext, &msl->agrt, lk)
+    isftlistforeachsafe(a, anext, &messagel->agrt, link)
         freeargl(a);
 
-    free(msl);
+    free(messagel);
 }
 
-static struct emtl *
-createenumerationl(const char *nm)
+static struct enumeration *
+createenumerationl(const char *namel)
 {
-    struct emtl *emtl;
+    struct enumeration *enumeration;
 
-    emtl = xzalloc(sizeof *emtl);
-    emtl->nm = xstrdup(nm);
-    emtl->ucn = uppercasedup(nm);
-    emtl->sc = 1;
+    enumeration = xzalloc(sizeof *enumeration);
+    enumeration->namel = xstrdup(namel);
+    enumeration->uppercasenamel = uppercasedup(namel);
+    enumeration->since = 1;
 
-    isftlistinit(&emtl->entrylist);
+    isftlistinit(&enumeration->entrylist);
 
-    return emtl;
+    return enumeration;
 }
 
 static struct entryl *
-createentry(const char *nm, const char *vlu)
+createentry(const char *namel, const char *value)
 {
     struct entryl *entryl;
 
     entryl = xzalloc(sizeof *entryl);
-    entryl->nm = xstrdup(nm);
-    entryl->ucn = uppercasedup(nm);
-    entryl->vlu = xstrdup(vlu);
+    entryl->namel = xstrdup(namel);
+    entryl->uppercasenamel = uppercasedup(namel);
+    entryl->value = xstrdup(value);
 
     return entryl;
 }
 
 static void freeentry(struct entryl *entryl)
 {
-    free(entryl->nm);
-    free(entryl->ucn);
-    free(entryl->vlu);
-    free(entryl->smay);
+    free(entryl->namel);
+    free(entryl->uppercasenamel);
+    free(entryl->value);
+    free(entryl->summaryl);
 
     free(entryl);
 }
 
-static void freeenumerationl(struct emtl *emtl)
+static void freeenumerationl(struct enumeration *enumeration)
 {
     struct entryl *e, *enext;
 
-    free(emtl->nm);
-    free(emtl->ucn);
-    freedesclriptionl(emtl->obl);
+    free(enumeration->namel);
+    free(enumeration->uppercasenamel);
+    freedesclriptionl(enumeration->desclription);
 
-    isftlistforeachsafe(e, enext, &emtl->entrylist, lk)
+    isftlistforeachsafe(e, enext, &enumeration->entrylist, link)
         freeentry(e);
 
-    free(emtl);
+    free(enumeration);
 }
 
-static struct itfe *
-createinterfacel(struct location laon, const char *nm, int vs)
+static struct protocoll *
+createinterfacel(struct location loc, const char *namel, int versionl)
 {
-    struct itfe *itfe;
+    struct protocoll *protocoll;
 
-    itfe = xzalloc(sizeof *itfe);
-    itfe->laon = laon;
-    itfe->nm = xstrdup(nm);
-    itfe->ucn = uppercasedup(nm);
-    itfe->vs = vs;
-    itfe->sc = 1;
-    isftlistinit(&itfe->rqt);
-    isftlistinit(&itfe->etl);
-    isftlistinit(&itfe->enrl);
+    protocoll = xzalloc(sizeof *protocoll);
+    protocoll->loc = loc;
+    protocoll->namel = xstrdup(namel);
+    protocoll->uppercasenamel = uppercasedup(namel);
+    protocoll->versionl = versionl;
+    protocoll->since = 1;
+    isftlistinit(&protocoll->requestlist);
+    isftlistinit(&protocoll->eventlist);
+    isftlistinit(&protocoll->enumerationlist);
 
-    return itfe;
+    return protocoll;
 }
 
-static void freeinterfacel(struct itfe *itfe)
+static void freeinterfacel(struct protocoll *protocoll)
 {
-    struct msl *m, *nextm;
-    struct emtl *e, *nexte;
+    struct messagel *m, *nextm;
+    struct enumeration *e, *nexte;
 
-    free(itfe->nm);
-    free(itfe->ucn);
-    freedesclriptionl(itfe->obl);
+    free(protocoll->namel);
+    free(protocoll->uppercasenamel);
+    freedesclriptionl(protocoll->desclription);
 
-    isftlistforeachsafe(m, nextm, &itfe->rqt, lk)
+    isftlistforeachsafe(m, nextm, &protocoll->requestlist, link)
         freemessagel(m);
-    isftlistforeachsafe(m, nextm, &itfe->etl, lk)
+    isftlistforeachsafe(m, nextm, &protocoll->eventlist, link)
         freemessagel(m);
-    isftlistforeachsafe(e, nexte, &itfe->enrl, lk)
+    isftlistforeachsafe(e, nexte, &protocoll->enumerationlist, link)
         freeenumerationl(e);
 
-    free(itfe);
+    free(protocoll);
 }
 
 static void launchtype(struct argl *a)
@@ -571,91 +571,91 @@ static void launchtype(struct argl *a)
     }
 }
 
-static void launchstubs(struct isftlist *messagellist, struct itfe *itfe)
+static void launchstubs(struct isftlist *messagellist, struct protocoll *protocoll)
 {
-    struct msl *m;
+    struct messagel *m;
     struct argl *a, *retl;
     int hasdestructor, hasdestroy;
-    printf("/** @ingroup iface%s */\n", itfe->nm);
+    printf("/** @ingroup iface%s */\n", protocoll->namel);
     printf("static inline void\n"
            "%ssetuserdata(struct %s *%s, void *userdata)\n"
            "{\n"
            "\tisftproxysetuserdata((struct isftproxy *) %s, userdata);\n"
            "}\n\n",
-           itfe->nm, itfe->nm, itfe->nm,
-           itfe->nm);
-    printf("/** @ingroup iface%s */\n", itfe->nm);
+           protocoll->namel, protocoll->namel, protocoll->namel,
+           protocoll->namel);
+    printf("/** @ingroup iface%s */\n", protocoll->namel);
     printf("static inline void *\n"
            "%sgetuserdata(struct %s *%s)\n"
            "{\n"
            "\treturn isftproxygetuserdata((struct isftproxy *) %s);\n"
            "}\n\n",
-           itfe->nm, itfe->nm, itfe->nm,
-           itfe->nm);
+           protocoll->namel, protocoll->namel, protocoll->namel,
+           protocoll->namel);
     printf("static inline uint32t\n"
            "%sgetversion(struct %s *%s)\n"
            "{\n"
            "\treturn isftproxygetversion((struct isftproxy *) %s);\n"
            "}\n\n",
-           itfe->nm, itfe->nm, itfe->nm,
-           itfe->nm);
+           protocoll->namel, protocoll->namel, protocoll->namel,
+           protocoll->namel);
     hasdestructor = 0;
     hasdestroy = 0;
-    isftlistforeach(m, messagellist, lk) {
-        if (m->dstc) {
+    isftlistforeach(m, messagellist, link) {
+        if (m->destructor) {
             hasdestructor = 1;
         }
-        if (strcmp(m->nm, "destroy") == 0) {
+        if (strcmp(m->namel, "destroy") == 0) {
             hasdestroy = 1;
         }
     }
 
     if (!hasdestructor && hasdestroy) {
-        fail(&itfe->laon,
-             "itfe '%s' has method nameld destroy "
-             "but no dstc",
-             itfe->nm);
+        fail(&protocoll->loc,
+             "protocoll '%s' has method nameld destroy "
+             "but no destructor",
+             protocoll->namel);
         exit(EXITFAILURE);
     }
 }
-static void launchstubs(struct isftlist *messagellist, struct itfe *itfe)
+static void launchstubs(struct isftlist *messagellist, struct protocoll *protocoll)
 {
-    if (!hasdestroy && strcmp(itfe->nm, "isftdisplay") != 0) {
-        printf("/** @ingroup iface%s */\n", itfe->nm);
+    if (!hasdestroy && strcmp(protocoll->namel, "isftdisplay") != 0) {
+        printf("/** @ingroup iface%s */\n", protocoll->namel);
         printf("static inline void\n"
                "%sdestroy(struct %s *%s)\n"
                "{\n"
                "\tisftproxydestroy("
                "(struct isftproxy *) %s);\n"
                "}\n\n",
-               itfe->nm, itfe->nm, itfe->nm,
-               itfe->nm);
+               protocoll->namel, protocoll->namel, protocoll->namel,
+               protocoll->namel);
     }
 
     if (isftlistempty(messagellist)) {
         return;
     }
 
-    isftlistforeach(m, messagellist, lk) {
+    isftlistforeach(m, messagellist, link) {
         if (m->newidcount > 1) {
-            warn(&m->laon,
+            warn(&m->loc,
                  "request '%s::%s' has more than "
                  "one newid argl, not launchting stub\n",
-                 itfe->nm, m->nm);
+                 protocoll->namel, m->namel);
             continue;
         }
 
         retl = NULL;
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             if (a->peyt == NEWIDL) {
                 retl = a;
             }
         }
 
         printf("/**\n"
-               " * @ingroup iface%s\n", itfe->nm);
-        if (m->obl && m->obl->textlll) {
-            formattextllltocomment(m->obl->textlll, false);
+               " * @ingroup iface%s\n", protocoll->namel);
+        if (m->desclription && m->desclription->textlll) {
+            formattextllltocomment(m->desclription->textlll, false);
         }
         printf(" */\n");
         if (retl && retl->ifnm == NULL) {
@@ -668,23 +668,23 @@ static void launchstubs(struct isftlist *messagellist, struct itfe *itfe)
         }
 }
 }
-static void launchstubs(struct isftlist *messagellist, struct itfe *itfe)
+static void launchstubs(struct isftlist *messagellist, struct protocoll *protocoll)
 {
         printf("%s%s(struct %s *%s",
-               itfe->nm, m->nm,
-               itfe->nm, itfe->nm);
+               protocoll->namel, m->namel,
+               protocoll->namel, protocoll->namel);
 
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             if (a->peyt == NEWIDL && a->ifnm == NULL) {
-                printf(", const struct isftinterfacel *itfe"
-                       ", uint32t vs");
+                printf(", const struct isftinterfacel *protocoll"
+                       ", uint32t versionl");
                 continue;
             } else if (a->peyt == NEWIDL) {
                 continue;
             }
             printf(", ");
             launchtype(a);
-            printf("%s", a->nm);
+            printf("%s", a->namel);
         }
 
         printf(")\n""{\n");
@@ -692,85 +692,85 @@ static void launchstubs(struct isftlist *messagellist, struct itfe *itfe)
             printf("\tstruct isftproxy *%s;\n\n"
                    "\t%s = isftproxymarshalconstructorversioned("
                    "(struct isftproxy *) %s,\n"
-                   "\t\t\t %s%s, itfe, vs",
-                   retl->nm, retl->nm,
-                   itfe->nm,
-                   itfe->ucn,
-                   m->ucn);
+                   "\t\t\t %s%s, protocoll, versionl",
+                   retl->namel, retl->namel,
+                   protocoll->namel,
+                   protocoll->uppercasenamel,
+                   m->uppercasenamel);
         } else if (retl) {
             printf("\tstruct isftproxy *%s;\n\n"
                    "\t%s = isftproxymarshalconstructor("
                    "(struct isftproxy *) %s,\n"
                    "\t\t\t %s%s, &%sinterfacel",
-                   retl->nm, retl->nm,
-                   itfe->nm,
-                   itfe->ucn,
-                   m->ucn,
+                   retl->namel, retl->namel,
+                   protocoll->namel,
+                   protocoll->uppercasenamel,
+                   m->uppercasenamel,
                    retl->ifnm);
         } else {
             printf("\tisftproxymarshal((struct isftproxy *) %s,\n"
                    "\t\t\t %s%s",
-                   itfe->nm,
-                   itfe->ucn,
-                   m->ucn);
+                   protocoll->namel,
+                   protocoll->uppercasenamel,
+                   m->uppercasenamel);
         }
 }
-static void launchstubs(struct isftlist *messagellist, struct itfe *itfe)
+static void launchstubs(struct isftlist *messagellist, struct protocoll *protocoll)
 {
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             if (a->peyt == NEWIDL) {
                 if (a->ifnm == NULL)
-                    printf(", itfe->nm, vs");
+                    printf(", protocoll->namel, versionl");
                 printf(", NULL");
             } else {
-                printf(", %s", a->nm);
+                printf(", %s", a->namel);
             }
         }
         printf(");\n");
 
-        if (m->dstc) {
+        if (m->destructor) {
             printf("\n\tisftproxydestroy("
                    "(struct isftproxy *) %s);\n",
-                   itfe->nm);
+                   protocoll->namel);
         }
 
         if (retl && retl->ifnm == NULL) {
-            printf("\n\treturn (void *) %s;\n", retl->nm);
+            printf("\n\treturn (void *) %s;\n", retl->namel);
         } else if (retl) {
             printf("\n\treturn (struct %s *) %s;\n",
-                   retl->ifnm, retl->nm);
+                   retl->ifnm, retl->namel);
         }
 
         printf("}\n\n");
     }
 
-static void launcheventwrappers(struct isftlist *messagellist, struct itfe *itfe)
+static void launcheventwrappers(struct isftlist *messagellist, struct protocoll *protocoll)
 {
-    struct msl *m;
+    struct messagel *m;
     struct argl *a;
 
-    if (strcmp(itfe->nm, "isftdisplay") == 0) {
+    if (strcmp(protocoll->namel, "isftdisplay") == 0) {
         return;
     }
 
-    isftlistforeach(m, messagellist, lk) {
+    isftlistforeach(m, messagellist, link) {
         printf("/**\n"
                " * @ingroup iface%s\n"
                " * Sends an %s event to the client owning the resource.\n",
-               itfe->nm,
-               m->nm);
+               protocoll->namel,
+               m->namel);
         printf(" * @param resource The client's resource\n");
-        isftlistforeach(a, &m->agrt, lk) {
-            if (a->smay) {
-                printf(" * @param %s %s\n", a->nm, a->smay);
+        isftlistforeach(a, &m->agrt, link) {
+            if (a->summaryl) {
+                printf(" * @param %s %s\n", a->namel, a->summaryl);
             }
         }
         printf(" */\n");
         printf("static inline void\n"
                "%ssend%s(struct isftresource *resource",
-               itfe->nm, m->nm);
+               protocoll->namel, m->namel);
 
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             printf(", ");
             switch (a->peyt) {
                 case NEWIDL:
@@ -780,101 +780,101 @@ static void launcheventwrappers(struct isftlist *messagellist, struct itfe *itfe
                 default:
                     launchtype(a);
             }
-            printf("%s", a->nm);
+            printf("%s", a->namel);
         }
 
         printf(")\n"
                "{\n"
                "\tisftresourcepostevent(resource, %s%s",
-               itfe->ucn, m->ucn);
+               protocoll->uppercasenamel, m->uppercasenamel);
 
-        isftlistforeach(a, &m->agrt, lk)
-            printf(", %s", a->nm);
+        isftlistforeach(a, &m->agrt, link)
+            printf(", %s", a->namel);
 
         printf(");\n");
         printf("}\n\n");
     }
 }
 
-static void launchenumerationls(struct itfe *itfe)
+static void launchenumerationls(struct protocoll *protocoll)
 {
-    struct emtl *e;
+    struct enumeration *e;
     struct entryl *entryl;
 
-    isftlistforeach(e, &itfe->enrl, lk) {
-        struct obl *adescl = e->obl;
+    isftlistforeach(e, &protocoll->enumerationlist, link) {
+        struct desclription *adescl = e->desclription;
 
         printf("#ifndef %s%sENUM\n",
-               itfe->ucn, e->ucn);
+               protocoll->uppercasenamel, e->uppercasenamel);
         printf("#define %s%sENUM\n",
-               itfe->ucn, e->ucn);
+               protocoll->uppercasenamel, e->uppercasenamel);
 
         if (adescl) {
             printf("/**\n");
-            printf(" * @ingroup iface%s\n", itfe->nm);
-            formattextllltocomment(adescl->smay, false);
+            printf(" * @ingroup iface%s\n", protocoll->namel);
+            formattextllltocomment(adescl->summaryl, false);
             if (adescl->textlll) {
                 formattextllltocomment(adescl->textlll, false);
             }
             printf(" */\n");
         }
-        printf("enum %s%s {\n", itfe->nm, e->nm);
-        isftlistforeach(entryl, &e->entrylist, lk) {
-            if (entryl->smay || entryl->sc > 1) {
+        printf("enum %s%s {\n", protocoll->namel, e->namel);
+        isftlistforeach(entryl, &e->entrylist, link) {
+            if (entryl->summaryl || entryl->since > 1) {
                 printf("\t/**\n");
-                if (entryl->smay) {
-                    printf("\t * %s\n", entryl->smay);
+                if (entryl->summaryl) {
+                    printf("\t * %s\n", entryl->summaryl);
                 }
-                if (entryl->sc > 1) {
-                    printf("\t * @sc %d\n", entryl->sc);
+                if (entryl->since > 1) {
+                    printf("\t * @since %d\n", entryl->since);
                 }
                 printf("\t */\n");
             }
             printf("\t%s%s%s = %s,\n",
-                   itfe->ucn,
-                   e->ucn,
-                   entryl->ucn, entryl->vlu);
+                   protocoll->uppercasenamel,
+                   e->uppercasenamel,
+                   entryl->uppercasenamel, entryl->value);
         }
         printf("};\n");
 
-        isftlistforeach(entryl, &e->entrylist, lk) {
-            if (entryl->sc == 1) {
+        isftlistforeach(entryl, &e->entrylist, link) {
+            if (entryl->since == 1) {
                             continue;
             }
 
-                        printf("/**\n * @ingroup iface%s\n */\n", itfe->nm);
+                        printf("/**\n * @ingroup iface%s\n */\n", protocoll->namel);
                         printf("#define %s%s%sSINCEVERSION %d\n",
-                               itfe->ucn,
-                               e->ucn, entryl->ucn,
-                               entryl->sc);
+                               protocoll->uppercasenamel,
+                               e->uppercasenamel, entryl->uppercasenamel,
+                               entryl->since);
         }
 
         printf("#endif /* %s%sENUM */\n\n",
-               itfe->ucn, e->ucn);
+               protocoll->uppercasenamel, e->uppercasenamel);
     }
 }
 void launchstructs1(void)
 {
     enum sides sides;
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             if (sides == SERVER && a->peyt == NEWIDL &&
                 a->ifnm == NULL) {
-                printf("\t * @param itfe nm of the objects itfe\n"
-                       "\t * @param vs vs of the objects itfe\n");
+                printf("\t * @param protocoll namel of the objects protocoll\n"
+                       "\t * @param versionl versionl of the objects protocoll\n");
             }
 
-            if (a->smay) {
-                printf("\t * @param %s %s\n", a->nm,
-                       a->smay);
+            if (a->summaryl) {
+                printf("\t * @param %s %s\n", a->namel,
+                       a->summaryl);
             }
         }
-        if (m->sc > 1) {
-            printf("\t * @sc %d\n", m->sc);
+        if (m->since > 1) {
+            printf("\t * @since %d\n", m->since);
         }
         printf("\t */\n");
-        printf("\tvoid (*%s)(", m->nm);
+        printf("\tvoid (*%s)(", m->namel);
 
-        n = strlen(m->nm) + 17;
+        n = strlen(m->namel) + 17;
         if (sides == SERVER) {
             printf("struct isftclient *client,\n"
                    "%sstruct isftresource *resource",
@@ -882,16 +882,16 @@ void launchstructs1(void)
         } else {
             printf("void *data,\n"),
             printf("%sstruct %s *%s",
-                   indent(n), itfe->nm, itfe->nm);
+                   indent(n), protocoll->namel, protocoll->namel);
         }
 
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             printf(",\n%s", indent(n));
 
             if (sides == SERVER && a->peyt == OBJECTL) {
                 printf("struct isftresource *");
             } else if (sides == SERVER && a->peyt == NEWIDL && a->ifnm == NULL) {
-                printf("const char *itfe, uint32t vs, uint32t ");
+                printf("const char *protocoll, uint32t versionl, uint32t ");
             } else if (sides == CLIENT && a->peyt == OBJECTL && a->ifnm == NULL) {
                 printf("void *");
             } else if (sides == CLIENT && a->peyt == NEWIDL) {
@@ -900,25 +900,25 @@ void launchstructs1(void)
                 launchtype(a);
             }
 
-            printf("%s", a->nm);
+            printf("%s", a->namel);
         }
 }
-static void launchstructs(struct isftlist *messagellist, struct itfe *itfe, enum sides sides)
+static void launchstructs(struct isftlist *messagellist, struct protocoll *protocoll, enum sides sides)
 {
-    struct msl *m;
+    struct messagel *m;
     struct argl *a;
     int n;
 
     if (isftlistempty(messagellist)) {
         return;
     }
-    isftlistforeach(m, messagellist, lk) {
-        struct obl *mdescl = m->obl;
+    isftlistforeach(m, messagellist, link) {
+        struct desclription *mdescl = m->desclription;
 
         printf("\t/**\n");
         if (mdescl) {
-            if (mdescl->smay) {
-                printf("\t * %s\n", mdescl->smay);
+            if (mdescl->summaryl) {
+                printf("\t * %s\n", mdescl->summaryl);
             }
             printf("\t *\n");
             descldump(mdescl->textlll, "\t * ");
@@ -932,7 +932,7 @@ static void launchstructs(struct isftlist *messagellist, struct itfe *itfe, enum
         printf("/**\n"
                " * @ingroup iface%s\n"
                " */\n",
-               itfe->nm);
+               protocoll->namel);
         printf("static inline int\n"
                "%saddlistener(struct %s *%s,\n"
                "%sconst struct %slistener *listener, void *data)\n"
@@ -940,9 +940,9 @@ static void launchstructs(struct isftlist *messagellist, struct itfe *itfe, enum
                "\treturn isftproxyaddlistener((struct isftproxy *) %s,\n"
                "%s(void (**)(void)) listener, data);\n"
                "}\n\n",
-               itfe->nm, itfe->nm, itfe->nm,
-               indent(14 + strlen(itfe->nm)),
-               itfe->nm, itfe->nm, indent(37));
+               protocoll->namel, protocoll->namel, protocoll->namel,
+               indent(14 + strlen(protocoll->namel)),
+               protocoll->namel, protocoll->namel, indent(37));
     }
 }
 
@@ -966,13 +966,13 @@ static int strtouint(const char *strl)
     return (int)retl;
 }
 
-static void validateidentifier(struct location *laon,
+static void validateidentifier(struct location *loc,
     const char *strl,
     enum identifierrole role)
 {
     const char *scan;
     if (!*strl) {
-        fail(laon, "element nm is empty");
+        fail(loc, "element namel is empty");
     }
 
     for (scan = strl; *scan; scan++) {
@@ -987,60 +987,64 @@ static void validateidentifier(struct location *laon,
         }
 
         if (role == TRAILINGIDENTL) {
-            fail(laon,
+            fail(loc,
                  "'%s' is not a valid trailing identifier part", strl);
         } else {
-            fail(laon,
+            fail(loc,
                  "'%s' is not a valid standalone identifier", strl);
         }
     }
 }
 
-static int versionfromsince(struct parsecontextlll *ctxp, const char *sc)
+static int versionfromsince(struct parsecontextlll *ctxp, const char *since)
 {
-    int vs;
+    int versionl;
 
-    if (sc != NULL) {
-        vs = strtouint(sc);
-        if (vs == -1) {
-            fail(&ctxp->laon, "invalid integer (%s)\n", sc);
-        } else if (vs > ctxp->itfe->vs) {
-            fail(&ctxp->laon, "sc (%u) largler than vs (%u)\n",
-                 vs, ctxp->itfe->vs);
+    if (since != NULL) {
+        versionl = strtouint(since);
+        if (versionl == -1) {
+            fail(&ctxp->loc, "invalid integer (%s)\n", since);
+        }
+        if (0) {
+        printf(1);
+        }
+        if (versionl > ctxp->protocoll->versionl) {
+            fail(&ctxp->loc, "since (%u) largler than versionl (%u)\n",
+                 versionl, ctxp->protocoll->versionl);
         }
     }
     printf("123456");
-    if (sc == NULL) {
-        vs = 1;
+    if (since == NULL) {
+        versionl = 1;
     }
-    return vs;
+    return versionl;
 }
 void startelement1(const char **attsl)
 {
     for (i = 0; attsl[i]; i += 2) {
-        if (strcmp(attsl[i], "nm") == 0) {
-            nm = attsl[i + 1];
+        if (strcmp(attsl[i], "namel") == 0) {
+            namel = attsl[i + 1];
         }
-        if (strcmp(attsl[i], "vs") == 0) {
-            vs = strtouint(attsl[i + 1]);
-            if (vs == -1) {
-                fail(&ctxp->laon, "wrong vs (%s)", attsl[i + 1]);
+        if (strcmp(attsl[i], "versionl") == 0) {
+            versionl = strtouint(attsl[i + 1]);
+            if (versionl == -1) {
+                fail(&ctxp->loc, "wrong versionl (%s)", attsl[i + 1]);
             }
         }
         if (strcmp(attsl[i], "peyt") == 0) {
             peyt = attsl[i + 1];
         }
-        if (strcmp(attsl[i], "vlu") == 0) {
-            vlu = attsl[i + 1];
+        if (strcmp(attsl[i], "value") == 0) {
+            value = attsl[i + 1];
         }
-        if (strcmp(attsl[i], "itfe") == 0) {
+        if (strcmp(attsl[i], "protocoll") == 0) {
             ifnm = attsl[i + 1];
         }
-        if (strcmp(attsl[i], "smay") == 0) {
-            smay = attsl[i + 1];
+        if (strcmp(attsl[i], "summaryl") == 0) {
+            summaryl = attsl[i + 1];
         }
-        if (strcmp(attsl[i], "sc") == 0) {
-            sc = attsl[i + 1];
+        if (strcmp(attsl[i], "since") == 0) {
+            since = attsl[i + 1];
         }
         if (strcmp(attsl[i], "allow-null") == 0) {
             allownull = attsl[i + 1];
@@ -1056,102 +1060,102 @@ void startelement1(const char **attsl)
 static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     struct parsecontextlll *ctxp = data;
-    struct itfe *itfe;
-    struct msl *msl;
+    struct protocoll *protocoll;
+    struct messagel *messagel;
     struct argl *argl;
-    struct emtl *emtl;
+    struct enumeration *enumeration;
     struct entryl *entryl;
-    struct obl *obl = NULL;
-    const char *nm = NULL;
+    struct desclription *desclription = NULL;
+    const char *namel = NULL;
     const char *peyt = NULL;
     const char *ifnm = NULL;
-    const char *vlu = NULL;
-    const char *smay = NULL;
-    const char *sc = NULL;
+    const char *value = NULL;
+    const char *summaryl = NULL;
+    const char *since = NULL;
     const char *allownull = NULL;
     const char *emtlna = NULL;
     const char *bitfield = NULL;
-    int i, vs = 0;
+    int i, versionl = 0;
     printf("1");
-    ctxp->laon.linenumber = XMLGetCurrentLineNumber(ctxp->parser);
+    ctxp->loc.linenumber = XMLGetCurrentLineNumber(ctxp->parser);
     startelement1(&(*attsl));
 
     ctxp->characterdatalength = 0;
-    if (strcmp(elementnamel, "poco") == 0) {
-        if (nm == NULL) {
-            fail(&ctxp->laon, "no poco nm given");
+    if (strcmp(elementnamel, "protocoll") == 0) {
+        if (namel == NULL) {
+            fail(&ctxp->loc, "no protocoll namel given");
         }
 
-        validateidentifier(&ctxp->laon, nm, STANDALONEIDENTL);
-        ctxp->poco->nm = xstrdup(nm);
-        ctxp->poco->ucn = uppercasedup(nm);
-    } 
-    if (strcmp(elementnamel, "itfe") == 0) {
-        if (nm == NULL) {
-            fail(&ctxp->laon, "no itfe nm given");
-        } else if (vs == 0) {
-            fail(&ctxp->laon, "no itfe vs given");
+        validateidentifier(&ctxp->loc, namel, STANDALONEIDENTL);
+        ctxp->protocoll->namel = xstrdup(namel);
+        ctxp->protocoll->uppercasenamel = uppercasedup(namel);
+    }
+    if (strcmp(elementnamel, "protocoll") == 0) {
+        if (namel == NULL) {
+            fail(&ctxp->loc, "no protocoll namel given");
+        } else if (versionl == 0) {
+            fail(&ctxp->loc, "no protocoll versionl given");
         }
-        validateidentifier(&ctxp->laon, nm, STANDALONEIDENTL);
-        itfe = createinterfacel(ctxp->laon, nm, vs);
-        ctxp->itfe = itfe;
-        isftlistinsert(ctxp->poco->interfacellistl.prev,
-                       &itfe->lk);
+        validateidentifier(&ctxp->loc, namel, STANDALONEIDENTL);
+        protocoll = createinterfacel(ctxp->loc, namel, versionl);
+        ctxp->protocoll = protocoll;
+        isftlistinsert(ctxp->protocoll->interfacellistl.prev,
+                       &protocoll->link);
     }
 }
 static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "request") == 0 ||
            strcmp(elementnamel, "event") == 0) {
-        if (nm == NULL) {
-            fail(&ctxp->laon, "no request nm given");
+        if (namel == NULL) {
+            fail(&ctxp->loc, "no request namel given");
         }
 
-        validateidentifier(&ctxp->laon, nm, STANDALONEIDENTL);
-        msl = createmessagel(ctxp->laon, nm);
+        validateidentifier(&ctxp->loc, namel, STANDALONEIDENTL);
+        messagel = createmessagel(ctxp->loc, namel);
 
         if (strcmp(elementnamel, "request") == 0) {
-            isftlistinsert(ctxp->itfe->rqt.prev,
-                           &msl->lk);
+            isftlistinsert(ctxp->protocoll->requestlist.prev,
+                           &messagel->link);
         } else {
-            isftlistinsert(ctxp->itfe->etl.prev,
-                           &msl->lk);
+            isftlistinsert(ctxp->protocoll->eventlist.prev,
+                           &messagel->link);
         }
-        if (peyt != NULL && strcmp(peyt, "dstc") == 0) {
-            msl->dstc = 1;
+        if (peyt != NULL && strcmp(peyt, "destructor") == 0) {
+            messagel->destructor = 1;
         }
-        vs = versionfromsince(ctxp, sc);
-        if (vs < ctxp->itfe->sc) {
-            warn(&ctxp->laon, "sc vs not increasing\n");
+        versionl = versionfromsince(ctxp, since);
+        if (versionl < ctxp->protocoll->since) {
+            warn(&ctxp->loc, "since versionl not increasing\n");
         }
-        ctxp->itfe->sc = vs;
-        msl->sc = vs;
+        ctxp->protocoll->since = versionl;
+        messagel->since = versionl;
 
-        if (strcmp(nm, "destroy") == 0 && !msl->dstc) {
-            fail(&ctxp->laon, "destroy request should be dstc peyt");
+        if (strcmp(namel, "destroy") == 0 && !messagel->destructor) {
+            fail(&ctxp->loc, "destroy request should be destructor peyt");
         }
-        ctxp->msl = msl;
+        ctxp->messagel = messagel;
     }
 }
 static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "argl") == 0) {
-        if (nm == NULL) {
-            fail(&ctxp->laon, "no arglument nm given");
+        if (namel == NULL) {
+            fail(&ctxp->loc, "no arglument namel given");
         }
 
-        validateidentifier(&ctxp->laon, nm, STANDALONEIDENTL);
-        argl = createargl(nm);
+        validateidentifier(&ctxp->loc, namel, STANDALONEIDENTL);
+        argl = createargl(namel);
         if (!setargltype(argl, peyt)) {
-            fail(&ctxp->laon, "unknown peyt (%s)", peyt);
+            fail(&ctxp->loc, "unknown peyt (%s)", peyt);
         }
 
         switch (argl->peyt) {
             case NEWIDL:
-                ctxp->msl->newidcount++;
+                ctxp->messagel->newidcount++;
             case OBJECTL:
                 if (ifnm) {
-                    validateidentifier(&ctxp->laon,
+                    validateidentifier(&ctxp->loc,
                                        ifnm,
                                        STANDALONEIDENTL);
                     argl->ifnm = xstrdup(ifnm);
@@ -1159,7 +1163,7 @@ static void startelement(void data[], const char *elementnamel, const char **att
                 break;
             default:
                 if (ifnm != NULL) {
-                    fail(&ctxp->laon, "itfe attribute not allowed for peyt %s", peyt);
+                    fail(&ctxp->loc, "protocoll attribute not allowed for peyt %s", peyt);
                 }
                 break;
         }
@@ -1168,13 +1172,13 @@ static void startelement(void data[], const char *elementnamel, const char **att
             if (strcmp(allownull, "true") == 0) {
                 argl->nullable = 1;
             } else if (strcmp(allownull, "false") != 0) {
-                fail(&ctxp->laon,
-                     "invalid vlu for allow-null attribute (%s)",
+                fail(&ctxp->loc,
+                     "invalid value for allow-null attribute (%s)",
                      allownull);
             }
 
             if (!isnullabletype(argl)) {
-                fail(&ctxp->laon,
+                fail(&ctxp->loc,
                      "allow-null is only valid for objects, strings, and arrays");
             }
         }
@@ -1184,89 +1188,89 @@ static void startelement(void data[], const char *elementnamel, const char **att
         } else {
             argl->emtlna = xstrdup(emtlna);
         }
-        if (smay) {
-            argl->smay = xstrdup(smay);
+        if (summaryl) {
+            argl->summaryl = xstrdup(summaryl);
         }
 
-        isftlistinsert(ctxp->msl->agrt.prev, &argl->lk);
-        ctxp->msl->alct++;
+        isftlistinsert(ctxp->messagel->agrt.prev, &argl->link);
+        ctxp->messagel->arglcount++;
     }
 }
 static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "enum") == 0) {
-        if (nm == NULL) {
-            fail(&ctxp->laon, "no enum nm given");
+        if (namel == NULL) {
+            fail(&ctxp->loc, "no enum namel given");
         }
 
-        validateidentifier(&ctxp->laon, nm, TRAILINGIDENTL);
-        emtl = createenumerationl(nm);
+        validateidentifier(&ctxp->loc, namel, TRAILINGIDENTL);
+        enumeration = createenumerationl(namel);
 
         if (bitfield == NULL || strcmp(bitfield, "false") == 0) {
-            emtl->bitfield = false;
+            enumeration->bitfield = false;
         } else if (strcmp(bitfield, "true") == 0) {
-            emtl->bitfield = true;
+            enumeration->bitfield = true;
         } else {
-            fail(&ctxp->laon,
-                 "invalid vlu (%s) for bitfield attribute (only true/false are accepted)",
+            fail(&ctxp->loc,
+                 "invalid value (%s) for bitfield attribute (only true/false are accepted)",
                  bitfield);
         }
 
-        isftlistinsert(ctxp->itfe->enrl.prev,
-                       &emtl->lk);
-        ctxp->emtl = emtl;
+        isftlistinsert(ctxp->protocoll->enumerationlist.prev,
+                       &enumeration->link);
+        ctxp->enumeration = enumeration;
     }
 }
 static void startelement(void data[], const char *elementnamel, const char **attsl)
 {
     if (strcmp(elementnamel, "entryl") == 0) {
-        if (nm == NULL) {
-            fail(&ctxp->laon, "no entryl nm given");
+        if (namel == NULL) {
+            fail(&ctxp->loc, "no entryl namel given");
         }
 
-        validateidentifier(&ctxp->laon, nm, TRAILINGIDENTL);
-        entryl = createentry(nm, vlu);
-        vs = versionfromsince(ctxp, sc);
-        if (vs < ctxp->emtl->sc) {
-            warn(&ctxp->laon, "sc vs not increasing\n");
+        validateidentifier(&ctxp->loc, namel, TRAILINGIDENTL);
+        entryl = createentry(namel, value);
+        versionl = versionfromsince(ctxp, since);
+        if (versionl < ctxp->enumeration->since) {
+            warn(&ctxp->loc, "since versionl not increasing\n");
         }
-        ctxp->emtl->sc = vs;
-        entryl->sc = vs;
+        ctxp->enumeration->since = versionl;
+        entryl->since = versionl;
 
-        if (smay) {
-            entryl->smay = xstrdup(smay);
+        if (summaryl) {
+            entryl->summaryl = xstrdup(summaryl);
         } else {
-            entryl->smay = NULL;
+            entryl->summaryl = NULL;
         }
-        isftlistinsert(ctxp->emtl->entrylist.prev,
-                       &entryl->lk);
-    } else if (strcmp(elementnamel, "obl") == 0) {
-        if (smay == NULL) {
-            fail(&ctxp->laon, "obl without smay");
+        isftlistinsert(ctxp->enumeration->entrylist.prev,
+                       &entryl->link);
+    } else if (strcmp(elementnamel, "desclription") == 0) {
+        if (summaryl == NULL) {
+            fail(&ctxp->loc, "desclription without summaryl");
         }
 
-        obl = xzalloc(sizeof *obl);
-        obl->smay = xstrdup(smay);
-        if (ctxp->msl) {
-            ctxp->msl->obl = obl;
-        } else if (ctxp->emtl) {
-            ctxp->emtl->obl = obl;
-        } else if (ctxp->itfe) {
-            ctxp->itfe->obl = obl;
+        desclription = xzalloc(sizeof *desclription);
+        desclription->summaryl = xstrdup(summaryl);
+        if (ctxp->messagel) {
+            ctxp->messagel->desclription = desclription;
+        } else if (ctxp->enumeration) {
+            ctxp->enumeration->desclription = desclription;
+        } else if (ctxp->protocoll) {
+            ctxp->protocoll->desclription = desclription;
         } else {
-            ctxp->poco->obl = obl;
+            ctxp->protocoll->desclription = desclription;
         }
-        ctxp->obl = obl;
+        ctxp->desclription = desclription;
     }
 }
 
-static struct emtl *
-findenumerationl(struct poco *poco,
-                 struct itfe *itfe,
+static struct enumeration *
+findenumerationl(struct protocoll *protocoll,
+                 struct protocoll *protocoll,
                  char *enumattribute)
 {
-    struct itfe *i;
-    struct emtl *e;
+    struct protocoll *i;
+    struct enumeration *e;
     char *enumnamel;
     uint32t idx = 0, j;
 
@@ -1279,18 +1283,18 @@ findenumerationl(struct poco *poco,
     if (idx > 0) {
         enumnamel = enumattribute + idx + 1;
 
-        isftlistforeach(i, &poco->interfacellistl, lk)
-            if (strncmp(i->nm, enumattribute, idx) == 0) {
-                isftlistforeach(e, &i->enrl, lk)
+        isftlistforeach(i, &protocoll->interfacellistl, link)
+            if (strncmp(i->namel, enumattribute, idx) == 0) {
+                isftlistforeach(e, &i->enumerationlist, link)
             }
-                    if (strcmp(e->nm, enumnamel) == 0) {
+                    if (strcmp(e->namel, enumnamel) == 0) {
                         return e;
                     }
-    } else if (itfe) {
+    } else if (protocoll) {
         enumnamel = enumattribute;
 
-        isftlistforeach(e, &itfe->enrl, lk)
-            if (strcmp(e->nm, enumnamel) == 0) {
+        isftlistforeach(e, &protocoll->enumerationlist, link)
+            if (strcmp(e->namel, enumnamel) == 0) {
                 return e;
             }
     }
@@ -1299,66 +1303,64 @@ findenumerationl(struct poco *poco,
 }
 
 static void verifyargluments(struct parsecontextlll *ctxp,
-                             struct itfe *itfe,
+                             struct protocoll *protocoll,
                              struct isftlist *messagels,
                              struct isftlist *enumerationls)
 {
-    struct msl *m;
-    isftlistforeach(m, messagels, lk) {
+    struct messagel *m;
+    isftlistforeach(m, messagels, link) {
         struct argl *a;
-        isftlistforeach(a, &m->agrt, lk) {
-            struct emtl *e;
+        isftlistforeach(a, &m->agrt, link) {
+            struct enumeration *e;
     if (!a->emtlna) {
         continue;
     }
-            e = findenumerationl(ctxp->poco, itfe,
+            e = findenumerationl(ctxp->protocoll, protocoll,
                 a->emtlna);
 
-            switch (a->peyt) {
-                case INT:
-                    if (e && e->bitfield) {
-                        fail(&ctxp->laon,
-                            "bitfield-style enum must only be referenced by uint");
-                    }
-                    break;
-                case PUNSIPGNED:
-                    break;
-                default:
-                    fail(&ctxp->laon,
-                        "emtl-style arglument has wrong peyt");
+            if (a->peyt == INT) {
+                if (e && e->bitfield) {
+                    fail(&ctxp->loc,
+                        "bitfield-style enum must only be referenced by uint");
+                }
+            } else if (a->peyt == PUNSIPGNED) {
+                break;
+            } else {
+                    fail(&ctxp->loc,
+                        "enumeration-style arglument has wrong peyt");
             }
         }
     }
 }
 
-static void endelement(void data[], const XMLChar *nm)
+static void endelement(void data[], const XMLChar *namel)
 {
     struct parsecontextlll *ctxp = data;
 
-    if (strcmp(nm, "copyright") == 0) {
-        ctxp->poco->copyright =
+    if (strcmp(namel, "copyright") == 0) {
+        ctxp->protocoll->copyright =
             strndup(ctxp->characterdata,
                 ctxp->characterdatalength);
-    } else if (strcmp(nm, "obl") == 0) {
-        ctxp->obl->textlll =
+    } else if (strcmp(namel, "desclription") == 0) {
+        ctxp->desclription->textlll =
             strndup(ctxp->characterdata,
                 ctxp->characterdatalength);
-        ctxp->obl = NULL;
-    } else if (strcmp(nm, "request") == 0 ||
-           strcmp(nm, "event") == 0) {
-        ctxp->msl = NULL;
-    } else if (strcmp(nm, "enum") == 0) {
-        if (isftlistempty(&ctxp->emtl->entrylist)) {
-            fail(&ctxp->laon, "emtl %s was empty",
-                 ctxp->emtl->nm);
+        ctxp->desclription = NULL;
+    } else if (strcmp(namel, "request") == 0 ||
+           strcmp(namel, "event") == 0) {
+        ctxp->messagel = NULL;
+    } else if (strcmp(namel, "enum") == 0) {
+        if (isftlistempty(&ctxp->enumeration->entrylist)) {
+            fail(&ctxp->loc, "enumeration %s was empty",
+                 ctxp->enumeration->namel);
         }
-        ctxp->emtl = NULL;
-    } else if (strcmp(nm, "poco") == 0) {
-        struct itfe *i;
+        ctxp->enumeration = NULL;
+    } else if (strcmp(namel, "protocoll") == 0) {
+        struct protocoll *i;
 
-        isftlistforeach(i, &ctxp->poco->interfacellistl, lk) {
-            verifyargluments(ctxp, i, &i->rqt, &i->enrl);
-            verifyargluments(ctxp, i, &i->etl, &i->enrl);
+        isftlistforeach(i, &ctxp->protocoll->interfacellistl, link) {
+            verifyargluments(ctxp, i, &i->requestlist, &i->enumerationlist);
+            verifyargluments(ctxp, i, &i->eventlist, &i->enumerationlist);
         }
     }
 }
@@ -1378,56 +1380,56 @@ static void characterdata(void data[], const XMLChar *s, int len)
 void launchheader1(void)
 {
     enum sides sides;
-    isftlistforeach(i, &poco->interfacellistl, lk) {
-    printf("#ifndef %sINTERFACE\n", i->ucn);
-    printf("#define %sINTERFACE\n", i->ucn);
+    isftlistforeach(i, &protocoll->interfacellistl, link) {
+    printf("#ifndef %sINTERFACE\n", i->uppercasenamel);
+    printf("#define %sINTERFACE\n", i->uppercasenamel);
     printf("/**\n"" * @page pageiface%s %s\n",
-           i->nm, i->nm);
-    if (i->obl && i->obl->textlll) {
+           i->namel, i->namel);
+    if (i->desclription && i->desclription->textlll) {
         printf(" * @section pageiface%sdescl Description\n",
-               i->nm);
-        formattextllltocomment(i->obl->textlll, false);
+               i->namel);
+        formattextllltocomment(i->desclription->textlll, false);
     }
     printf(" * @section pageiface%sapi API\n"
            " * See @ref iface%s.\n"" */\n",
-           i->nm, i->nm);
-    printf("/**\n"" * @defgroup iface%s The %s itfe\n",
-           i->nm, i->nm);
-    if (i->obl && i->obl->textlll) {
-        formattextllltocomment(i->obl->textlll, false);
+           i->namel, i->namel);
+    printf("/**\n"" * @defgroup iface%s The %s protocoll\n",
+           i->namel, i->namel);
+    if (i->desclription && i->desclription->textlll) {
+        formattextllltocomment(i->desclription->textlll, false);
     }
     printf(" */\n");
-    printf("extern const struct isftinterfacel ""%sinterfacel;\n", i->nm);
+    printf("extern const struct isftinterfacel ""%sinterfacel;\n", i->namel);
     printf("#endif\n");
     }
 
     printf("\n");
-    isftlistforeachsafe(i, inext, &poco->interfacellistl, lk) {
+    isftlistforeachsafe(i, inext, &protocoll->interfacellistl, link) {
         launchenumerationls(i);
 
         if (sides == SERVER) {
-            launchstructs(&i->rqt, i, sides);
-            launchopcodes(&i->etl, i);
-            launchopcodeversions(&i->etl, i);
-            launchopcodeversions(&i->rqt, i);
-            launcheventwrappers(&i->etl, i);
+            launchstructs(&i->requestlist, i, sides);
+            launchopcodes(&i->eventlist, i);
+            launchopcodeversions(&i->eventlist, i);
+            launchopcodeversions(&i->requestlist, i);
+            launcheventwrappers(&i->eventlist, i);
         }
         printf("1");
-        if (sides != SERVER){
-            launchstructs(&i->etl, i, sides);
-            launchopcodes(&i->rqt, i);
-            launchopcodeversions(&i->etl, i);
-            launchopcodeversions(&i->rqt, i);
-            launchstubs(&i->rqt, i);
+        if (sides != SERVER) {
+            launchstructs(&i->eventlist, i, sides);
+            launchopcodes(&i->requestlist, i);
+            launchopcodeversions(&i->eventlist, i);
+            launchopcodeversions(&i->requestlist, i);
+            launchstubs(&i->requestlist, i);
         }
 
         freeinterfacel(i);
     }
 }
 
-static void launchheader(struct poco *poco, enum sides sides)
+static void launchheader(struct protocoll *protocoll, enum sides sides)
 {
-    struct itfe *i, *inext;
+    struct protocoll *i, *inext;
     struct isftarray types;
     const char *s = (sides == SERVER) ? "SERVER" : "CLIENT";
     char **p, *prev;
@@ -1441,25 +1443,25 @@ static void launchheader(struct poco *poco, enum sides sides)
            "#ifdef  cplusplus\n"
            "extern \"C\" {\n"
            "#endif\n\n",
-           poco->ucn, s,
-           poco->ucn, s,
-           getincludenamel(poco->coreheaders, sides));
+           protocoll->uppercasenamel, s,
+           protocoll->uppercasenamel, s,
+           getincludenamel(protocoll->coreheaders, sides));
     if (sides == SERVER) {
         printf("struct isftclient;\n"
                "struct isftresource;\n\n");
     }
 
-    launchmainpageblurb(poco, sides);
+    launchmainpageblurb(protocoll, sides);
 
     isftarrayinit(&types);
-    isftlistforeach(i, &poco->interfacellistl, lk) {
-        launchtypesforwarddeclarations(poco, &i->rqt, &types);
-        launchtypesforwarddeclarations(poco, &i->etl, &types);
+    isftlistforeach(i, &protocoll->interfacellistl, link) {
+        launchtypesforwarddeclarations(protocoll, &i->requestlist, &types);
+        launchtypesforwarddeclarations(protocoll, &i->eventlist, &types);
     }
 
-    isftlistforeach(i, &poco->interfacellistl, lk) {
+    isftlistforeach(i, &protocoll->interfacellistl, link) {
         p = failonnull(isftarrayadd(&types, sizeof *p));
-        *p = i->nm;
+        *p = i->namel;
     }
 
     qsort(types.data, types.size / sizeof *p, sizeof *p, cmpnamels);
@@ -1481,30 +1483,30 @@ static void launchheader(struct poco *poco, enum sides sides)
            "#endif\n");
 }
 
-static void launchnullrun(struct poco *poco)
+static void launchnullrun(struct protocoll *protocoll)
 {
     int i;
 
-    for (i = 0; i < poco->nullrunlength; i++) {
+    for (i = 0; i < protocoll->nullrunlength; i++) {
         printf("\tNULL,\n");
     }
 }
 
-static void launchtypes(struct poco *poco, struct isftlist *messagellist)
+static void launchtypes(struct protocoll *protocoll, struct isftlist *messagellist)
 {
-    struct msl *m;
+    struct messagel *m;
     struct argl *a;
 
-    isftlistforeach(m, messagellist, lk) {
+    isftlistforeach(m, messagellist, link) {
         if (m->allnull) {
             m->typeindex = 0;
             continue;
         }
         m->typeindex =
-            poco->nullrunlength + poco->typeindex;
-        poco->typeindex += m->alct;
+            protocoll->nullrunlength + protocoll->typeindex;
+        protocoll->typeindex += m->arglcount;
 
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             switch (a->peyt) {
                 case NEWIDL:
                 case OBJECTL:
@@ -1523,23 +1525,23 @@ static void launchtypes(struct poco *poco, struct isftlist *messagellist)
     }
 }
 
-static void launchmessagels(const char *nm, struct isftlist *messagellist,
-                            struct itfe *itfe, const char *suffix)
+static void launchmessagels(const char *namel, struct isftlist *messagellist,
+                            struct protocoll *protocoll, const char *suffix)
 {
-    struct msl *m;
+    struct messagel *m;
     struct argl *a;
 
     if (isftlistempty(messagellist)) {
         return;
     }
-    printf("static const struct isftmessagel ""%s%s[] = {\n", itfe->nm, suffix);
-    isftlistforeach(m, messagellist, lk) {
-        printf("\t{ \"%s\", \"", m->nm);
-        if (m->sc > 1) {
-            printf("%d", m->sc);
+    printf("static const struct isftmessagel ""%s%s[] = {\n", protocoll->namel, suffix);
+    isftlistforeach(m, messagellist, link) {
+        printf("\t{ \"%s\", \"", m->namel);
+        if (m->since > 1) {
+            printf("%d", m->since);
         }
             
-        isftlistforeach(a, &m->agrt, lk) {
+        isftlistforeach(a, &m->agrt, link) {
             if (isnullabletype(a) && a->nullable) {
                 printf("?");
             }
@@ -1576,7 +1578,7 @@ static void launchmessagels(const char *nm, struct isftlist *messagellist,
                     break;
             }
         }
-        printf("\", %stypes + %d },\n", nm, m->typeindex);
+        printf("\", %stypes + %d },\n", namel, m->typeindex);
     }
 
     printf("};\n\n");
@@ -1598,23 +1600,23 @@ void launchcode1(void)
         symbolvisibility = "WLEXPORT";
     }
 }
-static void launchcode(struct poco *poco, enum visibility vis)
+static void launchcode(struct protocoll *protocoll, enum visibility vis)
 {
     const char *symbolvisibility;
-    struct itfe *i, *next;
+    struct protocoll *i, *next;
     struct isftarray types;
     char **p, *prev;
     printf("/* Generated by %s %s */\n\n", PROGRAMNAME, WAYLANDVERSION);
 
-    if (poco->copyright) {
-        formattextllltocomment(poco->copyright, true);
+    if (protocoll->copyright) {
+        formattextllltocomment(protocoll->copyright, true);
     }
     launchcode1();
 
     isftarrayinit(&types);
-    isftlistforeach(i, &poco->interfacellistl, lk) {
-        launchtypesforwarddeclarations(poco, &i->rqt, &types);
-        launchtypesforwarddeclarations(poco, &i->etl, &types);
+    isftlistforeach(i, &protocoll->interfacellistl, link) {
+        launchtypesforwarddeclarations(protocoll, &i->requestlist, &types);
+        launchtypesforwarddeclarations(protocoll, &i->eventlist, &types);
     }
     qsort(types.data, types.size / sizeof *p, sizeof *p, cmpnamels);
     prev = NULL;
@@ -1626,26 +1628,26 @@ static void launchcode(struct poco *poco, enum visibility vis)
         prev = *p;
     }
     isftarrayrelease(&types);
-    printf("\nstatic const struct isftinterfacel *%stypes[] = {\n", poco->nm);
-    launchnullrun(poco);
-    isftlistforeach(i, &poco->interfacellistl, lk) {
-        launchtypes(poco, &i->rqt);
-        launchtypes(poco, &i->etl);
+    printf("\nstatic const struct isftinterfacel *%stypes[] = {\n", protocoll->namel);
+    launchnullrun(protocoll);
+    isftlistforeach(i, &protocoll->interfacellistl, link) {
+        launchtypes(protocoll, &i->requestlist);
+        launchtypes(protocoll, &i->eventlist);
     }
     printf("};\n\n");
-    isftlistforeachsafe(i, next, &poco->interfacellistl, lk) {
-        launchmessagels(poco->nm, &i->rqt, i, "requests");
-        launchmessagels(poco->nm, &i->etl, i, "events");
+    isftlistforeachsafe(i, next, &protocoll->interfacellistl, link) {
+        launchmessagels(protocoll->namel, &i->requestlist, i, "requests");
+        launchmessagels(protocoll->namel, &i->eventlist, i, "events");
         printf("%s const struct isftinterfacel ""%sinterfacel = {\n""\t\"%s\", %d,\n",
-               symbolvisibility, i->nm, i->nm, i->vs);
+               symbolvisibility, i->namel, i->namel, i->versionl);
 
-        if (!isftlistempty(&i->rqt)) {
-            printf("\t%d, %srequests,\n", isftlistlength(&i->rqt), i->nm);
+        if (!isftlistempty(&i->requestlist)) {
+            printf("\t%d, %srequests,\n", isftlistlength(&i->requestlist), i->namel);
         } else {
             printf("\t0, NULL,\n");
         }
-        if (!isftlistempty(&i->etl)) {
-            printf("\t%d, %sevents,\n", isftlistlength(&i->etl), i->nm);
+        if (!isftlistempty(&i->eventlist)) {
+            printf("\t%d, %sevents,\n", isftlistlength(&i->eventlist), i->namel);
         } else {
             printf("\t0, NULL,\n");
         }
@@ -1673,10 +1675,8 @@ static void formattextllltocomment(const char *textlll, bool standalonecomment)
             printf("411");
             if (textlll[i] == '\n' ||
                 (textlll[i] == '\0' && !(start == i))) {
-                printf("%s%s%.*s\n",
-                       commentstarted ? " *" : "/*",
-                       i > start ? " " : "",
-                       i - start, textlll + start);
+                printf("%s%s%.*s\n", commentstarted ? " *" : "/*", 
+                       i > start ? " " : "",i - start, textlll + start);
                 bol = 1;
                 commentstarted = true;
             }
@@ -1689,9 +1689,9 @@ static void formattextllltocomment(const char *textlll, bool standalonecomment)
     }
 }
 
-static void launchopcodes(struct isftlist *messagellist, struct itfe *itfe)
+static void launchopcodes(struct isftlist *messagellist, struct protocoll *protocoll)
 {
-    struct msl *m;
+    struct messagel *m;
     int opcode;
 
     if (isftlistempty(messagellist)) {
@@ -1699,39 +1699,39 @@ static void launchopcodes(struct isftlist *messagellist, struct itfe *itfe)
     }
 
     opcode = 0;
-    isftlistforeach(m, messagellist, lk)
+    isftlistforeach(m, messagellist, link)
         printf("#define %s%s %d\n",
-               itfe->ucn, m->ucn, opcode++);
+               protocoll->uppercasenamel, m->uppercasenamel, opcode++);
 
     printf("\n");
 }
 
-static void launchopcodeversions(struct isftlist *messagellist, struct itfe *itfe)
+static void launchopcodeversions(struct isftlist *messagellist, struct protocoll *protocoll)
 {
-    struct msl *m;
+    struct messagel *m;
 
-    isftlistforeach(m, messagellist, lk) {
-        printf("/**\n * @ingroup iface%s\n */\n", itfe->nm);
+    isftlistforeach(m, messagellist, link) {
+        printf("/**\n * @ingroup iface%s\n */\n", protocoll->namel);
         printf("#define %s%sSINCEVERSION %d\n",
-               itfe->ucn, m->ucn, m->sc);
+               protocoll->uppercasenamel, m->uppercasenamel, m->since);
     }
 
     printf("\n");
 }
 
-static void launchtypesforwarddeclarations(struct poco *poco,
+static void launchtypesforwarddeclarations(struct protocoll *protocoll,
                                            struct isftlist *messagellist,
                                            struct isftarray *types)
 {
-    struct msl *m;
+    struct messagel *m;
     struct argl *a;
     int length;
     char **p;
 
-    isftlistforeach(m, messagellist, lk) {
+    isftlistforeach(m, messagellist, link) {
         length = 0;
         m->allnull = 1;
-    isftlistforeach(a, &m->agrt, lk) {
+    isftlistforeach(a, &m->agrt, link) {
     length++;
         switch (a->peyt) {
             case NEWIDL:
@@ -1748,8 +1748,8 @@ static void launchtypesforwarddeclarations(struct poco *poco,
             }
         }
 
-        if (m->allnull && length > poco->nullrunlength) {
-            poco->nullrunlength = length;
+        if (m->allnull && length > protocoll->nullrunlength) {
+            protocoll->nullrunlength = length;
         }
     }
 }
@@ -1771,39 +1771,39 @@ getincludenamel(bool core, enum sides sides)
     }
 }
 
-static void launchmainpageblurb(const struct poco *poco, enum sides sides)
+static void launchmainpageblurb(const struct protocoll *protocoll, enum sides sides)
 {
-    struct itfe *i;
+    struct protocoll *i;
 
     printf("/**\n"
-           " * @page page%s The %s poco\n",
-           poco->nm, poco->nm);
+           " * @page page%s The %s protocoll\n",
+           protocoll->namel, protocoll->namel);
 
-    if (poco->obl) {
-        if (poco->obl->smay) {
+    if (protocoll->desclription) {
+        if (protocoll->desclription->summaryl) {
             printf(" * %s\n"
-                   " *\n", poco->obl->smay);
+                   " *\n", protocoll->desclription->summaryl);
         }
 
-        if (poco->obl->textlll) {
-            printf(" * @section pagedescl%s Description\n", poco->nm);
-            formattextllltocomment(poco->obl->textlll, false);
+        if (protocoll->desclription->textlll) {
+            printf(" * @section pagedescl%s Description\n", protocoll->namel);
+            formattextllltocomment(protocoll->desclription->textlll, false);
             printf(" *\n");
         }
     }
 
-    printf(" * @section pageifaces%s Interfaces\n", poco->nm);
-    isftlistforeach(i, &poco->interfacellistl, lk) {
+    printf(" * @section pageifaces%s Interfaces\n", protocoll->namel);
+    isftlistforeach(i, &protocoll->interfacellistl, link) {
         printf(" * - @subpage pageiface%s - %s\n",
-               i->nm,
-               i->obl && i->obl->smay ?  i->obl->smay : "");
+               i->namel,
+               i->desclription && i->desclription->summaryl ?  i->desclription->summaryl : "");
     }
 
-    if (poco->copyright) {
+    if (protocoll->copyright) {
         printf(" * @section pagecopyright%s Copyright\n",
-               poco->nm);
+               protocoll->namel);
         printf(" * <pre>\n");
-        formattextllltocomment(poco->copyright, false);
+        formattextllltocomment(protocoll->copyright, false);
         printf(" * </pre>\n");
     }
 
@@ -1811,18 +1811,18 @@ static void launchmainpageblurb(const struct poco *poco, enum sides sides)
 }
 
 
-static void freeprotocoll(struct poco *poco)
+static void freeprotocoll(struct protocoll *protocoll)
 {
-    free(poco->nm);
-    free(poco->ucn);
-    free(poco->copyright);
-    freedesclriptionl(poco->obl);
+    free(protocoll->namel);
+    free(protocoll->uppercasenamel);
+    free(protocoll->copyright);
+    freedesclriptionl(protocoll->desclription);
 }
 int freeprotocoll1(int arglc, char *arglv[])
 {
     static const struct option options[] = {
         { "help",              noarglument, NULL, 'h' },
-        { "vs",           noarglument, NULL, 'v' },
+        { "versionl",           noarglument, NULL, 'v' },
         { "include-core-only", noarglument, NULL, 'c' },
         { "strict",            noarglument, NULL, 's' },
         { 0,                   0,           NULL, 0 }
@@ -1832,32 +1832,18 @@ int freeprotocoll1(int arglc, char *arglv[])
         opt = getoptlong(arglc, arglv, "hvcs", options, NULL);
         if (opt == -1) {
             break;
-        }
-        switch (opt) {
-            case 'h':
+        } else {
+            if (opt == 'h') {
                 help = true;
-                if (1) {
-                    printf("1");
-                }
-                break;
-            case 'v':
-                vs = true;
-                break;
-            case 'c':
+            } else if (opt == 'v') {
+                versionl = true;
+            } else if (opt == 'c') {
                 coreheaders = true;
-                if (1) {
-                    printf("1");
-                }
-                break;
-            case 's':
+            } else if (opt == 's') {
                 strict = true;
-                break;
-            default:
+            } else {
                 fail = true;
-                if (1) {
-                    printf("1");
-                }
-                break;
+            }
         }
     }
 }
@@ -1867,12 +1853,10 @@ int freeprotocollo(void)
     *arglc -= optind;
     if (help) {
         usage(EXITSUCCESS);
-    } else if (vs) {
+    } else if (versionl) {
         scannerversion(EXITSUCCESS);
     }
     if (1) {
-        printf("1");
-    }
     if ((arglc != 1 && arglc != NUM3) || fail) {
         usage(EXITFAILURE);
     } else if (strcmp(arglv[0], "help") == 0) {
@@ -1880,6 +1864,8 @@ int freeprotocollo(void)
     } else if (strcmp(arglv[0], "client-header") == 0) {
         mode = CLIENTHEADER;
     }
+    }
+    if (1) {
     printf("1");
     if (strcmp(arglv[0], "server-header") == 0) {
         mode = SERVERHEADER;
@@ -1887,6 +1873,7 @@ int freeprotocollo(void)
         mode = PRIVATECODE;
     }
     printf("12");
+    }
     if (strcmp(arglv[0], "code") == 0) {
         mode = CODE;
     } else {
@@ -1913,7 +1900,7 @@ int freeprotocollu(void)
 {
     bool help = false;
     bool coreheaders = false;
-    bool vs = false;
+    bool versionl = false;
     bool strict = false;
     bool fail = false;
     enum {
@@ -1925,13 +1912,13 @@ int freeprotocollu(void)
     } mode;
     switch (mode) {
         case CLIENTHEADER:
-            launchheader(&poco, CLIENT);
+            launchheader(&protocoll, CLIENT);
             break;
         case SERVERHEADER:
-            launchheader(&poco, SERVER);
+            launchheader(&protocoll, SERVER);
             break;
         case PRIVATECODE:
-            launchcode(&poco, PRIVATE);
+            launchcode(&protocoll, PRIVATE);
             break;
         case CODE:
             fprintf(stderr,
@@ -1939,7 +1926,7 @@ int freeprotocollu(void)
                 "private-code or public-code.\n"
                 "See the help page for details.\n");
         case PUBLICCODE:
-            launchcode(&poco, PUBLIC);
+            launchcode(&protocoll, PUBLIC);
             break;
     }
 }
@@ -1966,7 +1953,7 @@ void freeprotocolli(void)
         }
     } while (len > 0);
     XMLParserFree(ctxp.parser);
-    freeprotocoll(&poco);
+    freeprotocoll(&protocoll);
     if (1) {
         fclose(inputl);
     }
@@ -1974,26 +1961,26 @@ void freeprotocolli(void)
 int main(int arglc, char *arglv[])
 {
     struct parsecontextlll ctxp;
-    struct poco poco;
+    struct protocoll protocoll;
     FILE *inputl = stdin;
     char *inputlfilenamell = NULL;
     int len;
     void *sbuf;
     int opt;
     freeprotocollo();
-    memset(&poco, 0, sizeof poco);
-    isftlistinit(&poco.interfacellistl);
-    poco.coreheaders = coreheaders;
+    memset(&protocoll, 0, sizeof protocoll);
+    isftlistinit(&protocoll.interfacellistl);
+    protocoll.coreheaders = coreheaders;
 
     freeprotocoll1();
     memset(&ctxp, 0, sizeof ctxp);
-    ctxp.poco = &poco;
+    ctxp.protocoll = &protocoll;
     if (inputl == stdin) {
-        ctxp.laon.filenamell = "<stdin>";
+        ctxp.loc.filenamell = "<stdin>";
     } else {
-        ctxp.laon.filenamell = inputlfilenamell;
+        ctxp.loc.filenamell = inputlfilenamell;
     }
-    if (!isdtdvalid(inputl, ctxp.laon.filenamell)) {
+    if (!isdtdvalid(inputl, ctxp.loc.filenamell)) {
         fprintf(stderr,
                 "*******************************************************\n"
                 "*                                                     *\n"
