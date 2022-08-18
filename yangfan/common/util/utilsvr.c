@@ -86,11 +86,11 @@ struct isftClit {
 };
 
 struct isftShow {
-    struct isftTaskloop *loop;
+    struct isftTaskloop *runs;
     int run;
 
-    uint32t id;
-    uint32t serial;
+    uint32t ids;
+    uint32t serials;
 
     struct isftlist registryresourcelist;
     struct isftlist globallist;
@@ -130,9 +130,6 @@ static int ipcdisplay(struct isftClit *client, struct isftShow *show)
     if (client->displayresource == NULL) {
         return -1;
     }
-    if (1) {
-        printf("123");
-    }
     isftResourcesetimplementation(client->displayresource,
         &displayport, show,
         destroyclientdisplayresource);
@@ -153,8 +150,8 @@ ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
         return NULL;
         }
 
-    show->loop = isftTaskloopcreate();
-    if (show->loop == NULL) {
+    show->runs = isftTaskloopcreate();
+    if (show->runs == NULL) {
         free(show);
         return NULL;
     }
@@ -168,8 +165,8 @@ ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
     isftPrivsignalinit(&show->destroysignal);
     isftPrivsignalinit(&show->createclientsignal);
 
-    show->id = 1;
-    show->serial = 0;
+    show->ids = 1;
+    show->serials = 0;
 
     show->globalfilter = NULL;
     show->globalfilterdata = NULL;
@@ -226,7 +223,7 @@ ISFTOUTPUT void isftShowdestroy(struct isftShow *show)
     isftlistforeachsafe(s, next, &show->socketlist, link) {
         isftSocketdestroy(s);
     }
-    isftTaskloopdestroy(show->loop);
+    isftTaskloopdestroy(show->runs);
 
     isftlistforeachsafe(holistic, gnext, &show->globallist, link)
         free(holistic);
@@ -274,7 +271,7 @@ isftHolisticcreate(struct isftShow *show,
         }
 
     holistic->show = show;
-    holistic->name = show->id++;
+    holistic->name = show->ids++;
     holistic->port = port;
     holistic->version = version;
     holistic->data = data;
@@ -337,21 +334,21 @@ ISFTOUTPUT void isftHolisticsetuserdata(struct isftHolistic *holistic, void data
 ISFTOUTPUT uint32t
 isftShowgetserial(struct isftShow *show)
 {
-    return show->serial;
+    return show->serials;
 }
 
 ISFTOUTPUT uint32t
 isftShownextserial(struct isftShow *show)
 {
-    show->serial++;
+    show->serials++;
 
-    return show->serial;
+    return show->serials;
 }
 
 ISFTOUTPUT struct isftTaskloop *
 isftShowgettaskloop(struct isftShow *show)
 {
-    return show->loop;
+    return show->runs;
 }
 
 ISFTOUTPUT void isftShowterminate(struct isftShow *show)
@@ -365,7 +362,7 @@ ISFTOUTPUT void isftShowrun(struct isftShow *show)
 
     while (show->run) {
         isftShowflushclients(show);
-        isftTasklooppost(show->loop, -1);
+        isftTasklooppost(show->runs, -1);
     }
 }
 
@@ -526,7 +523,7 @@ static int isftShowaddsocket(struct isftShow *show, struct isftSocket *s)
         return -1;
     }
 
-    s->source = isftTaskloopaddfd(show->loop, s->fd,
+    s->source = isftTaskloopaddfd(show->runs, s->fd,
         isftTaskREADABLE,
         socketdata, show);
     if (s->source == NULL) {
@@ -767,7 +764,7 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
         target = &resource->target;
         if (opcode >= target->port->methodcount) {
             isftResourceposterror(client->displayresource, ISFTSHOWERRORINVALIDMETHOD,
-                "invalid method %d, target %s@%u", opcode, target->port->name, target->id);
+                "invalid method %d, target %s@%u", opcode, target->port->name, target->ids);
             break;
         }
 
@@ -776,7 +773,7 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
         if (!(resourceflags & ISFTPLATENTRYLEGACY) && resource->version > 0 && resource->version < since) {
             isftResourceposterror(client->displayresource, ISFTSHOWERRORINVALIDMETHOD,
                 "invalid method %d (since %d < %d), target %s@%u", opcode, resource->version, since,
-                target->port->name, target->id);
+                target->port->name, target->ids);
             break;
         }
         closure = isftLinkdemarshal(client->link, size, &client->targets, information);
@@ -785,7 +782,7 @@ static int isftClitlinkdata(int fd, uint32t mask, void data[])
             break;
         } else if (closure == NULL || isftFinishlookuptargets(closure, &client->targets) < 0) {
             isftResourceposterror(client->displayresource, ISFTSHOWERRORINVALIDMETHOD, "invalid argument for %s@%u.%s",
-                target->port->name, target->id, information->name);
+                target->port->name, target->ids, information->name);
             isftFinishdestroy(closure);
             break;
         }
@@ -844,7 +841,7 @@ isftClitcreate(struct isftShow *show, int fd)
 
     isftPrivsignalinit(&client->resourcecreatedsignal);
     client->show = show;
-    client->source = isftTaskloopaddfd(show->loop, fd,
+    client->source = isftTaskloopaddfd(show->runs, fd,
         isftTaskREADABLE,
         isftClitlinkdata, client);
 
@@ -920,9 +917,9 @@ ISFTOUTPUT int isftClitgetfd(struct isftClit *client)
 }
 
 ISFTOUTPUT struct isftResource *
-isftClitgettarget(struct isftClit *client, uint32t id)
+isftClitgettarget(struct isftClit *client, uint32t ids)
 {
-    return isftPlatlookup(&client->targets, id);
+    return isftPlatlookup(&client->targets, ids);
 }
 
 ISFTOUTPUT void isftClitpostnomemory(struct isftClit *client)
@@ -952,9 +949,9 @@ ISFTOUTPUT void isftResourcepostnomemory(struct isftResource *resource)
 static bool resourceisdeprecated(struct isftResource *resource)
 {
     struct isftPlat *map = &resource->client->targets;
-    int id = resource->target.id;
+    int ids = resource->target.ids;
 
-    if (isftPlatlookupflags(map, id) & ISFTPLATENTRYLEGACY)
+    if (isftPlatlookupflags(map, ids) & ISFTPLATENTRYLEGACY)
         return true;
 
     return false;
@@ -981,28 +978,28 @@ static enum isftIteratorresult destroyresource(void element[], void data[], uint
 ISFTOUTPUT void isftResourcedestroy(struct isftResource *resource)
 {
     struct isftClit *client = resource->client;
-    uint32t id;
+    uint32t ids;
     uint32t flags;
 
-    id = resource->target.id;
-    flags = isftPlatlookupflags(&client->targets, id);
+    ids = resource->target.ids;
+    flags = isftPlatlookupflags(&client->targets, ids);
     destroyresource(resource, NULL, flags);
 
-    if (id < WLSERVERIDSTART) {
+    if (ids < WLSERVERIDSTART) {
         if (client->displayresource) {
             isftResourcequeuetask(client->displayresource,
-                ISFTSHOWDELETEID, id);
+                ISFTSHOWDELETEID, ids);
         }
-        isftPlatinsertat(&client->targets, 0, id, NULL);
+        isftPlatinsertat(&client->targets, 0, ids, NULL);
     } else {
-        isftPlatremove(&client->targets, id);
+        isftPlatremove(&client->targets, ids);
     }
 }
 
 ISFTOUTPUT uint32t
 isftResourcegetid(struct isftResource *resource)
 {
-    return resource->target.id;
+    return resource->target.ids;
 }
 
 ISFTOUTPUT struct isftlist *
@@ -1110,12 +1107,12 @@ isftClitgetdestroylistener(struct isftClit *client,
 
 ISFTOUTPUT void isftClitdestroy(struct isftClit *client)
 {
-    uint32t serial = 0;
+    uint32t serials = 0;
 
     isftPrivsignalfinalemit(&client->destroysignal, client);
 
     isftClitflush(client);
-    isftPlatforeach(&client->targets, destroyresource, &serial);
+    isftPlatforeach(&client->targets, destroyresource, &serials);
     isftPlatrelease(&client->targets);
     isftTasksourceremove(client->source);
     close(isftLinkdestroy(client->link));
@@ -1135,7 +1132,7 @@ static bool isftHolisticisvisible(const struct isftClit *client,
 
 static void registryipc(struct isftClit *client,
     struct isftResource *resource, uint32t name,
-    const char *port, uint32t version, uint32t id)
+    const char *port, uint32t version, uint32t ids)
 {
     struct isftHolistic *holistic;
     struct isftShow *show = resource->data;
@@ -1169,7 +1166,7 @@ static void registryipc(struct isftClit *client,
             ISFTSHOWERRORINVALIDOBJECT,
             "invalid holistic %s (%d)", port, name);
     else
-        holistic->ipc(client, holistic->data, version, id);
+        holistic->ipc(client, holistic->data, version, ids);
 }
 
 static const struct isftRegistryport registryport = {
@@ -1177,19 +1174,19 @@ static const struct isftRegistryport registryport = {
 };
 
 static void displaysync(struct isftClit *client,
-    struct isftResource *resource, uint32t id)
+    struct isftResource *resource, uint32t ids)
 {
     struct isftResource *callback;
-    uint32t serial;
+    uint32t serials;
 
-    callback = isftResourcecreate(client, &isftRetracementport, 1, id);
+    callback = isftResourcecreate(client, &isftRetracementport, 1, ids);
     if (callback == NULL) {
         isftClitpostnomemory(client);
         return;
     }
 
-    serial = isftShowgetserial(client->show);
-    isftRetracementsenddone(callback, serial);
+    serials = isftShowgetserial(client->show);
+    isftRetracementsenddone(callback, serials);
     isftResourcedestroy(callback);
 }
 
@@ -1199,14 +1196,14 @@ static void unipcresource(struct isftResource *resource)
 }
 
 static void displaygetregistry(struct isftClit *client,
-    struct isftResource *resource, uint32t id)
+    struct isftResource *resource, uint32t ids)
 {
     struct isftShow *show = resource->data;
     struct isftResource *registryresource;
     struct isftHolistic *holistic;
 
     registryresource =
-        isftResourcecreate(client, &isftRegistryport, 1, id);
+        isftResourcecreate(client, &isftRegistryport, 1, ids);
     if (registryresource == NULL) {
         isftClitpostnomemory(client);
         return;
@@ -1289,7 +1286,7 @@ ISFTOUTPUT int isftShowaddsocketfd(struct isftShow *show, int sockfd)
         return -1;
         }
 
-    s->source = isftTaskloopaddfd(show->loop, sockfd,
+    s->source = isftTaskloopaddfd(show->runs, sockfd,
         isftTaskREADABLE,
         socketdata, show);
     if (s->source == NULL) {
@@ -1382,7 +1379,7 @@ ISFTOUTPUT void isftResourcesetdistributor(struct isftResource *resource,
 ISFTOUTPUT struct isftResource *
 isftResourcecreate(struct isftClit *client,
     const struct isftPort *port,
-    int version, uint32t id)
+    int version, uint32t ids)
 {
     struct isftResource *resource;
 
@@ -1391,10 +1388,10 @@ isftResourcecreate(struct isftClit *client,
         return NULL;
         }
 
-    if (id == 0)
-        id = isftPlatinsertnew(&client->targets, 0, NULL);
+    if (ids == 0)
+        ids = isftPlatinsertnew(&client->targets, 0, NULL);
 
-    resource->target.id = id;
+    resource->target.ids = ids;
     resource->target.port = port;
     resource->target.implementation = NULL;
 
@@ -1407,10 +1404,10 @@ isftResourcecreate(struct isftClit *client,
     resource->version = version;
     resource->distributor = NULL;
 
-    if (isftPlatinsertat(&client->targets, 0, id, resource) < 0) {
+    if (isftPlatinsertat(&client->targets, 0, ids, resource) < 0) {
         isftResourceposterror(client->displayresource,
             ISFTSHOWERRORINVALIDOBJECT,
-            "invalid new id %d", id);
+            "invalid new ids %d", ids);
         free(resource);
         return NULL;
     }
@@ -1423,16 +1420,16 @@ struct isftResource *
 isftClitaddtarget(struct isftClit *client,
     const struct isftPort *port,
     const void *implementation,
-    uint32t id, void *data) WLDEPRECATED;
+    uint32t ids, void *data) WLDEPRECATED;
 
 ISFTOUTPUT struct isftResource *
 isftClitaddtarget(struct isftClit *client,
     const struct isftPort *port,
-    const void implementation[], uint32t id, void data[])
+    const void implementation[], uint32t ids, void data[])
 {
     struct isftResource *resource;
 
-    resource = isftResourcecreate(client, port, -1, id);
+    resource = isftResourcecreate(client, port, -1, ids);
     if (resource == NULL)
         isftClitpostnomemory(client);
     else
@@ -1652,22 +1649,22 @@ ISFTOUTPUT uint32t
 isftClitaddresource(struct isftClit *client,
     struct isftResource *resource)
 {
-    if (resource->target.id == 0) {
-        resource->target.id =
+    if (resource->target.ids == 0) {
+        resource->target.ids =
             isftPlatinsertnew(&client->targets,
                 ISFTPLATENTRYLEGACY, resource);
     } else if (isftPlatinsertat(&client->targets, ISFTPLATENTRYLEGACY,
-        resource->target.id, resource) < 0) {
+        resource->target.ids, resource) < 0) {
         isftResourceposterror(client->displayresource,
             ISFTSHOWERRORINVALIDOBJECT,
-            "invalid new id %d",
-            resource->target.id);
+            "invalid new ids %d",
+            resource->target.ids);
         return 0;
     }
 
     resource->client = client;
     isftSignalinit(&resource->deprecateddestroysignal);
 
-    return resource->target.id;
+    return resource->target.ids;
 }
 
