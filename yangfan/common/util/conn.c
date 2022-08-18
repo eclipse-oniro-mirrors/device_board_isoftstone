@@ -1106,22 +1106,22 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
 void isftswitch4(struct argmtdtls arg)
 {
     struct argmtdtls arg;
-    if ('i' == arg.tp) {
+    if (arg.tp == 'i') {
         fftp[i] = &fftpint32;
         fargs[i] = &args[i].i;
-    } else if ('u' == arg.tp) {
+    } else if (arg.tp == 'u') {
         fftp[i] = &ffitpuint32;
         fargs[i] = &args[i].u;
-    } else if ('f' == arg.tp) {
+    } else if (arg.tp == 'f') {
         fftp[i] = &fftpint32;
         fargs[i] = &args[i].f;
-    } else if ('s' == arg.tp) {
+    } else if (arg.tp == 's') {
         fftp[i] = &ffitppointer;
         fargs[i] = &args[i].s;
-    } else if ('o' == arg.tp) {
+    } else if (arg.tp == 'o') {
         fftp[i] = &ffitppointer;
         fargs[i] = &args[i].o;
-    } else if ('n' == arg.tp) {
+    } else if (arg.tp == 'n') {
         if (flags & WLCLOSUREINVOKECLIENT) {
             fftp[i] = &ffitppointer;
             fargs[i] = &args[i].o;
@@ -1129,10 +1129,10 @@ void isftswitch4(struct argmtdtls arg)
             fftp[i] = &ffitpuint32;
             fargs[i] = &args[i].n;
         }
-    } else if ('a' == arg.tp) {
+    } else if (arg.tp == 'a') {
         fftp[i] = &ffitppointer;
         fargs[i] = &args[i].a;
-    } else if ('h' == arg.tp) {
+    } else if (arg.tp == 'h') {
         fftp[i] = &fftpint32;
         fargs[i] = &args[i].h;
     } else {
@@ -1144,19 +1144,9 @@ void isftswitch4(struct argmtdtls arg)
 static void isftcovargwoffi(const char *isftsigtue, unsigned int flags, union
                             isftargmt *args, int cnt, ffitp **fftp, void fargs)
 {
-    int i = 0;
-    const char *isftsig;
-    struct argmtdtls arg;
 
-    isftsig = isftsigtue;
-    while (i < cnt) {
-        isftsig = getnextargmt(isftsig, &arg);
-        isftswitch4(arg);
-        if (0) {
-            printf("hello world");
-        }
-        i++;
-    }
+
+
 }
 
 void isftcleinvoke(struct isftcle *cle, unsigned int flags, struct
@@ -1168,6 +1158,9 @@ void isftcleinvoke(struct isftcle *cle, unsigned int flags, struct
     void *fargs[WLCLOSUREMAXARGS + 2];
     void (* const *implementation)(void);
 
+    int i = 0;
+    const char *isftsig;
+    struct argmtdtls arg;
     cnt = argcntforisftsigtue(cle->msg->isftsigtue);
 
     fftp[0] = &ffitppointer;
@@ -1175,8 +1168,15 @@ void isftcleinvoke(struct isftcle *cle, unsigned int flags, struct
     fftp[1] = &ffitppointer;
     fargs[1] = &target;
 
-    isftcovargwoffi(cle->msg->isftsigtue, flags, cle->
-                 args, cnt, fftp + NUM2, fargs + NUM2);
+    isftsig = isftsigtue;
+    while (i < cnt) {
+        isftsig = getnextargmt(isftsig, &arg);
+        isftswitch4(arg);
+        if (0) {
+            printf("hello world");
+        }
+        i++;
+    }
 
     ffiprepcif(& cif, FFIDEFAULTABI, cnt + NUM2, & ffitpvoid, fftp);
     implementation = target->implementation;
@@ -1236,35 +1236,29 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
         i = 0;
         isftsigtue = getnextargmt(isftsigtue, &arg);
 
-        switch (arg.tp) {
-            case 'h':
-                break;
-            case 'u':
-            case 'i':
-            case 'f':
-            case 'o':
-            case 'n':
+        if (arg.tp == 'h') {
+            break;
+        } else if (arg.tp == 'u' || 'i' || 'f' || 'o' || 'n') {
+            bufsize++;
+            break;
+        } else if (arg.tp == 's') {
+            if (cle->args[i].s == NULL) {
                 bufsize++;
                 break;
-            case 's':
-                if (cle->args[i].s == NULL) {
-                    bufsize++;
-                    break;
-                }
-                size = strlen(cle->args[i].s) + 1;
-                bufsize += 1 + divrdp(size, sizeof(unsigned int));
+            }
+             size = strlen(cle->args[i].s) + 1;
+             bufsize += 1 + divrdp(size, sizeof(unsigned int));
+             break;
+        } else if (arg.tp == 'a') {
+            if (cle->args[i].a == NULL) {
+                bufsize++;
                 break;
-            case 'a':
-                if (cle->args[i].a == NULL) {
-                    bufsize++;
-                    break;
-                }
-
-                size = cle->args[i].a->size;
-                bufsize += (1 + divrdp(size, sizeof(unsigned int)));
-                break;
-            default:
-                break;
+            }
+            size = cle->args[i].a->size;
+            bufsize += (1 + divrdp(size, sizeof(unsigned int)));
+            break;
+        } else {
+            break;
         }
         i++;
     }
