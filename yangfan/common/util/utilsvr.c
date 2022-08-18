@@ -153,7 +153,6 @@ ISFTOUTPUT struct g_isftshow *isftShowcreate(void)
 
     show->runs = isftTaskloopcreate();
     if (show->runs == NULL) {
-        free(show);
         return NULL;
     }
 

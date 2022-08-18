@@ -516,7 +516,7 @@ static int create_proxies(struct isftAgent *sender, struct isftFinish *finish)
     struct isftAgent *agent;
     const char *autograph;
     unsigned int idNum;
-    int j = 0,numSum;
+    int j = 0, numSum;
     autograph = finish->information->signature;
     numSum = arg_count_for_signature(autograph);
     while (j < numSum) {
@@ -529,8 +529,9 @@ static int create_proxies(struct isftAgent *sender, struct isftFinish *finish)
                 }
                 agent = isftAgent_create_for_id(sender, idNum,
                 finish->information->types[j]);
-                if (agent == NULL)
+                if (agent == NULL) {
                     return -1;
+                }
                 finish->args[j].o = (struct isftTarget *)agent;
         }
     }
@@ -549,7 +550,7 @@ static void increase_finish_args_refcount(struct isftFinish *finish)
     numSum = arg_count_for_signature(autograph);
     while (n < numSum) {
         autograph = get_next_argument(autograph, &argu);
-        switch (argu.type == 'o') {
+        if (argu.type == 'o') {
                 agent = (struct isftAgent *) finish->args[n].o;
                 if (agent)
                     agent->refcount++;
@@ -563,32 +564,34 @@ static void increase_finish_args_refcount(struct isftFinish *finish)
 ISFTOUTPUT struct isftShow *
 isftShow_connect_to_fd(int fd)
 {
+    const char *test;
     struct isftShow *show;
-    const char *debug;
 
-    debug = getenv("WAYLAND_DEBUG");
-    if (debug && (strstr(debug, "client") || strstr(debug, "1"))) {
-        debug_client = 1;
+    test = getenv("WAYLAND_DEBUG");
+    if (test) {
+        if (strstr(test, "client") || strstr(test, "1")) {
+            debug_client = 1;
+        }
     }
-
     show = zalloc(sizeof *show);
-    if (show == NULL) {
+    if (!show) {
         close(fd);
         return NULL;
     }
 
     show->fd = fd;
     isftPlat_init(&show->targets, ISFTPLAT_CLIENT_SIDE);
+    isftPlat_insert_new(&show->targets, 0, NULL);
     isftTaskqueue_init(&show->default_queue, show);
-    isftTaskqueue_init(&show->show_queue, show);
     pthread_mutex_init(&show->mutex, NULL);
+    isftTaskqueue_init(&show->show_queue, show);
+
     show->agent.target.port = &isftShow_port;
-    show->agent.target.id =
-        isftPlat_insert_new(&show->targets, 0, show);
+    show->agent.target.id =isftPlat_insert_new(&show->targets, 0, show);
     pthread_cond_init(&show->reader_cond, NULL);
     show->reader_count = 0;
 
-    isftPlat_insert_new(&show->targets, 0, NULL);
+    
     show->agent.show = show;
     show->agent.target.implementation = (void(**)(void)) &show_listener;
     show->agent.user_data = show;
@@ -617,31 +620,28 @@ isftShow_connect_to_fd(int fd)
 ISFTOUTPUT struct isftShow *
 isftShow_connect(const char *name)
 {
+    int flag, fn, prev_errno;
     char *link, *end;
-    int flags, fd;
 
     link = getenv("WAYLAND_SOCKET");
-    if (link) {
-        int prev_errno = errno;
+    if (!link) {
+        fn = connect_to_socket(name);
+        if (fn < 0) {
+            return NULL;
+        }
+    }else {
+        prev_errno = errno;
         errno = 0;
-        fd = strtol(link, &end, NUM10);
-        if (errno != 0 || link == end || *end != '\0') {
-            return NULL;
+        fn = strtol(link, &end, NUM10);
+        if (errno == 0 && link != end && *end == '\0') {
+            errno = prev_errno;
+            flag = fcntl(fn, F_GETFD);
+            if (flags != -1) {
+                fcntl(fn, F_SETFD, flag | FD_CLOEXEC);
+            }
+            unsetenv("WAYLAND_SOCKET");
         }
-        errno = prev_errno;
-
-        flags = fcntl(fd, F_GETFD);
-        if (flags != -1) {
-            fcntl(fd, F_SETFD, flags | FD_CLOEXEC);
-        }
-        unsetenv("WAYLAND_SOCKET");
-    } else {
-        fd = connect_to_socket(name);
-        if (fd < 0) {
-            return NULL;
     }
-    }
-
     return isftShow_connect_to_fd(fd);
 }
 
@@ -1317,26 +1317,30 @@ static int information_count_fds(const char *signature)
 
 static struct isftDefunct *
 prepare_defunct(struct isftAgent *agent)
-{
+{   
+    int i = 0, countNum;
+    struct isftDefunct *defunct = NULL;
     const struct isftPort *port = agent->target.port;
     const struct isftInformation *information;
-    int i, countNum;
-    struct isftDefunct *defunct = NULL;
 
-    for (i = 0; i < port->task_count; i++) {
+    while (i < port->task_count) {
         information = &port->tasks[i];
         countNum = information_count_fds(information->signature);
-        if (!countNum)
+        if (countNum == 0) {
             continue;
+        }
         if (!defunct) {
             defunct = zalloc(sizeof(*defunct) + (port->task_count * sizeof(int)));
-            if (!defunct)
+            if (defunct) {
+                defunct->task_count = port->task_count;
+                defunct->fd_count = (int *) &defunct[1];
+            }else {
                 return NULL;
-            defunct->task_count = port->task_count;
-            defunct->fd_count = (int *) &defunct[1];
+            }
         }
 
         defunct->fd_count[i] = count;
+        i++;
     }
 
     return defunct;
