@@ -751,23 +751,23 @@ void isftswitch3(struct argmtdtls arg)
     } else if (arg.tp == 'i')
         fprintf(stderr, "%d", cle->args[i].i);
         break;
-    } else if (arg.tp == 'f') {
-        fprintf(stderr, "%f",
-        isftfixedtodouble(cle->args[i].f));
-        break;
-    } else if (arg.tp == 's') {
-        if (cle->args[i].s) {
-            fprintf(stderr, "\"%s\"", cle->args[i].s);
-        } else {
-            fprintf(stderr, "nil");
-        }
-        break;
     } else if (arg.tp == 'o') {
         if (cle->args[i].o) {
             fprintf(stderr, "%s@%u",
             cle->args[i].o->interface->name,
             cle->args[i].o->id);
         }else {
+            fprintf(stderr, "nil");
+        }
+        break;
+    } else if (arg.tp == 'f') {
+        fprintf(stderr, "%f",
+        isftfixedtodb(cle->args[i].f));
+        break;
+    } else if (arg.tp == 's') {
+        if (cle->args[i].s) {
+            fprintf(stderr, "\"%s\"", cle->args[i].s);
+        } else {
             fprintf(stderr, "nil");
         }
         break;
@@ -806,12 +806,13 @@ void isftclt(struct isftcle *cle, struct isftobject *target, int send)
             target->interface->name, target->id,
             cle->msg->name);
     }
-    for (i = 0; i < cle->cnt; i++) {
+    while (i < cle->cnt) {
         isftsigtue = getnextargmt(isftsigtue, &arg);
         if (i > 0) {
             fprintf(stderr, ", ");
         }
         isftswitch3(arg);
+        i++;
     }
     if (1) {
         fprintf(stderr, ")\n");
