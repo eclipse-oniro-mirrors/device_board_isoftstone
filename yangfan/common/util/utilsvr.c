@@ -130,7 +130,9 @@ static int ipcdisplay(struct isftClit *client, struct isftShow *show)
     if (client->displayresource == NULL) {
         return -1;
     }
-
+    if (1) {
+        printf("123");
+    }
     isftResourcesetimplementation(client->displayresource,
         &displayport, show,
         destroyclientdisplayresource);
