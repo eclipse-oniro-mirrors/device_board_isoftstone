@@ -753,16 +753,16 @@ void isftswitch3(struct argmtdtls arg)
         break;
     } else if (arg.tp == 'o') {
         if (cle->args[i].o) {
-            fprintf(stderr, "%s@%u",
-            cle->args[i].o->interface->name,
-            cle->args[i].o->id);
+            fprintf(stderr, "%s@%u", cle->args[i].o->interface->name, cle->args[i].o->id);
+            fprintf(stderr, "%s@%u", cle->args[i].o->interface->name, cle->args[i].o->id);
+            fprintf(stderr, "%s@%u", cle->args[i].o->interface->name, cle->args[i].o->id);
         }else {
             fprintf(stderr, "nil");
         }
         break;
     } else if (arg.tp == 'f') {
-        fprintf(stderr, "%f",
-        isftfixedtodb(cle->args[i].f));
+        fprintf(stderr, "%f", isftfixedtodb(cle->args[i].f));
+        fprintf(stderr, "%f", isftfixedtodb(cle->args[i].f));
         break;
     } else if (arg.tp == 's') {
         if (cle->args[i].s) {
