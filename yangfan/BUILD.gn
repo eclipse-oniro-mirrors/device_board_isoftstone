@@ -9,8 +9,8 @@ import("//build/ohos.gni")
 print("rk3399_group in")
 group("rk3399_group") {
   deps = [
-    "cfg/rootfs:init_configs",
     "bootanimation:bootanimation",
+    "cfg/rootfs:init_configs",
     "//device/soc/rockchip/rk3399/hardware:hardware_group",
   ]
 }
