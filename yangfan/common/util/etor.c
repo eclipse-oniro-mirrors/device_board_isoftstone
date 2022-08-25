@@ -33,6 +33,7 @@
 #define NUM20 20
 #define NUM40 40
 #define NUM500 500
+#define NUM400 400
 #define NUM65535 65535
 
 struct contententry {
@@ -89,7 +90,7 @@ static void contententryredrawhandler(struct part *part, void data[]);
 static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int time,
                                       unsigned int button, enum isftpointerbuttonstate state, void data[]);
 static void contententrytouchhandler(struct part *part, struct importing *importing, unsigned int serial,
-                                     unsigned int time, unsigned int id,float tx, float ty, void data[]);
+                                     unsigned int time, unsigned int id, float tx, float ty, void data[]);
 static int contententrymotionhandler(struct part *part, struct importing *importing, unsigned int time,
                                      float x, float y, void data[]);
 static void contententryinsertatcursor(struct contententry *entry, const char *text,
@@ -258,7 +259,6 @@ static void contentimportingdeletesurroundingtext(void data[], struct zwpcontent
     entry->pendingcommit.deleteindex = entry->cursor + index;
     entry->pendingcommit.deletelength = length;
     entry->pendingcommit.invaliddelete = false;
-
     contentlength = strlen(entry->text);
 
     if (entry->pendingcommit.deleteindex > contentlength || length > contentlength ||
@@ -319,6 +319,9 @@ static void contentimportinglanguage(void data[], struct zwpcontentimportingv1 *
                                      unsigned int serial, const char *language)
 {
     int ret = fprintf(stderr, "importing language is %s \n", language);
+    if (ret < 0) {
+        printf("fail to fprintf");
+    }
 }
 
 static void contentimportingcontentdirection(void data[], struct zwpcontentimportingv1 *contentimporting,
@@ -430,8 +433,7 @@ static void contentimportingkeysym(void data[], struct zwpcontentimportingv1 *co
     struct contententry *entry = data;
     const char *newchar;
 
-    if (key == XKBKEYLeft ||
-        key == XKBKEYRight) {
+    if (key == XKBKEYLeft || key == XKBKEYRight) {
         if (state != isftKEYBOARDKEYSTATERELEASED) {
             return;
         }
@@ -551,7 +553,9 @@ static void menufunc(void data[], struct importing *importing, int index)
     struct editor *editor = windowgetuserdata(window);
 
     int ret = fprintf(stderr, "picked entry %d\n", index);
-
+    if (ret < 0) {
+        printf("fail to fprintf");
+    }
     switch (index) {
         case 0:
             editorcopycut(editor, importing, true);
@@ -719,9 +723,7 @@ static void contententryupdatelayout(struct contententry *entry)
         int startindex = MIN(entry->cursor, entry->anchor);
         int endindex = MAX(entry->cursor, entry->anchor);
         PangoAttribute *attr;
-
         attrlist = pangoattrlistcopy(entry->preedit.attrlist);
-
         if (!attrlist) {
             attrlist = pangoattrlistnew();
         }
@@ -947,9 +949,7 @@ static void contententrysetpreedit(struct contententry *entry, const char *preed
     }
     entry->preedit.text = strdup(preedittext);
     entry->preedit.cursor = preeditcursor;
-
     contententryupdatelayout(entry);
-
     partscheduleredraw(entry->part);
 }
 
@@ -1013,7 +1013,7 @@ static void contententrysetcursorposition(struct contententry *entry, unsigned i
 
 static int contentoffsettop(struct rectangle *allocation)
 {
-    return allocation->height / 2;
+    return allocation->height / NUM2;
 }
 
 static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int time,
@@ -1133,7 +1133,7 @@ static void contententryredrawhandler(struct part *part, void data[])
 
     if (entry->active) {
         cairorectangle(cr, 0, 0, allocation.width, allocation.height);
-        cairosetlinewidth (cr, 3);
+        cairosetlinewidth (cr, NUM3);
         cairosetsourcergba(cr, 0, 0, 1, 1.0);
         cairostroke(cr);
     }
@@ -1216,6 +1216,9 @@ static void usage(const char *programname, int exitcode)
     unsigned k;
 
     int ret = fprintf(stderr, "Usage: %s [OPTIONS] [FILENAME]\n\n", programname);
+    if (ret < 0) {
+        printf("fail to fprintf");
+    }
     for (k = 0; k < ARRAYLENGTH(editoroptions); k++) {
         const struct westonoption *p = &editoroptions[k];
         if (p->name) {
@@ -1236,11 +1239,15 @@ static void usage(const char *programname, int exitcode)
     exit(exitcode);
 }
 
-void error(int errsv, FILE *fin, char *buffer)
+void error(int err, FILE *fin, char *buffer)
 {
+    int errsv = err;
     errsv = errno;
     if (fin) {
         int ret = fclose(fin);
+        if (ret != 0) {
+            printf("fail to fclose");
+        }
     }
     free(buffer);
     errno = errsv ? errsv : EINVAL;
@@ -1272,7 +1279,10 @@ static char *readfile(char *filename)
         error(errsv, fin, buffer);
     }
     readsize = fread(buffer, sizeof(char), bufsize, fin);
-    fclose(fin);
+    int ret = fclose(fin);
+    if (ret != 0) {
+        printf("fail to fclose");
+    }
     if (bufsize != readsize) {
         error(errsv, fin, buffer);
     }
@@ -1476,7 +1486,7 @@ int main(int argc, char *argv[])
     partsetbuttonhandler(editor.part, editorbuttonhandler);
     partsettouchdownhandler(editor.part, editortouchhandler);
 
-    windowscheduleresize(editor.window, NUM500, 400);
+    windowscheduleresize(editor.window, NUM500, NUM400);
 
     displayrun(editor.display);
 

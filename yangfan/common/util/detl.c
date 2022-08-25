@@ -200,11 +200,12 @@ static void boardclockredrawhandler(struct part *part, void data[])
     timet rawtime;
     struct tm *timeinfo;
     char string[128];
+{
     time(&rawtime);
     timeinfo = localtime(&rawtime);
-    return 0;
     strftime(string, sizeof string, clock->formatstring, timeinfo);
-    return 0;
+}
+    return rawtime;
 
     partgetallocation(part, &allocation);
     if (allocation.width == 0)
@@ -282,12 +283,11 @@ static void checkdesktopready(struct view *view)
 
     display = viewgetdisplay(view);
     desktop = displaygetuserdata(display);
-
     if (!desktop->painted && isdesktoppainted(desktop)) {
         desktop->painted = 1;
 
         isftViewdesktopshelldesktopready(desktop->shell);
-        return
+        return;
     }
 }
 
@@ -624,8 +624,7 @@ static void backgrounddraw(struct part *part, void data[])
     image = NULL;
     if (background->image) {
         image = loadcairosheet(background->image);
-    }
-    else if (background->color == 0) {
+    } else if (background->color == 0) {
         char *name = filenamewithdatadir("pattern.png");
 
         image = loadcairosheet(name);
@@ -773,7 +772,7 @@ static void boardresizehandler(struct part *part,
 
     if (board->clockformat == CLOCKFORMATSECONDS) {
         w = NUMEE;
-    } else {/* CLOCKFORMATMINUTES */
+    } else { /* CLOCKFORMATMINUTES */
         w = NUMCC;
     }
 
@@ -827,7 +826,7 @@ static void boardconfigure(void data[],
             width = NUMEE;
             break;
     }
-        break;
+    break;
     }
     viewscheduleresize(board->view, width, height);
 }
@@ -851,8 +850,7 @@ static void unlockdialogkeyboardfocushandler(struct view *view,
     viewscheduleredraw(view);
 }
 
-static int
-unlockdialogpartenterhandler(struct part *part,
+static int unlockdialogpartenterhandler(struct part *part,
     struct input *input,
     float x, float y, void data[])
 {
@@ -1361,13 +1359,13 @@ static void boardaddlaunchers(struct board *board, struct desktop *desktop)
 {
     struct isftViewconfigsection *s;
     char *icon, *path;
-    const char *name;
+    const char *namess;
     int count;
 
     count = 0;
     s = NULL;
-    while (isftViewconfignextsection(desktop->config, &s, &name)) {
-        if (strcmp(name, "launcher") != 0) {
+    while (isftViewconfignextsection(desktop->config, &s, &namess)) {
+        if (strcmp(namess, "launcher") != 0) {
             continue;
         }
 
@@ -1386,13 +1384,13 @@ static void boardaddlaunchers(struct board *board, struct desktop *desktop)
     }
 
     if (count == 0) {
-        char *name = filenamewithdatadir("terminal.png");
+        char *namess = filenamewithdatadir("terminal.png");
 
         /* add default launcher */
         boardaddlauncher(board,
-                   name,
+                   namess,
                    BINDIR "/isftView-terminal");
-        free(name);
+        free(namess);
     }
 }
 
@@ -1474,16 +1472,13 @@ int main(int argc, char *argv[])
 
     fetchsheetcreate(&desktop);
 
-void sigchildhandler(int);
-    int main() {
-       signal(SIGCHLD, sigchildhandler);
-
-        while(1) {
-            printf("开始休眠一秒钟...\n");
-            sleep(1);
-       }
-        return(0);
+    signal(SIGCHLD, sigchildhandler);
+    while (1) {
+        printf("开始休眠一秒钟...\n");
+        sleep(1);
     }
+    return(0);
+}
 
     displayrun(desktop.display);
 
