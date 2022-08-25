@@ -24,10 +24,16 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#include <linux/importing.h>
 #include <cairo.h>
+#include <linux/importing.h>
 
-
+#define NUM03 0.3
+#define NUM2 2
+#define NUM10 10
+#define NUM20 20
+#define NUM40 40
+#define NUM500 500
+#define NUM65535 65535
 
 struct contententry {
     struct part *part;
@@ -79,61 +85,50 @@ struct editor {
     struct contententry *activeentry;
 };
 
-
-
-
 static void contententryredrawhandler(struct part *part, void *data);
-static void contententrybuttonhandler(struct part *part,
-                      struct importing *importing, unsigned int time,
-                      unsigned int button,
-                      enum isftpointerbuttonstate state, void *data);
-static void contententrytouchhandler(struct part *part, struct importing *importing,
-                     unsigned int serial, unsigned int time, unsigned int id,
-                     float tx, float ty, void *data);
-static int contententrymotionhandler(struct part *part,
-                     struct importing *importing, unsigned int time,
-                     float x, float y, void *data);
+static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int time,
+                                      unsigned int button, enum isftpointerbuttonstate state, void *data);
+static void contententrytouchhandler(struct part *part, struct importing *importing,unsigned int serial,
+                                     unsigned int time, unsigned int id,float tx, float ty, void *data);
+static int contententrymotionhandler(struct part *part, struct importing *importing, unsigned int time,
+                                     float x, float y, void *data);
 static void contententryinsertatcursor(struct contententry *entry, const char *text,
-                    unsigned int cursor, unsigned int anchor);
-static void contententrysetpreedit(struct contententry *entry,
-                   const char *preedittext,
-                   int preeditcursor);
-static void contententrydeletetext(struct contententry *entry,
-                   unsigned int index, unsigned int length);
+                                       unsigned int cursor, unsigned int anchor);
+static void contententrysetpreedit(struct contententry *entry, const char *preedittext, int preeditcursor);
+static void contententrydeletetext(struct contententry *entry, unsigned int index, unsigned int length);
 static void contententrydeleteselectedtext(struct contententry *entry);
 static void contententryresetpreedit(struct contententry *entry);
 static void contententrycommitandreset(struct contententry *entry);
 static void contententrygetcursorrectangle(struct contententry *entry, struct rectangle *rectangle);
 static void contententryupdate(struct contententry *entry);
 
-static const char *
-mb4endchar(const char *p)
+static const char *mb4endchar(const char *p)
 {
-    while ((*p & 0xc0) == 0x80)
+    while ((*p & 0xc0) == 0x80) {
         p++;
+    }
     return p;
 }
 
-static const char *
-mb4prevchar(const char *s, const char *p)
+static const char *mb4prevchar(const char *s, const char *p)
 {
     for (--p; p >= s; --p) {
-        if ((*p & 0xc0) != 0x80)
+        if ((*p & 0xc0) != 0x80) {
             return p;
+        }
     }
     return NULL;
 }
 
-static const char *
-mb4nextchar(const char *p)
+static const char *mb4nextchar(const char *p)
 {
-    if (*p != 0)
+    if (*p != 0) {
         return mb4endchar(++p);
+    }
     return NULL;
 }
 
-static void
-ationup(const char *p, unsigned int *cursor)
+static void ationup(const char *p, unsigned int *cursor)
 {
     const char *posr, *posri;
     char text[16];
@@ -155,18 +150,15 @@ ationup(const char *p, unsigned int *cursor)
     }
 }
 
-
-static void
-contentimportingcommitstring(void *data,
-             struct zwpcontentimportingv1 *contentimporting,
-             unsigned int serial,
-             const char *text)
+static void contentimportingcommitstring(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                         unsigned int serial, const char *text)
 {
     struct contententry *entry = data;
 
     if ((entry->serial - serial) > (entry->serial - entry->resetserial)) {
         fprintf(stderr, "Ignore commit. Serial: %u, Current: %u, Reset: %u\n",
-            serial, entry->serial, entry->resetserial);
+                serial, entry->serial, entry->resetserial);
+    }
         return;
     }
 
@@ -179,24 +171,17 @@ contentimportingcommitstring(void *data,
     contententryresetpreedit(entry);
 
     if (entry->pendingcommit.deletelength) {
-        contententrydeletetext(entry,
-                       entry->pendingcommit.deleteindex,
-                       entry->pendingcommit.deletelength);
+        contententrydeletetext(entry, entry->pendingcommit.deleteindex, entry->pendingcommit.deletelength);
     } else {
         contententrydeleteselectedtext(entry);
     }
 
-    contententryinsertatcursor(entry, text,
-                    entry->pendingcommit.cursor,
-                    entry->pendingcommit.anchor);
-
+    contententryinsertatcursor(entry, text, entry->pendingcommit.cursor, entry->pendingcommit.anchor);
     memset(&entry->pendingcommit, 0, sizeof entry->pendingcommit);
-
     partscheduleredraw(entry->part);
 }
 
-static void
-clearpendingpreedit(struct contententry *entry)
+static void clearpendingpreedit(struct contententry *entry)
 {
     memset(&entry->pendingcommit, 0, sizeof entry->pendingcommit);
 
@@ -208,8 +193,7 @@ clearpendingpreedit(struct contententry *entry)
     memset(&entry->preeditinfo, 0, sizeof entry->preeditinfo);
 }
 
-static void
-ationdown(const char *p, unsigned int *cursor)
+static void ationdown(const char *p, unsigned int *cursor)
 {
     const char *posr;
     char text[16];
@@ -226,18 +210,14 @@ ationdown(const char *p, unsigned int *cursor)
     }
 }
 
-static void
-contentimportingpreeditstring(void *data,
-              struct zwpcontentimportingv1 *contentimporting,
-              unsigned int serial,
-              const char *text,
-              const char *commit)
+static void contentimportingpreeditstring(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                          unsigned int serial, const char *text, const char *commit)
 {
     struct contententry *entry = data;
 
     if ((entry->serial - serial) > (entry->serial - entry->resetserial)) {
         fprintf(stderr, "Ignore preeditstring. Serial: %u, Current: %u, Reset: %u\n",
-            serial, entry->serial, entry->resetserial);
+                serial, entry->serial, entry->resetserial);
         clearpendingpreedit(entry);
         return;
     }
@@ -249,9 +229,7 @@ contentimportingpreeditstring(void *data,
     }
 
     if (entry->pendingcommit.deletelength) {
-        contententrydeletetext(entry,
-                       entry->pendingcommit.deleteindex,
-                       entry->pendingcommit.deletelength);
+        contententrydeletetext(entry, entry->pendingcommit.deleteindex, entry->pendingcommit.deletelength);
     } else {
         contententrydeleteselectedtext(entry);
     }
@@ -261,17 +239,12 @@ contentimportingpreeditstring(void *data,
     entry->preedit.attrlist = pangoattrlistref(entry->preeditinfo.attrlist);
 
     clearpendingpreedit(entry);
-
     contententryupdate(entry);
-
     partscheduleredraw(entry->part);
 }
 
-static void
-contentimportingdeletesurroundingtext(void *data,
-                   struct zwpcontentimportingv1 *contentimporting,
-                   unsigned int index,
-                   unsigned int length)
+static void contentimportingdeletesurroundingtext(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                                  unsigned int index, unsigned int length)
 {
     struct contententry *entry = data;
     unsigned int contentlength;
@@ -282,21 +255,17 @@ contentimportingdeletesurroundingtext(void *data,
 
     contentlength = strlen(entry->text);
 
-    if (entry->pendingcommit.deleteindex > contentlength ||
-        length > contentlength ||
+    if (entry->pendingcommit.deleteindex > contentlength || length > contentlength ||
         entry->pendingcommit.deleteindex + length > contentlength) {
         fprintf(stderr, "deletesurroundingtext: Invalid index: %d," \
-            "length %u'; cursor: %u text length: %u\n", index, length, entry->cursor, contentlength);
+                "length %u'; cursor: %u text length: %u\n", index, length, entry->cursor, contentlength);
         entry->pendingcommit.invaliddelete = true;
         return;
     }
 }
 
-static void
-contentimportingcursorposition(void *data,
-               struct zwpcontentimportingv1 *contentimporting,
-               unsigned int index,
-               unsigned int anchor)
+static void contentimportingcursorposition(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                           unsigned int index, unsigned int anchor)
 {
     struct contententry *entry = data;
 
@@ -304,18 +273,14 @@ contentimportingcursorposition(void *data,
     entry->pendingcommit.anchor = anchor;
 }
 
-
-
-static void
-contentimportingenter(void *data,
-         struct zwpcontentimportingv1 *contentimporting,
-         struct isftsurface *surface)
+static void contentimportingenter(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                  struct isftsurface *surface)
 {
     struct contententry *entry = data;
 
-    if (surface != windowgetisftsurface(entry->window))
+    if (surface != windowgetisftsurface(entry->window)) {
         return;
-
+    }
     entry->active++;
 
     contententryupdate(entry);
@@ -324,9 +289,7 @@ contentimportingenter(void *data,
     partscheduleredraw(entry->part);
 }
 
-static void
-contentimportingleave(void *data,
-         struct zwpcontentimportingv1 *contentimporting)
+static void contentimportingleave(void *data, struct zwpcontentimportingv1 *contentimporting)
 {
     struct contententry *entry = data;
 
@@ -341,32 +304,23 @@ contentimportingleave(void *data,
     partscheduleredraw(entry->part);
 }
 
-static void
-contentimportingimportingpanelstate(void *data,
-                 struct zwpcontentimportingv1 *contentimporting,
-                 unsigned int state)
+static void contentimportingimportingpanelstate(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                                unsigned int state)
 {
 }
 
-static void
-contentimportinglanguage(void *data,
-            struct zwpcontentimportingv1 *contentimporting,
-            unsigned int serial,
-            const char *language)
+static void contentimportinglanguage(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                     unsigned int serial, const char *language)
 {
     fprintf(stderr, "importing language is %s \n", language);
 }
 
-static void
-contentimportingcontentdirection(void *data,
-              struct zwpcontentimportingv1 *contentimporting,
-              unsigned int serial,
-              unsigned int direction)
+static void contentimportingcontentdirection(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                             unsigned int serial, unsigned int direction)
 {
     struct contententry *entry = data;
     PangoContext *context = pangolayoutgetcontext(entry->layout);
     PangoDirection pangodirection;
-
 
     switch (direction) {
         case ZWPcontentimportingV1contentDIRECTIONLTR:
@@ -399,20 +353,16 @@ static const struct zwpcontentimportingv1listener contentimportinglistener = {
     contentimportingcontentdirection
 };
 
-static void
-contentimportingpreeditstyling(void *data,
-               struct zwpcontentimportingv1 *contentimporting,
-               unsigned int index,
-               unsigned int length,
-               unsigned int style)
+static void contentimportingpreeditstyling(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                           unsigned int index, unsigned int length, unsigned int style)
 {
     struct contententry *entry = data;
     PangoAttribute *attr1 = NULL;
     PangoAttribute *attr2 = NULL;
 
-    if (!entry->preeditinfo.attrlist)
+    if (!entry->preeditinfo.attrlist) {
         entry->preeditinfo.attrlist = pangoattrlistnew();
-
+    }
     switch (style) {
         case ZWPcontentimportingV1PREEDITSTYLEDEFAULT:
         case ZWPcontentimportingV1PREEDITSTYLEUNDERLINE:
@@ -420,11 +370,11 @@ contentimportingpreeditstyling(void *data,
             break;
         case ZWPcontentimportingV1PREEDITSTYLEINCORRECT:
             attr1 = pangoattrunderlinenew(PANGOUNDERLINEERROR);
-            attr2 = pangoattrunderlinecolornew(65535, 0, 0);
+            attr2 = pangoattrunderlinecolornew(NUM65535, 0, 0);
             break;
         case ZWPcontentimportingV1PREEDITSTYLESELECTION:
-            attr1 = pangoattrbackgroundnew(0.3 * 65535, 0.3 * 65535, 65535);
-            attr2 = pangoattrforegroundnew(65535, 65535, 65535);
+            attr1 = pangoattrbackgroundnew(NUM03 * NUM65535, NUM03 * NUM65535, NUM65535);
+            attr2 = pangoattrforegroundnew(NUM65535, NUM65535, NUM65535);
             break;
         case ZWPcontentimportingV1PREEDITSTYLEHIGHLIGHT:
         case ZWPcontentimportingV1PREEDITSTYLEACTIVE:
@@ -433,7 +383,7 @@ contentimportingpreeditstyling(void *data,
             break;
         case ZWPcontentimportingV1PREEDITSTYLEINACTIVE:
             attr1 = pangoattrunderlinenew(PANGOUNDERLINESINGLE);
-            attr2 = pangoattrforegroundnew(0.3 * 65535, 0.3 * 65535, 0.3 * 65535);
+            attr2 = pangoattrforegroundnew(NUM03 * NUM65535, NUM03 * NUM65535, NUM03 * NUM65535);
             break;
     }
 
@@ -450,71 +400,62 @@ contentimportingpreeditstyling(void *data,
     }
 }
 
-static void
-contentimportingpreeditcursor(void *data,
-              struct zwpcontentimportingv1 *contentimporting,
-              unsigned int index)
+static void contentimportingpreeditcursor(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                          unsigned int index)
 {
     struct contententry *entry = data;
 
     entry->preeditinfo.cursor = index;
 }
 
-static void
-contentimportingmodifiersmap(void *data,
-             struct zwpcontentimportingv1 *contentimporting,
-             struct isftarray *map)
+static void contentimportingmodifiersmap(void *data, struct zwpcontentimportingv1 *contentimporting,
+                                         struct isftarray *map)
 {
     struct contententry *entry = data;
 
     entry->keysym.shiftmask = keysymmodifiersgetmask(map, "Shift");
 }
 
-static void
-contentimportingkeysym(void *data,
-          struct zwpcontentimportingv1 *contentimporting,
-          unsigned int serial,
-          unsigned int time,
-          unsigned int key,
-          unsigned int state,
-          unsigned int modifiers)
+static void contentimportingkeysym(void *data, struct zwpcontentimportingv1 *contentimporting, unsigned int serial,
+                                   unsigned int time, unsigned int key, unsigned int state, unsigned int modifiers)
 {
     struct contententry *entry = data;
     const char *newchar;
 
     if (key == XKBKEYLeft ||
         key == XKBKEYRight) {
-        if (state != isftKEYBOARDKEYSTATERELEASED)
+        if (state != isftKEYBOARDKEYSTATERELEASED) {
             return;
-
-        if (key == XKBKEYLeft)
+        }
+        if (key == XKBKEYLeft) {
             newchar = mb4prevchar(entry->text, entry->text + entry->cursor);
-        else
+        } else {
             newchar = mb4nextchar(entry->text + entry->cursor);
-
+        }
         if (newchar != NULL) {
             entry->cursor = newchar - entry->text;
         }
 
-        if (!(modifiers & entry->keysym.shiftmask))
+        if (!(modifiers & entry->keysym.shiftmask)) {
             entry->anchor = entry->cursor;
+        }
         partscheduleredraw(entry->part);
 
         return;
     }
 
-    if (key == XKBKEYUp ||
-        key == XKBKEYDown) {
-        if (state != isftKEYBOARDKEYSTATERELEASED)
+    if (key == XKBKEYUp || key == XKBKEYDown) {
+        if (state != isftKEYBOARDKEYSTATERELEASED) {
             return;
-
-        if (key == XKBKEYUp)
+        }
+        if (key == XKBKEYUp) {
             ationup(entry->text, &entry->cursor);
-        else
+        } else {
             ationdown(entry->text, &entry->cursor);
-
-        if (!(modifiers & entry->keysym.shiftmask))
+        }
+        if (!(modifiers & entry->keysym.shiftmask)) {
             entry->anchor = entry->cursor;
+        }
         partscheduleredraw(entry->part);
 
         return;
@@ -523,15 +464,15 @@ contentimportingkeysym(void *data,
     if (key == XKBKEYBackSpace) {
         const char *start, *end;
 
-        if (state != isftKEYBOARDKEYSTATERELEASED)
+        if (state != isftKEYBOARDKEYSTATERELEASED) {
             return;
-
+        }
         contententrycommitandreset(entry);
 
         start = mb4prevchar(entry->text, entry->text + entry->cursor);
-        if (start == NULL)
+        if (start == NULL) {
             return;
-
+        }
         end = mb4nextchar(start);
 
         contententrydeletetext(entry,
@@ -541,39 +482,28 @@ contentimportingkeysym(void *data,
         return;
     }
 
-    if (key == XKBKEYTab ||
-        key == XKBKEYKPEnter ||
-        key == XKBKEYReturn) {
+    if (key == XKBKEYTab || key == XKBKEYKPEnter || key == XKBKEYReturn) {
         char text[16];
-
-        if (state != isftKEYBOARDKEYSTATERELEASED)
+        if (state != isftKEYBOARDKEYSTATERELEASED) {
             return;
-
+        }
         xkbkeysymtomb4(key, text, sizeof(text));
-
         contententryinsertatcursor(entry, text, 0, 0);
-
         return;
     }
 }
 
-
-
-static void
-datasourcesend(void *data,
-         struct isftdatasource *source,
-         const char *mimetype, unsigned int fd)
+static void datasourcesend(void *data, struct isftdatasource *source, const char *mimetype, unsigned int fd)
 {
     struct editor *editor = data;
 
-    if (write(fd, editor->selectedtext, strlen(editor->selectedtext) + 1) < 0)
+    if (write(fd, editor->selectedtext, strlen(editor->selectedtext) + 1) < 0) {
         fprintf(stderr, "write failed: %s\n", strerror(errno));
-
+    }
     close(fd);
 }
 
-static void
-datasourcecancelled(void *data, struct isftdatasource *source)
+static void datasourcecancelled(void *data, struct isftdatasource *source)
 {
     isftdatasourcedestroy(source);
 }
@@ -584,17 +514,15 @@ static const struct isftdatasourcelistener datasourcelistener = {
     datasourcecancelled
 };
 
-static void
-pastefunc(void *buffer, int len,
-       unsigned int x, unsigned int y, void *data)
+static void pastefunc(void *buffer, int len, unsigned int x, unsigned int y, void *data)
 {
     struct editor *editor = data;
     struct contententry *entry = editor->activeentry;
     char *pastedtext;
 
-    if (!entry)
+    if (!entry) {
         return;
-
+    }
     pastedtext = malloc(len + 1);
     strncpy(pastedtext, buffer, len);
     pastedtext[len] = '\0';
@@ -604,17 +532,12 @@ pastefunc(void *buffer, int len,
     free(pastedtext);
 }
 
-
-static void
-editorpaste(struct editor *editor, struct importing *importing)
+static void editorpaste(struct editor *editor, struct importing *importing)
 {
-    importingreceiveselectiondata(importing,
-                     "text/plain;charset=utf-8",
-                     pastefunc, editor);
+    importingreceiveselectiondata(importing, "text/plain;charset=utf-8", pastefunc, editor);
 }
 
-static void
-menufunc(void *data, struct importing *importing, int index)
+static void menufunc(void *data, struct importing *importing, int index)
 {
     struct window *window = data;
     struct editor *editor = windowgetuserdata(window);
@@ -622,20 +545,19 @@ menufunc(void *data, struct importing *importing, int index)
     fprintf(stderr, "picked entry %d\n", index);
 
     switch (index) {
-    case 0:
-        editorcopycut(editor, importing, true);
-        break;
-    case 1:
-        editorcopycut(editor, importing, false);
-        break;
-    case 2:
-        editorpaste(editor, importing);
-        break;
+        case 0:
+            editorcopycut(editor, importing, true);
+            break;
+        case 1:
+            editorcopycut(editor, importing, false);
+            break;
+        case NUM2:
+            editorpaste(editor, importing);
+            break;
     }
 }
 
-static void
-showmenu(struct editor *editor, struct importing *importing, unsigned int time)
+static void showmenu(struct editor *editor, struct importing *importing, unsigned int time)
 {
     unsigned int x, y;
     static const char *entries[] = {
@@ -643,13 +565,11 @@ showmenu(struct editor *editor, struct importing *importing, unsigned int time)
     };
 
     importinggetposition(importing, &x, &y);
-    windowshowmenu(editor->display, importing, time, editor->window,
-             x + 10, y + 20, menufunc,
-             entries, ARRAYLENGTH(entries));
+    windowshowmenu(editor->display, importing, time, editor->window, x + NUM10, y + NUM20, menufunc,
+                   entries, ARRAYLENGTH(entries));
 }
 
-static struct contententry*
-contententrycreate(struct editor *editor, const char *text)
+static struct contententry* contententrycreate(struct editor *editor, const char *text)
 {
     struct contententry *entry;
 
@@ -664,8 +584,7 @@ contententrycreate(struct editor *editor, const char *text)
     entry->anchor = entry->cursor;
     entry->contentimporting =
         zwpcontentimportingmanagerv1createcontentimporting(editor->contentimportingmanager);
-    zwpcontentimportingv1addlistener(entry->contentimporting,
-                       &contentimportinglistener, entry);
+        zwpcontentimportingv1addlistener(entry->contentimporting, &contentimportinglistener, entry);
 
     partsetredrawhandler(entry->part, contententryredrawhandler);
     partsetbuttonhandler(entry->part, contententrybuttonhandler);
@@ -675,8 +594,7 @@ contententrycreate(struct editor *editor, const char *text)
     return entry;
 }
 
-static void
-contententrydestroy(struct contententry *entry)
+static void contententrydestroy(struct contententry *entry)
 {
     partdestroy(entry->part);
     zwpcontentimportingv1destroy(entry->contentimporting);
@@ -686,8 +604,7 @@ contententrydestroy(struct contententry *entry)
     free(entry);
 }
 
-static void
-redrawhandler(struct part *part, void *data)
+static void redrawhandler(struct part *part, void *data)
 {
     struct editor *editor = data;
     cairosurfacet *surface;
@@ -717,14 +634,13 @@ redrawhandler(struct part *part, void *data)
     cairosurfacedestroy(surface);
 }
 
-static void
-editorcopycut(struct editor *editor, struct importing *importing, bool cut)
+static void editorcopycut(struct editor *editor, struct importing *importing, bool cut)
 {
     struct contententry *entry = editor->activeentry;
 
-    if (!entry)
+    if (!entry) {
         return;
-
+    }
     if (entry->cursor != entry->anchor) {
         int startindex = MIN(entry->cursor, entry->anchor);
         int endindex = MAX(entry->cursor, entry->anchor);
@@ -734,60 +650,44 @@ editorcopycut(struct editor *editor, struct importing *importing, bool cut)
         strncpy(editor->selectedtext, &entry->text[startindex], len);
         editor->selectedtext[len] = '\0';
 
-        if (cut)
+        if (cut) {
             contententrydeletetext(entry, startindex, len);
-
+        }
         editor->selection =
             displaycreatedatasource(editor->display);
-        if (!editor->selection)
+        if (!editor->selection) {
             return;
-
-        isftdatasourceoffer(editor->selection,
-                     "text/plain;charset=utf-8");
-        isftdatasourceaddlistener(editor->selection,
-                        &datasourcelistener, editor);
-        importingsetselection(importing, editor->selection,
-                    displaygetserial(editor->display));
+        }
+        isftdatasourceoffer(editor->selection, "text/plain;charset=utf-8");
+        isftdatasourceaddlistener(editor->selection, &datasourcelistener, editor);
+        importingsetselection(importing, editor->selection, displaygetserial(editor->display));
     }
 }
 
-
-static void
-contententryallocate(struct contententry *entry, unsigned int x, unsigned int y,
-            unsigned int width, unsigned int height)
+static void contententryallocate(struct contententry *entry, unsigned int x, unsigned int y,
+                                 unsigned int width, unsigned int height)
 {
     partsetallocation(entry->part, x, y, width, height);
 }
 
-static void
-resizehandler(struct part *part,
-           unsigned int width, unsigned int height, void *data)
+static void resizehandler(struct part *part, unsigned int width, unsigned int height, void *data)
 {
     struct editor *editor = data;
     struct rectangle allocation;
 
     partgetallocation(editor->part, &allocation);
-
-    contententryallocate(editor->entry,
-                allocation.x + 20, allocation.y + 20,
-                width - 40, height / 2 - 40);
-    contententryallocate(editor->editor,
-                allocation.x + 20, allocation.y + height / 2 + 20,
-                width - 40, height / 2 - 40);
+    contententryallocate(editor->entry, allocation.x + NUM20, allocation.y + NUM20,
+                         width - NUM40, height / NUM2 - NUM40);
+    contententryallocate(editor->editor, allocation.x + NUM20, allocation.y + height / NUM2 + NUM20,
+                         width - NUM40, height / NUM2 - NUM40);
 }
 
-
-
-static void
-contententrydeactivate(struct contententry *entry,
-              struct isftseat *seat)
+static void contententrydeactivate(struct contententry *entry, struct isftseat *seat)
 {
-    zwpcontentimportingv1deactivate(entry->contentimporting,
-                     seat);
+    zwpcontentimportingv1deactivate(entry->contentimporting, seat);
 }
 
-static void
-contententryupdatelayout(struct contententry *entry)
+static void contententryupdatelayout(struct contententry *entry)
 {
     char *text;
     PangoAttrList *attrlist;
@@ -812,9 +712,9 @@ contententryupdatelayout(struct contententry *entry)
 
         attrlist = pangoattrlistcopy(entry->preedit.attrlist);
 
-        if (!attrlist)
+        if (!attrlist) {
             attrlist = pangoattrlistnew();
-
+        }
         attr = pangoattrbackgroundnew(0.3 * 65535, 0.3 * 65535, 65535);
         attr->startindex = startindex;
         attr->endindex = endindex;
@@ -831,9 +731,9 @@ contententryupdatelayout(struct contententry *entry)
     if (entry->preedit.text && !entry->preedit.attrlist) {
         PangoAttribute *attr;
 
-        if (!attrlist)
+        if (!attrlist) {
             attrlist = pangoattrlistnew();
-
+        }
         attr = pangoattrunderlinenew(PANGOUNDERLINESINGLE);
         attr->startindex = entry->cursor;
         attr->endindex = entry->cursor + strlen(entry->preedit.text);
@@ -849,63 +749,47 @@ contententryupdatelayout(struct contententry *entry)
     pangoattrlistunref(attrlist);
 }
 
-static void
-contententryupdate(struct contententry *entry)
+static void contententryupdate(struct contententry *entry)
 {
     struct rectangle cursorrectangle;
 
-    zwpcontentimportingv1setcontenttype(entry->contentimporting,
-                       ZWPcontentimportingV1CONTENTHINTNONE,
-                       entry->contentpurpose);
+    zwpcontentimportingv1setcontenttype(entry->contentimporting, ZWPcontentimportingV1CONTENTHINTNONE,
+                                        entry->contentpurpose);
 
-    zwpcontentimportingv1setsurroundingtext(entry->contentimporting,
-                           entry->text,
-                           entry->cursor,
-                           entry->anchor);
+    zwpcontentimportingv1setsurroundingtext(entry->contentimporting, entry->text, entry->cursor, entry->anchor);
 
-    if (entry->preferredlanguage)
-        zwpcontentimportingv1setpreferredlanguage(entry->contentimporting,
-                             entry->preferredlanguage);
-
+    if (entry->preferredlanguage) {
+        zwpcontentimportingv1setpreferredlanguage(entry->contentimporting, entry->preferredlanguage);
+    }
     contententrygetcursorrectangle(entry, &cursorrectangle);
-    zwpcontentimportingv1setcursorrectangle(entry->contentimporting,
-                           cursorrectangle.x,
-                           cursorrectangle.y,
-                           cursorrectangle.width,
-                           cursorrectangle.height);
+    zwpcontentimportingv1setcursorrectangle(entry->contentimporting, cursorrectangle.x,cursorrectangle.y,
+                                            cursorrectangle.width, cursorrectangle.height);
 
     zwpcontentimportingv1commitstate(entry->contentimporting, ++entry->serial);
 }
 
-static void
-contententryactivate(struct contententry *entry,
-            struct isftseat *seat)
+static void contententryactivate(struct contententry *entry, struct isftseat *seat)
 {
     struct isftsurface *surface = windowgetisftsurface(entry->window);
 
     if (entry->clicktoshow && entry->active) {
         entry->panelvisible = !entry->panelvisible;
 
-        if (entry->panelvisible)
+        if (entry->panelvisible) {
             zwpcontentimportingv1showimportingpanel(entry->contentimporting);
-        else
+        } else {
             zwpcontentimportingv1hideimportingpanel(entry->contentimporting);
-
+        }
         return;
     }
 
     if (!entry->clicktoshow)
         zwpcontentimportingv1showimportingpanel(entry->contentimporting);
 
-    zwpcontentimportingv1activate(entry->contentimporting,
-                   seat,
-                   surface);
+    zwpcontentimportingv1activate(entry->contentimporting, seat, surface);
 }
 
-
-static void
-contententrydeletetext(struct contententry *entry,
-               unsigned int index, unsigned int length)
+static void contententrydeletetext(struct contententry *entry, unsigned int index, unsigned int length)
 {
     unsigned int l;
 
@@ -914,9 +798,7 @@ contententrydeletetext(struct contententry *entry,
     assert(index + length >= length);
 
     l = strlen(entry->text + index + length);
-    memmove(entry->text + index,
-        entry->text + index + length,
-        l + 1);
+    memmove(entry->text + index, entry->text + index + length, l + 1);
 
     if (entry->cursor > (index + length))
         entry->cursor -= length;
@@ -924,30 +806,25 @@ contententrydeletetext(struct contententry *entry,
         entry->cursor = index;
 
     entry->anchor = entry->cursor;
-
     contententryupdatelayout(entry);
-
     partscheduleredraw(entry->part);
-
     contententryupdate(entry);
 }
 
-static void
-contententrydeleteselectedtext(struct contententry *entry)
+static void contententrydeleteselectedtext(struct contententry *entry)
 {
     unsigned int startindex = entry->anchor < entry->cursor ? entry->anchor : entry->cursor;
     unsigned int endindex = entry->anchor < entry->cursor ? entry->cursor : entry->anchor;
 
-    if (entry->anchor == entry->cursor)
+    if (entry->anchor == entry->cursor) {
         return;
-
+    }
     contententrydeletetext(entry, startindex, endindex - startindex);
 
     entry->anchor = entry->cursor;
 }
 
-static void
-contententrygetcursorrectangle(struct contententry *entry, struct rectangle *rectangle)
+static void contententrygetcursorrectangle(struct contententry *entry, struct rectangle *rectangle)
 {
     struct rectangle allocation;
     PangoRectangle extents;
@@ -963,31 +840,25 @@ contententrygetcursorrectangle(struct contententry *entry, struct rectangle *rec
         return;
     }
 
-
     pangolayoutgetextents(entry->layout, &extents, NULL);
-    pangolayoutgetcursorpos(entry->layout,
-                    entry->cursor + entry->preedit.cursor,
-                    &cursorpos, NULL);
+    pangolayoutgetcursorpos(entry->layout, entry->cursor + entry->preedit.cursor, &cursorpos, NULL);
 
-    rectangle->x = allocation.x + (allocation.height / 2) + PANGOPIXELS(cursorpos.x);
-    rectangle->y = allocation.y + 10 + PANGOPIXELS(cursorpos.y);
+    rectangle->x = allocation.x + (allocation.height / NUM2) + PANGOPIXELS(cursorpos.x);
+    rectangle->y = allocation.y + NUM10 + PANGOPIXELS(cursorpos.y);
     rectangle->width = PANGOPIXELS(cursorpos.width);
     rectangle->height = PANGOPIXELS(cursorpos.height);
 }
 
-static void
-contententrydrawcursor(struct contententry *entry, cairot *cr)
+static void contententrydrawcursor(struct contententry *entry, cairot *cr)
 {
     PangoRectangle extents;
     PangoRectangle cursorpos;
 
-    if (entry->preedit.text && entry->preedit.cursor < 0)
+    if (entry->preedit.text && entry->preedit.cursor < 0) {
         return;
-
+    }
     pangolayoutgetextents(entry->layout, &extents, NULL);
-    pangolayoutgetcursorpos(entry->layout,
-                    entry->cursor + entry->preedit.cursor,
-                    &cursorpos, NULL);
+    pangolayoutgetcursorpos(entry->layout, entry->cursor + entry->preedit.cursor, &cursorpos, NULL);
 
     cairosetlinewidth(cr, 1.0);
     cairoationto(cr, PANGOPIXELS(cursorpos.x), PANGOPIXELS(cursorpos.y));
@@ -995,44 +866,38 @@ contententrydrawcursor(struct contententry *entry, cairot *cr)
     cairostroke(cr);
 }
 
-static int
-contentoffsetleft(struct rectangle *allocation)
+static int contentoffsetleft(struct rectangle *allocation)
 {
-    return 10;
+    return NUM10;
 }
 
-static void
-contententryinsertatcursor(struct contententry *entry, const char *text,
-                unsigned int cursor, unsigned int anchor)
+static void contententryinsertatcursor(struct contententry *entry, const char *text,
+                                       unsigned int cursor, unsigned int anchor)
 {
     char *newtext = xmalloc(strlen(entry->text) + strlen(text) + 1);
 
     strncpy(newtext, entry->text, entry->cursor);
     strcpy(newtext + entry->cursor, text);
-    strcpy(newtext + entry->cursor + strlen(text),
-           entry->text + entry->cursor);
+    strcpy(newtext + entry->cursor + strlen(text), entry->text + entry->cursor);
 
     free(entry->text);
     entry->text = newtext;
-    if (anchor >= 0)
+    if (anchor >= 0) {
         entry->anchor = entry->cursor + strlen(text) + anchor;
-    else
+    } else {
         entry->anchor = entry->cursor + 1 + anchor;
-
-    if (cursor >= 0)
+    }
+    if (cursor >= 0) {
         entry->cursor += strlen(text) + cursor;
-    else
+    } else {
         entry->cursor += 1 + cursor;
-
+    }
     contententryupdatelayout(entry);
-
     partscheduleredraw(entry->part);
-
     contententryupdate(entry);
 }
 
-static void
-contententryresetpreedit(struct contententry *entry)
+static void contententryresetpreedit(struct contententry *entry)
 {
     entry->preedit.cursor = 0;
 
@@ -1046,14 +911,13 @@ contententryresetpreedit(struct contententry *entry)
     entry->preedit.attrlist = NULL;
 }
 
-static void
-contententrycommitandreset(struct contententry *entry)
+static void contententrycommitandreset(struct contententry *entry)
 {
     char *commit = NULL;
 
-    if (entry->preedit.commit)
+    if (entry->preedit.commit) {
         commit = strdup(entry->preedit.commit);
-
+    }
     contententryresetpreedit(entry);
     if (commit) {
         contententryinsertatcursor(entry, commit, 0, 0);
@@ -1065,16 +929,13 @@ contententrycommitandreset(struct contententry *entry)
     entry->resetserial = entry->serial;
 }
 
-static void
-contententrysetpreedit(struct contententry *entry,
-               const char *preedittext,
-               int preeditcursor)
+static void contententrysetpreedit(struct contententry *entry, const char *preedittext, int preeditcursor)
 {
     contententryresetpreedit(entry);
 
-    if (!preedittext)
+    if (!preedittext) {
         return;
-
+    }
     entry->preedit.text = strdup(preedittext);
     entry->preedit.cursor = preeditcursor;
 
@@ -1083,97 +944,71 @@ contententrysetpreedit(struct contententry *entry,
     partscheduleredraw(entry->part);
 }
 
-static unsigned int
-contententrytryinvokepreeditaction(struct contententry *entry,
-                     unsigned int x, unsigned int y,
-                     unsigned int button,
-                     enum isftpointerbuttonstate state)
+static unsigned int contententrytryinvokepreeditaction(struct contententry *entry, unsigned int x, unsigned int y,
+                                                       unsigned int button, enum isftpointerbuttonstate state)
 {
     int index, trailing;
     unsigned int cursor;
     const char *text;
 
-    if (!entry->preedit.text)
+    if (!entry->preedit.text) {
         return 0;
-
-    pangolayoutxytoindex(entry->layout,
-                 x * PANGOSCALE, y * PANGOSCALE,
-                 &index, &trailing);
-
+    }
+    pangolayoutxytoindex(entry->layout, x * PANGOSCALE, y * PANGOSCALE, &index, &trailing);
     text = pangolayoutgettext(entry->layout);
     cursor = gmb4offsettopointer(text + index, trailing) - text;
 
-    if (cursor < entry->cursor ||
-        cursor > entry->cursor + strlen(entry->preedit.text)) {
+    if (cursor < entry->cursor || cursor > entry->cursor + strlen(entry->preedit.text)) {
         return 0;
     }
 
-    if (state == isftPOINTERBUTTONSTATERELEASED)
-        zwpcontentimportingv1invokeaction(entry->contentimporting,
-                        button,
-                        cursor - entry->cursor);
-
+    if (state == isftPOINTERBUTTONSTATERELEASED) {
+        zwpcontentimportingv1invokeaction(entry->contentimporting, button, cursor - entry->cursor);
+    }
     return 1;
 }
 
-static bool
-contententryhaspreedit(struct contententry *entry)
+static bool contententryhaspreedit(struct contententry *entry)
 {
     return entry->preedit.text && (strlen(entry->preedit.text) > 0);
 }
 
-static void
-contententrysetcursorposition(struct contententry *entry,
-                   unsigned int x, unsigned int y,
-                   bool ationanchor)
+static void contententrysetcursorposition(struct contententry *entry, unsigned int x, unsigned int y, bool ationanchor)
 {
     int index, trailing;
     const char *text;
     unsigned int cursor;
 
-    pangolayoutxytoindex(entry->layout,
-                 x * PANGOSCALE, y * PANGOSCALE,
-                 &index, &trailing);
-
+    pangolayoutxytoindex(entry->layout, x * PANGOSCALE, y * PANGOSCALE, &index, &trailing);
     text = pangolayoutgettext(entry->layout);
 
     cursor = gmb4offsettopointer(text + index, trailing) - text;
 
-    if (ationanchor)
+    if (ationanchor) {
         entry->anchor = cursor;
-
+    }
     if (contententryhaspreedit(entry)) {
         contententrycommitandreset(entry);
 
         assert(!contententryhaspreedit(entry));
     }
 
-    if (entry->cursor == cursor)
+    if (entry->cursor == cursor) {
         return;
-
+    }
     entry->cursor = cursor;
-
     contententryupdatelayout(entry);
-
     partscheduleredraw(entry->part);
-
     contententryupdate(entry);
 }
 
-
-static int
-contentoffsettop(struct rectangle *allocation)
+static int contentoffsettop(struct rectangle *allocation)
 {
     return allocation->height / 2;
 }
 
-
-
-static void
-contententrybuttonhandler(struct part *part,
-              struct importing *importing, unsigned int time,
-              unsigned int button,
-              enum isftpointerbuttonstate state, void *data)
+static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int time,
+                                      unsigned int button, enum isftpointerbuttonstate state, void *data)
 {
     struct contententry *entry = data;
     struct rectangle allocation;
@@ -1190,41 +1025,39 @@ contententrybuttonhandler(struct part *part,
     editor = windowgetuserdata(entry->window);
 
     switch (button) {
-    case BTNLEFT:
-        entry->buttonpressed = (state == isftPOINTERBUTTONSTATEPRESSED);
-        if (state == isftPOINTERBUTTONSTATEPRESSED)
-            importinggrab(importing, entry->part, button);
-        else
-            importingungrab(importing);
-        break;
-    case BTNRIGHT:
-        if (state == isftPOINTERBUTTONSTATEPRESSED)
-            showmenu(editor, importing, time);
-        break;
+        case BTNLEFT:
+            entry->buttonpressed = (state == isftPOINTERBUTTONSTATEPRESSED);
+            if (state == isftPOINTERBUTTONSTATEPRESSED) {
+                importinggrab(importing, entry->part, button);
+            } else {
+                importingungrab(importing);
+            }
+            break;
+        case BTNRIGHT:
+            if (state == isftPOINTERBUTTONSTATEPRESSED) {
+                showmenu(editor, importing, time);
+            }
+            break;
     }
 
     if (contententryhaspreedit(entry)) {
         result = contententrytryinvokepreeditaction(entry, x, y, button, state);
 
-        if (result)
+        if (result) {
             return;
+        }
     }
-
-    if (state == isftPOINTERBUTTONSTATEPRESSED &&
-        button == BTNLEFT) {
+    if (state == isftPOINTERBUTTONSTATEPRESSED && button == BTNLEFT) {
         struct isftseat *seat = importinggetseat(importing);
 
         contententryactivate(entry, seat);
         editor->activeentry = entry;
-
         contententrysetcursorposition(entry, x, y, true);
     }
 }
 
-static void
-contententrytouchhandler(struct part *part, struct importing *importing,
-             unsigned int serial, unsigned int time, unsigned int id,
-             float tx, float ty, void *data)
+static void contententrytouchhandler(struct part *part, struct importing *importing,unsigned int serial,
+                                     unsigned int time, unsigned int id, float tx, float ty, void *data)
 {
     struct contententry *entry = data;
     struct isftseat *seat = importinggetseat(importing);
@@ -1244,11 +1077,8 @@ contententrytouchhandler(struct part *part, struct importing *importing,
     contententrysetcursorposition(entry, x, y, true);
 }
 
-static void
-editorbuttonhandler(struct part *part,
-              struct importing *importing, unsigned int time,
-              unsigned int button,
-              enum isftpointerbuttonstate state, void *data)
+static void editorbuttonhandler(struct part *part, struct importing *importing, unsigned int time,
+                                unsigned int button, enum isftpointerbuttonstate state, void *data)
 {
     struct editor *editor = data;
 
@@ -1265,8 +1095,7 @@ editorbuttonhandler(struct part *part,
     }
 }
 
-static void
-contententryredrawhandler(struct part *part, void *data)
+static void contententryredrawhandler(struct part *part, void *data)
 {
     struct contententry *entry = data;
     cairosurfacet *surface;
@@ -1300,15 +1129,13 @@ contententryredrawhandler(struct part *part, void *data)
 
     cairosetsourcergba(cr, 0, 0, 0, 1);
 
-    cairotranslate(cr,
-            contentoffsetleft(&allocation),
-            contentoffsettop(&allocation));
+    cairotranslate(cr, ontentoffsetleft(&allocation), contentoffsettop(&allocation));
 
-    if (!entry->layout)
+    if (!entry->layout) {
         entry->layout = pangocairocreatelayout(cr);
-    else
+    } else {
         pangocairoupdatelayout(cr, entry->layout);
-
+    }
     contententryupdatelayout(entry);
 
     pangocairoshowlayout(cr, entry->layout);
@@ -1322,10 +1149,8 @@ contententryredrawhandler(struct part *part, void *data)
     cairosurfacedestroy(surface);
 }
 
-static int
-contententrymotionhandler(struct part *part,
-              struct importing *importing, unsigned int time,
-              float x, float y, void *data)
+static int contententrymotionhandler(struct part *part, struct importing *importing, unsigned int time,
+                                     float x, float y, void *data)
 {
     struct contententry *entry = data;
     struct rectangle allocation;
@@ -1345,11 +1170,8 @@ contententrymotionhandler(struct part *part,
     return CURSORIBEAM;
 }
 
-
-
-static void
-globalhandler(struct display *display, unsigned int name,
-           const char *interface, unsigned int version, void *data)
+static void globalhandler(struct display *display, unsigned int name, const char *interface,
+                          unsigned int version, void *data)
 {
     struct editor *editor = data;
 
@@ -1378,8 +1200,7 @@ static const struct westonoption editoroptions[] = {
     { WESTONOPTIONSTRING, "preferred-language", 'L', &optpreferredlanguage },
 };
 
-static void
-usage(const char *programname, int exitcode)
+static void usage(const char *programname, int exitcode)
 {
     unsigned k;
 
@@ -1388,22 +1209,23 @@ usage(const char *programname, int exitcode)
         const struct westonoption *p = &editoroptions[k];
         if (p->name) {
             fprintf(stderr, "  --%s", p->name);
-            if (p->type != WESTONOPTIONBOOLEAN)
+            if (p->type != WESTONOPTIONBOOLEAN) {
                 fprintf(stderr, "=VALUE");
+            }
             fprintf(stderr, "\n");
         }
         if (p->shortname) {
             fprintf(stderr, "  -%c", p->shortname);
-            if (p->type != WESTONOPTIONBOOLEAN)
+            if (p->type != WESTONOPTIONBOOLEAN) {
                 fprintf(stderr, "VALUE");
+            }
             fprintf(stderr, "\n");
         }
     }
     exit(exitcode);
 }
 
-static char *
-readfile(char *filename)
+static char *readfile(char *filename)
 {
     char *buffer = NULL;
     int bufsize, readsize;
@@ -1443,53 +1265,42 @@ error:
     return NULL;
 }
 
-static void
-editortouchhandler(struct part *part, struct importing *importing,
-             unsigned int serial, unsigned int time, unsigned int id,
-             float tx, float ty, void *data)
+static void editortouchhandler(struct part *part, struct importing *importing, unsigned int serial,
+                               unsigned int time, unsigned int id, float tx, float ty, void *data)
 {
     struct editor *editor = data;
-
     struct isftseat *seat = importinggetseat(importing);
-
     contententrydeactivate(editor->entry, seat);
     contententrydeactivate(editor->editor, seat);
     editor->activeentry = NULL;
 }
 
-static void
-keyboardfocushandler(struct window *window,
-               struct importing *device, void *data)
+static void keyboardfocushandler(struct window *window, struct importing *device, void *data)
 {
     struct editor *editor = data;
 
     windowscheduleredraw(editor->window);
 }
 
-static int
-handleboundkey(struct editor *editor,
-         struct importing *importing, unsigned int sym, unsigned int time)
+static int handleboundkey(struct editor *editor, struct importing *importing, unsigned int sym, unsigned int time)
 {
     switch (sym) {
-    case XKBKEYX:
-        editorcopycut(editor, importing, true);
-        return 1;
-    case XKBKEYC:
-        editorcopycut(editor, importing, false);
-        return 1;
-    case XKBKEYV:
-        editorpaste(editor, importing);
-        return 1;
-    default:
-        return 0;
+        case XKBKEYX:
+            editorcopycut(editor, importing, true);
+            return 1;
+        case XKBKEYC:
+            editorcopycut(editor, importing, false);
+            return 1;
+        case XKBKEYV:
+            editorpaste(editor, importing);
+            return 1;
+        default:
+            return 0;
     }
 }
 
-static void
-keyhandler(struct window *window,
-        struct importing *importing, unsigned int time,
-        unsigned int key, unsigned int sym, enum isftkeyboardkeystate state,
-        void *data)
+static void keyhandler(struct window *window, struct importing *importing, unsigned int time,
+                       unsigned int key, unsigned int sym, enum isftkeyboardkeystate state, void *data)
 {
     struct editor *editor = data;
     struct contententry *entry;
@@ -1497,38 +1308,34 @@ keyhandler(struct window *window,
     char text[16];
     unsigned int modifiers;
 
-    if (!editor->activeentry)
+    if (!editor->activeentry) {
         return;
-
+    }
     entry = editor->activeentry;
 
-    if (state != isftKEYBOARDKEYSTATEPRESSED)
+    if (state != isftKEYBOARDKEYSTATEPRESSED) {
         return;
-
+    }
     modifiers = importinggetmodifiers(importing);
-    if ((modifiers & MODCONTROLMASK) &&
-        (modifiers & MODSHIFTMASK) &&
-        handleboundkey(editor, importing, sym, time))
+    if ((modifiers & MODCONTROLMASK) && (modifiers & MODSHIFTMASK) && handleboundkey(editor, importing, sym, time)) {
         return;
-
+    }
     switch (sym) {
         case XKBKEYBackSpace:
             contententrycommitandreset(entry);
 
             newchar = mb4prevchar(entry->text, entry->text + entry->cursor);
-            if (newchar != NULL)
-                contententrydeletetext(entry,
-                               newchar - entry->text,
-                               (entry->text + entry->cursor) - newchar);
+            if (newchar != NULL) {
+                contententrydeletetext(entry, newchar - entry->text, (entry->text + entry->cursor) - newchar);
+            }
             break;
         case XKBKEYDelete:
             contententrycommitandreset(entry);
 
             newchar = mb4nextchar(entry->text + entry->cursor);
-            if (newchar != NULL)
-                contententrydeletetext(entry,
-                               entry->cursor,
-                               newchar - (entry->text + entry->cursor));
+            if (newchar != NULL) {
+                contententrydeletetext(entry, entry->cursor, newchar - (entry->text + entry->cursor));
+            }
             break;
         case XKBKEYLeft:
             contententrycommitandreset(entry);
@@ -1583,8 +1390,7 @@ keyhandler(struct window *window,
     partscheduleredraw(entry->part);
 }
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     struct editor editor;
     char *contentbuffer = NULL;
@@ -1629,13 +1435,15 @@ main(int argc, char *argv[])
     editor.window = windowcreate(editor.display);
     editor.part = windowframecreate(editor.window, &editor);
 
-    if (contentbuffer)
+    if (contentbuffer) {
         editor.entry = contententrycreate(&editor, contentbuffer);
-    else
+    } else {
         editor.entry = contententrycreate(&editor, "Entry");
+    }
     editor.entry->clicktoshow = optclicktoshow;
-    if (optpreferredlanguage)
+    if (optpreferredlanguage) {
         editor.entry->preferredlanguage = strdup(optpreferredlanguage);
+    }
     editor.editor = contententrycreate(&editor, "Numeric");
     editor.editor->contentpurpose = ZWPcontentimportingV1CONTENTPURPOSENUMBER;
     editor.editor->clicktoshow = optclicktoshow;
@@ -1644,8 +1452,7 @@ main(int argc, char *argv[])
 
     windowsettitle(editor.window, "Text Editor");
     windowsetkeyhandler(editor.window, keyhandler);
-    windowsetkeyboardfocushandler(editor.window,
-                      keyboardfocushandler);
+    windowsetkeyboardfocushandler(editor.window, keyboardfocushandler);
     windowsetuserdata(editor.window, &editor);
 
     partsetredrawhandler(editor.part, redrawhandler);
@@ -1653,14 +1460,16 @@ main(int argc, char *argv[])
     partsetbuttonhandler(editor.part, editorbuttonhandler);
     partsettouchdownhandler(editor.part, editortouchhandler);
 
-    windowscheduleresize(editor.window, 500, 400);
+    windowscheduleresize(editor.window, NUM500, 400);
 
     displayrun(editor.display);
 
-    if (editor.selectedtext)
+    if (editor.selectedtext) {
         free(editor.selectedtext);
-    if (editor.selection)
+    }
+    if (editor.selection) {
         isftdatasourcedestroy(editor.selection);
+    }
     contententrydestroy(editor.entry);
     contententrydestroy(editor.editor);
     partdestroy(editor.part);

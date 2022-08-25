@@ -25,15 +25,35 @@
 #include <math.h>
 #include <cairo.h>
 #include <sys/wait.h>
-#include <linux/input.h>
 #include <libgen.h>
 #include <ctype.h>
 #include <time.h>
 #include <assert.h>
+#include <linux/input.h>
 
 #define DEFAULTCLOCKFORMAT CLOCKFORMATMINUTES
 #define DEFAULTSPACING 10
-
+#define NUMA 0.2
+#define NUMB 0.4
+#define NUMC 0.5
+#define NUMD 0.6
+#define NUME 0.7
+#define NUMF 0.85
+#define NUMG 0.86
+#define NUMAA 1.5
+#define NUMBB 14
+#define NUMCC 150
+#define NUMDD 16
+#define NUMEE 170
+#define NUMFF 2
+#define NUMGG 2.0
+#define NUMAAA 24
+#define NUMBBB 255.0
+#define NUMCCC 260
+#define NUMDDD 3
+#define NUMEEE 32
+#define NUMFFF 60
+#define NUMGGG 8
 
 enum clockformat {
     CLOCKFORMATMINUTES,
@@ -140,10 +160,7 @@ struct unlockdialog {
     struct desktop *desktop;
 };
 
-
-
-static void
-boardlaunchertouchdownhandler(struct part *part, struct input *input,
+static void boardlaunchertouchdownhandler(struct part *part, struct input *input,
                   uint32t serial, uint32t time, int32t id,
                   float x, float y, void *data)
 {
@@ -154,8 +171,7 @@ boardlaunchertouchdownhandler(struct part *part, struct input *input,
     partscheduleredraw(part);
 }
 
-static void
-boardlaunchertouchuphandler(struct part *part, struct input *input,
+static void boardlaunchertouchuphandler(struct part *part, struct input *input,
                 uint32t serial, uint32t time, int32t id,
                 void *data)
 {
@@ -167,16 +183,14 @@ boardlaunchertouchuphandler(struct part *part, struct input *input,
     boardlauncheractivate(launcher);
 }
 
-static void
-clockfunc(struct toytimer *tt)
+static void clockfunc(struct toytimer *tt)
 {
     struct boardclock *clock = containerof(tt, struct boardclock, timer);
 
     partscheduleredraw(clock->part);
 }
 
-static void
-boardclockredrawhandler(struct part *part, void *data)
+static void boardclockredrawhandler(struct part *part, void *data)
 {
     struct boardclock *clock = data;
     cairot *cr;
@@ -195,26 +209,25 @@ boardclockredrawhandler(struct part *part, void *data)
         return;
 
     cr = partcairocreate(clock->board->part);
-    cairosetfontsize(cr, 14);
+    cairosetfontsize(cr, NUMBB);
     cairotextextents(cr, string, &extents);
     if (allocation.x > 0)
         allocation.x +=
-            allocation.width - DEFAULTSPACING * 1.5 - extents.width;
+            allocation.width - DEFAULTSPACING * NUMAA - extents.width;
     else
         allocation.x +=
-            allocation.width / 2 - extents.width / 2;
-    allocation.y += allocation.height / 2 - 1 + extents.height / 2;
+            allocation.width / NUMFF - extents.width / NUMFF;
+    allocation.y += allocation.height / NUMFF - 1 + extents.height / NUMFF;
     cairomoveto(cr, allocation.x + 1, allocation.y + 1);
-    cairosetsourcergba(cr, 0, 0, 0, 0.85);
+    cairosetsourcergba(cr, 0, 0, 0, NUMF);
     cairoshowtext(cr, string);
     cairomoveto(cr, allocation.x, allocation.y);
-    cairosetsourcergba(cr, 1, 1, 1, 0.85);
+    cairosetsourcergba(cr, 1, 1, 1, NUMF);
     cairoshowtext(cr, string);
     cairodestroy(cr);
 }
 
-static int
-clocktimerreset(struct boardclock *clock)
+static int clocktimerreset(struct boardclock *clock)
 {
     struct itimerspec its;
 
@@ -227,19 +240,16 @@ clocktimerreset(struct boardclock *clock)
     return 0;
 }
 
-static void
-boarddestroyclock(struct boardclock *clock)
+static void boarddestroyclock(struct boardclock *clock)
 {
     partdestroy(clock->part);
     toytimerfini(&clock->timer);
     free(clock);
 }
 
-static void
-boardaddlaunchers(struct board *board, struct desktop *desktop);
+static void boardaddlaunchers(struct board *board, struct desktop *desktop);
 
-static void
-sigchildhandler(int s)
+static void sigchildhandler(int s)
 {
     int status;
     pidt pid;
@@ -248,8 +258,7 @@ sigchildhandler(int s)
         fprintf(stderr, "child %d exited\n", pid);
 }
 
-static int
-isdesktoppainted(struct desktop *desktop)
+static int isdesktoppainted(struct desktop *desktop)
 {
     struct export *export;
 
@@ -263,8 +272,7 @@ isdesktoppainted(struct desktop *desktop)
     return 1;
 }
 
-static void
-checkdesktopready(struct view *view)
+static void checkdesktopready(struct view *view)
 {
     struct display *display;
     struct desktop *desktop;
@@ -279,8 +287,7 @@ checkdesktopready(struct view *view)
     }
 }
 
-static void
-boardlauncheractivate(struct boardlauncher *part)
+static void boardlauncheractivate(struct boardlauncher *part)
 {
     char **argv;
     pidt pid;
@@ -306,8 +313,7 @@ boardlauncheractivate(struct boardlauncher *part)
     }
 }
 
-static void
-boardlauncherredrawhandler(struct part *part, void *data)
+static void boardlauncherredrawhandler(struct part *part, void *data)
 {
     struct boardlauncher *launcher = data;
     struct rectangle allocation;
@@ -316,34 +322,33 @@ boardlauncherredrawhandler(struct part *part, void *data)
     cr = partcairocreate(launcher->board->part);
 
     partgetallocation(part, &allocation);
-    allocation.x += allocation.width / 2 -
-        cairoimagesheetgetwidth(launcher->icon) / 2;
+    allocation.x += allocation.width / NUMFF -
+        cairoimagesheetgetwidth(launcher->icon) / NUMFF;
     if (allocation.width > allocation.height)
-        allocation.x += allocation.width / 2 - allocation.height / 2;
-    allocation.y += allocation.height / 2 -
-        cairoimagesheetgetheight(launcher->icon) / 2;
+        allocation.x += allocation.width / NUMFF - allocation.height / NUMFF;
+    allocation.y += allocation.height / NUMFF -
+        cairoimagesheetgetheight(launcher->icon) / NUMFF;
     if (allocation.height > allocation.width)
-        allocation.y += allocation.height / 2 - allocation.width / 2;
+        allocation.y += allocation.height / NUMFF - allocation.width / NUMFF;
     if (launcher->pressed) {
         allocation.x++;
         allocation.y++;
     }
 
     cairosetsourcesheet(cr, launcher->icon,
-                 allocation.x, allocation.y);
+        allocation.x, allocation.y);
     cairopaint(cr);
 
     if (launcher->focused) {
-        cairosetsourcergba(cr, 1.0, 1.0, 1.0, 0.4);
+        cairosetsourcergba(cr, 1.0, 1.0, 1.0, NUMB);
         cairomasksheet(cr, launcher->icon,
-                   allocation.x, allocation.y);
+            allocation.x, allocation.y);
     }
 
     cairodestroy(cr);
 }
 
-static int
-boardlaunchermotionhandler(struct part *part, struct input *input,
+static int boardlaunchermotionhandler(struct part *part, struct input *input,
                   uint32t time, float x, float y, void *data)
 {
     struct boardlauncher *launcher = data;
@@ -353,18 +358,16 @@ boardlaunchermotionhandler(struct part *part, struct input *input,
     return CURSORLEFTPTR;
 }
 
-static void
-sethexcolor(cairot *cr, uint32t color)
+static void sethexcolor(cairot *cr, uint32t color)
 {
     cairosetsourcergba(cr,
-                  ((color >> 16) & 0xff) / 255.0,
-                  ((color >>  8) & 0xff) / 255.0,
-                  ((color >>  0) & 0xff) / 255.0,
-                  ((color >> 24) & 0xff) / 255.0);
+        ((color >> NUMDD) & 0xff) / 255.0,
+        ((color >>  NUMGGG) & 0xff) / 255.0,
+        ((color >>  0) & 0xff) / NUMBBB,
+        ((color >> NUMAAA) & 0xff) / 255.0);
 }
 
-static void
-boardredrawhandler(struct part *part, void *data)
+static void boardredrawhandler(struct part *part, void *data)
 {
     cairosheett *sheet;
     cairot *cr;
@@ -382,8 +385,7 @@ boardredrawhandler(struct part *part, void *data)
     checkdesktopready(board->view);
 }
 
-static int
-boardlauncherenterhandler(struct part *part, struct input *input,
+static int boardlauncherenterhandler(struct part *part, struct input *input,
                  float x, float y, void *data)
 {
     struct boardlauncher *launcher = data;
@@ -394,8 +396,7 @@ boardlauncherenterhandler(struct part *part, struct input *input,
     return CURSORLEFTPTR;
 }
 
-static void
-boardlauncherleavehandler(struct part *part,
+static void boardlauncherleavehandler(struct part *part,
                  struct input *input, void *data)
 {
     struct boardlauncher *launcher = data;
@@ -405,8 +406,7 @@ boardlauncherleavehandler(struct part *part,
     partscheduleredraw(part);
 }
 
-static void
-boardlauncherbuttonhandler(struct part *part,
+static void boardlauncherbuttonhandler(struct part *part,
                   struct input *input, uint32t time,
                   uint32t button,
                   enum isftpointerbuttonstate state, void *data)
@@ -417,13 +417,9 @@ boardlauncherbuttonhandler(struct part *part,
     partscheduleredraw(part);
     if (state == isftPOINTERBUTTONSTATERELEASED)
         boardlauncheractivate(launcher);
-
 }
 
-
-
-static void
-boarddestroylauncher(struct boardlauncher *launcher)
+static void boarddestroylauncher(struct boardlauncher *launcher)
 {
     isftarrayrelease(&launcher->argv);
     isftarrayrelease(&launcher->envp);
@@ -438,15 +434,14 @@ boarddestroylauncher(struct boardlauncher *launcher)
     free(launcher);
 }
 
-static void
-boarddestroy(struct board *board)
+static void boarddestroy(struct board *board)
 {
     struct boardlauncher *tmp;
     struct boardlauncher *launcher;
 
-    if (board->clock)
+    if (board->clock) {
         boarddestroyclock(board->clock);
-
+	}
     isftlistforeachsafe(launcher, tmp, &board->launcherlist, link)
         boarddestroylauncher(launcher);
 
@@ -456,8 +451,7 @@ boarddestroy(struct board *board)
     free(board);
 }
 
-static struct board *
-boardcreate(struct desktop *desktop, struct export *export)
+static struct board *boardcreate(struct desktop *desktop, struct export *export)
 {
     struct board *board;
     struct isftViewconfigsection *s;
@@ -478,9 +472,9 @@ boardcreate(struct desktop *desktop, struct export *export)
 
     board->boardposition = desktop->boardposition;
     board->clockformat = desktop->clockformat;
-    if (board->clockformat != CLOCKFORMATNONE)
+    if (board->clockformat != CLOCKFORMATNONE) {
         boardaddclock(board);
-
+	}
     s = isftViewconfiggetsection(desktop->config, "shell", NULL, NULL);
     isftViewconfigsectiongetcolor(s, "board-color",
                     &board->color, 0xaa000000);
@@ -490,8 +484,7 @@ boardcreate(struct desktop *desktop, struct export *export)
     return board;
 }
 
-static cairosheett *
-loadiconorfallback(const char *icon)
+static cairosheett *loadiconorfallback(const char *icon)
 {
     cairosheett *sheet = cairoimagesheetcreatefrompng(icon);
     cairostatust status;
@@ -507,7 +500,7 @@ loadiconorfallback(const char *icon)
 
     /* draw fallback icon */
     sheet = cairoimagesheetcreate(CAIROFORMATARGB32,
-                         20, 20);
+        20, 20);
     cr = cairocreate(sheet);
 
     cairosetsourcergba(cr, 0.8, 0.8, 0.8, 1);
@@ -527,8 +520,7 @@ loadiconorfallback(const char *icon)
     return sheet;
 }
 
-static void
-boardaddlauncher(struct board *board, const char *icon, const char *path)
+static void boardaddlauncher(struct board *board, const char *icon, const char *path)
 {
     struct boardlauncher *launcher;
     char *start, *p, *eq, **ps;
@@ -548,13 +540,15 @@ boardaddlauncher(struct board *board, const char *icon, const char *path)
 
     start = launcher->path;
     while (*start) {
-        for (p = start, eq = NULL; *p && !isspace(*p); p++)
-            if (*p == '=')
+        for (p = start, eq = NULL; *p && !isspace(*p); p++) {	
+		}
+            if (*p == '=') {
                 eq = p;
-
+			}
         if (eq && j == 0) {
             ps = launcher->envp.data;
-            for (k = 0; k < i; k++)
+            for (k = 0; k < i; k++) {
+			}
                 if (strncmp(ps[k], start, eq - start) == 0) {
                     ps[k] = start;
                     break;
@@ -570,8 +564,9 @@ boardaddlauncher(struct board *board, const char *icon, const char *path)
             j++;
         }
 
-        while (*p && isspace(*p))
+        while (*p && isspace(*p)) {
             *p++ = '\0';
+		}
 
         start = p;
     }
@@ -586,19 +581,19 @@ boardaddlauncher(struct board *board, const char *icon, const char *path)
 
     launcher->part = partaddpart(board->part, launcher);
     partsetenterhandler(launcher->part,
-                 boardlauncherenterhandler);
+        boardlauncherenterhandler);
     partsetleavehandler(launcher->part,
-                   boardlauncherleavehandler);
+        boardlauncherleavehandler);
     partsetbuttonhandler(launcher->part,
-                    boardlauncherbuttonhandler);
+        boardlauncherbuttonhandler);
     partsettouchdownhandler(launcher->part,
-                      boardlaunchertouchdownhandler);
+        boardlaunchertouchdownhandler);
     partsettouchuphandler(launcher->part,
-                    boardlaunchertouchuphandler);
+        boardlaunchertouchuphandler);
     partsetredrawhandler(launcher->part,
-                  boardlauncherredrawhandler);
+        boardlauncherredrawhandler);
     partsetmotionhandler(launcher->part,
-                  boardlaunchermotionhandler);
+        boardlaunchermotionhandler);
 }
 
 enum {
@@ -608,8 +603,7 @@ enum {
     BACKGROUNDCENTERED
 };
 
-static void
-backgrounddraw(struct part *part, void *data)
+static void backgrounddraw(struct part *part, void *data)
 {
     struct background *background = data;
     cairosheett *sheet, *image;
@@ -625,8 +619,9 @@ backgrounddraw(struct part *part, void *data)
 
     cr = partcairocreate(background->part);
     cairosetoperator(cr, CAIROOPERATORSOURCE);
-    if (background->color == 0)
-        cairosetsourcergba(cr, 0.0, 0.0, 0.2, 1.0);
+    if (background->color == 0) {
+        cairosetsourcergba(cr, 0.0, 0.0, NUMA, 1.0);
+	}
     else
         sethexcolor(cr, background->color);
     cairopaint(cr);
@@ -651,37 +646,37 @@ backgrounddraw(struct part *part, void *data)
         pattern = cairopatterncreateforsheet(image);
 
         switch (background->type) {
-        case BACKGROUNDSCALE:
-            cairomatrixinitscale(&matrix, sx, sy);
-            cairopatternsetmatrix(pattern, &matrix);
-            cairopatternsetextend(pattern, CAIROEXTENDPAD);
-            break;
-        case BACKGROUNDSCALECROP:
-            s = (sx < sy) ? sx : sy;
-            /* align center */
-            tx = (imw - s * allocation.width) * 0.5;
-            ty = (imh - s * allocation.height) * 0.5;
-            cairomatrixinittranslate(&matrix, tx, ty);
-            cairomatrixscale(&matrix, s, s);
-            cairopatternsetmatrix(pattern, &matrix);
-            cairopatternsetextend(pattern, CAIROEXTENDPAD);
-            break;
-        case BACKGROUNDTILE:
-            cairopatternsetextend(pattern, CAIROEXTENDREPEAT);
-            break;
-        case BACKGROUNDCENTERED:
-            s = (sx < sy) ? sx : sy;
-            if (s < 1.0)
-                s = 1.0;
+            case BACKGROUNDSCALE:
+                cairomatrixinitscale(&matrix, sx, sy);
+                cairopatternsetmatrix(pattern, &matrix);
+                cairopatternsetextend(pattern, CAIROEXTENDPAD);
+                break;
+            case BACKGROUNDSCALECROP:
+                s = (sx < sy) ? sx : sy;
+                /* align center */
+                tx = (imw - s * allocation.width) * NUMC;
+                ty = (imh - s * allocation.height) * NUMC;
+                cairomatrixinittranslate(&matrix, tx, ty);
+                cairomatrixscale(&matrix, s, s);
+                cairopatternsetmatrix(pattern, &matrix);
+                cairopatternsetextend(pattern, CAIROEXTENDPAD);
+                break;
+            case BACKGROUNDTILE:
+                cairopatternsetextend(pattern, CAIROEXTENDREPEAT);
+                break;
+            case BACKGROUNDCENTERED:
+                s = (sx < sy) ? sx : sy;
+                if (s < 1.0) {
+                    s = 1.0;
+				}
+                /* align center */
+                tx = (imw - s * allocation.width) * NUMC;
+                ty = (imh - s * allocation.height) * NUMC;
 
-            /* align center */
-            tx = (imw - s * allocation.width) * 0.5;
-            ty = (imh - s * allocation.height) * 0.5;
-
-            cairomatrixinittranslate(&matrix, tx, ty);
-            cairomatrixscale(&matrix, s, s);
-            cairopatternsetmatrix(pattern, &matrix);
-            break;
+                cairomatrixinittranslate(&matrix, tx, ty);
+                cairomatrixscale(&matrix, s, s);
+                cairopatternsetmatrix(pattern, &matrix);
+                break;
         }
 
         cairosetsource(cr, pattern);
@@ -697,14 +692,12 @@ backgrounddraw(struct part *part, void *data)
     checkdesktopready(background->view);
 }
 
-static void
-backgrounddestroy(struct background *background);
+static void backgrounddestroy(struct background *background);
 
-static void
-backgroundconfigure(void *data,
-             struct isftViewdesktopshell *desktopshell,
-             uint32t edges, struct view *view,
-             int32t width, int32t height)
+static void backgroundconfigure(void *data,
+    struct isftViewdesktopshell *desktopshell,
+        uint32t edges, struct view *view,
+        int32t width, int32t height)
 {
     struct export *owner;
     struct background *background =
@@ -727,8 +720,7 @@ backgroundconfigure(void *data,
     partscheduleresize(background->part, width, height);
 }
 
-static void
-boardaddclock(struct board *board)
+static void boardaddclock(struct board *board)
 {
     struct boardclock *clock;
 
@@ -737,28 +729,27 @@ boardaddclock(struct board *board)
     board->clock = clock;
 
     switch (board->clockformat) {
-    case CLOCKFORMATMINUTES:
-        clock->formatstring = "%a %b %d, %I:%M %p";
-        clock->refreshtimer = 60;
-        break;
-    case CLOCKFORMATSECONDS:
-        clock->formatstring = "%a %b %d, %I:%M:%S %p";
-        clock->refreshtimer = 1;
-        break;
-    case CLOCKFORMATNONE:
-        assert(!"not reached");
+        case CLOCKFORMATMINUTES:
+            clock->formatstring = "%a %b %d, %I:%M %p";
+            clock->refreshtimer = NUMFFF;
+            break;
+        case CLOCKFORMATSECONDS:
+            clock->formatstring = "%a %b %d, %I:%M:%S %p";
+            clock->refreshtimer = 1;
+            break;
+        case CLOCKFORMATNONE:
+            assert(!"not reached");
     }
 
     toytimerinit(&clock->timer, CLOCKMONOTONIC,
-              viewgetdisplay(board->view), clockfunc);
+        viewgetdisplay(board->view), clockfunc);
     clocktimerreset(clock);
 
     clock->part = partaddpart(board->part, clock);
     partsetredrawhandler(clock->part, boardclockredrawhandler);
 }
 
-static void
-boardresizehandler(struct part *part,
+static void boardresizehandler(struct part *part,
              int32t width, int32t height, void *data)
 {
     struct boardlauncher *launcher;
@@ -773,35 +764,37 @@ boardresizehandler(struct part *part,
 
     isftlistforeach(launcher, &board->launcherlist, link) {
         partsetallocation(launcher->part, x, y,
-                      w + firstpadw + 1, h + firstpadh + 1);
-        if (horizontal)
+            w + firstpadw + 1, h + firstpadh + 1);
+        if (horizontal) {
             x += w + firstpadw;
+		}
         else
             y += h + firstpadh;
         firstpadh = firstpadw = 0;
     }
 
-    if (board->clockformat == CLOCKFORMATSECONDS)
-        w = 170;
+    if (board->clockformat == CLOCKFORMATSECONDS) {
+        w = NUMEE;
+	}
     else /* CLOCKFORMATMINUTES */
-        w = 150;
+        w = NUMCC;
 
-    if (horizontal)
+    if (horizontal) {
         x = width - w;
+	}
     else
-        y = height - (h = DEFAULTSPACING * 3);
+        y = height - (h = DEFAULTSPACING * NUMDDD);
 
-    if (board->clock)
+    if (board->clock) {
         partsetallocation(board->clock->part,
-                      x, y, w + 1, h + 1);
+            x, y, w + 1, h + 1);
+	}
 }
 
-static void
-boarddestroy(struct board *board);
+static void boarddestroy(struct board *board);
 
-static void
-boardconfigure(void *data,
-        struct isftViewdesktopshell *desktopshell,
+static void boardconfigure(void *data,
+    struct isftViewdesktopshell *desktopshell,
         uint32t edges, struct view *view,
         int32t width, int32t height)
 {
@@ -819,32 +812,29 @@ boardconfigure(void *data,
     }
 
     switch (desktop->boardposition) {
-    case isftViewDESKTOPSHELLboardPOSITIONTOP:
-    case isftViewDESKTOPSHELLboardPOSITIONBOTTOM:
-        height = 32;
-        break;
-    case isftViewDESKTOPSHELLboardPOSITIONLEFT:
-    case isftViewDESKTOPSHELLboardPOSITIONRIGHT:
-        switch (desktop->clockformat) {
-        case CLOCKFORMATNONE:
-            width = 32;
+        case isftViewDESKTOPSHELLboardPOSITIONTOP:
+        case isftViewDESKTOPSHELLboardPOSITIONBOTTOM:
+            height = NUMEEE;
             break;
-        case CLOCKFORMATMINUTES:
-            width = 150;
-            break;
-        case CLOCKFORMATSECONDS:
-            width = 170;
-            break;
+        case isftViewDESKTOPSHELLboardPOSITIONLEFT:
+        case isftViewDESKTOPSHELLboardPOSITIONRIGHT:
+    switch (desktop->clockformat) {
+            case CLOCKFORMATNONE:
+                width = NUMEEE
+                break;
+            case CLOCKFORMATMINUTES:
+                width = NUMCC;
+                break;
+            case CLOCKFORMATSECONDS:
+                width = NUMEE;
+                break;
         }
         break;
     }
     viewscheduleresize(board->view, width, height);
 }
 
-
-
-static void
-unlockdialogtouchuphandler(struct part *part, struct input *input,
+static void unlockdialogtouchuphandler(struct part *part, struct input *input,
                 uint32t serial, uint32t time, int32t id,
                 void *data)
 {
@@ -857,9 +847,8 @@ unlockdialogtouchuphandler(struct part *part, struct input *input,
     dialog->closing = 1;
 }
 
-static void
-unlockdialogkeyboardfocushandler(struct view *view,
-                     struct input *device, void *data)
+static void unlockdialogkeyboardfocushandler(struct view *view,
+    struct input *device, void *data)
 {
     viewscheduleredraw(view);
 }
@@ -877,9 +866,8 @@ unlockdialogpartenterhandler(struct part *part,
     return CURSORLEFTPTR;
 }
 
-static void
-unlockdialogpartleavehandler(struct part *part,
-                   struct input *input, void *data)
+static void unlockdialogpartleavehandler(struct part *part,
+    struct input *input, void *data)
 {
     struct unlockdialog *dialog = data;
 
@@ -887,8 +875,7 @@ unlockdialogpartleavehandler(struct part *part,
     partscheduleredraw(part);
 }
 
-static struct unlockdialog *
-unlockdialogcreate(struct desktop *desktop)
+static struct unlockdialog *unlockdialogcreate(struct desktop *desktop)
 {
     struct display *display = desktop->display;
     struct unlockdialog *dialog;
@@ -902,31 +889,30 @@ unlockdialogcreate(struct desktop *desktop)
 
     viewsetuserdata(dialog->view, dialog);
     viewsetkeyboardfocushandler(dialog->view,
-                      unlockdialogkeyboardfocushandler);
+        unlockdialogkeyboardfocushandler);
     dialog->button = partaddpart(dialog->part, dialog);
     partsetredrawhandler(dialog->part,
-                  unlockdialogredrawhandler);
+        unlockdialogredrawhandler);
     partsetenterhandler(dialog->button,
-                 unlockdialogpartenterhandler);
+        unlockdialogpartenterhandler);
     partsetleavehandler(dialog->button,
-                 unlockdialogpartleavehandler);
+        unlockdialogpartleavehandler);
     partsetbuttonhandler(dialog->button,
-                  unlockdialogbuttonhandler);
+        unlockdialogbuttonhandler);
     partsettouchdownhandler(dialog->button,
-                      unlockdialogtouchdownhandler);
+        unlockdialogtouchdownhandler);
     partsettouchuphandler(dialog->button,
-                      unlockdialogtouchuphandler);
+        unlockdialogtouchuphandler);
 
     sheet = viewgetisftsheet(dialog->view);
     isftViewdesktopshellsetlocksheet(desktop->shell, sheet);
 
-    viewscheduleresize(dialog->view, 260, 230);
+    viewscheduleresize(dialog->view, NUMCCC, 230);
 
     return dialog;
 }
 
-static void
-unlockdialogredrawhandler(struct part *part, void *data)
+static void unlockdialogredrawhandler(struct part *part, void *data)
 {
     struct unlockdialog *dialog = data;
     struct rectangle allocation;
@@ -939,32 +925,33 @@ unlockdialogredrawhandler(struct part *part, void *data)
 
     partgetallocation(dialog->part, &allocation);
     cairorectangle(cr, allocation.x, allocation.y,
-            allocation.width, allocation.height);
+        allocation.width, allocation.height);
     cairosetoperator(cr, CAIROOPERATORSOURCE);
-    cairosetsourcergba(cr, 0, 0, 0, 0.6);
+    cairosetsourcergba(cr, 0, 0, 0, NUMD);
     cairofill(cr);
 
     cairotranslate(cr, allocation.x, allocation.y);
-    if (dialog->buttonfocused)
+    if (dialog->buttonfocused) {
         f = 1.0;
+	}
     else
-        f = 0.7;
+        f = NUME;
 
-    cx = allocation.width / 2.0;
-    cy = allocation.height / 2.0;
-    r = (cx < cy ? cx : cy) * 0.4;
-    pat = cairopatterncreateradial(cx, cy, r * 0.7, cx, cy, r);
-    cairopatternaddcolorstoprgb(pat, 0.0, 0, 0.86 * f, 0);
-    cairopatternaddcolorstoprgb(pat, 0.85, 0.2 * f, f, 0.2 * f);
-    cairopatternaddcolorstoprgb(pat, 1.0, 0, 0.86 * f, 0);
+    cx = allocation.width / NUMGG;
+    cy = allocation.height / NUMGG;
+    r = (cx < cy ? cx : cy) * NUMB;
+    pat = cairopatterncreateradial(cx, cy, r * NUME, cx, cy, r);
+    cairopatternaddcolorstoprgb(pat, 0.0, 0, NUMG * f, 0);
+    cairopatternaddcolorstoprgb(pat, NUMF, 0.2 * f, f, 0.2 * f);
+    cairopatternaddcolorstoprgb(pat, 1.0, 0, NUMG * f, 0);
     cairosetsource(cr, pat);
     cairopatterndestroy(pat);
-    cairoarc(cr, cx, cy, r, 0.0, 2.0 * MPI);
+    cairoarc(cr, cx, cy, r, 0.0, NUMGG * MPI);
     cairofill(cr);
 
     partsetallocation(dialog->button,
-                  allocation.x + cx - r,
-                  allocation.y + cy - r, 2 * r, 2 * r);
+        allocation.x + cx - r,
+        allocation.y + cy - r, NUMFF * r, NUMFF * r);
 
     cairodestroy(cr);
 
@@ -972,11 +959,10 @@ unlockdialogredrawhandler(struct part *part, void *data)
     cairosheetdestroy(sheet);
 }
 
-static void
-unlockdialogbuttonhandler(struct part *part,
-                 struct input *input, uint32t time,
-                 uint32t button,
-                 enum isftpointerbuttonstate state, void *data)
+static void unlockdialogbuttonhandler(struct part *part,
+    struct input *input, uint32t time,
+    uint32t button,
+    enum isftpointerbuttonstate state, void *data)
 {
     struct unlockdialog *dialog = data;
     struct desktop *desktop = dialog->desktop;
@@ -990,10 +976,9 @@ unlockdialogbuttonhandler(struct part *part,
     }
 }
 
-static void
-unlockdialogtouchdownhandler(struct part *part, struct input *input,
-           uint32t serial, uint32t time, int32t id,
-           float x, float y, void *data)
+static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
+    uint32t serial, uint32t time, int32t id,
+    float x, float y, void *data)
 {
     struct unlockdialog *dialog = data;
 
@@ -1001,16 +986,13 @@ unlockdialogtouchdownhandler(struct part *part, struct input *input,
     partscheduleredraw(part);
 }
 
-
-
 static const struct isftViewdesktopshelllistener listener = {
     desktopshellconfigure,
     desktopshellpreparelocksheet,
     desktopshellfetchcursor
 };
 
-static void
-backgrounddestroy(struct background *background)
+static void backgrounddestroy(struct background *background)
 {
     partdestroy(background->part);
     viewdestroy(background->view);
@@ -1019,8 +1001,7 @@ backgrounddestroy(struct background *background)
     free(background);
 }
 
-static struct background *
-backgroundcreate(struct desktop *desktop, struct export *export)
+static struct background *backgroundcreate(struct desktop *desktop, struct export *export)
 {
     struct background *background;
     struct isftViewconfigsection *s;
@@ -1037,12 +1018,12 @@ backgroundcreate(struct desktop *desktop, struct export *export)
 
     s = isftViewconfiggetsection(desktop->config, "shell", NULL, NULL);
     isftViewconfigsectiongetstring(s, "background-image",
-                     &background->image, NULL);
+       &background->image, NULL);
     isftViewconfigsectiongetcolor(s, "background-color",
-                    &background->color, 0x00000000);
+        &background->color, 0x00000000);
 
     isftViewconfigsectiongetstring(s, "background-type",
-                     &type, "tile");
+        &type, "tile");
     if (type == NULL) {
         fprintf(stderr, "%s: out of memory\n", programinvocationshortname);
         exit(EXITFAILURE);
@@ -1067,15 +1048,13 @@ backgroundcreate(struct desktop *desktop, struct export *export)
     return background;
 }
 
-static void
-unlockdialogdestroy(struct unlockdialog *dialog)
+static void unlockdialogdestroy(struct unlockdialog *dialog)
 {
     viewdestroy(dialog->view);
     free(dialog);
 }
 
-static void
-unlockdialogfinish(struct task *task, uint32t events)
+static void unlockdialogfinish(struct task *task, uint32t events)
 {
     struct desktop *desktop =
         containerof(task, struct desktop, unlocktask);
@@ -1085,8 +1064,7 @@ unlockdialogfinish(struct task *task, uint32t events)
     desktop->unlockdialog = NULL;
 }
 
-static void
-desktopshellconfigure(void *data,
+static void desktopshellconfigure(void *data,
             struct isftViewdesktopshell *desktopshell,
             uint32t edges,
             struct isftsheet *sheet,
@@ -1098,8 +1076,7 @@ desktopshellconfigure(void *data,
     s->configure(data, desktopshell, edges, view, width, height);
 }
 
-static void
-desktopshellpreparelocksheet(void *data,
+static void desktopshellpreparelocksheet(void *data,
                    struct isftViewdesktopshell *desktopshell)
 {
     struct desktop *desktop = data;
@@ -1115,55 +1092,53 @@ desktopshellpreparelocksheet(void *data,
     }
 }
 
-static void
-desktopshellfetchcursor(void *data,
+static void desktopshellfetchcursor(void *data,
               struct isftViewdesktopshell *desktopshell,
               uint32t cursor)
 {
     struct desktop *desktop = data;
 
     switch (cursor) {
-    case isftViewDESKTOPSHELLCURSORNONE:
-        desktop->fetchcursor = CURSORBLANK;
-        break;
-    case isftViewDESKTOPSHELLCURSORBUSY:
-        desktop->fetchcursor = CURSORWATCH;
-        break;
-    case isftViewDESKTOPSHELLCURSORMOVE:
-        desktop->fetchcursor = CURSORDRAGGING;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZETOP:
-        desktop->fetchcursor = CURSORTOP;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZEBOTTOM:
-        desktop->fetchcursor = CURSORBOTTOM;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZELEFT:
-        desktop->fetchcursor = CURSORLEFT;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZERIGHT:
-        desktop->fetchcursor = CURSORRIGHT;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZETOPLEFT:
-        desktop->fetchcursor = CURSORTOPLEFT;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZETOPRIGHT:
-        desktop->fetchcursor = CURSORTOPRIGHT;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZEBOTTOMLEFT:
-        desktop->fetchcursor = CURSORBOTTOMLEFT;
-        break;
-    case isftViewDESKTOPSHELLCURSORRESIZEBOTTOMRIGHT:
-        desktop->fetchcursor = CURSORBOTTOMRIGHT;
-        break;
-    case isftViewDESKTOPSHELLCURSORARROW:
-    default:
-        desktop->fetchcursor = CURSORLEFTPTR;
+        case isftViewDESKTOPSHELLCURSORNONE:
+            desktop->fetchcursor = CURSORBLANK;
+            break;
+        case isftViewDESKTOPSHELLCURSORBUSY:
+            desktop->fetchcursor = CURSORWATCH;
+            break;
+        case isftViewDESKTOPSHELLCURSORMOVE:
+            desktop->fetchcursor = CURSORDRAGGING;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZETOP:
+            desktop->fetchcursor = CURSORTOP;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZEBOTTOM:
+            desktop->fetchcursor = CURSORBOTTOM;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZELEFT:
+            desktop->fetchcursor = CURSORLEFT;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZERIGHT:
+            desktop->fetchcursor = CURSORRIGHT;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZETOPLEFT:
+            desktop->fetchcursor = CURSORTOPLEFT;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZETOPRIGHT:
+            desktop->fetchcursor = CURSORTOPRIGHT;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZEBOTTOMLEFT:
+            desktop->fetchcursor = CURSORBOTTOMLEFT;
+            break;
+        case isftViewDESKTOPSHELLCURSORRESIZEBOTTOMRIGHT:
+            desktop->fetchcursor = CURSORBOTTOMRIGHT;
+            break;
+        case isftViewDESKTOPSHELLCURSORARROW:
+        default:
+            desktop->fetchcursor = CURSORLEFTPTR;
     }
 }
 
-static int
-fetchsheetenterhandler(struct part *part, struct input *input,
+static int fetchsheetenterhandler(struct part *part, struct input *input,
                float x, float y, void *data)
 {
     struct desktop *desktop = data;
@@ -1171,15 +1146,13 @@ fetchsheetenterhandler(struct part *part, struct input *input,
     return desktop->fetchcursor;
 }
 
-static void
-fetchsheetdestroy(struct desktop *desktop)
+static void fetchsheetdestroy(struct desktop *desktop)
 {
     partdestroy(desktop->fetchpart);
     viewdestroy(desktop->fetchview);
 }
 
-static void
-fetchsheetcreate(struct desktop *desktop)
+static void fetchsheetcreate(struct desktop *desktop)
 {
     struct isftsheet *s;
 
@@ -1195,24 +1168,24 @@ fetchsheetcreate(struct desktop *desktop)
     partsetallocation(desktop->fetchpart, 0, 0, 1, 1);
 
     partsetenterhandler(desktop->fetchpart,
-                 fetchsheetenterhandler);
+        fetchsheetenterhandler);
 }
 
-static void
-exportdestroy(struct export *export)
+static void exportdestroy(struct export *export)
 {
-    if (export->background)
+    if (export->background) {
         backgrounddestroy(export->background);
-    if (export->board)
+	}
+    if (export->board) {
         boarddestroy(export->board);
+	}
     isftexportdestroy(export->export);
     isftlistremove(&export->link);
 
     free(export);
 }
 
-static void
-desktopdestroyexports(struct desktop *desktop)
+static void desktopdestroyexports(struct desktop *desktop)
 {
     struct export *tmp;
     struct export *export;
@@ -1221,8 +1194,6 @@ desktopdestroyexports(struct desktop *desktop)
         exportdestroy(export);
 }
 
-
-
 static const struct isftexportlistener exportlistener = {
     exporthandlegeometry,
     exporthandlemode,
@@ -1230,8 +1201,7 @@ static const struct isftexportlistener exportlistener = {
     exporthandlescale
 };
 
-static void
-exportinit(struct export *export, struct desktop *desktop)
+static void exportinit(struct export *export, struct desktop *desktop)
 {
     struct isftsheet *sheet;
 
@@ -1239,40 +1209,37 @@ exportinit(struct export *export, struct desktop *desktop)
         export->board = boardcreate(desktop, export);
         sheet = viewgetisftsheet(export->board->view);
         isftViewdesktopshellsetboard(desktop->shell,
-                           export->export, sheet);
+            export->export, sheet);
     }
-
     export->background = backgroundcreate(desktop, export);
     sheet = viewgetisftsheet(export->background->view);
     isftViewdesktopshellsetbackground(desktop->shell,
-                        export->export, sheet);
+        export->export, sheet);
 }
 
-static void
-createexport(struct desktop *desktop, uint32t id)
+static void createexport(struct desktop *desktop, uint32t id)
 {
     struct export *export;
 
     export = zalloc(sizeof *export);
-    if (!export)
+    if (!export) {
         return;
-
+	}
     export->export =
-        displaybind(desktop->display, id, &isftexportinterface, 2);
+        displaybind(desktop->display, id, &isftexportinterface, NUMFF);
     export->serverexportid = id;
 
     isftexportaddlistener(export->export, &exportlistener, export);
 
     isftlistinsert(&desktop->exports, &export->link);
-
     /* On start up we may process an export global before the shell global
      * in which case we can't create the board and background just yet */
-    if (desktop->shell)
+    if (desktop->shell) {
         exportinit(export, desktop);
+	}
 }
 
-static void
-exportremove(struct desktop *desktop, struct export *export)
+static void exportremove(struct desktop *desktop, struct export *export)
 {
     struct export *cur;
     struct export *rep = NULL;
@@ -1285,7 +1252,6 @@ exportremove(struct desktop *desktop, struct export *export)
     isftlistforeach(cur, &desktop->exports, link) {
         if (cur == export)
             continue;
-
         /* XXX: Assumes size matches. */
         if (cur->x == export->x && cur->y == export->y) {
             rep = cur;
@@ -1294,14 +1260,11 @@ exportremove(struct desktop *desktop, struct export *export)
     }
 
     if (rep) {
-
-
         if (!rep->background) {
             rep->background = export->background;
             export->background = NULL;
             rep->background->owner = rep;
         }
-
         if (!rep->board) {
             rep->board = export->board;
             export->board = NULL;
@@ -1313,48 +1276,46 @@ exportremove(struct desktop *desktop, struct export *export)
     exportdestroy(export);
 }
 
-static void
-exporthandlegeometry(void *data,
-                       struct isftexport *isftexport,
-                       int x, int y,
-                       int physicalwidth,
-                       int physicalheight,
-                       int subpixel,
-                       const char *make,
-                       const char *model,
-                       int transform)
+static void exporthandlegeometry(void *data,
+    struct isftexport *isftexport,
+    int x, int y,
+    int physicalwidth,
+    int physicalheight,
+    int subpixel,
+    const char *make,
+    const char *model,
+    int transform)
 {
     struct export *export = data;
 
     export->x = x;
     export->y = y;
 
-    if (export->board)
+    if (export->board) {
         viewsetbuffertransform(export->board->view, transform);
-    if (export->background)
+	}
+    if (export->background) {
         viewsetbuffertransform(export->background->view, transform);
+	}
 }
 
-static void
-exporthandlemode(void *data,
-           struct isftexport *isftexport,
-           uint32t flags,
-           int width,
-           int height,
-           int refresh)
+static void exporthandlemode(void *data,
+    struct isftexport *isftexport,
+        uint32t flags,
+    int width,
+    int height,
+    int refresh)
 {
 }
 
-static void
-exporthandledone(void *data,
-                   struct isftexport *isftexport)
+static void exporthandledone(void *data,
+    struct isftexport *isftexport)
 {
 }
 
-static void
-exporthandlescale(void *data,
-                    struct isftexport *isftexport,
-                    int32t scale)
+static void exporthandlescale(void *data,
+    struct isftexport *isftexport,
+        int32t scale)
 {
     struct export *export = data;
 
@@ -1364,28 +1325,26 @@ exporthandlescale(void *data,
         viewsetbufferscale(export->background->view, scale);
 }
 
-static void
-globalhandler(struct display *display, uint32t id,
-           const char *interface, uint32t version, void *data)
+static void globalhandler(struct display *display, uint32t id,
+    const char *interface, uint32t version, void *data)
 {
     struct desktop *desktop = data;
 
     if (!strcmp(interface, "isftViewdesktopshell")) {
         desktop->shell = displaybind(desktop->display,
-                          id,
-                          &isftViewdesktopshellinterface,
-                          1);
+            id,
+            &isftViewdesktopshellinterface,
+            1);
         isftViewdesktopshelladdlistener(desktop->shell,
-                          &listener,
-                          desktop);
+            &listener,
+            desktop);
     } else if (!strcmp(interface, "isftexport")) {
         createexport(desktop, id);
     }
 }
 
-static void
-globalhandlerremove(struct display *display, uint32t id,
-           const char *interface, uint32t version, void *data)
+static void globalhandlerremove(struct display *display, uint32t id,
+    const char *interface, uint32t version, void *data)
 {
     struct desktop *desktop = data;
     struct export *export;
@@ -1400,8 +1359,7 @@ globalhandlerremove(struct display *display, uint32t id,
     }
 }
 
-static void
-boardaddlaunchers(struct board *board, struct desktop *desktop)
+static void boardaddlaunchers(struct board *board, struct desktop *desktop)
 {
     struct isftViewconfigsection *s;
     char *icon, *path;
@@ -1411,8 +1369,9 @@ boardaddlaunchers(struct board *board, struct desktop *desktop)
     count = 0;
     s = NULL;
     while (isftViewconfignextsection(desktop->config, &s, &name)) {
-        if (strcmp(name, "launcher") != 0)
+        if (strcmp(name, "launcher") != 0) {
             continue;
+		}
 
         isftViewconfigsectiongetstring(s, "icon", &icon, NULL);
         isftViewconfigsectiongetstring(s, "path", &path, NULL);
@@ -1439,8 +1398,7 @@ boardaddlaunchers(struct board *board, struct desktop *desktop)
     }
 }
 
-static void
-parseboardposition(struct desktop *desktop, struct isftViewconfigsection *s)
+static void parseboardposition(struct desktop *desktop, struct isftViewconfigsection *s)
 {
     char *position;
 
@@ -1457,27 +1415,31 @@ parseboardposition(struct desktop *desktop, struct isftViewconfigsection *s)
         desktop->boardposition = isftViewDESKTOPSHELLboardPOSITIONRIGHT;
     } else {
         /* 'none' is valid here */
-        if (strcmp(position, "none") != 0)
+        if (strcmp(position, "none") != 0) {
             fprintf(stderr, "Wrong board position: %s\n", position);
+		}
         desktop->wantboard = 0;
     }
     free(position);
 }
 
-static void
-parseclockformat(struct desktop *desktop, struct isftViewconfigsection *s)
+static void parseclockformat(struct desktop *desktop, struct isftViewconfigsection *s)
 {
     char *clockformat;
 
     isftViewconfigsectiongetstring(s, "clock-format", &clockformat, "");
-    if (strcmp(clockformat, "minutes") == 0)
+    if (strcmp(clockformat, "minutes") == 0) {
         desktop->clockformat = CLOCKFORMATMINUTES;
-    else if (strcmp(clockformat, "seconds") == 0)
+	}
+    else if (strcmp(clockformat, "seconds") == 0) {
         desktop->clockformat = CLOCKFORMATSECONDS;
-    else if (strcmp(clockformat, "none") == 0)
+	}
+    else if (strcmp(clockformat, "none") == 0) {
         desktop->clockformat = CLOCKFORMATNONE;
-    else
-        desktop->clockformat = DEFAULTCLOCKFORMAT;
+	}
+    else {
+	    desktop->clockformat = DEFAULTCLOCKFORMAT;
+	}
     free(clockformat);
 }
 
