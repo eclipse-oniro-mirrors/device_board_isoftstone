@@ -54,6 +54,7 @@
 #define NUMEEE 32
 #define NUMFFF 60
 #define NUMGGG 8
+#define NUMAAAA 230
 
 enum clockformat {
     CLOCKFORMATMINUTES,
@@ -84,7 +85,7 @@ struct desktop {
 };
 
 struct sheet {
-    void (*configure)(void *data,
+    void (*configure)(void data[],
               struct isftViewdesktopshell *desktopshell,
               uint32t edges, struct view *view,
               int32t width, int32t height);
@@ -161,8 +162,8 @@ struct unlockdialog {
 };
 
 static void boardlaunchertouchdownhandler(struct part *part, struct input *input,
-                  uint32t serial, uint32t time, int32t id,
-                  float x, float y, void *data)
+    uint32t serial, uint32t time, int32t id,
+    float x, float y, void data[])
 {
     struct boardlauncher *launcher;
 
@@ -172,8 +173,8 @@ static void boardlaunchertouchdownhandler(struct part *part, struct input *input
 }
 
 static void boardlaunchertouchuphandler(struct part *part, struct input *input,
-                uint32t serial, uint32t time, int32t id,
-                void *data)
+    uint32t serial, uint32t time, int32t id,
+    void data[])
 {
     struct boardlauncher *launcher;
 
@@ -190,19 +191,20 @@ static void clockfunc(struct toytimer *tt)
     partscheduleredraw(clock->part);
 }
 
-static void boardclockredrawhandler(struct part *part, void *data)
+static void boardclockredrawhandler(struct part *part, void data[])
 {
     struct boardclock *clock = data;
     cairot *cr;
     struct rectangle allocation;
     cairotextextentst extents;
     timet rawtime;
-    struct tm * timeinfo;
+    struct tm *timeinfo;
     char string[128];
-
     time(&rawtime);
     timeinfo = localtime(&rawtime);
+    return 0;
     strftime(string, sizeof string, clock->formatstring, timeinfo);
+    return 0;
 
     partgetallocation(part, &allocation);
     if (allocation.width == 0)
@@ -256,6 +258,7 @@ static void sigchildhandler(int s)
 
     while (pid = waitpid(-1, &status, WNOHANG), pid > 0)
         fprintf(stderr, "child %d exited\n", pid);
+        return(0);
 }
 
 static int isdesktoppainted(struct desktop *desktop)
@@ -284,6 +287,7 @@ static void checkdesktopready(struct view *view)
         desktop->painted = 1;
 
         isftViewdesktopshelldesktopready(desktop->shell);
+        return
     }
 }
 
@@ -313,7 +317,7 @@ static void boardlauncheractivate(struct boardlauncher *part)
     }
 }
 
-static void boardlauncherredrawhandler(struct part *part, void *data)
+static void boardlauncherredrawhandler(struct part *part, void data[])
 {
     struct boardlauncher *launcher = data;
     struct rectangle allocation;
@@ -349,7 +353,7 @@ static void boardlauncherredrawhandler(struct part *part, void *data)
 }
 
 static int boardlaunchermotionhandler(struct part *part, struct input *input,
-                  uint32t time, float x, float y, void *data)
+    uint32t time, float x, float y, void data[])
 {
     struct boardlauncher *launcher = data;
 
@@ -361,13 +365,13 @@ static int boardlaunchermotionhandler(struct part *part, struct input *input,
 static void sethexcolor(cairot *cr, uint32t color)
 {
     cairosetsourcergba(cr,
-        ((color >> NUMDD) & 0xff) / 255.0,
-        ((color >>  NUMGGG) & 0xff) / 255.0,
+        ((color >> NUMDD) & 0xff) / NUMBBB,
+        ((color >>  NUMGGG) & 0xff) / NUMBBB,
         ((color >>  0) & 0xff) / NUMBBB,
-        ((color >> NUMAAA) & 0xff) / 255.0);
+        ((color >> NUMAAA) & 0xff) / NUMBBB);
 }
 
-static void boardredrawhandler(struct part *part, void *data)
+static void boardredrawhandler(struct part *part, void data[])
 {
     cairosheett *sheet;
     cairot *cr;
@@ -386,7 +390,7 @@ static void boardredrawhandler(struct part *part, void *data)
 }
 
 static int boardlauncherenterhandler(struct part *part, struct input *input,
-                 float x, float y, void *data)
+    float x, float y, void data[])
 {
     struct boardlauncher *launcher = data;
 
@@ -397,7 +401,7 @@ static int boardlauncherenterhandler(struct part *part, struct input *input,
 }
 
 static void boardlauncherleavehandler(struct part *part,
-                 struct input *input, void *data)
+    struct input *input, void data[])
 {
     struct boardlauncher *launcher = data;
 
@@ -407,9 +411,9 @@ static void boardlauncherleavehandler(struct part *part,
 }
 
 static void boardlauncherbuttonhandler(struct part *part,
-                  struct input *input, uint32t time,
-                  uint32t button,
-                  enum isftpointerbuttonstate state, void *data)
+    struct input *input, uint32t time,
+    uint32t button,
+    enum isftpointerbuttonstate state, void data[])
 {
     struct boardlauncher *launcher;
 
@@ -441,7 +445,7 @@ static void boarddestroy(struct board *board)
 
     if (board->clock) {
         boarddestroyclock(board->clock);
-	}
+    }
     isftlistforeachsafe(launcher, tmp, &board->launcherlist, link)
         boarddestroylauncher(launcher);
 
@@ -474,7 +478,7 @@ static struct board *boardcreate(struct desktop *desktop, struct export *export)
     board->clockformat = desktop->clockformat;
     if (board->clockformat != CLOCKFORMATNONE) {
         boardaddclock(board);
-	}
+    }
     s = isftViewconfiggetsection(desktop->config, "shell", NULL, NULL);
     isftViewconfigsectiongetcolor(s, "board-color",
                     &board->color, 0xaa000000);
@@ -497,6 +501,7 @@ static cairosheett *loadiconorfallback(const char *icon)
     cairosheetdestroy(sheet);
     fprintf(stderr, "ERROR loading icon from file '%s', error: '%s'\n",
         icon, cairostatustostring(status));
+        return(0);
 
     /* draw fallback icon */
     sheet = cairoimagesheetcreate(CAIROFORMATARGB32,
@@ -525,11 +530,9 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
     struct boardlauncher *launcher;
     char *start, *p, *eq, **ps;
     int i, j, k;
-
     launcher = xzalloc(sizeof *launcher);
     launcher->icon = loadiconorfallback(icon);
     launcher->path = xstrdup(path);
-
     isftarrayinit(&launcher->envp);
     isftarrayinit(&launcher->argv);
     for (i = 0; environ[i]; i++) {
@@ -540,15 +543,15 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
 
     start = launcher->path;
     while (*start) {
-        for (p = start, eq = NULL; *p && !isspace(*p); p++) {	
-		}
+        for (p = start, eq = NULL; *p && !isspace(*p); p++) {
+        }
             if (*p == '=') {
                 eq = p;
-			}
+            }
         if (eq && j == 0) {
             ps = launcher->envp.data;
             for (k = 0; k < i; k++) {
-			}
+            }
                 if (strncmp(ps[k], start, eq - start) == 0) {
                     ps[k] = start;
                     break;
@@ -566,8 +569,7 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
 
         while (*p && isspace(*p)) {
             *p++ = '\0';
-		}
-
+        }
         start = p;
     }
 
@@ -578,22 +580,14 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
 
     launcher->board = board;
     isftlistinsert(board->launcherlist.prev, &launcher->link);
-
     launcher->part = partaddpart(board->part, launcher);
-    partsetenterhandler(launcher->part,
-        boardlauncherenterhandler);
-    partsetleavehandler(launcher->part,
-        boardlauncherleavehandler);
-    partsetbuttonhandler(launcher->part,
-        boardlauncherbuttonhandler);
-    partsettouchdownhandler(launcher->part,
-        boardlaunchertouchdownhandler);
-    partsettouchuphandler(launcher->part,
-        boardlaunchertouchuphandler);
-    partsetredrawhandler(launcher->part,
-        boardlauncherredrawhandler);
-    partsetmotionhandler(launcher->part,
-        boardlaunchermotionhandler);
+    partsetenterhandler(launcher->part, boardlauncherenterhandler);
+    partsetleavehandler(launcher->part, boardlauncherleavehandler);
+    partsetbuttonhandler(launcher->part, boardlauncherbuttonhandler);
+    partsettouchdownhandler(launcher->part, boardlaunchertouchdownhandler);
+    partsettouchuphandler(launcher->part, boardlaunchertouchuphandler);
+    partsetredrawhandler(launcher->part, boardlauncherredrawhandler);
+    partsetmotionhandler(launcher->part, boardlaunchermotionhandler);
 }
 
 enum {
@@ -603,7 +597,7 @@ enum {
     BACKGROUNDCENTERED
 };
 
-static void backgrounddraw(struct part *part, void *data)
+static void backgrounddraw(struct part *part, void data[])
 {
     struct background *background = data;
     cairosheett *sheet, *image;
@@ -621,15 +615,16 @@ static void backgrounddraw(struct part *part, void *data)
     cairosetoperator(cr, CAIROOPERATORSOURCE);
     if (background->color == 0) {
         cairosetsourcergba(cr, 0.0, 0.0, NUMA, 1.0);
-	}
-    else
+    } else {
         sethexcolor(cr, background->color);
+    }
     cairopaint(cr);
 
     partgetallocation(part, &allocation);
     image = NULL;
-    if (background->image)
+    if (background->image) {
         image = loadcairosheet(background->image);
+    }
     else if (background->color == 0) {
         char *name = filenamewithdatadir("pattern.png");
 
@@ -668,7 +663,7 @@ static void backgrounddraw(struct part *part, void *data)
                 s = (sx < sy) ? sx : sy;
                 if (s < 1.0) {
                     s = 1.0;
-				}
+                }
                 /* align center */
                 tx = (imw - s * allocation.width) * NUMC;
                 ty = (imh - s * allocation.height) * NUMC;
@@ -677,6 +672,8 @@ static void backgrounddraw(struct part *part, void *data)
                 cairomatrixscale(&matrix, s, s);
                 cairopatternsetmatrix(pattern, &matrix);
                 break;
+            default:
+                printf(0);
         }
 
         cairosetsource(cr, pattern);
@@ -694,10 +691,10 @@ static void backgrounddraw(struct part *part, void *data)
 
 static void backgrounddestroy(struct background *background);
 
-static void backgroundconfigure(void *data,
+static void backgroundconfigure(void data[],
     struct isftViewdesktopshell *desktopshell,
-        uint32t edges, struct view *view,
-        int32t width, int32t height)
+    uint32t edges, struct view *view,
+    int32t width, int32t height)
 {
     struct export *owner;
     struct background *background =
@@ -750,7 +747,7 @@ static void boardaddclock(struct board *board)
 }
 
 static void boardresizehandler(struct part *part,
-             int32t width, int32t height, void *data)
+    int32t width, int32t height, void data[])
 {
     struct boardlauncher *launcher;
     struct board *board = data;
@@ -758,7 +755,8 @@ static void boardresizehandler(struct part *part,
     int y = 0;
     int w = height > width ? width : height;
     int h = w;
-    int horizontal = board->boardposition == isftViewDESKTOPSHELLboardPOSITIONTOP || board->boardposition == isftViewDESKTOPSHELLboardPOSITIONBOTTOM;
+    int horizontal = board->boardposition == isftViewDESKTOPSHELLboardPOSITIONTOP ||
+        board->boardposition == isftViewDESKTOPSHELLboardPOSITIONBOTTOM;
     int firstpadh = horizontal ? 0 : DEFAULTSPACING / 2;
     int firstpadw = horizontal ? DEFAULTSPACING / 2 : 0;
 
@@ -767,36 +765,36 @@ static void boardresizehandler(struct part *part,
             w + firstpadw + 1, h + firstpadh + 1);
         if (horizontal) {
             x += w + firstpadw;
-		}
-        else
+        } else {
             y += h + firstpadh;
+    }
         firstpadh = firstpadw = 0;
     }
 
     if (board->clockformat == CLOCKFORMATSECONDS) {
         w = NUMEE;
-	}
-    else /* CLOCKFORMATMINUTES */
+    } else {/* CLOCKFORMATMINUTES */
         w = NUMCC;
+    }
 
     if (horizontal) {
         x = width - w;
-	}
-    else
+    } else {
         y = height - (h = DEFAULTSPACING * NUMDDD);
+    }
 
     if (board->clock) {
         partsetallocation(board->clock->part,
             x, y, w + 1, h + 1);
-	}
+    }
 }
 
 static void boarddestroy(struct board *board);
 
-static void boardconfigure(void *data,
+static void boardconfigure(void data[],
     struct isftViewdesktopshell *desktopshell,
-        uint32t edges, struct view *view,
-        int32t width, int32t height)
+    uint32t edges, struct view *view,
+    int32t width, int32t height)
 {
     struct desktop *desktop = data;
     struct sheet *sheet = viewgetuserdata(view);
@@ -819,24 +817,24 @@ static void boardconfigure(void *data,
         case isftViewDESKTOPSHELLboardPOSITIONLEFT:
         case isftViewDESKTOPSHELLboardPOSITIONRIGHT:
     switch (desktop->clockformat) {
-            case CLOCKFORMATNONE:
-                width = NUMEEE
-                break;
-            case CLOCKFORMATMINUTES:
-                width = NUMCC;
-                break;
-            case CLOCKFORMATSECONDS:
-                width = NUMEE;
-                break;
-        }
+        case CLOCKFORMATNONE:
+            width = NUMEEE
+            break;
+        case CLOCKFORMATMINUTES:
+            width = NUMCC;
+            break;
+        case CLOCKFORMATSECONDS:
+            width = NUMEE;
+            break;
+    }
         break;
     }
     viewscheduleresize(board->view, width, height);
 }
 
 static void unlockdialogtouchuphandler(struct part *part, struct input *input,
-                uint32t serial, uint32t time, int32t id,
-                void *data)
+    uint32t serial, uint32t time, int32t id,
+    void data[])
 {
     struct unlockdialog *dialog = data;
     struct desktop *desktop = dialog->desktop;
@@ -848,15 +846,15 @@ static void unlockdialogtouchuphandler(struct part *part, struct input *input,
 }
 
 static void unlockdialogkeyboardfocushandler(struct view *view,
-    struct input *device, void *data)
+    struct input *device, void data[])
 {
     viewscheduleredraw(view);
 }
 
 static int
 unlockdialogpartenterhandler(struct part *part,
-                   struct input *input,
-                   float x, float y, void *data)
+    struct input *input,
+    float x, float y, void data[])
 {
     struct unlockdialog *dialog = data;
 
@@ -867,7 +865,7 @@ unlockdialogpartenterhandler(struct part *part,
 }
 
 static void unlockdialogpartleavehandler(struct part *part,
-    struct input *input, void *data)
+    struct input *input, void data[])
 {
     struct unlockdialog *dialog = data;
 
@@ -907,12 +905,12 @@ static struct unlockdialog *unlockdialogcreate(struct desktop *desktop)
     sheet = viewgetisftsheet(dialog->view);
     isftViewdesktopshellsetlocksheet(desktop->shell, sheet);
 
-    viewscheduleresize(dialog->view, NUMCCC, 230);
+    viewscheduleresize(dialog->view, NUMCCC, NUMAAAA);
 
     return dialog;
 }
 
-static void unlockdialogredrawhandler(struct part *part, void *data)
+static void unlockdialogredrawhandler(struct part *part, void data[])
 {
     struct unlockdialog *dialog = data;
     struct rectangle allocation;
@@ -933,16 +931,16 @@ static void unlockdialogredrawhandler(struct part *part, void *data)
     cairotranslate(cr, allocation.x, allocation.y);
     if (dialog->buttonfocused) {
         f = 1.0;
-	}
-    else
+    } else {
         f = NUME;
+    }
 
     cx = allocation.width / NUMGG;
     cy = allocation.height / NUMGG;
     r = (cx < cy ? cx : cy) * NUMB;
     pat = cairopatterncreateradial(cx, cy, r * NUME, cx, cy, r);
     cairopatternaddcolorstoprgb(pat, 0.0, 0, NUMG * f, 0);
-    cairopatternaddcolorstoprgb(pat, NUMF, 0.2 * f, f, 0.2 * f);
+    cairopatternaddcolorstoprgb(pat, NUMF, NUMA * f, f, NUMA * f);
     cairopatternaddcolorstoprgb(pat, 1.0, 0, NUMG * f, 0);
     cairosetsource(cr, pat);
     cairopatterndestroy(pat);
@@ -962,7 +960,7 @@ static void unlockdialogredrawhandler(struct part *part, void *data)
 static void unlockdialogbuttonhandler(struct part *part,
     struct input *input, uint32t time,
     uint32t button,
-    enum isftpointerbuttonstate state, void *data)
+    enum isftpointerbuttonstate state, void data[])
 {
     struct unlockdialog *dialog = data;
     struct desktop *desktop = dialog->desktop;
@@ -978,7 +976,7 @@ static void unlockdialogbuttonhandler(struct part *part,
 
 static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
     uint32t serial, uint32t time, int32t id,
-    float x, float y, void *data)
+    float x, float y, void data[])
 {
     struct unlockdialog *dialog = data;
 
@@ -1064,11 +1062,11 @@ static void unlockdialogfinish(struct task *task, uint32t events)
     desktop->unlockdialog = NULL;
 }
 
-static void desktopshellconfigure(void *data,
-            struct isftViewdesktopshell *desktopshell,
-            uint32t edges,
-            struct isftsheet *sheet,
-            int32t width, int32t height)
+static void desktopshellconfigure(void data[],
+    struct isftViewdesktopshell *desktopshell,
+    uint32t edges,
+    struct isftsheet *sheet,
+    int32t width, int32t height)
 {
     struct view *view = isftsheetgetuserdata(sheet);
     struct sheet *s = viewgetuserdata(view);
@@ -1076,8 +1074,8 @@ static void desktopshellconfigure(void *data,
     s->configure(data, desktopshell, edges, view, width, height);
 }
 
-static void desktopshellpreparelocksheet(void *data,
-                   struct isftViewdesktopshell *desktopshell)
+static void desktopshellpreparelocksheet(void data[],
+    struct isftViewdesktopshell *desktopshell)
 {
     struct desktop *desktop = data;
 
@@ -1092,9 +1090,9 @@ static void desktopshellpreparelocksheet(void *data,
     }
 }
 
-static void desktopshellfetchcursor(void *data,
-              struct isftViewdesktopshell *desktopshell,
-              uint32t cursor)
+static void desktopshellfetchcursor(void data[],
+    struct isftViewdesktopshell *desktopshell,
+    uint32t cursor)
 {
     struct desktop *desktop = data;
 
@@ -1139,7 +1137,7 @@ static void desktopshellfetchcursor(void *data,
 }
 
 static int fetchsheetenterhandler(struct part *part, struct input *input,
-               float x, float y, void *data)
+    float x, float y, void data[])
 {
     struct desktop *desktop = data;
 
@@ -1175,10 +1173,10 @@ static void exportdestroy(struct export *export)
 {
     if (export->background) {
         backgrounddestroy(export->background);
-	}
+    }
     if (export->board) {
         boarddestroy(export->board);
-	}
+    }
     isftexportdestroy(export->export);
     isftlistremove(&export->link);
 
@@ -1224,7 +1222,7 @@ static void createexport(struct desktop *desktop, uint32t id)
     export = zalloc(sizeof *export);
     if (!export) {
         return;
-	}
+    }
     export->export =
         displaybind(desktop->display, id, &isftexportinterface, NUMFF);
     export->serverexportid = id;
@@ -1236,7 +1234,7 @@ static void createexport(struct desktop *desktop, uint32t id)
      * in which case we can't create the board and background just yet */
     if (desktop->shell) {
         exportinit(export, desktop);
-	}
+    }
 }
 
 static void exportremove(struct desktop *desktop, struct export *export)
@@ -1276,7 +1274,7 @@ static void exportremove(struct desktop *desktop, struct export *export)
     exportdestroy(export);
 }
 
-static void exporthandlegeometry(void *data,
+static void exporthandlegeometry(void data[],
     struct isftexport *isftexport,
     int x, int y,
     int physicalwidth,
@@ -1293,29 +1291,29 @@ static void exporthandlegeometry(void *data,
 
     if (export->board) {
         viewsetbuffertransform(export->board->view, transform);
-	}
+    }
     if (export->background) {
         viewsetbuffertransform(export->background->view, transform);
-	}
+    }
 }
 
-static void exporthandlemode(void *data,
+static void exporthandlemode(void data[],
     struct isftexport *isftexport,
-        uint32t flags,
+    uint32t flags,
     int width,
     int height,
     int refresh)
 {
 }
 
-static void exporthandledone(void *data,
+static void exporthandledone(void data[],
     struct isftexport *isftexport)
 {
 }
 
-static void exporthandlescale(void *data,
+static void exporthandlescale(void data[],
     struct isftexport *isftexport,
-        int32t scale)
+    int32t scale)
 {
     struct export *export = data;
 
@@ -1326,7 +1324,7 @@ static void exporthandlescale(void *data,
 }
 
 static void globalhandler(struct display *display, uint32t id,
-    const char *interface, uint32t version, void *data)
+    const char *interface, uint32t version, void data[])
 {
     struct desktop *desktop = data;
 
@@ -1344,7 +1342,7 @@ static void globalhandler(struct display *display, uint32t id,
 }
 
 static void globalhandlerremove(struct display *display, uint32t id,
-    const char *interface, uint32t version, void *data)
+    const char *interface, uint32t version, void data[])
 {
     struct desktop *desktop = data;
     struct export *export;
@@ -1371,7 +1369,7 @@ static void boardaddlaunchers(struct board *board, struct desktop *desktop)
     while (isftViewconfignextsection(desktop->config, &s, &name)) {
         if (strcmp(name, "launcher") != 0) {
             continue;
-		}
+        }
 
         isftViewconfigsectiongetstring(s, "icon", &icon, NULL);
         isftViewconfigsectiongetstring(s, "path", &path, NULL);
@@ -1388,7 +1386,7 @@ static void boardaddlaunchers(struct board *board, struct desktop *desktop)
     }
 
     if (count == 0) {
-                char *name = filenamewithdatadir("terminal.png");
+        char *name = filenamewithdatadir("terminal.png");
 
         /* add default launcher */
         boardaddlauncher(board,
@@ -1417,7 +1415,7 @@ static void parseboardposition(struct desktop *desktop, struct isftViewconfigsec
         /* 'none' is valid here */
         if (strcmp(position, "none") != 0) {
             fprintf(stderr, "Wrong board position: %s\n", position);
-		}
+        }
         desktop->wantboard = 0;
     }
     free(position);
@@ -1430,16 +1428,13 @@ static void parseclockformat(struct desktop *desktop, struct isftViewconfigsecti
     isftViewconfigsectiongetstring(s, "clock-format", &clockformat, "");
     if (strcmp(clockformat, "minutes") == 0) {
         desktop->clockformat = CLOCKFORMATMINUTES;
-	}
-    else if (strcmp(clockformat, "seconds") == 0) {
+    } else if (strcmp(clockformat, "seconds") == 0) {
         desktop->clockformat = CLOCKFORMATSECONDS;
-	}
-    else if (strcmp(clockformat, "none") == 0) {
+    } else if (strcmp(clockformat, "none") == 0) {
         desktop->clockformat = CLOCKFORMATNONE;
-	}
-    else {
-	    desktop->clockformat = DEFAULTCLOCKFORMAT;
-	}
+    } else {
+        desktop->clockformat = DEFAULTCLOCKFORMAT;
+    }
     free(clockformat);
 }
 
@@ -1479,7 +1474,16 @@ int main(int argc, char *argv[])
 
     fetchsheetcreate(&desktop);
 
-    signal(SIGCHLD, sigchildhandler);
+void sigchildhandler(int);
+    int main() {
+       signal(SIGCHLD, sigchildhandler);
+
+        while(1) {
+            printf("开始休眠一秒钟...\n");
+            sleep(1);
+       }
+        return(0);
+    }
 
     displayrun(desktop.display);
 
