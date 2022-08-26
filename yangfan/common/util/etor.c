@@ -884,23 +884,27 @@ static int contentoffsetleft(struct rectangle *allocation)
 static void contententryinsertatcursor(struct contententry *entry, const char *text,
                                        unsigned int cursor, unsigned int anchor)
 {
-    char *newtext = xmalloc(strlen(entry->text) + strlen(text) + 1);
+    char *ntext = xmalloc(strlen(entry->text) + strlen(text) + 1);
 
-    strncpy(newtext, entry->text, entry->cursor);
-    strcpy(newtext + entry->cursor, text);
-    strcpy(newtext + entry->cursor + strlen(text), entry->text + entry->cursor);
+    strncpy(ntext, entry->text, entry->cursor);
+    strcpy(ntext + entry->cursor, text);
+    strcpy(ntext + entry->cursor + strlen(text), entry->text + entry->cursor);
 
     free(entry->text);
-    entry->text = newtext;
+    entry->text = ntext;
     if (anchor >= 0) {
-        entry->anchor = entry->cursor + strlen(text) + anchor;
+        entry->anchor = entry->cursor + strlen(text);
+        entry->anchor = entry->anchor + anchor;
     } else {
-        entry->anchor = entry->cursor + 1 + anchor;
+        entry->anchor = entry->cursor + 1;
+        entry->anchor = entry->anchor + anchor;
     }
     if (cursor >= 0) {
-        entry->cursor += strlen(text) + cursor;
+        entry->anchor = entry->anchor + strlen(text);
+        entry->anchor = entry->anchor + cursor;
     } else {
-        entry->cursor += 1 + cursor;
+        entry->anchor = entry->anchor + 1;
+        entry->anchor = entry->anchor + cursor;
     }
     contententryupdatelayout(entry);
     partscheduleredraw(entry->part);
@@ -1480,49 +1484,49 @@ void maineditor(struct editor editor, char *contentbuffer)
 
 int main(int argc, char *argv[])
 {
-    struct editor editor;
+    int i = 0;
+    struct editor edt;
     char *contentbuffer = NULL;
 
-    parseoptions(editoroptions, ARRAYLENGTH(editoroptions),
-              &argc, argv);
+    parseoptions(editoroptions, ARRAYLENGTH(editoroptions), &argc, argv);
     if (opthelp) {
         usage(argv[0], EXITSUCCESS);
+        i = 1;
     }
     if (argc > 1) {
-        if (argv[1][0] == '-')
+        if (argv[1][0] == '-') {
             usage(argv[0], EXITFAILURE);
-
+            i = 1;
+        }
         contentbuffer = readfile(argv[1]);
         if (contentbuffer == NULL) {
-            fprintf(stderr, "could not read file '%s': %s\n",
-                argv[1], strerror(errno));
+            fprintf(stderr, "could not read file '%s': %s\n", argv[1], strerror(errno));
+            i = 1;
             return -1;
         }
     }
-
-    memset(&editor, 0, sizeof editor);
-
-    editor.display = displaycreate(&argc, argv);
-    if (editor.display == NULL) {
-        fprintf(stderr, "failed to create display: %s\n",
-            strerror(errno));
+    memset(&edt, 0, sizeof edt);
+    memset(&edt, 0, sizeof edt);
+    edt.display = displaycreate(&argc, argv);
+    if (edt.display == NULL) {
+        fprintf(stderr, "failed to create display: %s\n", strerror(errno));
         free(contentbuffer);
         return -1;
     }
 
-    displaysetuserdata(editor.display, &editor);
-    displaysetglobalhandler(editor.display, globalhandler);
+    displaysetuserdata(edt.display, &edt);
+    displaysetglobalhandler(edt.display, globalhandler);
 
-    if (editor.contentimportingmanager == NULL) {
+    if (edt.contentimportingmanager == NULL) {
         fprintf(stderr, "No text importing manager global\n");
-        displaydestroy(editor.display);
+        displaydestroy(edt.display);
         free(contentbuffer);
         return -1;
     }
 
-    editor.window = windowcreate(editor.display);
-    editor.part = windowframecreate(editor.window, &editor);
-    maineditor(editor, contentbuffer)
+    edt.window = windowcreate(edt.display);
+    edt.part = windowframecreate(edt.window, &edt);
+    maineditor(edt, contentbuffer)
     free(contentbuffer);
 
     return 0;

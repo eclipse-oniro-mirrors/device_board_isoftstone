@@ -293,32 +293,6 @@ static void checkdesktopready(struct view *view)
     }
 }
 
-static void boardlauncheractivate(struct boardlauncher *part)
-{
-    char **argv;
-    pidt pid;
-
-    pid = fork();
-    if (pid < 0) {
-        fprintf(stderr, "fork failed: %s\n", strerror(errno));
-        return;
-    }
-
-    if (pid)
-        return;
-
-    argv = part->argv.data;
-
-    if (setsid() == -1)
-        exit(EXITFAILURE);
-
-    if (execve(argv[0], argv, part->envp.data) < 0) {
-        fprintf(stderr, "execl '%s' failed: %s\n", argv[0],
-            strerror(errno));
-        exit(1);
-    }
-}
-
 static void boardlauncherredrawhandler(struct part *part, void data[])
 {
     struct boardlauncher *launcher = data;
@@ -532,15 +506,15 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
 {
     struct boardlauncher *launcher;
     char *start, *p, *eq, **ps;
-    int i, j, k;
+    int l, j, s;
     launcher = xzalloc(sizeof *launcher);
     launcher->icon = loadiconorfallback(icon);
     launcher->path = xstrdup(path);
     isftarrayinit(&launcher->envp);
     isftarrayinit(&launcher->argv);
-    for (i = 0; environ[i]; i++) {
+    for (l = 0; environ[l]; l++) {
         ps = isftarrayadd(&launcher->envp, sizeof *ps);
-        *ps = environ[i];
+        *ps = environ[l];
     }
     j = 0;
 
@@ -553,16 +527,16 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
             }
         if (eq && j == 0) {
             ps = launcher->envp.data;
-            for (k = 0; k < i; k++) {
+            for (s = 0; s < l; s++) {
             }
-                if (strncmp(ps[k], start, eq - start) == 0) {
-                    ps[k] = start;
+                if (strncmp(ps[s], start, eq - start) == 0) {
+                    ps[s] = start;
                     break;
                 }
-            if (k == i) {
+            if (s == l) {
                 ps = isftarrayadd(&launcher->envp, sizeof *ps);
                 *ps = start;
-                i++;
+                l++;
             }
         } else {
             ps = isftarrayadd(&launcher->argv, sizeof *ps);
@@ -897,14 +871,6 @@ static struct unlockdialog *unlockdialogcreate(struct desktop *desktop)
         unlockdialogredrawhandler);
     partsetenterhandler(dialog->button,
         unlockdialogpartenterhandler);
-    partsetleavehandler(dialog->button,
-        unlockdialogpartleavehandler);
-    partsetbuttonhandler(dialog->button,
-        unlockdialogbuttonhandler);
-    partsettouchdownhandler(dialog->button,
-        unlockdialogtouchdownhandler);
-    partsettouchuphandler(dialog->button,
-        unlockdialogtouchuphandler);
 
     sheet = viewgetisftsheet(dialog->view);
     isftViewdesktopshellsetlocksheet(desktop->shell, sheet);
