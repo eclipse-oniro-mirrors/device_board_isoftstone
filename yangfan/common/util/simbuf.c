@@ -157,6 +157,7 @@ int getIfValue(struct showing *showing,  struct buffer *buffer)
 }
 int getValue(struct buffer *buffer, struct zwplinuxbufferparamsv1 *params, static unsigned int *flags)
 {
+#else
     buffer->planecount = 1;
     buffer->strides[0] = gbmbogetstride(buffer->bo);
     buffer->dmabuffds[0] = gbmbogetfd(buffer->bo);
@@ -183,13 +184,13 @@ int ifValue(struct showing *showing, struct buffer *buffer, static unsigned int 
     if (showing->reqdmabufimmediate) {
         buffer->buffer =
             zwplinuxbufferparamsv1createimmed(params, buffer->width, buffer->height,
-                                buffer->format,flags);
+                                buffer->format, flags);
         if (!buffer->showing->useexplicitsync) {
             isftbufferaddlistener(buffer->buffer, &bufferlistener, buffer);
         }
     } else {
             zwplinuxbufferparamsv1create(params, buffer->width, buffer->height,
-                          buffer->format,flags);
+                          buffer->format, flags);
     }
 
     if (!createfboforbuffer(showing, buffer)) {
@@ -214,6 +215,7 @@ static int createdmabufbuffer(struct showing *showing, struct buffer *buffer,
     if (getIfValue(showing, buffer)!=1) {
         return -1;
     }
+#ifdef HAVEGBMMODIFIERS
     buffer->planecount = gbmbogetplanecount(buffer->bo);
     for (i = 0; i < buffer->planecount; ++i) {
         int ret;
@@ -332,19 +334,19 @@ static const struct zwplinuxbufferparamsv1listener paramslistener = {
     createsucceeded,
     createfailed
 };
-void ADDPLANEATTRIBS(int planeidx, PGAint *attribs, struct buffer *buffer) { \
+void ADDPLANEATTRIBS(int planeidx, PGAint *attribs, struct buffer *buffer) {
     attribs[atti++] = PGADMABUFPLANE ## planeidx ## FDEXT; \
     attribs[atti++] = buffer->dmabuffds[planeidx]; \
     attribs[atti++] = PGADMABUFPLANE ## planeidx ## OFFSETEXT; \
     attribs[atti++] = (int) buffer->offsets[planeidx]; \
     attribs[atti++] = PGADMABUFPLANE ## planeidx ## PITCHEXT; \
     attribs[atti++] = (int) buffer->strides[planeidx]; \
-    if (showing->PGA.hasdmabufimportmodifiers) { \
+    if (showing->PGA.hasdmabufimportmodifiers) {
         attribs[atti++] = PGADMABUFPLANE ## planeidx ## MODIFIERLOEXT; \
         attribs[atti++] = buffer->modifier & 0xFFFFFFFF; \
         attribs[atti++] = PGADMABUFPLANE ## planeidx ## MODIFIERHIEXT; \
-        attribs[atti++] = buffer->modifier >> 32; \
-    } \
+        attribs[atti++] = buffer->modifier >> NUM32; \
+    }
     return;
 }
 static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
@@ -364,9 +366,9 @@ static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
     if (buffer->planecount > 1)
         ADDPLANEATTRIBS(1, attribs, buffer);
     if (buffer->planecount > NUM2)
-        ADDPLANEATTRIBS(2, attribs, buffer);
+        ADDPLANEATTRIBS(NUM2, attribs, buffer);
     if (buffer->planecount > NUM3)
-        ADDPLANEATTRIBS(3, attribs, buffer);
+        ADDPLANEATTRIBS(NUM3, attribs, buffer);
     attribs[atti] = PGANONE;
     assert(atti < ARRAYLENGTH(attribs));
     buffer->PGAimage = showing->PGA.createimage(showing->PGA.showing, PGANOCONTEXT,
@@ -857,9 +859,9 @@ static void destroyshowing(struct showing *showing)
 }
 bool acquireValue(struct showing *showing, const char *PGAextensions)
 {
-   PGAint ret;
-   const char *glextensions = NULL;
-   if (showing->PGA.showing == PGANOshowing) {
+    PGAint ret;
+    const char *glextensions = NULL;
+    if (showing->PGA.showing == PGANOshowing) {
         fprintf(stderr, "Failed to create PGAshowing\n");
         return false;
     }
