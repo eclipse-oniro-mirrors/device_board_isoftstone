@@ -1157,90 +1157,90 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
 
     if (terminal->escape_flags & ESC_FLAG_WHAT) {
         switch(code) {
-        case 1:  /* DECCKM */
-            if (sr)    terminal->key_mode = KM_APPLICATION;
-            else    terminal->key_mode = KM_NORMAL;
-            break;
-        case 2:  /* DECANM */
-            /* No VT52 support yet */
-            terminal->g0 = CS_US;
-            terminal->g1 = CS_US;
-            terminal->cs = terminal->g0;
-            break;
-        case 3:  /* DECCOLM */
-            if (sr)
-                terminal_resize(terminal, 132, 24);
-            else
-                terminal_resize(terminal, 80, 24);
+			case 1:  /* DECCKM */
+				if (sr)    terminal->key_mode = KM_APPLICATION;
+				else    terminal->key_mode = KM_NORMAL;
+				break;
+			case 2:  /* DECANM */
+				/* No VT52 support yet */
+				terminal->g0 = CS_US;
+				terminal->g1 = CS_US;
+				terminal->cs = terminal->g0;
+				break;
+			case 3:  /* DECCOLM */
+				if (sr)
+					terminal_resize(terminal, 132, 24);
+				else
+					terminal_resize(terminal, 80, 24);
 
-            /* set columns, but also home cursor and clear screen */
-            terminal->row = 0; terminal->column = 0;
-            for (i = 0; i < terminal->height; i++) {
-                memset(terminal_get_row(terminal, i),
-                    0, terminal->data_pitch);
-                attr_init(terminal_get_attr_row(terminal, i),
-                    terminal->curr_attr, terminal->width);
-            }
-            break;
-        case 5:  /* DECSCNM */
-            if (sr)    terminal->mode |=  MODE_INVERSE;
-            else    terminal->mode &= ~MODE_INVERSE;
-            break;
-        case 6:  /* DECOM */
-            terminal->origin_mode = sr;
-            if (terminal->origin_mode)
-                terminal->row = terminal->margin_top;
-            else
-                terminal->row = 0;
-            terminal->column = 0;
-            break;
-        case 7:  /* DECAWM */
-            if (sr)    terminal->mode |=  MODE_AUTOWRAP;
-            else    terminal->mode &= ~MODE_AUTOWRAP;
-            break;
-        case 8:  /* DECARM */
-            if (sr)    terminal->mode |=  MODE_AUTOREPEAT;
-            else    terminal->mode &= ~MODE_AUTOREPEAT;
-            break;
-        case 12:  /* Very visible cursor (CVVIS) */
-            /* FIXME: What do we do here. */
-            break;
-        case 25:
-            if (sr)    terminal->mode |=  MODE_SHOW_CURSOR;
-            else    terminal->mode &= ~MODE_SHOW_CURSOR;
-            break;
-        case 1034:   /* smm/rmm, meta mode on/off */
-            /* ignore */
-            break;
-        case 1037:   /* deleteSendsDel */
-            if (sr)    terminal->mode |=  MODE_DELETE_SENDS_DEL;
-            else    terminal->mode &= ~MODE_DELETE_SENDS_DEL;
-            break;
-        case 1039:   /* altSendsEscape */
-            if (sr)    terminal->mode |=  MODE_ALT_SENDS_ESC;
-            else    terminal->mode &= ~MODE_ALT_SENDS_ESC;
-            break;
-        case 1049:   /* rmcup/smcup, alternate screen */
-            /* Ignore.  Should be possible to implement,
-             * but it's kind of annoying. */
-            break;
-        default:
-            fprintf(stderr, "Unknown parameter: ?%d\n", code);
-            break;
+				/* set columns, but also home cursor and clear screen */
+				terminal->row = 0; terminal->column = 0;
+				for (i = 0; i < terminal->height; i++) {
+					memset(terminal_get_row(terminal, i),
+						0, terminal->data_pitch);
+					attr_init(terminal_get_attr_row(terminal, i),
+						terminal->curr_attr, terminal->width);
+				}
+				break;
+			case 5:  /* DECSCNM */
+				if (sr)    terminal->mode |=  MODE_INVERSE;
+				else    terminal->mode &= ~MODE_INVERSE;
+				break;
+			case 6:  /* DECOM */
+				terminal->origin_mode = sr;
+				if (terminal->origin_mode)
+					terminal->row = terminal->margin_top;
+				else
+					terminal->row = 0;
+				terminal->column = 0;
+				break;
+			case 7:  /* DECAWM */
+				if (sr)    terminal->mode |=  MODE_AUTOWRAP;
+				else    terminal->mode &= ~MODE_AUTOWRAP;
+				break;
+			case 8:  /* DECARM */
+				if (sr)    terminal->mode |=  MODE_AUTOREPEAT;
+				else    terminal->mode &= ~MODE_AUTOREPEAT;
+				break;
+			case 12:  /* Very visible cursor (CVVIS) */
+				/* FIXME: What do we do here. */
+				break;
+			case 25:
+				if (sr)    terminal->mode |=  MODE_SHOW_CURSOR;
+				else    terminal->mode &= ~MODE_SHOW_CURSOR;
+				break;
+			case 1034:   /* smm/rmm, meta mode on/off */
+				/* ignore */
+				break;
+			case 1037:   /* deleteSendsDel */
+				if (sr)    terminal->mode |=  MODE_DELETE_SENDS_DEL;
+				else    terminal->mode &= ~MODE_DELETE_SENDS_DEL;
+				break;
+			case 1039:   /* altSendsEscape */
+				if (sr)    terminal->mode |=  MODE_ALT_SENDS_ESC;
+				else    terminal->mode &= ~MODE_ALT_SENDS_ESC;
+				break;
+			case 1049:   /* rmcup/smcup, alternate screen */
+				/* Ignore.  Should be possible to implement,
+				* but it's kind of annoying. */
+				break;
+			default:
+				fprintf(stderr, "Unknown parameter: ?%d\n", code);
+				break;
         }
     } else {
         switch(code) {
-        case 4:  /* IRM */
-            if (sr)    terminal->mode |=  MODE_IRM;
-            else    terminal->mode &= ~MODE_IRM;
-            break;
-        case 20: /* LNM */
-            if (sr)    terminal->mode |=  MODE_LF_NEWLINE;
-            else    terminal->mode &= ~MODE_LF_NEWLINE;
-            break;
-        default:
-            fprintf(stderr, "Unknown parameter: %d\n", code);
-            break;
+			case 4:  /* IRM */
+				if (sr)    terminal->mode |=  MODE_IRM;
+				else    terminal->mode &= ~MODE_IRM;
+				break;
+			case 20: /* LNM */
+				if (sr)    terminal->mode |=  MODE_LF_NEWLINE;
+				else    terminal->mode &= ~MODE_LF_NEWLINE;
+				break;
+			default:
+				fprintf(stderr, "Unknown parameter: %d\n", code);
+				break;
         }
     }
 }
@@ -1260,21 +1260,21 @@ static void handle_osc(struct terminal *terminal)
     if (*p == ';') p++;
 
     switch (code) {
-    case 0: /* Icon name and window title */
-    case 1: /* Icon label */
-    case 2: /* Window title*/
-        free(terminal->title);
-        terminal->title = strdup(p);
-        window_set_title(terminal->window, p);
-        break;
-    case 7: /* shell cwd as uri */
-        break;
-    case 777: /* Desktop notifications */
-        break;
-    default:
-        fprintf(stderr, "Unknown OSC escape code %d, text %s\n",
-            code, p);
-        break;
+		case 0: /* Icon name and window title */
+		case 1: /* Icon label */
+		case 2: /* Window title*/
+			free(terminal->title);
+			terminal->title = strdup(p);
+			window_set_title(terminal->window, p);
+			break;
+		case 7: /* shell cwd as uri */
+			break;
+		case 777: /* Desktop notifications */
+			break;
+		default:
+			fprintf(stderr, "Unknown OSC escape code %d, text %s\n",
+				code, p);
+			break;
     }
 }
 
@@ -1306,414 +1306,414 @@ static void handle_escape(struct terminal *terminal)
     }
 
     switch (*p) {
-    case '@':    /* ICH - Insert <count> blank characters */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        terminal_shift_line(terminal, count);
-        break;
-    case 'A':    /* CUU - Move cursor up <count> rows */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if (terminal->row - count >= terminal->margin_top)
-            terminal->row -= count;
-        else
-            terminal->row = terminal->margin_top;
-        break;
-    case 'B':    /* CUD - Move cursor down <count> rows */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if (terminal->row + count <= terminal->margin_bottom)
-            terminal->row += count;
-        else
-            terminal->row = terminal->margin_bottom;
-        break;
-    case 'C':    /* CUF - Move cursor right by <count> columns */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if ((terminal->column + count) < terminal->width)
-            terminal->column += count;
-        else
-            terminal->column = terminal->width - 1;
-        break;
-    case 'D':    /* CUB - Move cursor left <count> columns */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if ((terminal->column - count) >= 0)
-            terminal->column -= count;
-        else
-            terminal->column = 0;
-        break;
-    case 'E':    /* CNL - Move cursor down <count> rows, to column 1 */
-        count = set[0] ? args[0] : 1;
-        if (terminal->row + count <= terminal->margin_bottom)
-            terminal->row += count;
-        else
-            terminal->row = terminal->margin_bottom;
-        terminal->column = 0;
-        break;
-    case 'F':    /* CPL - Move cursour up <count> rows, to column 1 */
-        count = set[0] ? args[0] : 1;
-        if (terminal->row - count >= terminal->margin_top)
-            terminal->row -= count;
-        else
-            terminal->row = terminal->margin_top;
-        terminal->column = 0;
-        break;
-    case 'G':    /* CHA - Move cursor to column <y> in current row */
-        y = set[0] ? args[0] : 1;
-        y = y <= 0 ? 1 : y > terminal->width ? terminal->width : y;
+		case '@':    /* ICH - Insert <count> blank characters */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			terminal_shift_line(terminal, count);
+			break;
+		case 'A':    /* CUU - Move cursor up <count> rows */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if (terminal->row - count >= terminal->margin_top)
+				terminal->row -= count;
+			else
+				terminal->row = terminal->margin_top;
+			break;
+		case 'B':    /* CUD - Move cursor down <count> rows */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if (terminal->row + count <= terminal->margin_bottom)
+				terminal->row += count;
+			else
+				terminal->row = terminal->margin_bottom;
+			break;
+		case 'C':    /* CUF - Move cursor right by <count> columns */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if ((terminal->column + count) < terminal->width)
+				terminal->column += count;
+			else
+				terminal->column = terminal->width - 1;
+			break;
+		case 'D':    /* CUB - Move cursor left <count> columns */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if ((terminal->column - count) >= 0)
+				terminal->column -= count;
+			else
+				terminal->column = 0;
+			break;
+		case 'E':    /* CNL - Move cursor down <count> rows, to column 1 */
+			count = set[0] ? args[0] : 1;
+			if (terminal->row + count <= terminal->margin_bottom)
+				terminal->row += count;
+			else
+				terminal->row = terminal->margin_bottom;
+			terminal->column = 0;
+			break;
+		case 'F':    /* CPL - Move cursour up <count> rows, to column 1 */
+			count = set[0] ? args[0] : 1;
+			if (terminal->row - count >= terminal->margin_top)
+				terminal->row -= count;
+			else
+				terminal->row = terminal->margin_top;
+			terminal->column = 0;
+			break;
+		case 'G':    /* CHA - Move cursor to column <y> in current row */
+			y = set[0] ? args[0] : 1;
+			y = y <= 0 ? 1 : y > terminal->width ? terminal->width : y;
 
-        terminal->column = y - 1;
-        break;
-    case 'f':    /* HVP - Move cursor to <x, y> */
-    case 'H':    /* CUP - Move cursor to <x, y> (origin at 1,1) */
-        x = (set[1] ? args[1] : 1) - 1;
-        x = x < 0 ? 0 :
-            (x >= terminal->width ? terminal->width - 1 : x);
+			terminal->column = y - 1;
+			break;
+		case 'f':    /* HVP - Move cursor to <x, y> */
+		case 'H':    /* CUP - Move cursor to <x, y> (origin at 1,1) */
+			x = (set[1] ? args[1] : 1) - 1;
+			x = x < 0 ? 0 :
+				(x >= terminal->width ? terminal->width - 1 : x);
 
-        y = (set[0] ? args[0] : 1) - 1;
-        if (terminal->origin_mode) {
-            y += terminal->margin_top;
-            y = y < terminal->margin_top ? terminal->margin_top :
-                (y > terminal->margin_bottom ? terminal->margin_bottom : y);
-        } else {
-            y = y < 0 ? 0 :
-                (y >= terminal->height ? terminal->height - 1 : y);
-        }
+			y = (set[0] ? args[0] : 1) - 1;
+			if (terminal->origin_mode) {
+				y += terminal->margin_top;
+				y = y < terminal->margin_top ? terminal->margin_top :
+					(y > terminal->margin_bottom ? terminal->margin_bottom : y);
+			} else {
+				y = y < 0 ? 0 :
+					(y >= terminal->height ? terminal->height - 1 : y);
+			}
 
-        terminal->row = y;
-        terminal->column = x;
-        break;
-    case 'I':    /* CHT */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        while (count > 0 && terminal->column < terminal->width) {
-            if (terminal->tab_ruler[terminal->column]) count--;
-            terminal->column++;
-        }
-        terminal->column--;
-        break;
-    case 'J':    /* ED - Erase display */
-        row = terminal_get_row(terminal, terminal->row);
-        attr_row = terminal_get_attr_row(terminal, terminal->row);
-        if (!set[0] || args[0] == 0 || args[0] > 2) {
-            memset(&row[terminal->column],
-                   0, (terminal->width - terminal->column) * sizeof(union utf8_char));
-            attr_init(&attr_row[terminal->column],
-                   terminal->curr_attr, terminal->width - terminal->column);
-            for (i = terminal->row + 1; i < terminal->height; i++) {
-                memset(terminal_get_row(terminal, i),
-                    0, terminal->data_pitch);
-                attr_init(terminal_get_attr_row(terminal, i),
-                    terminal->curr_attr, terminal->width);
-            }
-        } else if (args[0] == 1) {
-            memset(row, 0, (terminal->column+1) * sizeof(union utf8_char));
-            attr_init(attr_row, terminal->curr_attr, terminal->column+1);
-            for (i = 0; i < terminal->row; i++) {
-                memset(terminal_get_row(terminal, i),
-                    0, terminal->data_pitch);
-                attr_init(terminal_get_attr_row(terminal, i),
-                    terminal->curr_attr, terminal->width);
-            }
-        } else if (args[0] == 2) {
-            /* Clear screen by scrolling contents out */
-            terminal_scroll_buffer(terminal,
-                           terminal->end - terminal->start);
-        }
-        break;
-    case 'K':    /* EL - Erase line */
-        row = terminal_get_row(terminal, terminal->row);
-        attr_row = terminal_get_attr_row(terminal, terminal->row);
-        if (!set[0] || args[0] == 0 || args[0] > 2) {
-            memset(&row[terminal->column], 0,
-                (terminal->width - terminal->column) * sizeof(union utf8_char));
-            attr_init(&attr_row[terminal->column], terminal->curr_attr,
-                terminal->width - terminal->column);
-        } else if (args[0] == 1) {
-            memset(row, 0, (terminal->column+1) * sizeof(union utf8_char));
-            attr_init(attr_row, terminal->curr_attr, terminal->column+1);
-        } else if (args[0] == 2) {
-            memset(row, 0, terminal->data_pitch);
-            attr_init(attr_row, terminal->curr_attr, terminal->width);
-        }
-        break;
-    case 'L':    /* IL - Insert <count> blank lines */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if (terminal->row >= terminal->margin_top &&
-            terminal->row < terminal->margin_bottom)
-        {
-            top = terminal->margin_top;
-            terminal->margin_top = terminal->row;
-            terminal_scroll(terminal, 0 - count);
-            terminal->margin_top = top;
-        } else if (terminal->row == terminal->margin_bottom) {
-            memset(terminal_get_row(terminal, terminal->row),
-                   0, terminal->data_pitch);
-            attr_init(terminal_get_attr_row(terminal, terminal->row),
-                terminal->curr_attr, terminal->width);
-        }
-        break;
-    case 'M':    /* DL - Delete <count> lines */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if (terminal->row >= terminal->margin_top &&
-            terminal->row < terminal->margin_bottom)
-        {
-            top = terminal->margin_top;
-            terminal->margin_top = terminal->row;
-            terminal_scroll(terminal, count);
-            terminal->margin_top = top;
-        } else if (terminal->row == terminal->margin_bottom) {
-            memset(terminal_get_row(terminal, terminal->row),
-                   0, terminal->data_pitch);
-        }
-        break;
-    case 'P':    /* DCH - Delete <count> characters on current line */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        terminal_shift_line(terminal, 0 - count);
-        break;
-    case 'S':    /* SU */
-        terminal_scroll(terminal, set[0] ? args[0] : 1);
-        break;
-    case 'T':    /* SD */
-        terminal_scroll(terminal, 0 - (set[0] ? args[0] : 1));
-        break;
-    case 'X':    /* ECH - Erase <count> characters on current line */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if ((terminal->column + count) > terminal->width)
-            count = terminal->width - terminal->column;
-        row = terminal_get_row(terminal, terminal->row);
-        attr_row = terminal_get_attr_row(terminal, terminal->row);
-        memset(&row[terminal->column], 0, count * sizeof(union utf8_char));
-        attr_init(&attr_row[terminal->column], terminal->curr_attr, count);
-        break;
-    case 'Z':    /* CBT */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        while (count > 0 && terminal->column >= 0) {
-            if (terminal->tab_ruler[terminal->column]) count--;
-            terminal->column--;
-        }
-        terminal->column++;
-        break;
-    case '`':    /* HPA - Move cursor to <y> column in current row */
-        y = set[0] ? args[0] : 1;
-        y = y <= 0 ? 1 : y > terminal->width ? terminal->width : y;
+			terminal->row = y;
+			terminal->column = x;
+			break;
+		case 'I':    /* CHT */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			while (count > 0 && terminal->column < terminal->width) {
+				if (terminal->tab_ruler[terminal->column]) count--;
+				terminal->column++;
+			}
+			terminal->column--;
+			break;
+		case 'J':    /* ED - Erase display */
+			row = terminal_get_row(terminal, terminal->row);
+			attr_row = terminal_get_attr_row(terminal, terminal->row);
+			if (!set[0] || args[0] == 0 || args[0] > 2) {
+				memset(&row[terminal->column],
+					0, (terminal->width - terminal->column) * sizeof(union utf8_char));
+				attr_init(&attr_row[terminal->column],
+					terminal->curr_attr, terminal->width - terminal->column);
+				for (i = terminal->row + 1; i < terminal->height; i++) {
+					memset(terminal_get_row(terminal, i),
+						0, terminal->data_pitch);
+					attr_init(terminal_get_attr_row(terminal, i),
+						terminal->curr_attr, terminal->width);
+				}
+			} else if (args[0] == 1) {
+				memset(row, 0, (terminal->column+1) * sizeof(union utf8_char));
+				attr_init(attr_row, terminal->curr_attr, terminal->column+1);
+				for (i = 0; i < terminal->row; i++) {
+					memset(terminal_get_row(terminal, i),
+						0, terminal->data_pitch);
+					attr_init(terminal_get_attr_row(terminal, i),
+						terminal->curr_attr, terminal->width);
+				}
+			} else if (args[0] == 2) {
+				/* Clear screen by scrolling contents out */
+				terminal_scroll_buffer(terminal,
+							terminal->end - terminal->start);
+			}
+			break;
+		case 'K':    /* EL - Erase line */
+			row = terminal_get_row(terminal, terminal->row);
+			attr_row = terminal_get_attr_row(terminal, terminal->row);
+			if (!set[0] || args[0] == 0 || args[0] > 2) {
+				memset(&row[terminal->column], 0,
+					(terminal->width - terminal->column) * sizeof(union utf8_char));
+				attr_init(&attr_row[terminal->column], terminal->curr_attr,
+					terminal->width - terminal->column);
+			} else if (args[0] == 1) {
+				memset(row, 0, (terminal->column+1) * sizeof(union utf8_char));
+				attr_init(attr_row, terminal->curr_attr, terminal->column+1);
+			} else if (args[0] == 2) {
+				memset(row, 0, terminal->data_pitch);
+				attr_init(attr_row, terminal->curr_attr, terminal->width);
+			}
+			break;
+		case 'L':    /* IL - Insert <count> blank lines */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if (terminal->row >= terminal->margin_top &&
+				terminal->row < terminal->margin_bottom)
+			{
+				top = terminal->margin_top;
+				terminal->margin_top = terminal->row;
+				terminal_scroll(terminal, 0 - count);
+				terminal->margin_top = top;
+			} else if (terminal->row == terminal->margin_bottom) {
+				memset(terminal_get_row(terminal, terminal->row),
+					0, terminal->data_pitch);
+				attr_init(terminal_get_attr_row(terminal, terminal->row),
+					terminal->curr_attr, terminal->width);
+			}
+			break;
+		case 'M':    /* DL - Delete <count> lines */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if (terminal->row >= terminal->margin_top &&
+				terminal->row < terminal->margin_bottom)
+			{
+				top = terminal->margin_top;
+				terminal->margin_top = terminal->row;
+				terminal_scroll(terminal, count);
+				terminal->margin_top = top;
+			} else if (terminal->row == terminal->margin_bottom) {
+				memset(terminal_get_row(terminal, terminal->row),
+					0, terminal->data_pitch);
+			}
+			break;
+		case 'P':    /* DCH - Delete <count> characters on current line */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			terminal_shift_line(terminal, 0 - count);
+			break;
+		case 'S':    /* SU */
+			terminal_scroll(terminal, set[0] ? args[0] : 1);
+			break;
+		case 'T':    /* SD */
+			terminal_scroll(terminal, 0 - (set[0] ? args[0] : 1));
+			break;
+		case 'X':    /* ECH - Erase <count> characters on current line */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if ((terminal->column + count) > terminal->width)
+				count = terminal->width - terminal->column;
+			row = terminal_get_row(terminal, terminal->row);
+			attr_row = terminal_get_attr_row(terminal, terminal->row);
+			memset(&row[terminal->column], 0, count * sizeof(union utf8_char));
+			attr_init(&attr_row[terminal->column], terminal->curr_attr, count);
+			break;
+		case 'Z':    /* CBT */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			while (count > 0 && terminal->column >= 0) {
+				if (terminal->tab_ruler[terminal->column]) count--;
+				terminal->column--;
+			}
+			terminal->column++;
+			break;
+		case '`':    /* HPA - Move cursor to <y> column in current row */
+			y = set[0] ? args[0] : 1;
+			y = y <= 0 ? 1 : y > terminal->width ? terminal->width : y;
 
-        terminal->column = y - 1;
-        break;
-    case 'b':    /* REP */
-        count = set[0] ? args[0] : 1;
-        if (count == 0) count = 1;
-        if (terminal->last_char.byte[0])
-            for (i = 0; i < count; i++)
-                handle_char(terminal, terminal->last_char);
-        terminal->last_char.byte[0] = 0;
-        break;
-    case 'c':    /* Primary DA - Answer "I am a VT102" */
-        terminal_write(terminal, "\e[?6c", 5);
-        break;
-    case 'd':    /* VPA - Move cursor to <x> row, current column */
-        x = set[0] ? args[0] : 1;
-        x = x <= 0 ? 1 : x > terminal->height ? terminal->height : x;
+			terminal->column = y - 1;
+			break;
+		case 'b':    /* REP */
+			count = set[0] ? args[0] : 1;
+			if (count == 0) count = 1;
+			if (terminal->last_char.byte[0])
+				for (i = 0; i < count; i++)
+					handle_char(terminal, terminal->last_char);
+			terminal->last_char.byte[0] = 0;
+			break;
+		case 'c':    /* Primary DA - Answer "I am a VT102" */
+			terminal_write(terminal, "\e[?6c", 5);
+			break;
+		case 'd':    /* VPA - Move cursor to <x> row, current column */
+			x = set[0] ? args[0] : 1;
+			x = x <= 0 ? 1 : x > terminal->height ? terminal->height : x;
 
-        terminal->row = x - 1;
-        break;
-    case 'g':    /* TBC - Clear tab stop(s) */
-        if (!set[0] || args[0] == 0) {
-            terminal->tab_ruler[terminal->column] = 0;
-        } else if (args[0] == 3) {
-            memset(terminal->tab_ruler, 0, terminal->width);
-        }
-        break;
-    case 'h':    /* SM - Set mode */
-        for (i = 0; i < 10 && set[i]; i++) {
-            handle_term_parameter(terminal, args[i], 1);
-        }
-        break;
-    case 'l':    /* RM - Reset mode */
-        for (i = 0; i < 10 && set[i]; i++) {
-            handle_term_parameter(terminal, args[i], 0);
-        }
-        break;
-    case 'm':    /* SGR - Set attributes */
-        for (i = 0; i < 10; i++) {
-            if (i <= 7 && set[i] && set[i + 1] &&
-                set[i + 2] && args[i + 1] == 5)
-            {
-                if (args[i] == 38) {
-                    handle_sgr(terminal, args[i + 2] + 256);
-                    break;
-                } else if (args[i] == 48) {
-                    handle_sgr(terminal, args[i + 2] + 512);
-                    break;
-                }
-            }
-            if (set[i]) {
-                handle_sgr(terminal, args[i]);
-            } else if (i == 0) {
-                handle_sgr(terminal, 0);
-                break;
-            } else {
-                break;
-            }
-        }
-        break;
-    case 'n':    /* DSR - Status report */
-        i = set[0] ? args[0] : 0;
-        if (i == 0 || i == 5) {
-            terminal_write(terminal, "\e[0n", 4);
-        } else if (i == 6) {
-            snprintf(response, MAX_RESPONSE, "\e[%d;%dR",
-                     terminal->origin_mode ?
-                     terminal->row+terminal->margin_top : terminal->row+1,
-                 terminal->column+1);
-            terminal_write(terminal, response, strlen(response));
-        }
-         break;
-    case 'r':    /* DECSTBM - Set scrolling region */
-        if (!set[0]) {
-            terminal->margin_top = 0;
-            terminal->margin_bottom = terminal->height-1;
-            terminal->row = 0;
-            terminal->column = 0;
-        } else {
-            top = (set[0] ? args[0] : 1) - 1;
-            top = top < 0 ? 0 :
-                  (top >= terminal->height ? terminal->height - 1 : top);
-            bottom = (set[1] ? args[1] : 1) - 1;
-            bottom = bottom < 0 ? 0 :
-                     (bottom >= terminal->height ? terminal->height - 1 : bottom);
-            if (bottom > top) {
-                terminal->margin_top = top;
-                terminal->margin_bottom = bottom;
-            } else {
-                terminal->margin_top = 0;
-                terminal->margin_bottom = terminal->height-1;
-            }
-            if (terminal->origin_mode)
-                terminal->row = terminal->margin_top;
-            else
-                terminal->row = 0;
-            terminal->column = 0;
-        }
-        break;
-    case 's':    /* Save cursor location */
-        terminal->saved_row = terminal->row;
-        terminal->saved_column = terminal->column;
-        break;
-    case 't':    /* windowOps */
-        if (!set[0]) break;
-        switch (args[0]) {
-        case 4:  /* resize px */
-            if (set[1] && set[2]) {
-                widget_schedule_resize(terminal->widget,
-                               args[2], args[1]);
-            }
-            break;
-        case 8:  /* resize ch */
-            if (set[1] && set[2]) {
-                terminal_resize(terminal, args[2], args[1]);
-            }
-            break;
-        case 13: /* report position */
-            widget_get_allocation(terminal->widget, &allocation);
-            snprintf(response, MAX_RESPONSE, "\e[3;%d;%dt",
-                 allocation.x, allocation.y);
-            terminal_write(terminal, response, strlen(response));
-            break;
-        case 14: /* report px */
-            widget_get_allocation(terminal->widget, &allocation);
-            snprintf(response, MAX_RESPONSE, "\e[4;%d;%dt",
-                 allocation.height, allocation.width);
-            terminal_write(terminal, response, strlen(response));
-            break;
-        case 18: /* report ch */
-            snprintf(response, MAX_RESPONSE, "\e[9;%d;%dt",
-                 terminal->height, terminal->width);
-            terminal_write(terminal, response, strlen(response));
-            break;
-        case 21: /* report title */
-            snprintf(response, MAX_RESPONSE, "\e]l%s\e\\",
-                 window_get_title(terminal->window));
-            terminal_write(terminal, response, strlen(response));
-            break;
-        default:
-            if (args[0] >= 24)
-                terminal_resize(terminal, terminal->width, args[0]);
-            else
-                fprintf(stderr, "Unimplemented windowOp %d\n", args[0]);
-            break;
-        }
-        break;
-    case 'u':    /* Restore cursor location */
-        terminal->row = terminal->saved_row;
-        terminal->column = terminal->saved_column;
-        break;
-    default:
-        fprintf(stderr, "Unknown CSI escape: %c\n", *p);
-        break;
-    }
+			terminal->row = x - 1;
+			break;
+		case 'g':    /* TBC - Clear tab stop(s) */
+			if (!set[0] || args[0] == 0) {
+				terminal->tab_ruler[terminal->column] = 0;
+			} else if (args[0] == 3) {
+				memset(terminal->tab_ruler, 0, terminal->width);
+			}
+			break;
+		case 'h':    /* SM - Set mode */
+			for (i = 0; i < 10 && set[i]; i++) {
+				handle_term_parameter(terminal, args[i], 1);
+			}
+			break;
+		case 'l':    /* RM - Reset mode */
+			for (i = 0; i < 10 && set[i]; i++) {
+				handle_term_parameter(terminal, args[i], 0);
+			}
+			break;
+		case 'm':    /* SGR - Set attributes */
+			for (i = 0; i < 10; i++) {
+				if (i <= 7 && set[i] && set[i + 1] &&
+					set[i + 2] && args[i + 1] == 5)
+				{
+					if (args[i] == 38) {
+						handle_sgr(terminal, args[i + 2] + 256);
+						break;
+					} else if (args[i] == 48) {
+						handle_sgr(terminal, args[i + 2] + 512);
+						break;
+					}
+				}
+				if (set[i]) {
+					handle_sgr(terminal, args[i]);
+				} else if (i == 0) {
+					handle_sgr(terminal, 0);
+					break;
+				} else {
+					break;
+				}
+			}
+			break;
+		case 'n':    /* DSR - Status report */
+			i = set[0] ? args[0] : 0;
+			if (i == 0 || i == 5) {
+				terminal_write(terminal, "\e[0n", 4);
+			} else if (i == 6) {
+				snprintf(response, MAX_RESPONSE, "\e[%d;%dR",
+						terminal->origin_mode ?
+						terminal->row+terminal->margin_top : terminal->row+1,
+					terminal->column+1);
+				terminal_write(terminal, response, strlen(response));
+			}
+			break;
+		case 'r':    /* DECSTBM - Set scrolling region */
+			if (!set[0]) {
+				terminal->margin_top = 0;
+				terminal->margin_bottom = terminal->height-1;
+				terminal->row = 0;
+				terminal->column = 0;
+			} else {
+				top = (set[0] ? args[0] : 1) - 1;
+				top = top < 0 ? 0 :
+					(top >= terminal->height ? terminal->height - 1 : top);
+				bottom = (set[1] ? args[1] : 1) - 1;
+				bottom = bottom < 0 ? 0 :
+						(bottom >= terminal->height ? terminal->height - 1 : bottom);
+				if (bottom > top) {
+					terminal->margin_top = top;
+					terminal->margin_bottom = bottom;
+				} else {
+					terminal->margin_top = 0;
+					terminal->margin_bottom = terminal->height-1;
+				}
+				if (terminal->origin_mode)
+					terminal->row = terminal->margin_top;
+				else
+					terminal->row = 0;
+				terminal->column = 0;
+			}
+			break;
+		case 's':    /* Save cursor location */
+			terminal->saved_row = terminal->row;
+			terminal->saved_column = terminal->column;
+			break;
+		case 't':    /* windowOps */
+			if (!set[0]) break;
+			switch (args[0]) {
+			case 4:  /* resize px */
+				if (set[1] && set[2]) {
+					widget_schedule_resize(terminal->widget,
+								args[2], args[1]);
+				}
+				break;
+			case 8:  /* resize ch */
+				if (set[1] && set[2]) {
+					terminal_resize(terminal, args[2], args[1]);
+				}
+				break;
+			case 13: /* report position */
+				widget_get_allocation(terminal->widget, &allocation);
+				snprintf(response, MAX_RESPONSE, "\e[3;%d;%dt",
+					allocation.x, allocation.y);
+				terminal_write(terminal, response, strlen(response));
+				break;
+			case 14: /* report px */
+				widget_get_allocation(terminal->widget, &allocation);
+				snprintf(response, MAX_RESPONSE, "\e[4;%d;%dt",
+					allocation.height, allocation.width);
+				terminal_write(terminal, response, strlen(response));
+				break;
+			case 18: /* report ch */
+				snprintf(response, MAX_RESPONSE, "\e[9;%d;%dt",
+					terminal->height, terminal->width);
+				terminal_write(terminal, response, strlen(response));
+				break;
+			case 21: /* report title */
+				snprintf(response, MAX_RESPONSE, "\e]l%s\e\\",
+					window_get_title(terminal->window));
+				terminal_write(terminal, response, strlen(response));
+				break;
+			default:
+				if (args[0] >= 24)
+					terminal_resize(terminal, terminal->width, args[0]);
+				else
+					fprintf(stderr, "Unimplemented windowOp %d\n", args[0]);
+				break;
+			}
+			break;
+		case 'u':    /* Restore cursor location */
+			terminal->row = terminal->saved_row;
+			terminal->column = terminal->saved_column;
+			break;
+		default:
+			fprintf(stderr, "Unknown CSI escape: %c\n", *p);
+			break;
+		}
 }
 
 static void handle_non_csi_escape(struct terminal *terminal, char code)
 {
     switch(code) {
-    case 'M':    /* RI - Reverse linefeed */
-        terminal->row -= 1;
-        if (terminal->row < terminal->margin_top) {
-            terminal->row = terminal->margin_top;
-            terminal_scroll(terminal, -1);
-        }
-        break;
-    case 'E':    /* NEL - Newline */
-        terminal->column = 0;
-        // fallthrough
-    case 'D':    /* IND - Linefeed */
-        terminal->row += 1;
-        if (terminal->row > terminal->margin_bottom) {
-            terminal->row = terminal->margin_bottom;
-            terminal_scroll(terminal, +1);
-        }
-        break;
-    case 'c':    /* RIS - Reset*/
-        terminal_init(terminal);
-        break;
-    case 'H':    /* HTS - Set tab stop at current column */
-        terminal->tab_ruler[terminal->column] = 1;
-        break;
-    case '7':    /* DECSC - Save current state */
-        terminal->saved_row = terminal->row;
-        terminal->saved_column = terminal->column;
-        terminal->saved_attr = terminal->curr_attr;
-        terminal->saved_origin_mode = terminal->origin_mode;
-        terminal->saved_cs = terminal->cs;
-        terminal->saved_g0 = terminal->g0;
-        terminal->saved_g1 = terminal->g1;
-        break;
-    case '8':    /* DECRC - Restore state most recently saved by ESC 7 */
-        terminal->row = terminal->saved_row;
-        terminal->column = terminal->saved_column;
-        terminal->curr_attr = terminal->saved_attr;
-        terminal->origin_mode = terminal->saved_origin_mode;
-        terminal->cs = terminal->saved_cs;
-        terminal->g0 = terminal->saved_g0;
-        terminal->g1 = terminal->saved_g1;
-        break;
-    case '=':    /* DECPAM - Set application keypad mode */
-        terminal->key_mode = KM_APPLICATION;
-        break;
-    case '>':    /* DECPNM - Set numeric keypad mode */
-        terminal->key_mode = KM_NORMAL;
-        break;
-    default:
-        fprintf(stderr, "Unknown escape code: %c\n", code);
-        break;
-    }
+		case 'M':    /* RI - Reverse linefeed */
+			terminal->row -= 1;
+			if (terminal->row < terminal->margin_top) {
+				terminal->row = terminal->margin_top;
+				terminal_scroll(terminal, -1);
+			}
+			break;
+		case 'E':    /* NEL - Newline */
+			terminal->column = 0;
+			// fallthrough
+		case 'D':    /* IND - Linefeed */
+			terminal->row += 1;
+			if (terminal->row > terminal->margin_bottom) {
+				terminal->row = terminal->margin_bottom;
+				terminal_scroll(terminal, +1);
+			}
+			break;
+		case 'c':    /* RIS - Reset*/
+			terminal_init(terminal);
+			break;
+		case 'H':    /* HTS - Set tab stop at current column */
+			terminal->tab_ruler[terminal->column] = 1;
+			break;
+		case '7':    /* DECSC - Save current state */
+			terminal->saved_row = terminal->row;
+			terminal->saved_column = terminal->column;
+			terminal->saved_attr = terminal->curr_attr;
+			terminal->saved_origin_mode = terminal->origin_mode;
+			terminal->saved_cs = terminal->cs;
+			terminal->saved_g0 = terminal->g0;
+			terminal->saved_g1 = terminal->g1;
+			break;
+		case '8':    /* DECRC - Restore state most recently saved by ESC 7 */
+			terminal->row = terminal->saved_row;
+			terminal->column = terminal->saved_column;
+			terminal->curr_attr = terminal->saved_attr;
+			terminal->origin_mode = terminal->saved_origin_mode;
+			terminal->cs = terminal->saved_cs;
+			terminal->g0 = terminal->saved_g0;
+			terminal->g1 = terminal->saved_g1;
+			break;
+		case '=':    /* DECPAM - Set application keypad mode */
+			terminal->key_mode = KM_APPLICATION;
+			break;
+		case '>':    /* DECPNM - Set numeric keypad mode */
+			terminal->key_mode = KM_NORMAL;
+			break;
+		default:
+			fprintf(stderr, "Unknown escape code: %c\n", code);
+			break;
+		}
 }
 
 static void handle_special_escape(struct terminal *terminal, char special, char code)
@@ -1722,115 +1722,115 @@ static void handle_special_escape(struct terminal *terminal, char special, char 
 
     if (special == '#') {
         switch(code) {
-        case '8':
-            /* fill with 'E', no cheap way to do this */
-            memset(terminal->data, 0, terminal->data_pitch * terminal->height);
-            numChars = terminal->width * terminal->height;
-            for (i = 0; i < numChars; i++) {
-                terminal->data[i].byte[0] = 'E';
-            }
-            break;
-        default:
-            fprintf(stderr, "Unknown HASH escape #%c\n", code);
-            break;
-        }
-    } else if (special == '(' || special == ')') {
-        switch(code) {
-        case '0':
-            if (special == '(')
-                terminal->g0 = CS_SPECIAL;
-            else
-                terminal->g1 = CS_SPECIAL;
-            break;
-        case 'A':
-            if (special == '(')
-                terminal->g0 = CS_UK;
-            else
-                terminal->g1 = CS_UK;
-            break;
-        case 'B':
-            if (special == '(')
-                terminal->g0 = CS_US;
-            else
-                terminal->g1 = CS_US;
-            break;
-        default:
-            fprintf(stderr, "Unknown character set %c\n", code);
-            break;
-        }
-    } else {
-        fprintf(stderr, "Unknown special escape %c%c\n", special, code);
-    }
+			case '8':
+				/* fill with 'E', no cheap way to do this */
+				memset(terminal->data, 0, terminal->data_pitch * terminal->height);
+				numChars = terminal->width * terminal->height;
+				for (i = 0; i < numChars; i++) {
+					terminal->data[i].byte[0] = 'E';
+				}
+				break;
+			default:
+				fprintf(stderr, "Unknown HASH escape #%c\n", code);
+				break;
+		}
+	} else if (special == '(' || special == ')') {
+		switch(code) {
+			case '0':
+				if (special == '(')
+					terminal->g0 = CS_SPECIAL;
+				else
+					terminal->g1 = CS_SPECIAL;
+				break;
+			case 'A':
+				if (special == '(')
+					terminal->g0 = CS_UK;
+				else
+					terminal->g1 = CS_UK;
+				break;
+			case 'B':
+				if (special == '(')
+					terminal->g0 = CS_US;
+				else
+					terminal->g1 = CS_US;
+				break;
+			default:
+				fprintf(stderr, "Unknown character set %c\n", code);
+				break;
+		}
+	} else {
+		fprintf(stderr, "Unknown special escape %c%c\n", special, code);
+	}
 }
 
 static void handle_sgr(struct terminal *terminal, int code)
 {
-    switch(code) {
-    case 0:
-        terminal->curr_attr = terminal->color_scheme->default_attr;
-        break;
-    case 1:
-        terminal->curr_attr.a |= ATTRMASK_BOLD;
-        if (terminal->curr_attr.fg < 8)
-            terminal->curr_attr.fg += 8;
-        break;
-    case 4:
-        terminal->curr_attr.a |= ATTRMASK_UNDERLINE;
-        break;
-    case 5:
-        terminal->curr_attr.a |= ATTRMASK_BLINK;
-        break;
-    case 8:
-        terminal->curr_attr.a |= ATTRMASK_CONCEALED;
-        break;
-    case 2:
-    case 21:
-    case 22:
-        terminal->curr_attr.a &= ~ATTRMASK_BOLD;
-        if (terminal->curr_attr.fg < 16 && terminal->curr_attr.fg >= 8)
-            terminal->curr_attr.fg -= 8;
-        break;
-    case 24:
-        terminal->curr_attr.a &= ~ATTRMASK_UNDERLINE;
-        break;
-    case 25:
-        terminal->curr_attr.a &= ~ATTRMASK_BLINK;
-        break;
-    case 7:
-    case 26:
-        terminal->curr_attr.a |= ATTRMASK_INVERSE;
-        break;
-    case 27:
-        terminal->curr_attr.a &= ~ATTRMASK_INVERSE;
-        break;
-    case 28:
-        terminal->curr_attr.a &= ~ATTRMASK_CONCEALED;
-        break;
-    case 39:
-        terminal->curr_attr.fg = terminal->color_scheme->default_attr.fg;
-        break;
-    case 49:
-        terminal->curr_attr.bg = terminal->color_scheme->default_attr.bg;
-        break;
-    default:
-        if (code >= 30 && code <= 37) {
-            terminal->curr_attr.fg = code - 30;
-            if (terminal->curr_attr.a & ATTRMASK_BOLD)
-                terminal->curr_attr.fg += 8;
-        } else if (code >= 40 && code <= 47) {
-            terminal->curr_attr.bg = code - 40;
-        } else if (code >= 90 && code <= 97) {
-            terminal->curr_attr.fg = code - 90 + 8;
-        } else if (code >= 100 && code <= 107) {
-            terminal->curr_attr.bg = code - 100 + 8;
-        } else if (code >= 256 && code < 512) {
-            terminal->curr_attr.fg = code - 256;
-        } else if (code >= 512 && code < 768) {
-            terminal->curr_attr.bg = code - 512;
-        } else {
-            fprintf(stderr, "Unknown SGR code: %d\n", code);
-        }
-        break;
+	switch(code) {
+		case 0:
+			terminal->curr_attr = terminal->color_scheme->default_attr;
+			break;
+		case 1:
+			terminal->curr_attr.a |= ATTRMASK_BOLD;
+			if (terminal->curr_attr.fg < 8)
+				terminal->curr_attr.fg += 8;
+			break;
+		case 4:
+			terminal->curr_attr.a |= ATTRMASK_UNDERLINE;
+			break;
+		case 5:
+			terminal->curr_attr.a |= ATTRMASK_BLINK;
+			break;
+		case 8:
+			terminal->curr_attr.a |= ATTRMASK_CONCEALED;
+			break;
+		case 2:
+		case 21:
+		case 22:
+			terminal->curr_attr.a &= ~ATTRMASK_BOLD;
+			if (terminal->curr_attr.fg < 16 && terminal->curr_attr.fg >= 8)
+				terminal->curr_attr.fg -= 8;
+			break;
+		case 24:
+			terminal->curr_attr.a &= ~ATTRMASK_UNDERLINE;
+			break;
+		case 25:
+			terminal->curr_attr.a &= ~ATTRMASK_BLINK;
+			break;
+		case 7:
+		case 26:
+			terminal->curr_attr.a |= ATTRMASK_INVERSE;
+			break;
+		case 27:
+			terminal->curr_attr.a &= ~ATTRMASK_INVERSE;
+			break;
+		case 28:
+			terminal->curr_attr.a &= ~ATTRMASK_CONCEALED;
+			break;
+		case 39:
+			terminal->curr_attr.fg = terminal->color_scheme->default_attr.fg;
+			break;
+		case 49:
+			terminal->curr_attr.bg = terminal->color_scheme->default_attr.bg;
+			break;
+		default:
+			if (code >= 30 && code <= 37) {
+				terminal->curr_attr.fg = code - 30;
+				if (terminal->curr_attr.a & ATTRMASK_BOLD)
+					terminal->curr_attr.fg += 8;
+			} else if (code >= 40 && code <= 47) {
+				terminal->curr_attr.bg = code - 40;
+			} else if (code >= 90 && code <= 97) {
+				terminal->curr_attr.fg = code - 90 + 8;
+			} else if (code >= 100 && code <= 107) {
+				terminal->curr_attr.bg = code - 100 + 8;
+			} else if (code >= 256 && code < 512) {
+				terminal->curr_attr.fg = code - 256;
+			} else if (code >= 512 && code < 768) {
+				terminal->curr_attr.bg = code - 512;
+			} else {
+				fprintf(stderr, "Unknown SGR code: %d\n", code);
+			}
+			break;
     }
 }
 
@@ -1844,70 +1844,70 @@ static int handle_special_char(struct terminal *terminal, char c)
     attr_row = terminal_get_attr_row(terminal, terminal->row);
 
     switch(c) {
-    case '\r':
-        terminal->column = 0;
-        break;
-    case '\n':
-        if (terminal->mode & MODE_LF_NEWLINE) {
-            terminal->column = 0;
-        }
-        /* fallthrough */
-    case '\v':
-    case '\f':
-        terminal->row++;
-        if (terminal->row > terminal->margin_bottom) {
-            terminal->row = terminal->margin_bottom;
-            terminal_scroll(terminal, +1);
-        }
+		case '\r':
+			terminal->column = 0;
+			break;
+		case '\n':
+			if (terminal->mode & MODE_LF_NEWLINE) {
+				terminal->column = 0;
+			}
+			/* fallthrough */
+		case '\v':
+		case '\f':
+			terminal->row++;
+			if (terminal->row > terminal->margin_bottom) {
+				terminal->row = terminal->margin_bottom;
+				terminal_scroll(terminal, +1);
+			}
 
-        break;
-    case '\t':
-        while (terminal->column < terminal->width) {
-            if (terminal->mode & MODE_IRM)
-                terminal_shift_line(terminal, +1);
+			break;
+		case '\t':
+			while (terminal->column < terminal->width) {
+				if (terminal->mode & MODE_IRM)
+					terminal_shift_line(terminal, +1);
 
-            if (row[terminal->column].byte[0] == '\0') {
-                row[terminal->column].byte[0] = ' ';
-                row[terminal->column].byte[1] = '\0';
-                attr_row[terminal->column] = terminal->curr_attr;
-            }
+				if (row[terminal->column].byte[0] == '\0') {
+					row[terminal->column].byte[0] = ' ';
+					row[terminal->column].byte[1] = '\0';
+					attr_row[terminal->column] = terminal->curr_attr;
+				}
 
-            terminal->column++;
-            if (terminal->tab_ruler[terminal->column]) break;
-        }
-        if (terminal->column >= terminal->width) {
-            terminal->column = terminal->width - 1;
-        }
+				terminal->column++;
+				if (terminal->tab_ruler[terminal->column]) break;
+			}
+			if (terminal->column >= terminal->width) {
+				terminal->column = terminal->width - 1;
+			}
 
-        break;
-    case '\b':
-        if (terminal->column >= terminal->width) {
-            terminal->column = terminal->width - 2;
-        } else if (terminal->column > 0) {
-            terminal->column--;
-        } else if (terminal->mode & MODE_AUTOWRAP) {
-            terminal->column = terminal->width - 1;
-            terminal->row -= 1;
-            if (terminal->row < terminal->margin_top) {
-                terminal->row = terminal->margin_top;
-                terminal_scroll(terminal, -1);
-            }
-        }
+			break;
+		case '\b':
+			if (terminal->column >= terminal->width) {
+				terminal->column = terminal->width - 2;
+			} else if (terminal->column > 0) {
+				terminal->column--;
+			} else if (terminal->mode & MODE_AUTOWRAP) {
+				terminal->column = terminal->width - 1;
+				terminal->row -= 1;
+				if (terminal->row < terminal->margin_top) {
+					terminal->row = terminal->margin_top;
+					terminal_scroll(terminal, -1);
+				}
+			}
 
-        break;
-    case '\a':
-        /* Bell */
-        break;
-    case '\x0E': /* SO */
-        terminal->cs = terminal->g1;
-        break;
-    case '\x0F': /* SI */
-        terminal->cs = terminal->g0;
-        break;
-    case '\0':
-        break;
-    default:
-        return 0;
+			break;
+		case '\a':
+			/* Bell */
+			break;
+		case '\x0E': /* SO */
+			terminal->cs = terminal->g1;
+			break;
+		case '\x0F': /* SI */
+			terminal->cs = terminal->g0;
+			break;
+		case '\0':
+			break;
+		default:
+			return 0;
     }
 
     return 1;
@@ -2001,127 +2001,126 @@ static void terminal_data(struct terminal *terminal, const char *data, size_t le
         parser_state =
             utf8_next_char(&terminal->state_machine, data[i]);
         switch(parser_state) {
-        case utf8state_accept:
-            utf8.ch = terminal->state_machine.s.ch;
-            break;
-        case utf8state_reject:
-            /* the unicode replacement character */
-            utf8.byte[0] = 0xEF;
-            utf8.byte[1] = 0xBF;
-            utf8.byte[2] = 0xBD;
-            utf8.byte[3] = 0x00;
-            break;
-        default:
-            continue;
+            case utf8state_accept:
+                utf8.ch = terminal->state_machine.s.ch;
+                break;
+            case utf8state_reject:
+                /* the unicode replacement character */
+                utf8.byte[0] = 0xEF;
+                utf8.byte[1] = 0xBF;
+                utf8.byte[2] = 0xBD;
+                utf8.byte[3] = 0x00;
+                break;
+            default:
+                continue;
         }
 
         /* assume escape codes never use non-ASCII characters */
         switch (terminal->state) {
-        case escape_state_escape:
-            escape_append_utf8(terminal, utf8);
-            switch (utf8.byte[0]) {
-            case 'P':  /* DCS */
-                terminal->state = escape_state_dcs;
-                break;
-            case '[':  /* CSI */
-                terminal->state = escape_state_csi;
-                break;
-            case ']':  /* OSC */
-                terminal->state = escape_state_osc;
-                break;
-            case '#':
-            case '(':
-            case ')':  /* special */
-                terminal->state = escape_state_special;
-                break;
-            case '^':  /* PM (not implemented) */
-            case '_':  /* APC (not implemented) */
-                terminal->state = escape_state_ignore;
-                break;
-            default:
-                terminal->state = escape_state_normal;
-                handle_non_csi_escape(terminal, utf8.byte[0]);
-                break;
-            }
-            continue;
-        case escape_state_csi:
-            if (handle_special_char(terminal, utf8.byte[0]) != 0) {
-                /* do nothing */
-            } else if (utf8.byte[0] == '?') {
-                terminal->escape_flags |= ESC_FLAG_WHAT;
-            } else if (utf8.byte[0] == '>') {
-                terminal->escape_flags |= ESC_FLAG_GT;
-            } else if (utf8.byte[0] == '!') {
-                terminal->escape_flags |= ESC_FLAG_BANG;
-            } else if (utf8.byte[0] == '$') {
-                terminal->escape_flags |= ESC_FLAG_CASH;
-            } else if (utf8.byte[0] == '\'') {
-                terminal->escape_flags |= ESC_FLAG_SQUOTE;
-            } else if (utf8.byte[0] == '"') {
-                terminal->escape_flags |= ESC_FLAG_DQUOTE;
-            } else if (utf8.byte[0] == ' ') {
-                terminal->escape_flags |= ESC_FLAG_SPACE;
-            } else {
+            case escape_state_escape:
                 escape_append_utf8(terminal, utf8);
-                if (terminal->escape_length >= MAX_ESCAPE)
-                    terminal->state = escape_state_normal;
-            }
-
-            if (isalpha(utf8.byte[0]) || utf8.byte[0] == '@' ||
-                utf8.byte[0] == '`')
-            {
-                terminal->state = escape_state_normal;
-                handle_escape(terminal);
-            } else {
-            }
-            continue;
-        case escape_state_inner_escape:
-            if (utf8.byte[0] == '\\') {
-                terminal->state = escape_state_normal;
-                if (terminal->outer_state == escape_state_dcs) {
-                    handle_dcs(terminal);
-                } else if (terminal->outer_state == escape_state_osc) {
-                    handle_osc(terminal);
+                switch (utf8.byte[0]) {
+                    case 'P':  /* DCS */
+                        terminal->state = escape_state_dcs;
+                        break;
+                    case '[':  /* CSI */
+                        terminal->state = escape_state_csi;
+                        break;
+                    case ']':  /* OSC */
+                        terminal->state = escape_state_osc;
+                        break;
+                    case '#':
+                    case '(':
+                    case ')':  /* special */
+                        terminal->state = escape_state_special;
+                        break;
+                    case '^':  /* PM (not implemented) */
+                    case '_':  /* APC (not implemented) */
+                        terminal->state = escape_state_ignore;
+                        break;
+                    default:
+                        terminal->state = escape_state_normal;
+                        handle_non_csi_escape(terminal, utf8.byte[0]);
+                        break;
                 }
-            } else if (utf8.byte[0] == '\e') {
-                terminal->state = terminal->outer_state;
-                escape_append_utf8(terminal, utf8);
-                if (terminal->escape_length >= MAX_ESCAPE)
+                continue;
+            case escape_state_csi:
+                if (handle_special_char(terminal, utf8.byte[0]) != 0) {
+                    /* do nothing */
+                } else if (utf8.byte[0] == '?') {
+                    terminal->escape_flags |= ESC_FLAG_WHAT;
+                } else if (utf8.byte[0] == '>') {
+                    terminal->escape_flags |= ESC_FLAG_GT;
+                } else if (utf8.byte[0] == '!') {
+                    terminal->escape_flags |= ESC_FLAG_BANG;
+                } else if (utf8.byte[0] == '$') {
+                    terminal->escape_flags |= ESC_FLAG_CASH;
+                } else if (utf8.byte[0] == '\'') {
+                    terminal->escape_flags |= ESC_FLAG_SQUOTE;
+                } else if (utf8.byte[0] == '"') {
+                    terminal->escape_flags |= ESC_FLAG_DQUOTE;
+                } else if (utf8.byte[0] == ' ') {
+                    terminal->escape_flags |= ESC_FLAG_SPACE;
+                } else {
+                    escape_append_utf8(terminal, utf8);
+                    if (terminal->escape_length >= MAX_ESCAPE)
+                        terminal->state = escape_state_normal;
+                }
+                if (isalpha(utf8.byte[0]) || utf8.byte[0] == '@' ||
+                    utf8.byte[0] == '`')
+                {
                     terminal->state = escape_state_normal;
-            } else {
-                terminal->state = terminal->outer_state;
-                if (terminal->escape_length < MAX_ESCAPE)
-                    terminal->escape[terminal->escape_length++] = '\e';
-                escape_append_utf8(terminal, utf8);
-                if (terminal->escape_length >= MAX_ESCAPE)
+                    handle_escape(terminal);
+                } else {
+                }
+                continue;
+            case escape_state_inner_escape:
+                if (utf8.byte[0] == '\\') {
                     terminal->state = escape_state_normal;
-            }
-            continue;
-        case escape_state_dcs:
-        case escape_state_osc:
-        case escape_state_ignore:
-            if (utf8.byte[0] == '\e') {
-                terminal->outer_state = terminal->state;
-                terminal->state = escape_state_inner_escape;
-            } else if (utf8.byte[0] == '\a' && terminal->state == escape_state_osc) {
+                    if (terminal->outer_state == escape_state_dcs) {
+                        handle_dcs(terminal);
+                    } else if (terminal->outer_state == escape_state_osc) {
+                        handle_osc(terminal);
+                    }
+                } else if (utf8.byte[0] == '\e') {
+                    terminal->state = terminal->outer_state;
+                    escape_append_utf8(terminal, utf8);
+                    if (terminal->escape_length >= MAX_ESCAPE)
+                        terminal->state = escape_state_normal;
+                } else {
+                    terminal->state = terminal->outer_state;
+                    if (terminal->escape_length < MAX_ESCAPE)
+                        terminal->escape[terminal->escape_length++] = '\e';
+                    escape_append_utf8(terminal, utf8);
+                    if (terminal->escape_length >= MAX_ESCAPE)
+                        terminal->state = escape_state_normal;
+                }
+                continue;
+            case escape_state_dcs:
+            case escape_state_osc:
+            case escape_state_ignore:
+                if (utf8.byte[0] == '\e') {
+                    terminal->outer_state = terminal->state;
+                    terminal->state = escape_state_inner_escape;
+                } else if (utf8.byte[0] == '\a' && terminal->state == escape_state_osc) {
+                    terminal->state = escape_state_normal;
+                    handle_osc(terminal);
+                } else {
+                    escape_append_utf8(terminal, utf8);
+                    if (terminal->escape_length >= MAX_ESCAPE)
+                        terminal->state = escape_state_normal;
+                }
+                continue;
+            case escape_state_special:
+                escape_append_utf8(terminal, utf8);
                 terminal->state = escape_state_normal;
-                handle_osc(terminal);
-            } else {
-                escape_append_utf8(terminal, utf8);
-                if (terminal->escape_length >= MAX_ESCAPE)
-                    terminal->state = escape_state_normal;
-            }
-            continue;
-        case escape_state_special:
-            escape_append_utf8(terminal, utf8);
-            terminal->state = escape_state_normal;
-            if (isdigit(utf8.byte[0]) || isalpha(utf8.byte[0])) {
-                handle_special_escape(terminal, terminal->escape[1],
-                                      utf8.byte[0]);
-            }
-            continue;
-        default:
-            break;
+                if (isdigit(utf8.byte[0]) || isalpha(utf8.byte[0])) {
+                    handle_special_escape(terminal, terminal->escape[1],
+                                        utf8.byte[0]);
+                }
+                continue;
+            default:
+                break;
         }
 
         /* this is valid, because ASCII characters are never used to
@@ -2260,50 +2259,50 @@ static int handle_bound_key(struct terminal *terminal,
                             struct input *input, uint32_t sym, uint32_t time)
 {
     switch (sym) {
-    case XKB_KEY_X:
-        /* Cut selection; terminal doesn't do cut, fall
-         * through to copy. */
-    case XKB_KEY_C:
-        terminal_copy(terminal, input);
-        return 1;
-    case XKB_KEY_V:
-        terminal_paste(terminal, input);
-        return 1;
-    case XKB_KEY_N:
-        terminal_new_instance(terminal);
-        return 1;
+		case XKB_KEY_X:
+			/* Cut selection; terminal doesn't do cut, fall
+			 * through to copy. */
+		case XKB_KEY_C:
+			terminal_copy(terminal, input);
+			return 1;
+		case XKB_KEY_V:
+			terminal_paste(terminal, input);
+			return 1;
+		case XKB_KEY_N:
+			terminal_new_instance(terminal);
+			return 1;
 
-    case XKB_KEY_Up:
-        if (!terminal->scrolling)
-            terminal->saved_start = terminal->start;
-        if (terminal->start == terminal->end - terminal->log_size)
-            return 1;
+		case XKB_KEY_Up:
+			if (!terminal->scrolling)
+				terminal->saved_start = terminal->start;
+			if (terminal->start == terminal->end - terminal->log_size)
+				return 1;
 
-        terminal->scrolling = 1;
-        terminal->start--;
-        terminal->row++;
-        terminal->selection_start_row++;
-        terminal->selection_end_row++;
-        widget_schedule_redraw(terminal->widget);
-        return 1;
+			terminal->scrolling = 1;
+			terminal->start--;
+			terminal->row++;
+			terminal->selection_start_row++;
+			terminal->selection_end_row++;
+			widget_schedule_redraw(terminal->widget);
+			return 1;
 
-    case XKB_KEY_Down:
-        if (!terminal->scrolling)
-            terminal->saved_start = terminal->start;
+		case XKB_KEY_Down:
+			if (!terminal->scrolling)
+				terminal->saved_start = terminal->start;
 
-        if (terminal->start == terminal->saved_start)
-            return 1;
+			if (terminal->start == terminal->saved_start)
+				return 1;
 
-        terminal->scrolling = 1;
-        terminal->start++;
-        terminal->row--;
-        terminal->selection_start_row--;
-        terminal->selection_end_row--;
-        widget_schedule_redraw(terminal->widget);
-        return 1;
+			terminal->scrolling = 1;
+			terminal->start++;
+			terminal->row--;
+			terminal->selection_start_row--;
+			terminal->selection_end_row--;
+			widget_schedule_redraw(terminal->widget);
+			return 1;
 
-    default:
-        return 0;
+		default:
+			return 0;
     }
 }
 
@@ -2326,195 +2325,195 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
 
     /* Map keypad symbols to 'normal' equivalents before processing */
     switch (sym) {
-    case XKB_KEY_KP_Space:
-        sym = XKB_KEY_space;
-        break;
-    case XKB_KEY_KP_Tab:
-        sym = XKB_KEY_Tab;
-        break;
-    case XKB_KEY_KP_Enter:
-        sym = XKB_KEY_Return;
-        break;
-    case XKB_KEY_KP_Left:
-        sym = XKB_KEY_Left;
-        break;
-    case XKB_KEY_KP_Up:
-        sym = XKB_KEY_Up;
-        break;
-    case XKB_KEY_KP_Right:
-        sym = XKB_KEY_Right;
-        break;
-    case XKB_KEY_KP_Down:
-        sym = XKB_KEY_Down;
-        break;
-    case XKB_KEY_KP_Equal:
-        sym = XKB_KEY_equal;
-        break;
-    case XKB_KEY_KP_Multiply:
-        sym = XKB_KEY_asterisk;
-        break;
-    case XKB_KEY_KP_Add:
-        sym = XKB_KEY_plus;
-        break;
-    case XKB_KEY_KP_Separator:
-        /* Note this is actually locale-dependent and should mostly be
-         * a comma.  But leave it as period until we one day start
-         * doing the right thing. */
-        sym = XKB_KEY_period;
-        break;
-    case XKB_KEY_KP_Subtract:
-        sym = XKB_KEY_minus;
-        break;
-    case XKB_KEY_KP_Decimal:
-        sym = XKB_KEY_period;
-        break;
-    case XKB_KEY_KP_Divide:
-        sym = XKB_KEY_slash;
-        break;
-    case XKB_KEY_KP_0:
-    case XKB_KEY_KP_1:
-    case XKB_KEY_KP_2:
-    case XKB_KEY_KP_3:
-    case XKB_KEY_KP_4:
-    case XKB_KEY_KP_5:
-    case XKB_KEY_KP_6:
-    case XKB_KEY_KP_7:
-    case XKB_KEY_KP_8:
-    case XKB_KEY_KP_9:
-        sym = (sym - XKB_KEY_KP_0) + XKB_KEY_0;
-        break;
-    default:
-        break;
+		case XKB_KEY_KP_Space:
+			sym = XKB_KEY_space;
+			break;
+		case XKB_KEY_KP_Tab:
+			sym = XKB_KEY_Tab;
+			break;
+		case XKB_KEY_KP_Enter:
+			sym = XKB_KEY_Return;
+			break;
+		case XKB_KEY_KP_Left:
+			sym = XKB_KEY_Left;
+			break;
+		case XKB_KEY_KP_Up:
+			sym = XKB_KEY_Up;
+			break;
+		case XKB_KEY_KP_Right:
+			sym = XKB_KEY_Right;
+			break;
+		case XKB_KEY_KP_Down:
+			sym = XKB_KEY_Down;
+			break;
+		case XKB_KEY_KP_Equal:
+			sym = XKB_KEY_equal;
+			break;
+		case XKB_KEY_KP_Multiply:
+			sym = XKB_KEY_asterisk;
+			break;
+		case XKB_KEY_KP_Add:
+			sym = XKB_KEY_plus;
+			break;
+		case XKB_KEY_KP_Separator:
+			/* Note this is actually locale-dependent and should mostly be
+			 * a comma.  But leave it as period until we one day start
+			 * doing the right thing. */
+			sym = XKB_KEY_period;
+			break;
+		case XKB_KEY_KP_Subtract:
+			sym = XKB_KEY_minus;
+			break;
+		case XKB_KEY_KP_Decimal:
+			sym = XKB_KEY_period;
+			break;
+		case XKB_KEY_KP_Divide:
+			sym = XKB_KEY_slash;
+			break;
+		case XKB_KEY_KP_0:
+		case XKB_KEY_KP_1:
+		case XKB_KEY_KP_2:
+		case XKB_KEY_KP_3:
+		case XKB_KEY_KP_4:
+		case XKB_KEY_KP_5:
+		case XKB_KEY_KP_6:
+		case XKB_KEY_KP_7:
+		case XKB_KEY_KP_8:
+		case XKB_KEY_KP_9:
+			sym = (sym - XKB_KEY_KP_0) + XKB_KEY_0;
+			break;
+		default:
+			break;
     }
 
     switch (sym) {
-    case XKB_KEY_BackSpace:
-        if (modifiers & MOD_ALT_MASK)
-            ch[len++] = 0x1b;
-        ch[len++] = 0x7f;
-        break;
-    case XKB_KEY_Tab:
-    case XKB_KEY_Linefeed:
-    case XKB_KEY_Clear:
-    case XKB_KEY_Pause:
-    case XKB_KEY_Scroll_Lock:
-    case XKB_KEY_Sys_Req:
-    case XKB_KEY_Escape:
-        ch[len++] = sym & 0x7f;
-        break;
+		case XKB_KEY_BackSpace:
+			if (modifiers & MOD_ALT_MASK)
+				ch[len++] = 0x1b;
+			ch[len++] = 0x7f;
+			break;
+		case XKB_KEY_Tab:
+		case XKB_KEY_Linefeed:
+		case XKB_KEY_Clear:
+		case XKB_KEY_Pause:
+		case XKB_KEY_Scroll_Lock:
+		case XKB_KEY_Sys_Req:
+		case XKB_KEY_Escape:
+			ch[len++] = sym & 0x7f;
+			break;
 
-    case XKB_KEY_Return:
-        if (terminal->mode & MODE_LF_NEWLINE) {
-            ch[len++] = 0x0D;
-            ch[len++] = 0x0A;
-        } else {
-            ch[len++] = 0x0D;
-        }
-        break;
+		case XKB_KEY_Return:
+			if (terminal->mode & MODE_LF_NEWLINE) {
+				ch[len++] = 0x0D;
+				ch[len++] = 0x0A;
+			} else {
+				ch[len++] = 0x0D;
+			}
+			break;
 
-    case XKB_KEY_Shift_L:
-    case XKB_KEY_Shift_R:
-    case XKB_KEY_Control_L:
-    case XKB_KEY_Control_R:
-    case XKB_KEY_Alt_L:
-    case XKB_KEY_Alt_R:
-    case XKB_KEY_Meta_L:
-    case XKB_KEY_Meta_R:
-    case XKB_KEY_Super_L:
-    case XKB_KEY_Super_R:
-    case XKB_KEY_Hyper_L:
-    case XKB_KEY_Hyper_R:
-        break;
+		case XKB_KEY_Shift_L:
+		case XKB_KEY_Shift_R:
+		case XKB_KEY_Control_L:
+		case XKB_KEY_Control_R:
+		case XKB_KEY_Alt_L:
+		case XKB_KEY_Alt_R:
+		case XKB_KEY_Meta_L:
+		case XKB_KEY_Meta_R:
+		case XKB_KEY_Super_L:
+		case XKB_KEY_Super_R:
+		case XKB_KEY_Hyper_L:
+		case XKB_KEY_Hyper_R:
+			break;
 
-    case XKB_KEY_Insert:
-        len = function_key_response('[', 2, modifiers, '~', ch);
-        break;
-    case XKB_KEY_Delete:
-        if (terminal->mode & MODE_DELETE_SENDS_DEL) {
-            ch[len++] = '\x04';
-        } else {
-            len = function_key_response('[', 3, modifiers, '~', ch);
-        }
-        break;
-    case XKB_KEY_Page_Up:
-        len = function_key_response('[', 5, modifiers, '~', ch);
-        break;
-    case XKB_KEY_Page_Down:
-        len = function_key_response('[', 6, modifiers, '~', ch);
-        break;
-    case XKB_KEY_F1:
-        len = function_key_response('O', 1, modifiers, 'P', ch);
-        break;
-    case XKB_KEY_F2:
-        len = function_key_response('O', 1, modifiers, 'Q', ch);
-        break;
-    case XKB_KEY_F3:
-        len = function_key_response('O', 1, modifiers, 'R', ch);
-        break;
-    case XKB_KEY_F4:
-        len = function_key_response('O', 1, modifiers, 'S', ch);
-        break;
-    case XKB_KEY_F5:
-        len = function_key_response('[', 15, modifiers, '~', ch);
-        break;
-    case XKB_KEY_F6:
-        len = function_key_response('[', 17, modifiers, '~', ch);
-        break;
-    case XKB_KEY_F7:
-        len = function_key_response('[', 18, modifiers, '~', ch);
-        break;
-    case XKB_KEY_F8:
-        len = function_key_response('[', 19, modifiers, '~', ch);
-        break;
-    case XKB_KEY_F9:
-        len = function_key_response('[', 20, modifiers, '~', ch);
-        break;
-    case XKB_KEY_F10:
-        len = function_key_response('[', 21, modifiers, '~', ch);
-        break;
-    case XKB_KEY_F12:
-        len = function_key_response('[', 24, modifiers, '~', ch);
-        break;
-    default:
-        /* Handle special keys with alternate mappings */
-        len = apply_key_map(terminal->key_mode, sym, modifiers, ch);
-        if (len != 0) break;
+		case XKB_KEY_Insert:
+			len = function_key_response('[', 2, modifiers, '~', ch);
+			break;
+		case XKB_KEY_Delete:
+			if (terminal->mode & MODE_DELETE_SENDS_DEL) {
+				ch[len++] = '\x04';
+			} else {
+				len = function_key_response('[', 3, modifiers, '~', ch);
+			}
+			break;
+		case XKB_KEY_Page_Up:
+			len = function_key_response('[', 5, modifiers, '~', ch);
+			break;
+		case XKB_KEY_Page_Down:
+			len = function_key_response('[', 6, modifiers, '~', ch);
+			break;
+		case XKB_KEY_F1:
+			len = function_key_response('O', 1, modifiers, 'P', ch);
+			break;
+		case XKB_KEY_F2:
+			len = function_key_response('O', 1, modifiers, 'Q', ch);
+			break;
+		case XKB_KEY_F3:
+			len = function_key_response('O', 1, modifiers, 'R', ch);
+			break;
+		case XKB_KEY_F4:
+			len = function_key_response('O', 1, modifiers, 'S', ch);
+			break;
+		case XKB_KEY_F5:
+			len = function_key_response('[', 15, modifiers, '~', ch);
+			break;
+		case XKB_KEY_F6:
+			len = function_key_response('[', 17, modifiers, '~', ch);
+			break;
+		case XKB_KEY_F7:
+			len = function_key_response('[', 18, modifiers, '~', ch);
+			break;
+		case XKB_KEY_F8:
+			len = function_key_response('[', 19, modifiers, '~', ch);
+			break;
+		case XKB_KEY_F9:
+			len = function_key_response('[', 20, modifiers, '~', ch);
+			break;
+		case XKB_KEY_F10:
+			len = function_key_response('[', 21, modifiers, '~', ch);
+			break;
+		case XKB_KEY_F12:
+			len = function_key_response('[', 24, modifiers, '~', ch);
+			break;
+		default:
+			/* Handle special keys with alternate mappings */
+			len = apply_key_map(terminal->key_mode, sym, modifiers, ch);
+			if (len != 0) break;
 
-        if (modifiers & MOD_CONTROL_MASK) {
-            if (sym >= '3' && sym <= '7')
-                sym = (sym & 0x1f) + 8;
+			if (modifiers & MOD_CONTROL_MASK) {
+				if (sym >= '3' && sym <= '7')
+					sym = (sym & 0x1f) + 8;
 
-            if (!((sym >= '!' && sym <= '/') ||
-                (sym >= '8' && sym <= '?') ||
-                (sym >= '0' && sym <= '2'))) sym = sym & 0x1f;
-            else if (sym == '2') sym = 0x00;
-            else if (sym == '/') sym = 0x1F;
-            else if (sym == '8' || sym == '?') sym = 0x7F;
-        }
-        if (modifiers & MOD_ALT_MASK) {
-            if (terminal->mode & MODE_ALT_SENDS_ESC) {
-                ch[len++] = 0x1b;
-            } else {
-                sym = sym | 0x80;
-                convert_utf8 = false;
-            }
-        }
+				if (!((sym >= '!' && sym <= '/') ||
+					(sym >= '8' && sym <= '?') ||
+					(sym >= '0' && sym <= '2'))) sym = sym & 0x1f;
+				else if (sym == '2') sym = 0x00;
+				else if (sym == '/') sym = 0x1F;
+				else if (sym == '8' || sym == '?') sym = 0x7F;
+			}
+			if (modifiers & MOD_ALT_MASK) {
+				if (terminal->mode & MODE_ALT_SENDS_ESC) {
+					ch[len++] = 0x1b;
+				} else {
+					sym = sym | 0x80;
+					convert_utf8 = false;
+				}
+			}
 
-        if ((sym < 128) ||
-            (!convert_utf8 && sym < 256)) {
-            ch[len++] = sym;
-        } else {
-            ret = xkb_keysym_to_utf8(sym, ch + len,
-                         MAX_RESPONSE - len);
-            if (ret < 0)
-                fprintf(stderr,
-                    "Warning: buffer too small to encode "
-                    "UTF8 character\n");
-            else
-                len += ret;
-        }
+			if ((sym < 128) ||
+				(!convert_utf8 && sym < 256)) {
+				ch[len++] = sym;
+			} else {
+				ret = xkb_keysym_to_utf8(sym, ch + len,
+							 MAX_RESPONSE - len);
+				if (ret < 0)
+					fprintf(stderr,
+						"Warning: buffer too small to encode "
+						"UTF8 character\n");
+				else
+					len += ret;
+			}
 
-        break;
+			break;
     }
 
     if (state == WL_KEYBOARD_KEY_STATE_PRESSED && len > 0) {
@@ -2613,15 +2612,15 @@ static int recompute_selection(struct terminal *terminal)
         }
 
         switch (terminal->dragging) {
-        case SELECT_LINE:
-            terminal->selection_start_col = 0;
-            break;
-        case SELECT_WORD:
-            terminal->selection_start_col = word_start;
-            break;
-        case SELECT_CHAR:
-            terminal->selection_start_col = col;
-            break;
+			case SELECT_LINE:
+				terminal->selection_start_col = 0;
+				break;
+			case SELECT_WORD:
+				terminal->selection_start_col = word_start;
+				break;
+			case SELECT_CHAR:
+				terminal->selection_start_col = col;
+				break;
         }
     }
 
@@ -2667,18 +2666,18 @@ static void menu_func(void *data, struct input *input, int index)
     fprintf(stderr, "picked entry %d\n", index);
 
     switch (index) {
-    case 0:
-        terminal_new_instance(terminal);
-        break;
-    case 1:
-        terminal_copy(terminal, input);
-        break;
-    case 2:
-        terminal_paste(terminal, input);
-        break;
-    case 3:
-        terminal_minimize(terminal);
-        break;
+		case 0:
+			terminal_new_instance(terminal);
+			break;
+		case 1:
+			terminal_copy(terminal, input);
+			break;
+		case 2:
+			terminal_paste(terminal, input);
+			break;
+		case 3:
+			terminal_minimize(terminal);
+			break;
     }
 }
 
@@ -2722,19 +2721,19 @@ static void button_handler(struct widget *widget,
     int32_t x, y;
 
     switch (button) {
-    case BTN_LEFT:
-        if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-            input_get_position(input, &x, &y);
-            click_handler(widget, terminal, input, x, y, time);
-        } else {
-            terminal->dragging = SELECT_NONE;
-        }
-        break;
+		case BTN_LEFT:
+			if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
+				input_get_position(input, &x, &y);
+				click_handler(widget, terminal, input, x, y, time);
+			} else {
+				terminal->dragging = SELECT_NONE;
+			}
+			break;
 
-    case BTN_RIGHT:
-        if (state == WL_POINTER_BUTTON_STATE_PRESSED)
-            show_menu(terminal, input, time);
-        break;
+		case BTN_RIGHT:
+			if (state == WL_POINTER_BUTTON_STATE_PRESSED)
+				show_menu(terminal, input, time);
+			break;
     }
 }
 
