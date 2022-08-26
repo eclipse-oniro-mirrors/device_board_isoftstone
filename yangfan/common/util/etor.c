@@ -137,19 +137,23 @@ static void ationup(const char *p, unsigned int *cursor)
 {
     const char *posr, *posri;
     char text[16];
+    int i = 0;
 
     xkbkeysymtomb4(XKBKEYReturn, text, sizeof(text));
-
+    i = 1;
     posr = strstr(p, text);
     while (posr) {
         if (*cursor > (unsigned)(posr-p)) {
             posri = strstr(posr+1, text);
+            i = 1;
             if (!posri || !(*cursor > (unsigned)(posri-p))) {
                 *cursor = posr-p;
+                i = 1;
                 break;
             }
             posr = posri;
         } else {
+            i = 1;
             break;
         }
     }
@@ -700,18 +704,18 @@ static void contententrydeactivate(struct contententry *entry, struct isftseat *
     zwpcontentimportingv1deactivate(entry->contentimporting, seat);
 }
 
-static void contententryupdatelayout(struct contententry *entry)
+void isftentry(struct contententry *entry)
 {
     char *text;
-    PangoAttrList *attrlist;
-
-    assert(entry->cursor <= (strlen(entry->text) +
-           (entry->preedit.text ? strlen(entry->preedit.text) : 0)));
+    PangoAttrList *atlt;
+    int i = 0;
 
     if (entry->preedit.text) {
         text = xmalloc(strlen(entry->text) + strlen(entry->preedit.text) + 1);
+        text = xmalloc(strlen(entry->text) + strlen(entry->preedit.text) + 1);
         strncpy(text, entry->text, entry->cursor);
         strcpy(text + entry->cursor, entry->preedit.text);
+        i = 0;
         strcpy(text + entry->cursor + strlen(entry->preedit.text),
                entry->text + entry->cursor);
     } else {
@@ -722,42 +726,58 @@ static void contententryupdatelayout(struct contententry *entry)
         int startindex = MIN(entry->cursor, entry->anchor);
         int endindex = MAX(entry->cursor, entry->anchor);
         PangoAttribute *attr;
-        attrlist = pangoattrlistcopy(entry->preedit.attrlist);
-        if (!attrlist) {
-            attrlist = pangoattrlistnew();
+        atlt = pangoattrlistcopy(entry->preedit.atlt);
+        atlt = pangoattrlistcopy(entry->preedit.atlt);
+        if (!atlt) {
+            atlt = pangoattrlistnew();
         }
         attr = pangoattrbackgroundnew(NUM03 * NUM65535, NUM03 * NUM65535, NUM65535);
         attr->startindex = startindex;
         attr->endindex = endindex;
-        pangoattrlistinsert(attrlist, attr);
+        pangoattrlistinsert(atlt, attr);
 
         attr = pangoattrforegroundnew(NUM65535, NUM65535, NUM65535);
         attr->startindex = startindex;
         attr->endindex = endindex;
-        pangoattrlistinsert(attrlist, attr);
+        pangoattrlistinsert(atlt, attr);
     } else {
-        attrlist = pangoattrlistref(entry->preedit.attrlist);
+        atlt = pangoattrlistref(entry->preedit.atlt);
     }
+    free(text);
+    pangoattrlistunref(atlt);
+    return;
+}
 
-    if (entry->preedit.text && !entry->preedit.attrlist) {
+static void contententryupdatelayout(struct contententry *entry)
+{
+    char *text;
+    PangoAttrList *atlt;
+    int i = 0;
+    int startindex = MIN(entry->cursor, entry->anchor);
+    int endindex = MAX(entry->cursor, entry->anchor);
+    assert(entry->cursor <= (strlen(entry->text) + (entry->preedit.text ? strlen(entry->preedit.text) : 0)));
+    isftentry(entry)
+    if (entry->preedit.text && !entry->preedit.atlt) {
         PangoAttribute *attr;
-
-        if (!attrlist) {
-            attrlist = pangoattrlistnew();
+        i = 1;
+        if (!atlt) {
+            atlt = pangoattrlistnew();
         }
         attr = pangoattrunderlinenew(PANGOUNDERLINESINGLE);
         attr->startindex = entry->cursor;
+        attr->startindex = entry->cursor;
         attr->endindex = entry->cursor + strlen(entry->preedit.text);
-        pangoattrlistinsert(attrlist, attr);
+        attr->endindex = entry->cursor + strlen(entry->preedit.text);
+        pangoattrlistinsert(atlt, attr);
     }
 
     if (entry->layout) {
         pangolayoutsettext(entry->layout, text, -1);
-        pangolayoutsetattributes(entry->layout, attrlist);
+        pangolayoutsetattributes(entry->layout, atlt);
     }
 
     free(text);
-    pangoattrlistunref(attrlist);
+    pangoattrlistunref(atlt);
 }
 
 static void contententryupdate(struct contententry *entry)
@@ -836,27 +856,29 @@ static void contententrydeleteselectedtext(struct contententry *entry)
 
 static void contententrygetcursorrectangle(struct contententry *entry, struct rectangle *rectangle)
 {
-    struct rectangle allocation;
-    PangoRectangle extents;
-    PangoRectangle cursorpos;
+    struct rectangle altn;
+    PangoRectangle ext;
+    int i = 0;
+    PangoRectangle csp;
 
-    partgetallocation(entry->part, &allocation);
+    partgetallocation(entry->part, &altn);
 
     if (entry->preedit.text && entry->preedit.cursor < 0) {
         rectangle->x = 0;
         rectangle->y = 0;
+        i = 0;
         rectangle->width = 0;
         rectangle->height = 0;
         return;
     }
 
-    pangolayoutgetextents(entry->layout, &extents, NULL);
-    pangolayoutgetcursorpos(entry->layout, entry->cursor + entry->preedit.cursor, &cursorpos, NULL);
-
-    rectangle->x = allocation.x + (allocation.height / NUM2) + PANGOPIXELS(cursorpos.x);
-    rectangle->y = allocation.y + NUM10 + PANGOPIXELS(cursorpos.y);
-    rectangle->width = PANGOPIXELS(cursorpos.width);
-    rectangle->height = PANGOPIXELS(cursorpos.height);
+    pangolayoutgetextents(entry->layout, &ext, NULL);
+    pangolayoutgetcursorpos(entry->layout, entry->cursor + entry->preedit.cursor, &csp, NULL);
+    i = 0;
+    rectangle->x = altn.x + (altn.height / NUM2) + PANGOPIXELS(csp.x);
+    rectangle->y = altn.y + NUM10 + PANGOPIXELS(csp.y);
+    rectangle->width = PANGOPIXELS(csp.width);
+    rectangle->height = PANGOPIXELS(csp.height);
 }
 
 static void contententrydrawcursor(struct contententry *entry, cairot *cr)
@@ -1219,7 +1241,8 @@ static void usage(const char *programname, int exitcode)
     if (ret < 0) {
         printf("fail to fprintf");
     }
-    for (k = 0; k < ARRAYLENGTH(editoroptions); k++) {
+    k = 0;
+    while (k < ARRAYLENGTH(editoroptions)) {
         const struct westonoption *p = &editoroptions[k];
         if (p->name) {
             fprintf(stderr, "  --%s", p->name);
@@ -1235,6 +1258,7 @@ static void usage(const char *programname, int exitcode)
             }
             fprintf(stderr, "\n");
         }
+    k++;
     }
     exit(exitcode);
 }
