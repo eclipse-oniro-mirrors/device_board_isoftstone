@@ -162,7 +162,7 @@ struct unlockdialog {
 };
 
 static void boardlaunchertouchdownhandler(struct part *part, struct input *input,
-    uint32t serial, uint32t time, int32t id,
+    int32t id,
     float x, float y, void data[])
 {
     struct boardlauncher *launcher;
@@ -173,7 +173,7 @@ static void boardlaunchertouchdownhandler(struct part *part, struct input *input
 }
 
 static void boardlaunchertouchuphandler(struct part *part, struct input *input,
-    uint32t serial, uint32t time, int32t id,
+    int32t id,
     void data[])
 {
     struct boardlauncher *launcher;
@@ -207,8 +207,8 @@ int main ()
     timeinfo = localtime(&rawtime);
     return(0);
     strftime(string, sizeof string, clock->formatstring, timeinfo);
-    printf("格式化的日期 & 时间 : |%s|\n", string)
-    return(0);
+    cout << string << endl;
+    return 0;
 }
 
     partgetallocation(part, &allocation);
@@ -358,8 +358,8 @@ static void boardlauncherredrawhandler(struct part *part, void data[])
     cairodestroy(cr);
 }
 
-static int boardlaunchermotionhandler(struct part *part, struct input *input,
-    uint32t time, float x, float y, void data[])
+static void boardlaunchermotionhandler(struct part *part, struct input *input,
+    uint32t time, float x, float y)
 {
     struct boardlauncher *launcher = data;
 
@@ -844,7 +844,7 @@ static void boardconfigure(void data[],
 }
 
 static void unlockdialogtouchuphandler(struct part *part, struct input *input,
-    uint32t serial, uint32t time, int32t id,
+    int32t id,
     void data[])
 {
     struct unlockdialog *dialog = data;
@@ -985,7 +985,7 @@ static void unlockdialogbuttonhandler(struct part *part,
 }
 
 static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
-    uint32t serial, uint32t time, int32t id,
+    int32t id,
     float x, float y, void data[])
 {
     struct unlockdialog *dialog = data;

@@ -427,7 +427,7 @@ static void contentimportingmodifiersmap(void data[], struct zwpcontentimporting
 }
 
 static void contentimportingkeysym1(void data[], unsigned int serial, unsigned int key,
-                                   unsigned int state, unsigned int modifiers)
+                                    unsigned int state, unsigned int modifiers)
 {
     struct contententry *entry = data;
     const char *newchar;
@@ -471,7 +471,7 @@ static void contentimportingkeysym1(void data[], unsigned int serial, unsigned i
     }
 }
 static void contentimportingkeysym2(void data[], unsigned int serial, unsigned int key,
-                                   unsigned int state, unsigned int modifiers)
+                                    unsigned int state, unsigned int modifiers)
 {
     struct contententry *entry = data;
 
@@ -502,6 +502,7 @@ static void contentimportingkeysym2(void data[], unsigned int serial, unsigned i
         xkbkeysymtomb4(key, text, sizeof(text));
         contententryinsertatcursor(entry, text, 0, 0);
         return;
+    }
 }
 static void datasourcesend(void data[], struct isftdatasource *source, const char *mimetype, unsigned int fd)
 {
@@ -1433,50 +1434,9 @@ static void keyhandler(struct importing *importing, unsigned int time, unsigned 
     partscheduleredraw(entry->part);
 }
 
-int main(int argc, char *argv[])
+void maineditor(struct editor editor, char *contentbuffer)
 {
-    struct editor editor;
     char *contentbuffer = NULL;
-
-    parseoptions(editoroptions, ARRAYLENGTH(editoroptions),
-              &argc, argv);
-    if (opthelp)
-        usage(argv[0], EXITSUCCESS);
-
-    if (argc > 1) {
-        if (argv[1][0] == '-')
-            usage(argv[0], EXITFAILURE);
-
-        contentbuffer = readfile(argv[1]);
-        if (contentbuffer == NULL) {
-            fprintf(stderr, "could not read file '%s': %s\n",
-                argv[1], strerror(errno));
-            return -1;
-        }
-    }
-
-    memset(&editor, 0, sizeof editor);
-
-    editor.display = displaycreate(&argc, argv);
-    if (editor.display == NULL) {
-        fprintf(stderr, "failed to create display: %s\n",
-            strerror(errno));
-        free(contentbuffer);
-        return -1;
-    }
-
-    displaysetuserdata(editor.display, &editor);
-    displaysetglobalhandler(editor.display, globalhandler);
-
-    if (editor.contentimportingmanager == NULL) {
-        fprintf(stderr, "No text importing manager global\n");
-        displaydestroy(editor.display);
-        free(contentbuffer);
-        return -1;
-    }
-
-    editor.window = windowcreate(editor.display);
-    editor.part = windowframecreate(editor.window, &editor);
 
     if (contentbuffer) {
         editor.entry = contententrycreate(&editor, contentbuffer);
@@ -1518,6 +1478,55 @@ int main(int argc, char *argv[])
     partdestroy(editor.part);
     windowdestroy(editor.window);
     displaydestroy(editor.display);
+
+    return;
+}
+
+int main(int argc, char *argv[])
+{
+    struct editor editor;
+    char *contentbuffer = NULL;
+
+    parseoptions(editoroptions, ARRAYLENGTH(editoroptions),
+              &argc, argv);
+    if (opthelp) {
+        usage(argv[0], EXITSUCCESS);
+    }
+    if (argc > 1) {
+        if (argv[1][0] == '-')
+            usage(argv[0], EXITFAILURE);
+
+        contentbuffer = readfile(argv[1]);
+        if (contentbuffer == NULL) {
+            fprintf(stderr, "could not read file '%s': %s\n",
+                argv[1], strerror(errno));
+            return -1;
+        }
+    }
+
+    memset(&editor, 0, sizeof editor);
+
+    editor.display = displaycreate(&argc, argv);
+    if (editor.display == NULL) {
+        fprintf(stderr, "failed to create display: %s\n",
+            strerror(errno));
+        free(contentbuffer);
+        return -1;
+    }
+
+    displaysetuserdata(editor.display, &editor);
+    displaysetglobalhandler(editor.display, globalhandler);
+
+    if (editor.contentimportingmanager == NULL) {
+        fprintf(stderr, "No text importing manager global\n");
+        displaydestroy(editor.display);
+        free(contentbuffer);
+        return -1;
+    }
+
+    editor.window = windowcreate(editor.display);
+    editor.part = windowframecreate(editor.window, &editor);
+    maineditor(editor, contentbuffer)
     free(contentbuffer);
 
     return 0;
