@@ -87,12 +87,10 @@ struct editor {
 };
 
 static void contententryredrawhandler(struct part *part, void data[]);
-static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int time,
-                                      unsigned int button, enum isftpointerbuttonstate state, void data[]);
-static void contententrytouchhandler(struct part *part, struct importing *importing, unsigned int serial,
-                                     unsigned int time, unsigned int id, float tx, float ty, void data[]);
-static int contententrymotionhandler(struct part *part, struct importing *importing, unsigned int time,
-                                     float x, float y, void data[]);
+static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int button,
+                                      enum isftpointerbuttonstate state, void data[]);
+static void contententrytouchhandler(struct part *part, struct importing *importing, float tx, float ty, void data[]);
+static int contententrymotionhandler(struct part *part, unsigned int time, float x, float y, void data[]);
 static void contententryinsertatcursor(struct contententry *entry, const char *text,
                                        unsigned int cursor, unsigned int anchor);
 static void contententrysetpreedit(struct contententry *entry, const char *preedittext, int preeditcursor);
@@ -1016,9 +1014,10 @@ static int contentoffsettop(struct rectangle *allocation)
     return allocation->height / NUM2;
 }
 
-static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int time,
-                                      unsigned int button, enum isftpointerbuttonstate state, void data[])
+static void contententrybuttonhandler(struct part *part, struct importing *importing, unsigned int button,
+                                      enum isftpointerbuttonstate state, void data[])
 {
+    unsigned int time;
     struct contententry *entry = data;
     struct rectangle allocation;
     struct editor *editor;
@@ -1066,8 +1065,7 @@ static void contententrybuttonhandler(struct part *part, struct importing *impor
     }
 }
 
-static void contententrytouchhandler(struct part *part, struct importing *importing, unsigned int serial,
-                                     unsigned int time, unsigned int id, float tx, float ty, void data[])
+static void contententrytouchhandler(struct part *part, struct importing *importing, float tx, float ty, void data[])
 {
     struct contententry *entry = data;
     struct isftseat *seat = importinggetseat(importing);
@@ -1087,8 +1085,8 @@ static void contententrytouchhandler(struct part *part, struct importing *import
     contententrysetcursorposition(entry, x, y, true);
 }
 
-static void editorbuttonhandler(struct part *part, struct importing *importing, unsigned int time,
-                                unsigned int button, enum isftpointerbuttonstate state, void data[])
+static void editorbuttonhandler(struct part *part, struct importing *importing, unsigned int button,
+                                enum isftpointerbuttonstate state, void data[])
 {
     struct editor *editor = data;
 
@@ -1159,8 +1157,7 @@ static void contententryredrawhandler(struct part *part, void data[])
     cairosurfacedestroy(surface);
 }
 
-static int contententrymotionhandler(struct part *part, struct importing *importing, unsigned int time,
-                                     float x, float y, void data[])
+static int contententrymotionhandler(struct part *part, unsigned int time, float x, float y, void data[])
 {
     struct contententry *entry = data;
     struct rectangle allocation;
@@ -1289,8 +1286,7 @@ static char *readfile(char *filename)
     return buffer;
 }
 
-static void editortouchhandler(struct part *part, struct importing *importing, unsigned int serial,
-                               unsigned int time, unsigned int id, float tx, float ty, void data[])
+static void editortouchhandler(struct part *part, struct importing *importing, void data[])
 {
     struct editor *editor = data;
     struct isftseat *seat = importinggetseat(importing);

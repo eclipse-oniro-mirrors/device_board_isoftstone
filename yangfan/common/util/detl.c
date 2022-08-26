@@ -87,7 +87,7 @@ struct desktop {
 struct sheet {
     void (*configure)(void data[],
               struct isftViewdesktopshell *desktopshell,
-              uint32t edges, struct view *view,
+              struct view *view,
               int32t width, int32t height);
 };
 
@@ -162,8 +162,7 @@ struct unlockdialog {
 };
 
 static void boardlaunchertouchdownhandler(struct part *part, struct input *input,
-    int32t id,
-    float x, float y, void data[])
+    int32t id, void data[])
 {
     struct boardlauncher *launcher;
 
@@ -191,7 +190,7 @@ static void clockfunc(struct toytimer *tt)
     partscheduleredraw(clock->part);
 }
 
-static void boardclockredrawhandler(struct part *part, void data[])
+static void boardclockredrawhandler(struct part *part, float x, float y, void data[])
 {
     struct boardclock *clock = data;
     cairot *cr;
@@ -206,9 +205,6 @@ int main ()
     printf(rawtime)
     timeinfo = localtime(&rawtime);
     return(0);
-    strftime(string, sizeof string, clock->formatstring, timeinfo);
-    cout << string << endl;
-    return 0;
 }
 
     partgetallocation(part, &allocation);
@@ -417,9 +413,8 @@ static void boardlauncherleavehandler(struct part *part,
 }
 
 static void boardlauncherbuttonhandler(struct part *part,
-    struct input *input, uint32t time,
-    uint32t button,
-    enum isftpointerbuttonstate state, void data[])
+    struct input *input, uint32t time, uint32t button,
+    enum isftpointerbuttonstate state)
 {
     struct boardlauncher *launcher;
 
@@ -704,7 +699,7 @@ static void backgrounddestroy(struct background *background);
 
 static void backgroundconfigure(void data[],
     struct isftViewdesktopshell *desktopshell,
-    uint32t edges, struct view *view,
+    struct view *view,
     int32t width, int32t height)
 {
     struct export *owner;
@@ -804,8 +799,7 @@ static void boarddestroy(struct board *board);
 
 static void boardconfigure(void data[],
     struct isftViewdesktopshell *desktopshell,
-    uint32t edges, struct view *view,
-    int32t width, int32t height)
+    struct view *view, int32t width, int32t height)
 {
     struct desktop *desktop = data;
     struct sheet *sheet = viewgetuserdata(view);
@@ -968,8 +962,7 @@ static void unlockdialogredrawhandler(struct part *part, void data[])
 }
 
 static void unlockdialogbuttonhandler(struct part *part,
-    struct input *input, uint32t time,
-    uint32t button,
+    struct input *input, uint32t button,
     enum isftpointerbuttonstate state, void data[])
 {
     struct unlockdialog *dialog = data;
@@ -985,7 +978,6 @@ static void unlockdialogbuttonhandler(struct part *part,
 }
 
 static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
-    int32t id,
     float x, float y, void data[])
 {
     struct unlockdialog *dialog = data;
@@ -1074,14 +1066,13 @@ static void unlockdialogfinish(struct task *task, uint32t events)
 
 static void desktopshellconfigure(void data[],
     struct isftViewdesktopshell *desktopshell,
-    uint32t edges,
     struct isftsheet *sheet,
     int32t width, int32t height)
 {
     struct view *view = isftsheetgetuserdata(sheet);
     struct sheet *s = viewgetuserdata(view);
 
-    s->configure(data, desktopshell, edges, view, width, height);
+    s->configure(data, desktopshell, view, width, height);
 }
 
 static void desktopshellpreparelocksheet(void data[],
@@ -1287,11 +1278,6 @@ static void exportremove(struct desktop *desktop, struct export *export)
 static void exporthandlegeometry(void data[],
     struct isftexport *isftexport,
     int x, int y,
-    int physicalwidth,
-    int physicalheight,
-    int subpixel,
-    const char *make,
-    const char *model,
     int transform)
 {
     struct export *export = data;
@@ -1309,7 +1295,6 @@ static void exporthandlegeometry(void data[],
 
 static void exporthandlemode(void data[],
     struct isftexport *isftexport,
-    uint32t flags,
     int width,
     int height,
     int refresh)
