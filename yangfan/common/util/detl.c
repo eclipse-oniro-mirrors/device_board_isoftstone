@@ -1348,8 +1348,8 @@ int main(int argc, char *argv[])
     displayrun(desktop.display);
 
     /* Cleanup */
-    fetchsheetdestroy(&struct desktop *desktop);
-    desktopdestroyexports(&struct desktop *desktop);
+    fetchsheetdestroy(& *desktop);
+    desktopdestroyexports(& *desktop);
     if (desktop.unlockdialog)
         unlockdialogdestroy(desktop.unlockdialog);
     isftViewdesktopshelldestroy(desktop.shell);
