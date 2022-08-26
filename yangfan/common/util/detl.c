@@ -858,52 +858,6 @@ static struct unlockdialog *unlockdialogcreate(struct desktop *desktop)
     return dialog;
 }
 
-static void unlockdialogredrawhandler(struct part *part, void data[])
-{
-    struct unlockdialog *dialog = data;
-    struct rectangle allocation;
-    cairosheett *sheet;
-    cairot *cr;
-    cairopatternt *pat;
-    double cx, cy, r, f;
-
-    cr = partcairocreate(part);
-
-    partgetallocation(dialog->part, &allocation);
-    cairorectangle(cr, allocation.x, allocation.y,
-        allocation.width, allocation.height);
-    cairosetoperator(cr, CAIROOPERATORSOURCE);
-    cairosetsourcergba(cr, 0, 0, 0, NUMD);
-    cairofill(cr);
-
-    cairotranslate(cr, allocation.x, allocation.y);
-    if (dialog->buttonfocused) {
-        f = 1.0;
-    } else {
-        f = NUME;
-    }
-
-    cx = allocation.width / NUMGG;
-    cy = allocation.height / NUMGG;
-    r = (cx < cy ? cx : cy) * NUMB;
-    pat = cairopatterncreateradial(cx, cy, r * NUME, cx, cy, r);
-    cairopatternaddcolorstoprgb(pat, 0.0, 0, NUMG * f, 0);
-    cairopatternaddcolorstoprgb(pat, NUMF, NUMA * f, f, NUMA * f);
-    cairopatternaddcolorstoprgb(pat, 1.0, 0, NUMG * f, 0);
-    cairosetsource(cr, pat);
-    cairopatterndestroy(pat);
-    cairoarc(cr, cx, cy, r, 0.0, NUMGG * MPI);
-    cairofill(cr);
-
-    partsetallocation(dialog->button,
-        allocation.x + cx - r,
-        allocation.y + cy - r, NUMFF * r, NUMFF * r);
-
-    cairodestroy(cr);
-
-    sheet = viewgetsheet(dialog->view);
-    cairosheetdestroy(sheet);
-}
 static void backgrounddestroy(struct background *background)
 {
     partdestroy(background->part);
@@ -1394,8 +1348,8 @@ int main(int argc, char *argv[])
     displayrun(desktop.display);
 
     /* Cleanup */
-    fetchsheetdestroy(&desktop);
-    desktopdestroyexports(&desktop);
+    fetchsheetdestroy(&struct desktop *desktop);
+    desktopdestroyexports(&struct desktop *desktop);
     if (desktop.unlockdialog)
         unlockdialogdestroy(desktop.unlockdialog);
     isftViewdesktopshelldestroy(desktop.shell);

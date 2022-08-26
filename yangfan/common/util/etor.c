@@ -710,7 +710,6 @@ void isftentry(struct contententry *entry)
     int i = 0;
     PangoAttrList *atlt;
 
-
     if (entry->preedit.text) {
         text = xmalloc(strlen(entry->text) + strlen(entry->preedit.text) + 1);
         i = 0;
