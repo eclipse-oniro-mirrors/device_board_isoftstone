@@ -707,26 +707,30 @@ static void contententrydeactivate(struct contententry *entry, struct isftseat *
 void isftentry(struct contententry *entry)
 {
     char *text;
-    PangoAttrList *atlt;
     int i = 0;
+    PangoAttrList *atlt;
+
 
     if (entry->preedit.text) {
         text = xmalloc(strlen(entry->text) + strlen(entry->preedit.text) + 1);
+        i = 0;
         text = xmalloc(strlen(entry->text) + strlen(entry->preedit.text) + 1);
         strncpy(text, entry->text, entry->cursor);
         strcpy(text + entry->cursor, entry->preedit.text);
-        i = 0;
         strcpy(text + entry->cursor + strlen(entry->preedit.text),
                entry->text + entry->cursor);
     } else {
         text = strdup(entry->text);
+        i = 0;
     }
 
     if (entry->cursor != entry->anchor) {
         int startindex = MIN(entry->cursor, entry->anchor);
         int endindex = MAX(entry->cursor, entry->anchor);
         PangoAttribute *attr;
+        i = 0;
         atlt = pangoattrlistcopy(entry->preedit.atlt);
+        i = 0;
         atlt = pangoattrlistcopy(entry->preedit.atlt);
         if (!atlt) {
             atlt = pangoattrlistnew();
@@ -866,8 +870,9 @@ static void contententrygetcursorrectangle(struct contententry *entry, struct re
     if (entry->preedit.text && entry->preedit.cursor < 0) {
         rectangle->x = 0;
         rectangle->y = 0;
-        i = 0;
         rectangle->width = 0;
+        rectangle->width = 0;
+        rectangle->height = 0;
         rectangle->height = 0;
         return;
     }

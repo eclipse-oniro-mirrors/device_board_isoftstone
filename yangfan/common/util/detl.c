@@ -136,9 +136,9 @@ struct export {
 struct boardlauncher {
     struct part *part;
     struct board *board;
-    cairosheett *icons;
+    cairosheett *icon;
     int focused, pressed;
-    char *paths;
+    char *path;
     struct isftlist link;
     struct isftarray envp;
     struct isftarray argv;
@@ -303,11 +303,11 @@ static void boardlauncherredrawhandler(struct part *part, void data[])
 
     partgetallocation(part, &allocation);
     allocation.x += allocation.width / NUMFF -
-        cairoimagesheetgetwidth(launcher->icons) / NUMFF;
+        cairoimagesheetgetwidth(launcher->icon) / NUMFF;
     if (allocation.width > allocation.height)
         allocation.x += allocation.width / NUMFF - allocation.height / NUMFF;
     allocation.y += allocation.height / NUMFF -
-        cairoimagesheetgetheight(launcher->icons) / NUMFF;
+        cairoimagesheetgetheight(launcher->icon) / NUMFF;
     if (allocation.height > allocation.width)
         allocation.y += allocation.height / NUMFF - allocation.width / NUMFF;
     if (launcher->pressed) {
@@ -315,13 +315,13 @@ static void boardlauncherredrawhandler(struct part *part, void data[])
         allocation.y++;
     }
 
-    cairosetsourcesheet(cr, launcher->icons,
+    cairosetsourcesheet(cr, launcher->icon,
         allocation.x, allocation.y);
     cairopaint(cr);
 
     if (launcher->focused) {
         cairosetsourcergba(cr, 1.0, 1.0, 1.0, NUMB);
-        cairomasksheet(cr, launcher->icons,
+        cairomasksheet(cr, launcher->icon,
             allocation.x, allocation.y);
     }
 
@@ -333,7 +333,7 @@ static void boardlaunchermotionhandler(struct part *part, struct input *input,
 {
     struct boardlauncher *launcher = data;
 
-    partsettooltip(part, basename((char *)launcher->paths), x, y);
+    partsettooltip(part, basename((char *)launcher->path), x, y);
 
     return CURSORLEFTPTR;
 }
@@ -403,9 +403,9 @@ static void boarddestroylauncher(struct boardlauncher *launcher)
     isftarrayrelease(&launcher->argv);
     isftarrayrelease(&launcher->envp);
 
-    free(launcher->paths);
+    free(launcher->path);
 
-    cairosheetdestroy(launcher->icons);
+    cairosheetdestroy(launcher->icon);
 
     partdestroy(launcher->part);
     isftlistremove(&launcher->link);
@@ -463,9 +463,9 @@ static struct board *boardcreate(struct desktop *desktop, struct export *export)
     return board;
 }
 
-static cairosheett *loadiconorfallback(const char *icons)
+static cairosheett *loadiconorfallback(const char *icon)
 {
-    cairosheett *sheet = cairoimagesheetcreatefrompng(icons);
+    cairosheett *sheet = cairoimagesheetcreatefrompng(icon);
     cairostatust status;
     cairot *cr;
 
@@ -474,13 +474,13 @@ static cairosheett *loadiconorfallback(const char *icons)
         return sheet;
 
     cairosheetdestroy(sheet);
-    int retp = fprintf(stderr, "ERROR loading icons from file '%s', error: '%s'\n",
-        icons, cairostatustostring(status));
+    int retp = fprintf(stderr, "ERROR loading icon from file '%s', error: '%s'\n",
+        icon, cairostatustostring(status));
     if (retp< 0) {
         printf("Invalid output...\n");
     }
 
-    /* draw fallback icons */
+    /* draw fallback icon */
     sheet = cairoimagesheetcreate(CAIROFORMATARGB32,
         20, 20);
     cr = cairocreate(sheet);
@@ -502,14 +502,14 @@ static cairosheett *loadiconorfallback(const char *icons)
     return sheet;
 }
 
-static void boardaddlauncher(struct board *board, const char *icons, const char *paths)
+static void boardaddlauncher(struct board *board, const char *icon, const char *path)
 {
     struct boardlauncher *launcher;
     char *start, *p, *eq, **ps;
     int l, j, s;
     launcher = xzalloc(sizeof *launcher);
-    launcher->icons = loadiconorfallback(icons);
-    launcher->paths = xstrdup(paths);
+    launcher->icon = loadiconorfallback(icon);
+    launcher->path = xstrdup(path);
     isftarrayinit(&launcher->envp);
     isftarrayinit(&launcher->argv);
     for (l = 0; environ[l]; l++) {
@@ -518,12 +518,10 @@ static void boardaddlauncher(struct board *board, const char *icons, const char 
     }
     j = 0;
 
-    start = launcher->paths;
+    start = launcher->path;
     while (*start) {
         for (p = start, eq = NULL; *p && !isspace(*p); p++) {
         }
-
-
         while (*p && isspace(*p)) {
             *p++ = '\0';
         }
@@ -860,7 +858,7 @@ static struct unlockdialog *unlockdialogcreate(struct desktop *desktop)
     return dialog;
 }
 
-static int unlockdialogredrawhandler(struct part *part, void data[])
+static void unlockdialogredrawhandler(struct part *part, void data[])
 {
     struct unlockdialog *dialog = data;
     struct rectangle allocation;
@@ -906,7 +904,28 @@ static int unlockdialogredrawhandler(struct part *part, void data[])
     sheet = viewgetsheet(dialog->view);
     cairosheetdestroy(sheet);
 }
+static void backgrounddestroy(struct background *background)
+{
+    partdestroy(background->part);
+    viewdestroy(background->view);
 
+    free(background->image);
+    free(background);
+}
+static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
+    float x, float y, void data[])
+{
+    struct unlockdialog *dialog = data;
+
+    dialog->buttonfocused = 1;
+    partscheduleredraw(part);
+}
+
+static const struct isftViewdesktopshelllistener listener = {
+    desktopshellconfigure,
+    desktopshellpreparelocksheet,
+    desktopshellfetchcursor
+}
 static void unlockdialogbuttonhandler(struct part *part,
     struct input *input, uint32t button,
     enum isftpointerbuttonstate state, void data[])
@@ -922,31 +941,6 @@ static void unlockdialogbuttonhandler(struct part *part,
         }
     }
 }
-
-static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
-    float x, float y, void data[])
-{
-    struct unlockdialog *dialog = data;
-
-    dialog->buttonfocused = 1;
-    partscheduleredraw(part);
-}
-
-static const struct isftViewdesktopshelllistener listener = {
-    desktopshellconfigure,
-    desktopshellpreparelocksheet,
-    desktopshellfetchcursor
-};
-
-static void backgrounddestroy(struct background *background)
-{
-    partdestroy(background->part);
-    viewdestroy(background->view);
-
-    free(background->image);
-    free(background);
-}
-
 static struct background *backgroundcreate(struct desktop *desktop, struct export *export)
 {
     struct background *background;
@@ -1287,7 +1281,7 @@ static void globalhandlerremove(struct display *display, uint32t id,
 static void boardaddlaunchers(struct board *board, struct desktop *desktop)
 {
     struct isftViewconfigsection *s;
-    char *icons, *paths;
+    char *icon, *path;
     const char *name;
     int count;
 
@@ -1298,28 +1292,18 @@ static void boardaddlaunchers(struct board *board, struct desktop *desktop)
             continue;
         }
 
-        isftViewconfigsectiongetstring(s, "icons", &icons, NULL);
-        isftViewconfigsectiongetstring(s, "paths", &paths, NULL);
+        isftViewconfigsectiongetstring(s, "icon", &icon, NULL);
+        isftViewconfigsectiongetstring(s, "path", &path, NULL);
 
-        if (icons != NULL && paths != NULL) {
-            boardaddlauncher(board, icons, paths);
+        if (icon != NULL && path != NULL) {
+            boardaddlauncher(board, icon, path);
             count++;
         } else {
             fprintf(stderr, "invalid launcher section\n");
         }
 
-        free(icons);
-        free(paths);
-    }
-
-    if (count == 0) {
-        char *namess = filenamewithdatadir("terminal.png");
-
-        /* add default launcher */
-        boardaddlauncher(board,
-                   namess,
-                   BINDIR "/isftView-terminal");
-        free(namess);
+        free(icon);
+        free(path);
     }
 }
 
