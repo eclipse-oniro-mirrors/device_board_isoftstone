@@ -334,7 +334,8 @@ static const struct zwplinuxbufferparamsv1listener paramslistener = {
     createsucceeded,
     createfailed
 };
-void ADDPLANEATTRIBS(int planeidx, PGAint *attribs, struct buffer *buffer) {
+void ADDPLANEATTRIBS(int planeidx, PGAint *attribs, struct buffer *buffer)
+{
     attribs[atti++] = PGADMABUFPLANE ## planeidx ## FDEXT; \
     attribs[atti++] = buffer->dmabuffds[planeidx]; \
     attribs[atti++] = PGADMABUFPLANE ## planeidx ## OFFSETEXT; \

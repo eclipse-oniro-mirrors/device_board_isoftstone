@@ -49,12 +49,6 @@
 #include "shared/helpers.h"
 #include "shared/xalloc.h"
 #include "window.h"
-
-enum NumBer {
-    NUM0 = 0.5, NUM1, NUM2 = 2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM10,
-    NUM11, NUM12, NUM13, NUM14, NUM15, NUM16, NUM17, NUM18, NUM19, NUM20,
-    NUM21, NUM22, NUM23, NUM24, NUM25, NUM26, NUM27, NUM28, NUM29, NUM30,
-};
 static bool option_fullscreen;
 static bool option_maximize;
 static char *option_font;
@@ -101,7 +95,17 @@ static int terminal_run(struct terminal *terminal, const char *path);
 #define MODE_IRM            0x00000020
 #define MODE_DELETE_SENDS_DEL    0x00000040
 #define MODE_ALT_SENDS_ESC       0x00000080
-
+#define NUM100 100
+#define NUM1034 1034
+#define NUM1037 1037
+#define NUM1039 1039
+#define NUM1049 1049
+enum NumBer {
+    NUM0 = 0.5, NUM1, NUM2 = 2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM10,
+    NUM11, NUM12, NUM13, NUM14, NUM15, NUM16, NUM17, NUM18, NUM19, NUM20,
+    NUM21, NUM22, NUM23, NUM24, NUM25, NUM26, NUM27, NUM28, NUM29, NUM30,
+    NUM32 = 32, NUM37 = 37, NUM38, NUM39, NUM40,
+};
 union utf8_char {
     unsigned char byte[4];
     uint32_t ch;
@@ -1274,24 +1278,24 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
                     terminal->mode &= ~MODE_SHOW_CURSOR;
                 }
                 break;
-            case 1034:   /* smm/rmm, meta mode on/off */
+            case NUM1034:   /* smm/rmm, meta mode on/off */
                 /* ignore */
                 break;
-            case 1037:   /* deleteSendsDel */
+            case NUM1037:   /* deleteSendsDel */
                 if (sr) {
                     terminal->mode |=  MODE_DELETE_SENDS_DEL;
                 } else {
                     terminal->mode &= ~MODE_DELETE_SENDS_DEL;
                 }
                 break;
-            case 1039:   /* altSendsEscape */
+            case NUM1039:   /* altSendsEscape */
                 if (sr) {
                     terminal->mode |=  MODE_ALT_SENDS_ESC;
                 } else {
                     terminal->mode &= ~MODE_ALT_SENDS_ESC;
                 }
                 break;
-            case 1049:   /* rmcup/smcup, alternate screen */
+            case NUM1049:   /* rmcup/smcup, alternate screen */
                 /* Ignore.  Should be possible to implement,
                 * but it's kind of annoying. */
                 break;
@@ -1721,7 +1725,9 @@ static void handle_escape(struct terminal *terminal)
             terminal->saved_column = terminal->column;
             break;
         case 't':    /* windowOps */
-            if (!set[0]) break;
+            if (!set[0]) {
+                break;
+            }
             switch (args[0]) {
                 case NUM4:  /* resize px */
                     if (set[1] && set[NUM2]) {
@@ -1926,24 +1932,24 @@ static void handle_sgr(struct terminal *terminal, int code)
         case NUM28:
             terminal->curr_attr.a &= ~ATTRMASK_CONCEALED;
             break;
-        case 39:
+        case NUM39:
             terminal->curr_attr.fg = terminal->color_scheme->default_attr.fg;
             break;
         case 49:
             terminal->curr_attr.bg = terminal->color_scheme->default_attr.bg;
             break;
         default:
-            if (code >= NUM30 && code <= 37) {
+            if (code >= NUM30 && code <= NUM37) {
                 terminal->curr_attr.fg = code - NUM30;
                 if (terminal->curr_attr.a & ATTRMASK_BOLD) {
                     terminal->curr_attr.fg += NUM8;
                 }
-            } else if (code >= 40 && code <= 47) {
-                terminal->curr_attr.bg = code - 40;
+            } else if (code >= NUM40 && code <= 47) {
+                terminal->curr_attr.bg = code - NUM40;
             } else if (code >= 90 && code <= 97) {
                 terminal->curr_attr.fg = code - 90 + NUM8;
-            } else if (code >= 100 && code <= 107) {
-                terminal->curr_attr.bg = code - 100 + NUM8;
+            } else if (code >= NUM100 && code <= 107) {
+                terminal->curr_attr.bg = code - NUM100 + NUM8;
             } else if (code >= 256 && code < 512) {
                 terminal->curr_attr.fg = code - 256;
             } else if (code >= 512 && code < 768) {
@@ -2073,7 +2079,7 @@ static void handle_char(struct terminal *terminal, union utf8_char utf8)
         } else {
             terminal->column--;
         }
-     }
+    }
 
     row = terminal_get_row(terminal, terminal->row);
     attr_row = terminal_get_attr_row(terminal, terminal->row);
