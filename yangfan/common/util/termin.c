@@ -50,6 +50,11 @@
 #include "shared/xalloc.h"
 #include "window.h"
 
+enum NumBer {
+    NUM0 = 0.5, NUM1, NUM2 = 2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM10,
+    NUM11, NUM12, NUM13, NUM14, NUM15, NUM16, NUM17, NUM18, NUM19, NUM20,
+    NUM21, NUM22, NUM23, NUM24, NUM25, NUM26, NUM27, NUM28, NUM29, NUM30,
+};
 static bool option_fullscreen;
 static bool option_maximize;
 static char *option_font;
@@ -339,10 +344,10 @@ static int function_key_response(char escape, int num, uint32_t modifiers,
         mod_num   |= 1;
     }
     if (modifiers & MOD_ALT_MASK) {
-        mod_num    |= 2;
+        mod_num    |= NUM2;
     }
     if (modifiers & MOD_CONTROL_MASK) {
-        mod_num |= 4;
+        mod_num |= NUM4;
     }
 
     if (mod_num != 0) {
@@ -539,10 +544,10 @@ static void init_color_table(struct terminal *terminal)
     struct terminal_color *color_table = terminal->color_table;
 
     for (c = 0; c < 256; c ++) {
-        if (c < 16) {
+        if (c < NUM16) {
             color_table[c] = terminal->color_scheme->palette[c];
         } else if (c < 232) {
-            r = c - 16;
+            r = c - NUM16;
             color_table[c].b = ((double)(r % 6) / 6.0);
             r /= 6;
             color_table[c].g = ((double)(r % 6) / 6.0);
@@ -569,7 +574,7 @@ terminal_get_row(struct terminal *terminal, int row)
     return (void *) terminal->data + index * terminal->data_pitch;
 }
 
-static struct attr*
+static struct attr *
 terminal_get_attr_row(struct terminal *terminal, int row)
 {
     int index;
@@ -610,10 +615,10 @@ static void terminal_decode_attr(struct terminal *terminal, int row, int col,
         foreground = attr.bg;
         background = attr.fg;
         if (attr.a & ATTRMASK_BOLD) {
-            if (foreground <= 16) {
+            if (foreground <= NUM16) {
                 foreground |= 0x08;
             }
-            if (background <= 16) {
+            if (background <= NUM16) {
                 background &= 0x07;
             }
         }
@@ -627,10 +632,10 @@ static void terminal_decode_attr(struct terminal *terminal, int row, int col,
         foreground = background;
         background = tmp;
         if (attr.a & ATTRMASK_BOLD) {
-            if (foreground <= 16) {
+            if (foreground <= NUM16) {
                 foreground |= 0x08;
             }
-            if (background <= 16) {
+            if (background <= NUM16) {
                 background &= 0x07;
             }
         }
@@ -878,7 +883,7 @@ static void resize_handler(struct widget *widget,
         close(terminal->pace_pipe);
         terminal->pace_pipe = -1;
     }
-    m = 2 * terminal->margin;
+    m = NUM2 * terminal->margin;
     columns = (width - m) / (int32_t) terminal->average_width;
     rows = (height - m) / (int32_t) terminal->extents.height;
 
@@ -908,7 +913,7 @@ static void terminal_resize(struct terminal *terminal, int columns, int rows)
         return;
     }
 
-    m = 2 * terminal->margin;
+    m = NUM2 * terminal->margin;
     width = columns * terminal->average_width + m;
     height = rows * terminal->extents.height + m;
 
@@ -921,8 +926,8 @@ struct color_scheme DEFAULT_COLORS = {
         {0.66, 0,    0,    1}, /* red */
         {0,    0.66, 0,    1}, /* green */
         {0.66, 0.33, 0,    1}, /* orange (nicer than muddy yellow) */
-        {0,    0  ,  0.66, 1}, /* blue */
-        {0.66, 0  ,  0.66, 1}, /* magenta */
+        {0,    0,    0.66, 1}, /* blue */
+        {0.66, 0,    0.66, 1}, /* magenta */
         {0,    0.66, 0.66, 1}, /* cyan */
         {0.66, 0.66, 0.66, 1}, /* light grey */
         {0.22, 0.33, 0.33, 1}, /* dark grey */
@@ -956,7 +961,7 @@ static void terminal_send_selection(struct terminal *terminal, int fd)
     int len;
 
     fp = fdopen(fd, "w");
-    if (fp == NULL){
+    if (fp == NULL) {
         close(fd);
         return;
     }
@@ -964,7 +969,7 @@ static void terminal_send_selection(struct terminal *terminal, int fd)
         p_row = terminal_get_row(terminal, row);
         for (col = 0; col < terminal->width; col++) {
             if (p_row[col].ch == 0x200B) {
-                \/* space glyph */
+                /* space glyph */
                 continue;
             }
             /* get the attributes for this character cell */
@@ -1006,7 +1011,7 @@ static void glyph_run_flush(struct glyph_run *run, union decoded_attr attr)
 {
     cairo_scaled_font_t *font;
 
-    if (run->count > ARRAY_LENGTH(run->glyphs) - 10 ||
+    if (run->count > ARRAY_LENGTH(run->glyphs) - NUM10 ||
         (attr.key != run->attr.key)) {
         if (run->attr.attr.a & (ATTRMASK_BOLD | ATTRMASK_BLINK)) {
             font = run->terminal->font_bold;
@@ -1082,8 +1087,8 @@ static void redraw_handler(struct widget *widget, void data[])
 
     extents = terminal->extents;
     average_width = terminal->average_width;
-    side_margin = (allocation.width - terminal->width * average_width) / 2;
-    top_margin = (allocation.height - terminal->height * extents.height) / 2;
+    side_margin = (allocation.width - terminal->width * average_width) / NUM2;
+    top_margin = (allocation.height - terminal->height * extents.height) / NUM2;
 
     cairo_set_line_width(cr, 1.0);
     cairo_translate(cr, allocation.x + side_margin,
@@ -1100,7 +1105,7 @@ static void redraw_handler(struct widget *widget, void data[])
             }
 
             if (is_wide(p_row[col])) {
-                unichar_width = 2 * average_width;
+                unichar_width = NUM2 * average_width;
             } else {
                 unichar_width = average_width;
             }
@@ -1132,8 +1137,8 @@ static void redraw_handler(struct widget *widget, void data[])
             text_y = extents.ascent + row * extents.height;
             if (attr.attr.a & ATTRMASK_UNDERLINE) {
                 terminal_set_color(terminal, cr, attr.attr.fg);
-                cairo_move_to(cr, text_x, (double)text_y + 1.5);
-                cairo_line_to(cr, text_x + average_width, (double) text_y + 1.5);
+                cairo_move_to(cr, text_x, (double)text_y + NUM1);
+                cairo_line_to(cr, text_x + average_width, (double) text_y + NUM1);
                 cairo_stroke(cr);
             }
 
@@ -1153,14 +1158,14 @@ static void redraw_handler(struct widget *widget, void data[])
 
     if ((terminal->mode & MODE_SHOW_CURSOR) &&
         !window_has_focus(terminal->window)) {
-        d = 0.5;
+        d = NUM0;
 
         cairo_set_line_width(cr, 1);
         cairo_move_to(cr, terminal->column * average_width + d,
                       terminal->row * extents.height + d);
-        cairo_rel_line_to(cr, average_width - 2 * d, 0);
-        cairo_rel_line_to(cr, 0, extents.height - 2 * d);
-        cairo_rel_line_to(cr, -average_width + 2 * d, 0);
+        cairo_rel_line_to(cr, average_width - NUM2 * d, 0);
+        cairo_rel_line_to(cr, 0, extents.height - NUM2 * d);
+        cairo_rel_line_to(cr, -average_width + NUM2 * d, 0);
         cairo_close_path(cr);
 
         cairo_stroke(cr);
@@ -1203,16 +1208,19 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
     if (terminal->escape_flags & ESC_FLAG_WHAT) {
         switch (code) {
             case 1:  /* DECCKM */
-                if (sr)    terminal->key_mode = KM_APPLICATION;
-                else    terminal->key_mode = KM_NORMAL;
+                if (sr) {
+                    terminal->key_mode = KM_APPLICATION;
+                } else {
+                    terminal->key_mode = KM_NORMAL;
+                }
                 break;
-            case 2:  /* DECANM */
+            case NUM2:  /* DECANM */
                 /* No VT52 support yet */
                 terminal->g0 = CS_US;
                 terminal->g1 = CS_US;
                 terminal->cs = terminal->g0;
                 break;
-            case 3:  /* DECCOLM */
+            case NUM3:  /* DECCOLM */
                 if (sr) {
                     terminal_resize(terminal, 132, 24);
                 } else {
@@ -1227,14 +1235,14 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
                         terminal->curr_attr, terminal->width);
                 }
                 break;
-            case 5:  /* DECSCNM */
+            case NUM5:  /* DECSCNM */
                 if (sr) {
                     terminal->mode |=  MODE_INVERSE;
                 } else {
                     terminal->mode &= ~MODE_INVERSE;
                 }
                 break;
-            case 6:  /* DECOM */
+            case NUM6:  /* DECOM */
                 terminal->origin_mode = sr;
                 if (terminal->origin_mode) {
                     terminal->row = terminal->margin_top;
@@ -1243,23 +1251,23 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
                 }
                 terminal->column = 0;
                 break;
-            case 7:  /* DECAWM */
+            case NUM7:  /* DECAWM */
                 if (sr) {
                     terminal->mode |=  MODE_AUTOWRAP;
                 } else {
                     terminal->mode &= ~MODE_AUTOWRAP;
                 }
                 break;
-            case 8:  /* DECARM */
+            case NUM8:  /* DECARM */
                 if (sr) {
                     terminal->mode |=  MODE_AUTOREPEAT;
                 } else {
                     terminal->mode &= ~MODE_AUTOREPEAT;
                 }
                 break;
-            case 12:  /* Very visible cursor (CVVIS) */
+            case NUM12:  /* Very visible cursor (CVVIS) */
                 break;
-            case 25:
+            case NUM25:
                 if (sr) {
                     terminal->mode |=  MODE_SHOW_CURSOR;
                 } else {
@@ -1293,14 +1301,14 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
         }
     } else {
         switch (code) {
-            case 4:  /* IRM */
+            case NUM4:  /* IRM */
                 if (sr) {
                     terminal->mode |=  MODE_IRM;
                 } else {
                     terminal->mode &= ~MODE_IRM;
                 }
                 break;
-            case 20: /* LNM */
+            case NUM20: /* LNM */
                 if (sr) {
                     terminal->mode |=  MODE_LF_NEWLINE;
                 } else {
@@ -1324,8 +1332,8 @@ static void handle_osc(struct terminal *terminal)
     int code;
 
     terminal->escape[terminal->escape_length++] = '\0';
-    p = &terminal->escape[2];
-    code = strtol(p, &p, 10);
+    p = &terminal->escape[NUM2];
+    code = strtol(p, &p, NUM10);
     if (*p == ';') {
         p++;
     }
@@ -1333,12 +1341,12 @@ static void handle_osc(struct terminal *terminal)
     switch (code) {
         case 0: /* Icon name and window title */
         case 1: /* Icon label */
-        case 2: /* Window title*/
+        case NUM2: /* Window title */
             free(terminal->title);
             terminal->title = strdup(p);
             window_set_title(terminal->window, p);
             break;
-        case 7: /* shell cwd as uri */
+        case NUM7: /* shell cwd as uri */
             break;
         case 777: /* Desktop notifications */
             break;
@@ -1361,8 +1369,8 @@ static void handle_escape(struct terminal *terminal)
 
     terminal->escape[terminal->escape_length++] = '\0';
     i = 0;
-    p = &terminal->escape[2];
-    while ((isdigit(*p) || *p == ';') && i < 10) {
+    p = &terminal->escape[NUM2];
+    while ((isdigit(*p) || *p == ';') && i < NUM10) {
         if (*p == ';') {
             if (!set[i]) {
                 args[i] = 0;
@@ -1371,7 +1379,7 @@ static void handle_escape(struct terminal *terminal)
             p++;
             i++;
         } else {
-            args[i] = strtol(p, &p, 10);
+            args[i] = strtol(p, &p, NUM10);
             set[i] = 1;
         }
     }
@@ -1487,7 +1495,7 @@ static void handle_escape(struct terminal *terminal)
         case 'J':    /* ED - Erase display */
             row = terminal_get_row(terminal, terminal->row);
             attr_row = terminal_get_attr_row(terminal, terminal->row);
-            if (!set[0] || args[0] == 0 || args[0] > 2) {
+            if (!set[0] || args[0] == 0 || args[0] > NUM2) {
                 memset(&row[terminal->column],
                     0, (terminal->width - terminal->column) * sizeof(union utf8_char));
                 attr_init(&attr_row[terminal->column],
@@ -1507,7 +1515,7 @@ static void handle_escape(struct terminal *terminal)
                     attr_init(terminal_get_attr_row(terminal, i),
                               terminal->curr_attr, terminal->width);
                 }
-            } else if (args[0] == 2) {
+            } else if (args[0] == NUM2) {
                 /* Clear screen by scrolling contents out */
                 terminal_scroll_buffer(terminal,
                                        terminal->end - terminal->start);
@@ -1516,7 +1524,7 @@ static void handle_escape(struct terminal *terminal)
         case 'K':    /* EL - Erase line */
             row = terminal_get_row(terminal, terminal->row);
             attr_row = terminal_get_attr_row(terminal, terminal->row);
-            if (!set[0] || args[0] == 0 || args[0] > 2) {
+            if (!set[0] || args[0] == 0 || args[0] > NUM2) {
                 memset(&row[terminal->column], 0,
                     (terminal->width - terminal->column) * sizeof(union utf8_char));
                 attr_init(&attr_row[terminal->column], terminal->curr_attr,
@@ -1524,7 +1532,7 @@ static void handle_escape(struct terminal *terminal)
             } else if (args[0] == 1) {
                 memset(row, 0, (terminal->column+1) * sizeof(union utf8_char));
                 attr_init(attr_row, terminal->curr_attr, terminal->column+1);
-            } else if (args[0] == 2) {
+            } else if (args[0] == NUM2) {
                 memset(row, 0, terminal->data_pitch);
                 attr_init(attr_row, terminal->curr_attr, terminal->width);
             }
@@ -1535,8 +1543,7 @@ static void handle_escape(struct terminal *terminal)
                 count = 1;
             }
             if (terminal->row >= terminal->margin_top &&
-                terminal->row < terminal->margin_bottom)
-            {
+                terminal->row < terminal->margin_bottom) {
                 top = terminal->margin_top;
                 terminal->margin_top = terminal->row;
                 terminal_scroll(terminal, 0 - count);
@@ -1554,8 +1561,7 @@ static void handle_escape(struct terminal *terminal)
                 count = 1;
             }
             if (terminal->row >= terminal->margin_top &&
-                terminal->row < terminal->margin_bottom)
-            {
+                terminal->row < terminal->margin_bottom) {
                 top = terminal->margin_top;
                 terminal->margin_top = terminal->row;
                 terminal_scroll(terminal, count);
@@ -1623,7 +1629,7 @@ static void handle_escape(struct terminal *terminal)
             terminal->last_char.byte[0] = 0;
             break;
         case 'c':    /* Primary DA - Answer "I am a VT102" */
-            terminal_write(terminal, "\e[?6c", 5);
+            terminal_write(terminal, "\e[?6c", NUM5);
             break;
         case 'd':    /* VPA - Move cursor to <x> row, current column */
             x = set[0] ? args[0] : 1;
@@ -1634,30 +1640,29 @@ static void handle_escape(struct terminal *terminal)
         case 'g':    /* TBC - Clear tab stop(s) */
             if (!set[0] || args[0] == 0) {
                 terminal->tab_ruler[terminal->column] = 0;
-            } else if (args[0] == 3) {
+            } else if (args[0] == NUM3) {
                 memset(terminal->tab_ruler, 0, terminal->width);
             }
             break;
         case 'h':    /* SM - Set mode */
-            for (i = 0; i < 10 && set[i]; i++) {
+            for (i = 0; i < NUM10 && set[i]; i++) {
                 handle_term_parameter(terminal, args[i], 1);
             }
             break;
         case 'l':    /* RM - Reset mode */
-            for (i = 0; i < 10 && set[i]; i++) {
+            for (i = 0; i < NUM10 && set[i]; i++) {
                 handle_term_parameter(terminal, args[i], 0);
             }
             break;
         case 'm':    /* SGR - Set attributes */
-            for (i = 0; i < 10; i++) {
-                if (i <= 7 && set[i] && set[i + 1] &&
-                    set[i + 2] && args[i + 1] == 5)
-                {
+            for (i = 0; i < NUM10; i++) {
+                if (i <= NUM7 && set[i] && set[i + 1] &&
+                    set[i + NUM2] && args[i + 1] == NUM5) {
                     if (args[i] == 38) {
-                        handle_sgr(terminal, args[i + 2] + 256);
+                        handle_sgr(terminal, args[i + NUM2] + 256);
                         break;
                     } else if (args[i] == 48) {
-                        handle_sgr(terminal, args[i + 2] + 512);
+                        handle_sgr(terminal, args[i + NUM2] + 512);
                         break;
                     }
                 }
@@ -1718,41 +1723,41 @@ static void handle_escape(struct terminal *terminal)
         case 't':    /* windowOps */
             if (!set[0]) break;
             switch (args[0]) {
-                case 4:  /* resize px */
-                    if (set[1] && set[2]) {
+                case NUM4:  /* resize px */
+                    if (set[1] && set[NUM2]) {
                         widget_schedule_resize(terminal->widget,
-                                               args[2], args[1]);
+                                               args[NUM2], args[1]);
                     }
                     break;
-                case 8:  /* resize ch */
-                    if (set[1] && set[2]) {
-                        terminal_resize(terminal, args[2], args[1]);
+                case NUM8:  /* resize ch */
+                    if (set[1] && set[NUM2]) {
+                        terminal_resize(terminal, args[NUM2], args[1]);
                     }
                     break;
-                case 13: /* report position */
+                case NUM13: /* report position */
                     widget_get_allocation(terminal->widget, &allocation);
                     snprintf(response, MAX_RESPONSE, "\e[3;%d;%dt",
                         allocation.x, allocation.y);
                     terminal_write(terminal, response, strlen(response));
                     break;
-                case 14: /* report px */
+                case NUM14: /* report px */
                     widget_get_allocation(terminal->widget, &allocation);
                     snprintf(response, MAX_RESPONSE, "\e[4;%d;%dt",
                         allocation.height, allocation.width);
                     terminal_write(terminal, response, strlen(response));
                     break;
-                case 18: /* report ch */
+                case NUM18: /* report ch */
                     snprintf(response, MAX_RESPONSE, "\e[9;%d;%dt",
                         terminal->height, terminal->width);
                     terminal_write(terminal, response, strlen(response));
                     break;
-                case 21: /* report title */
+                case NUM21: /* report title */
                     snprintf(response, MAX_RESPONSE, "\e]l%s\e\\",
                         window_get_title(terminal->window));
                     terminal_write(terminal, response, strlen(response));
                     break;
                 default:
-                    if (args[0] >= 24) {
+                    if (args[0] >= NUM24) {
                         terminal_resize(terminal, terminal->width, args[0]);
                     } else {
                         fprintf(stderr, "Unimplemented windowOp %d\n", args[0]);
@@ -1772,7 +1777,7 @@ static void handle_escape(struct terminal *terminal)
 
 static void handle_non_csi_escape(struct terminal *terminal, char code)
 {
-    switch(code) {
+    switch (code) {
         case 'M':    /* RI - Reverse linefeed */
             terminal->row -= 1;
             if (terminal->row < terminal->margin_top) {
@@ -1790,7 +1795,7 @@ static void handle_non_csi_escape(struct terminal *terminal, char code)
                 terminal_scroll(terminal, +1);
             }
             break;
-        case 'c':    /* RIS - Reset*/
+        case 'c':    /* RIS - Reset */
             terminal_init(terminal);
             break;
         case 'H':    /* HTS - Set tab stop at current column */
@@ -1884,41 +1889,41 @@ static void handle_sgr(struct terminal *terminal, int code)
             break;
         case 1:
             terminal->curr_attr.a |= ATTRMASK_BOLD;
-            if (terminal->curr_attr.fg < 8) {
-                terminal->curr_attr.fg += 8;
+            if (terminal->curr_attr.fg < NUM8) {
+                terminal->curr_attr.fg += NUM8;
             }
             break;
-        case 4:
+        case NUM4:
             terminal->curr_attr.a |= ATTRMASK_UNDERLINE;
             break;
-        case 5:
+        case NUM5:
             terminal->curr_attr.a |= ATTRMASK_BLINK;
             break;
-        case 8:
+        case NUM8:
             terminal->curr_attr.a |= ATTRMASK_CONCEALED;
             break;
-        case 2:
-        case 21:
-        case 22:
+        case NUM2:
+        case NUM21:
+        case NUM22:
             terminal->curr_attr.a &= ~ATTRMASK_BOLD;
-            if (terminal->curr_attr.fg < 16 && terminal->curr_attr.fg >= 8) {
-                terminal->curr_attr.fg -= 8;
+            if (terminal->curr_attr.fg < NUM16 && terminal->curr_attr.fg >= NUM8) {
+                terminal->curr_attr.fg -= NUM8;
             }
             break;
-        case 24:
+        case NUM24:
             terminal->curr_attr.a &= ~ATTRMASK_UNDERLINE;
             break;
-        case 25:
+        case NUM25:
             terminal->curr_attr.a &= ~ATTRMASK_BLINK;
             break;
-        case 7:
-        case 26:
+        case NUM7:
+        case NUM26:
             terminal->curr_attr.a |= ATTRMASK_INVERSE;
             break;
-        case 27:
+        case NUM27:
             terminal->curr_attr.a &= ~ATTRMASK_INVERSE;
             break;
-        case 28:
+        case NUM28:
             terminal->curr_attr.a &= ~ATTRMASK_CONCEALED;
             break;
         case 39:
@@ -1928,17 +1933,17 @@ static void handle_sgr(struct terminal *terminal, int code)
             terminal->curr_attr.bg = terminal->color_scheme->default_attr.bg;
             break;
         default:
-            if (code >= 30 && code <= 37) {
-                terminal->curr_attr.fg = code - 30;
+            if (code >= NUM30 && code <= 37) {
+                terminal->curr_attr.fg = code - NUM30;
                 if (terminal->curr_attr.a & ATTRMASK_BOLD) {
-                    terminal->curr_attr.fg += 8;
+                    terminal->curr_attr.fg += NUM8;
                 }
             } else if (code >= 40 && code <= 47) {
                 terminal->curr_attr.bg = code - 40;
             } else if (code >= 90 && code <= 97) {
-                terminal->curr_attr.fg = code - 90 + 8;
+                terminal->curr_attr.fg = code - 90 + NUM8;
             } else if (code >= 100 && code <= 107) {
-                terminal->curr_attr.bg = code - 100 + 8;
+                terminal->curr_attr.bg = code - 100 + NUM8;
             } else if (code >= 256 && code < 512) {
                 terminal->curr_attr.fg = code - 256;
             } else if (code >= 512 && code < 768) {
@@ -2001,7 +2006,7 @@ static int handle_special_char(struct terminal *terminal, char c)
             break;
         case '\b':
             if (terminal->column >= terminal->width) {
-                terminal->column = terminal->width - 2;
+                terminal->column = terminal->width - NUM2;
             } else if (terminal->column > 0) {
                 terminal->column--;
             } else if (terminal->mode & MODE_AUTOWRAP) {
@@ -2037,7 +2042,9 @@ static void handle_char(struct terminal *terminal, union utf8_char utf8)
     union utf8_char *row;
     struct attr *attr_row;
 
-    if (handle_special_char(terminal, utf8.byte[0])) return;
+    if (handle_special_char(terminal, utf8.byte[0])) {
+        return;
+    }
 
     apply_char_set(terminal->cs, &utf8);
 
@@ -2065,7 +2072,7 @@ static void handle_char(struct terminal *terminal, union utf8_char utf8)
             }
         } else {
             terminal->column--;
-         }
+        }
      }
 
     row = terminal_get_row(terminal, terminal->row);
@@ -2198,8 +2205,7 @@ static void terminal_data(struct terminal *terminal, const char *data, size_t le
                     }
                 }
                 if (isalpha(utf8.byte[0]) || utf8.byte[0] == '@' ||
-                    utf8.byte[0] == '`')
-                {
+                    utf8.byte[0] == '`') {
                     terminal->state = escape_state_normal;
                     handle_escape(terminal);
                 } else {
@@ -2570,20 +2576,20 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
             break;
 
         case XKB_KEY_Insert:
-            len = function_key_response('[', 2, modifiers, '~', ch);
+            len = function_key_response('[', NUM2, modifiers, '~', ch);
             break;
         case XKB_KEY_Delete:
             if (terminal->mode & MODE_DELETE_SENDS_DEL) {
                 ch[len++] = '\x04';
             } else {
-                len = function_key_response('[', 3, modifiers, '~', ch);
+                len = function_key_response('[', NUM3, modifiers, '~', ch);
             }
             break;
         case XKB_KEY_Page_Up:
-            len = function_key_response('[', 5, modifiers, '~', ch);
+            len = function_key_response('[', NUM5, modifiers, '~', ch);
             break;
         case XKB_KEY_Page_Down:
-            len = function_key_response('[', 6, modifiers, '~', ch);
+            len = function_key_response('[', NUM6, modifiers, '~', ch);
             break;
         case XKB_KEY_F1:
             len = function_key_response('O', 1, modifiers, 'P', ch);
@@ -2598,25 +2604,25 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
             len = function_key_response('O', 1, modifiers, 'S', ch);
             break;
         case XKB_KEY_F5:
-            len = function_key_response('[', 15, modifiers, '~', ch);
+            len = function_key_response('[', NUM15, modifiers, '~', ch);
             break;
         case XKB_KEY_F6:
-            len = function_key_response('[', 17, modifiers, '~', ch);
+            len = function_key_response('[', NUM17, modifiers, '~', ch);
             break;
         case XKB_KEY_F7:
-            len = function_key_response('[', 18, modifiers, '~', ch);
+            len = function_key_response('[', NUM18, modifiers, '~', ch);
             break;
         case XKB_KEY_F8:
-            len = function_key_response('[', 19, modifiers, '~', ch);
+            len = function_key_response('[', NUM19, modifiers, '~', ch);
             break;
         case XKB_KEY_F9:
-            len = function_key_response('[', 20, modifiers, '~', ch);
+            len = function_key_response('[', NUM20, modifiers, '~', ch);
             break;
         case XKB_KEY_F10:
-            len = function_key_response('[', 21, modifiers, '~', ch);
+            len = function_key_response('[', NUM21, modifiers, '~', ch);
             break;
         case XKB_KEY_F12:
-            len = function_key_response('[', 24, modifiers, '~', ch);
+            len = function_key_response('[', NUM24, modifiers, '~', ch);
             break;
         default:
             /* Handle special keys with alternate mappings */
@@ -2626,7 +2632,7 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
             }
             if (modifiers & MOD_CONTROL_MASK) {
                 if (sym >= '3' && sym <= '7') {
-                    sym = (sym & 0x1f) + 8;
+                    sym = (sym & 0x1f) + NUM8;
                 }
 
                 if (!((sym >= '!' && sym <= '/') ||
@@ -2726,8 +2732,8 @@ static int recompute_selection(struct terminal *terminal)
     widget_get_allocation(terminal->widget, &allocation);
     width = terminal->width * cw;
     height = terminal->height * ch;
-    side_margin = allocation.x + (allocation.width - width) / 2;
-    top_margin = allocation.y + (allocation.height - height) / 2;
+    side_margin = allocation.x + (allocation.width - width) / NUM2;
+    top_margin = allocation.y + (allocation.height - height) / NUM2;
 
     start_row = (terminal->selection_start_y - top_margin + ch) / ch - 1;
     end_row = (terminal->selection_end_y - top_margin + ch) / ch - 1;
@@ -2751,7 +2757,7 @@ static int recompute_selection(struct terminal *terminal)
         terminal->selection_start_row = 0;
         terminal->selection_start_col = 0;
     } else {
-        x = side_margin + cw / 2;
+        x = side_margin + cw / NUM2;
         data = terminal_get_row(terminal,
                     terminal->selection_start_row);
         word_start = 0;
@@ -2777,6 +2783,8 @@ static int recompute_selection(struct terminal *terminal)
             case SELECT_CHAR:
                 terminal->selection_start_col = col;
                 break;
+            default :
+                break;
         }
     }
 
@@ -2784,7 +2792,7 @@ static int recompute_selection(struct terminal *terminal)
         terminal->selection_end_row = terminal->height;
         terminal->selection_end_col = 0;
     } else {
-        x = side_margin + cw / 2;
+        x = side_margin + cw / NUM2;
         data = terminal_get_row(terminal, terminal->selection_end_row);
         for (col = 0; col < terminal->width; col++, x += cw) {
             if (terminal->dragging == SELECT_CHAR && end_x < x) {
@@ -2824,7 +2832,7 @@ static void menu_func(void data[], struct input *input, int index)
     struct terminal *terminal = window_get_user_data(window);
 
     fprintf(stderr, "picked entry %d\n", index);
-
+\
     switch (index) {
         case 0:
             terminal_new_instance(terminal);
@@ -2832,11 +2840,13 @@ static void menu_func(void data[], struct input *input, int index)
         case 1:
             terminal_copy(terminal, input);
             break;
-        case 2:
+        case NUM2:
             terminal_paste(terminal, input);
             break;
-        case 3:
+        case NUM3:
             terminal_minimize(terminal);
+            break;
+        default :
             break;
     }
 }
@@ -2850,7 +2860,7 @@ static void show_menu(struct terminal *terminal, struct input *input, uint32_t t
 
     input_get_position(input, &x, &y);
     window_show_menu(terminal->display, input, time, terminal->window,
-                     x - 10, y - 10, menu_func,
+                     x - NUM10, y - NUM10, menu_func,
                      entries, ARRAY_LENGTH(entries));
 }
 
@@ -2896,6 +2906,8 @@ static void button_handler(struct widget *widget,
             if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
                 show_menu(terminal, input, time);
             }
+            break;
+        default :
             break;
     }
 }
@@ -2948,8 +2960,9 @@ static void axis_handler(struct widget *widget,
 
     if (lines > 0) {
         if (terminal->scrolling) {
-            if ((uint32_t)lines > terminal->saved_start - terminal->start)
+            if ((uint32_t)lines > terminal->saved_start - terminal->start) {
                 lines = terminal->saved_start - terminal->start;
+            }
         } else {
             lines = 0;
         }
@@ -3200,11 +3213,9 @@ static int terminal_run(struct terminal *terminal, const char *path)
 
     if (option_fullscreen) {
         window_set_fullscreen(terminal->window, 1);
-    }
-    else if (option_maximize) {
+    } else if (option_maximize) {
         window_set_maximized(terminal->window, 1);
-    }
-    else {
+    } else {
         terminal_resize(terminal, 80, 24);
     }
 
@@ -3241,7 +3252,7 @@ int main(int argc, char *argv[])
     config = weston_config_parse(config_file);
     s = weston_config_get_section(config, "terminal", NULL, NULL);
     weston_config_section_get_string(s, "font", &option_font, "mono");
-    weston_config_section_get_int(s, "font-size", &option_font_size, 14);
+    weston_config_section_get_int(s, "font-size", &option_font_size, NUM14);
     weston_config_section_get_string(s, "term", &option_term, "xterm");
     weston_config_destroy(config);
 
