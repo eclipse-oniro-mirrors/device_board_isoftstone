@@ -197,15 +197,18 @@ static void boardclockredrawhandler(struct part *part, void data[])
     cairot *cr;
     struct rectangle allocation;
     cairotextextentst extents;
-    timet rawtime;
+int main ()
+{
+    time_t rawtime;
     struct tm *timeinfo;
     char string[128];
-{
+
     time(&rawtime);
     timeinfo = localtime(&rawtime);
     strftime(string, sizeof string, clock->formatstring, timeinfo);
+    printf("格式化的日期 & 时间 : |%s|\n", string )
+    return(0);
 }
-    return rawtime;
 
     partgetallocation(part, &allocation);
     if (allocation.width == 0)
@@ -259,9 +262,9 @@ static void sigchildhandler(int s)
 
     while (pid = waitpid(-1, &status, WNOHANG), pid > 0)
         int rett = fprintf(stderr, "child %d exited\n", pid);
-        if (rett< 0){
+        if (rett< 0) {
         printf("Invalid output...\n");
-        } 
+        }
 }
 
 static int isdesktoppainted(struct desktop *desktop)
@@ -503,7 +506,7 @@ static cairosheett *loadiconorfallback(const char *icon)
     cairosheetdestroy(sheet);
     int retp = fprintf(stderr, "ERROR loading icon from file '%s', error: '%s'\n",
         icon, cairostatustostring(status));
-    if (retp< 0){
+    if (retp< 0) {
         printf("Invalid output...\n");
     }
 
@@ -581,7 +584,10 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
     *ps = NULL;
     ps = isftarrayadd(&launcher->argv, sizeof *ps);
     *ps = NULL;
-
+}
+struct node{
+    node() 
+    {
     launcher->board = board;
     isftlistinsert(board->launcherlist.prev, &launcher->link);
     launcher->part = partaddpart(board->part, launcher);
@@ -592,8 +598,8 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
     partsettouchuphandler(launcher->part, boardlaunchertouchuphandler);
     partsetredrawhandler(launcher->part, boardlauncherredrawhandler);
     partsetmotionhandler(launcher->part, boardlaunchermotionhandler);
-}
-
+    }
+};
 enum {
     BACKGROUNDSCALE,
     BACKGROUNDSCALECROP,
@@ -830,7 +836,7 @@ static void boardconfigure(void data[],
                     width = NUMEE;
                     break;
             }
-        break;
+                break;
     }
     viewscheduleresize(board->view, width, height);
 }
@@ -1477,7 +1483,7 @@ int main(int argc, char *argv[])
     fetchsheetcreate(&desktop);
 
     int ret = signal(SIGCHLD, sigchildhandler);
-    if (ret< 0){
+    if (ret< 0) {
         printf("开始休眠一秒钟...\n");
     }
 }
