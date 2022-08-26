@@ -39,7 +39,11 @@
 
 #define BUFFERFORMAT DRMFORMATXRGB8888
 #define MAXBUFFERPLANES 4
-
+#define NUM05 0.5
+#define NUM06 0.6
+enum NumBer {
+    NUM10 = 10, NUM1000 = 1000, NUM2 = 2, NUM3 = 3, NUM4 = 4, NUM32 = 32,
+}
 struct showing {
     struct isftshowing *showing;
     struct isftregistry *registry;
@@ -126,7 +130,7 @@ static sigatomict running = 1;
 static void redraw(void data[], struct isftcallback *callback, unsigned int time);
 
 static int createdmabufbuffer(struct showing *showing, struct buffer *buffer,
-                   int width, int height, unsigned int opts)
+                              int width, int height, unsigned int opts)
 {
     /* Y-Invert the buffer image, since we are going to painterer to the
      * buffer through a FBO. */
@@ -220,7 +224,7 @@ static int createdmabufbuffer(struct showing *showing, struct buffer *buffer,
                            i,
                            buffer->offsets[i],
                            buffer->strides[i],
-                           buffer->modifier >> 32,
+                           buffer->modifier >> NUM32,
                            buffer->modifier & 0xffffffff);
     }
 
@@ -250,9 +254,7 @@ static int createdmabufbuffer(struct showing *showing, struct buffer *buffer,
         return -1;
     }
     return 0;
-
 }
-
 static void bufferrelease(void data[], struct isftbuffer *buffer)
 {
     struct buffer *mybuf = data;
@@ -287,7 +289,7 @@ static void bufferfree(struct buffer *buf)
 
     if (buf->buffer) {
         isftbufferdestroy(buf->buffer);
-
+    }
     if (buf->bo) {
         gbmbodestroy(buf->bo);
     }
@@ -335,23 +337,6 @@ static const struct zwplinuxbufferparamsv1listener paramslistener = {
     createsucceeded,
     createfailed
 };
-
-static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
-{
-    static const int generalattribs = 3;
-    static const int planeattribs = 5;
-    static const int entriesperattrib = 2;
-    PGAint attribs[(generalattribs + planeattribs * MAXBUFFERPLANES) *
-            entriesperattrib + 1];
-    unsigned int atti = 0;
-
-    attribs[atti++] = PGAWIDTH;
-    attribs[atti++] = buffer->width;
-    attribs[atti++] = PGAHEIGHT;
-    attribs[atti++] = buffer->height;
-    attribs[atti++] = PGALINUXDRMFOURCCEXT;
-    attribs[atti++] = buffer->format;
-
 #define ADDPLANEATTRIBS(planeidx) { \
     attribs[atti++] = PGADMABUFPLANE ## planeidx ## FDEXT; \
     attribs[atti++] = buffer->dmabuffds[planeidx]; \
@@ -366,46 +351,43 @@ static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
         attribs[atti++] = buffer->modifier >> 32; \
     } \
     }
-
+static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
+{
+    static const int generalattribs = 3, planeattribs = 5, entriesperattrib = 2;
+    PGAint attribs[(generalattribs + planeattribs * MAXBUFFERPLANES) *
+            entriesperattrib + 1];
+    unsigned int atti = 0;
+    attribs[atti++] = PGAWIDTH;
+    attribs[atti++] = buffer->width;
+    attribs[atti++] = PGAHEIGHT;
+    attribs[atti++] = buffer->height;
+    attribs[atti++] = PGALINUXDRMFOURCCEXT;
+    attribs[atti++] = buffer->format;
     if (buffer->planecount > 0)
         ADDPLANEATTRIBS(0);
-
     if (buffer->planecount > 1)
         ADDPLANEATTRIBS(1);
-
-    if (buffer->planecount > 2)
+    if (buffer->planecount > NUM2)
         ADDPLANEATTRIBS(2);
-
-    if (buffer->planecount > 3)
+    if (buffer->planecount > NUM3)
         ADDPLANEATTRIBS(3);
-
-#undef ADDPLANEATTRIBS
-
     attribs[atti] = PGANONE;
-
     assert(atti < ARRAYLENGTH(attribs));
-
-    buffer->PGAimage = showing->PGA.createimage(showing->PGA.showing,
-                                                PGANOCONTEXT,
+    buffer->PGAimage = showing->PGA.createimage(showing->PGA.showing,PGANOCONTEXT,
                                                 PGALINUXDMABUFEXT,
                                                 NULL, attribs);
     if (buffer->PGAimage == PGANOIMAGEKHR) {
         fprintf(stderr, "PGAImageKHR creation failed\n");
         return false;
     }
-
-    PGAMakeCurrent(showing->PGA.showing, PGANOSURFACE, PGANOSURFACE,
-        howing->PGA.context);
-
+    PGAMakeCurrent(showing->PGA.showing, PGANOSURFACE, PGANOSURFACE,howing->PGA.context);
     glGenTextures(1, &buffer->gltexture);
     glBindTexture(GLTEXTURE2D, buffer->gltexture);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPS, GLCLAMPTOEDGE);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPT, GLCLAMPTOEDGE);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREMAGFILTER, GLLINEAR);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREMINFILTER, GLLINEAR);
-
     showing->PGA.imagetargettexture2d(GLTEXTURE2D, buffer->PGAimage);
-
     glGenFramebuffers(1, &buffer->glfbo);
     glBindFramebuffer(GLFRAMEBUFFER, buffer->glfbo);
     glFramebufferTexture2D(GLFRAMEBUFFER, GLCOLORATTACHMENT0,
@@ -414,7 +396,6 @@ static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
         fprintf(stderr, "FBO creation failed\n");
         return false;
     }
-
     return true;
 }
 static void destroyview(struct view *view)
@@ -447,70 +428,52 @@ static void destroyview(struct view *view)
     free(view);
 }
 
-static struct view *
-createview(struct showing *showing, int width, int height, int opts)
+void showingStatus(struct showing *showing, struct view *view)
 {
-    struct view *view;
-    int i;
-    int ret;
-
-    view = zalloc(sizeof *view);
-    if (!view) {
-        return NULL;
-    }
-
-    view->callback = NULL;
-    view->showing = showing;
-    view->width = width;
-    view->height = height;
-    view->surface = isftcompositorcreatesurface(showing->compositor);
-
     if (showing->wmbase) {
-        view->xdgsurface =
-            xdgwmbasegetxdgsurface(showing->wmbase,
-                                   view->surface);
-
+        view->xdgsurface = xdgwmbasegetxdgsurface(showing->wmbase, view->surface);
         assert(view->xdgsurface);
-
-        xdgsurfaceaddlistener(view->xdgsurface,
-                              &xdgsurfacelistener, view);
-
-        view->xdgtoplevel =
-            xdgsurfacegettoplevel(view->xdgsurface);
-
+        xdgsurfaceaddlistener(view->xdgsurface, &xdgsurfacelistener, view);
+        view->xdgtoplevel = xdgsurfacegettoplevel(view->xdgsurface);
         assert(view->xdgtoplevel);
-
-        xdgtopleveladdlistener(view->xdgtoplevel,
-            &xdgtoplevellistener, view);
-
+        xdgtopleveladdlistener(view->xdgtoplevel, &xdgtoplevellistener, view);
         xdgtoplevelsettitle(view->xdgtoplevel, "simple-dmabuf-PGA");
-
         view->waitforconfigure = true;
         isftsurfacecommit(view->surface);
     } else if (showing->fshell) {
-        zwpfullscreenshellv1presentsurface(showing->fshell,
-                                           view->surface,
+        zwpfullscreenshellv1presentsurface(showing->fshell, view->surface,
                                            ZWPFULLSCREENSHELLV1PRESENTMETHODDEFAULT,
                                            NULL);
     } else {
         assert(0);
     }
-
     if (showing->explicitsync) {
-        view->surfacesync =
-            zwplinuxexplicitsynchronizationv1getsynchronization(
+        view->surfacesync =zwplinuxexplicitsynchronizationv1getsynchronization(
                 showing->explicitsync, view->surface);
         assert(view->surfacesync);
     }
-
+}
+static struct view *
+createview(struct showing *showing, int width, int height, int opts)
+{
+    struct view *view;
+    int i, ret, j;
+    view = zalloc(sizeof *view);
+    if (!view) {
+        return NULL;
+    }
+    view->callback = NULL;
+    view->showing = showing;
+    view->width = width;
+    view->height = height;
+    view->surface = isftcompositorcreatesurface(showing->compositor);
+    showingStatus(showing, view);
     for (i = 0; i < NUMBUFFERS; ++i) {
-        int j;
         for (j = 0; j < MAXBUFFERPLANES; ++j)
             view->buffers[i].dmabuffds[j] = -1;
     }
     for (i = 0; i < NUMBUFFERS; ++i) {
-        ret = createdmabufbuffer(showing, &view->buffers[i],
-                                 width, height, opts);
+        ret = createdmabufbuffer(showing, &view->buffers[i],width, height, opts);
         if (ret < 0) {
             if (view) {
                 destroyview(view);
@@ -518,9 +481,7 @@ createview(struct showing *showing, int width, int height, int opts)
             return NULL;
         }
     }
-
     view->paintmandelbrot = opts & OPTMANDELBROT;
-
     if (!viewsetupgl(view)) {
         if (view) {
             destroyview(view);
@@ -585,11 +546,11 @@ static void painter(struct view *view, struct buffer *buffer)
     uint64t timems;
 
     gettimeofday(&tv, NULL);
-    timems = tv.tvsec * 1000 + tv.tvusec / 1000;
+    timems = tv.tvsec * NUM1000 + tv.tvusec / NUM1000;
 
     /* Split timems in repeating views of [0, iterationms) and map them
      * to offsets in the [-0.5, 0.5) range. */
-    offset = (timems % iterationms) / (float) iterationms - 0.5;
+    offset = (timems % iterationms) / (float) iterationms - NUM05;
 
     /* Direct all GL draws to the buffer through the FBO */
     glBindFramebuffer(GLFRAMEBUFFER, buffer->glfbo);
@@ -601,12 +562,12 @@ static void painter(struct view *view, struct buffer *buffer)
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GLCOLORBUFFERBIT);
 
-    glVertexAttribPointer(view->gl.pos, 2, GLFLOAT, GLFALSE, 0, verts);
-    glVertexAttribPointer(view->gl.color, 3, GLFLOAT, GLFALSE, 0, colors);
+    glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
+    glVertexAttribPointer(view->gl.color, NUM3, GLFLOAT, GLFALSE, 0, colors);
     glEnableVertexAttribArray(view->gl.pos);
     glEnableVertexAttribArray(view->gl.color);
 
-    glDrawArrays(GLTRIANGLESTRIP, 0, 4);
+    glDrawArrays(GLTRIANGLESTRIP, 0, NUM4);
 
     glDisableVertexAttribArray(view->gl.pos);
     glDisableVertexAttribArray(view->gl.color);
@@ -627,11 +588,11 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
     int i;
 
     gettimeofday(&tv, NULL);
-    timems = tv.tvsec * 1000 + tv.tvusec / 1000;
+    timems = tv.tvsec * NUM1000 + tv.tvusec / NUM1000;
 
     /* Split timems in repeating views of [0, iterationms) and map them
      * to offsets in the [-0.5, 0.5) range. */
-    offset = (timems % iterationms) / (float) iterationms - 0.5;
+    offset = (timems % iterationms) / (float) iterationms - NUM05;
 
     /* Direct all GL draws to the buffer through the FBO */
     glBindFramebuffer(GLFRAMEBUFFER, buffer->glfbo);
@@ -640,7 +601,7 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
 
     glUniform1f(view->gl.offsetuniform, offset);
 
-    glClearColor(0.6, 0.6, 0.6, 1.0);
+    glClearColor(NUM06, NUM06, NUM06, 1.0);
     glClear(GLCOLORBUFFERBIT);
 
     for (i = 0; i < numcells; ++i) {
@@ -659,10 +620,10 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
         };
 
         /* ... and draw it. */
-        glVertexAttribPointer(view->gl.pos, 2, GLFLOAT, GLFALSE, 0, verts);
+        glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
         glEnableVertexAttribArray(view->gl.pos);
 
-        glDrawArrays(GLTRIANGLESTRIP, 0, 4);
+        glDrawArrays(GLTRIANGLESTRIP, 0, NUM4);
 
         glDisableVertexAttribArray(view->gl.pos);
     }
@@ -749,7 +710,6 @@ static const char *fragshadermandelbrottext =
     "  float y = 0.0;\n"
     "  int iteration = 0;\n"
     "}\n";
-
 static GLuint createshader(const char *source, GLenum shadertype)
 {
     GLuint shader;
@@ -765,7 +725,7 @@ static GLuint createshader(const char *source, GLenum shadertype)
     if (!status) {
         char log[1000];
         GLsizei len;
-        glGetShaderInfoLog(shader, 1000, &len, log);
+        glGetShaderInfoLog(shader, NUM1000, &len, log);
         fprintf(stderr, "Error: compiling %s: %.*s\n",
             shadertype == GLVERTEXSHADER ? "vertex" : "fragment",
             len, log);
@@ -788,21 +748,17 @@ static GLuint createandlinkprogram(GLuint vert, GLuint frag)
     if (!status) {
         char log[1000];
         GLsizei len;
-        glGetProgramInfoLog(program, 1000, &len, log);
+        glGetProgramInfoLog(program, NUM1000, &len, log);
         fprintf(stderr, "Error: linking:\n%.*s\n", len, log);
         return 0;
     }
 
     return program;
 }
-
-
-static void
-dmabufformat(void *data, struct zwplinuxdmabufv1 *zwplinuxdmabuf, unsigned int format)
+static void dmabufformat(void *data, struct zwplinuxdmabufv1 *zwplinuxdmabuf, unsigned int format)
 {
     /* XXX: deprecated */
 }
-
 static const struct zwplinuxdmabufv1listener dmabuflistener = {
     dmabufformat,
     dmabufmodifiers
@@ -838,7 +794,7 @@ static void registryhandleglobal(void data[], struct isftregistry *registry,
             return;
         }
         d->dmabuf = isftregistrybind(registry,
-                         id, &zwplinuxdmabufv1interface, 3);
+                         id, &zwplinuxdmabufv1interface, NUM3);
         zwplinuxdmabufv1addlistener(d->dmabuf, &dmabuflistener, d);
     } else if (strcmp(interface, "zwplinuxexplicitsynchronizationv1") == 0) {
         d->explicitsync = isftregistrybind(
@@ -988,7 +944,7 @@ static bool showingsetupPGA(struct showing *showing)
     assert(glextensions != NULL);
 
     if (!isftViewcheckPGAextension(glextensions,
-                               "GLOESPGAimage")) {
+                                   "GLOESPGAimage")) {
         fprintf(stderr, "GLOESPGAimage not supported\n");
         return false;
     }
@@ -1084,8 +1040,8 @@ static void bufferimmediaterelease(void data[],
 }
 
 static const struct zwplinuxbufferreleasev1listener bufferreleaselistener = {
-       bufferfencedrelease,
-       bufferimmediaterelease,
+    bufferfencedrelease,
+    bufferimmediaterelease,
 };
 
 static void waitforbufferreleasefence(struct buffer *buffer)
@@ -1143,7 +1099,7 @@ static void redraw(void data[], struct isftcallback *callback, unsigned int time
     if (view->showing->useexplicitsync) {
         int fencefd = createPGAfencefd(view);
         zwplinuxsurfacesynchronizationv1setacquirefence(
-           view->surfacesync, fencefd);
+            view->surfacesync, fencefd);
         close(fencefd);
 
         buffer->bufferrelease =
@@ -1182,7 +1138,7 @@ static void dmabufmodifiers(void data[], struct zwplinuxdmabufv1 *zwplinuxdmabuf
             d->modifiers = realloc(d->modifiers,
                            d->modifierscount * sizeof(*d->modifiers));
             d->modifiers[d->modifierscount - 1] =
-                ((uint64t)modifierhi << 32) | modifierlo;
+                ((uint64t)modifierhi << NUM32) | modifierlo;
             break;
         default:
             break;
@@ -1205,54 +1161,30 @@ static bool showingsetupgbm(struct showing *showing, char const* drmpaintnode)
 
     return true;
 }
-
-static struct showing *
-createshowing(char const *drmpaintnode, int opts)
+int judgeShowing(struct showing *showing)
 {
-    struct showing *showing = NULL;
-
-    showing = zalloc(sizeof *showing);
-    if (showing == NULL) {
-        fprintf(stderr, "out of memory\n");
-        goto error;
-    }
-
-    showing->gbm.drmfd = -1;
-
-    showing->showing = isftshowingconnect(NULL);
-    assert(showing->showing);
-
-    showing->reqdmabufimmediate = opts & OPTIMMEDIATE;
-
-    showing->registry = isftshowinggetregistry(showing->showing);
-    isftregistryaddlistener(showing->registry,
-        &registrylistener, showing);
-    isftshowingroundtrip(showing->showing);
     if (showing->dmabuf == NULL) {
         fprintf(stderr, "No zwplinuxdmabuf global\n");
         if (showing != NULL) {
             destroyshowing(showing);
         }
-        return NULL;
+        return 0;
     }
-
     isftshowingroundtrip(showing->showing);
-
     if (!showing->modifierscount) {
         fprintf(stderr, "format XRGB8888 is not available\n");
         if (showing != NULL) {
             destroyshowing(showing);
         }
-        return NULL;
+        return 0;
     }
-
     /* GBM needs to be initialized before PGA, so that we have a valid
      * painter node gbmdevice to create the PGA showing from. */
     if (!showingsetupgbm(showing, drmpaintnode)) {
         if (showing != NULL) {
             destroyshowing(showing);
         }
-        return NULL;
+        return 0;
     }
     if (!showingsetupPGA(showing)) {
         if (showing != NULL) {
@@ -1264,15 +1196,37 @@ createshowing(char const *drmpaintnode, int opts)
         if (showing != NULL) {
             destroyshowing(showing);
         }
+        return 0;
+    }
+    return 1;
+}
+static struct showing *
+createshowing(char const *drmpaintnode, int opts)
+{
+    struct showing *showing = NULL;
+    showing = zalloc(sizeof *showing);
+    if (showing == NULL) {
+        fprintf(stderr, "out of memory\n");
+        if (showing != NULL) {
+            destroyshowing(showing);
+        }
+        return NULL;
+    }
+    showing->gbm.drmfd = -1;
+    showing->showing = isftshowingconnect(NULL);
+    assert(showing->showing);
+    showing->reqdmabufimmediate = opts & OPTIMMEDIATE;
+    showing->registry = isftshowinggetregistry(showing->showing);
+    isftregistryaddlistener(showing->registry,
+        &registrylistener, showing);
+    isftshowingroundtrip(showing->showing);
+    if (!judgeShowing(showing)) {
         return NULL;
     }
     /* We use explicit synchronization only if the user hasn't disabled it,
      * the compositor supports it, we can handle fence fds. */
-    showing->useexplicitsync =
-        !(opts & OPTIMPLICITSYNC) &&
-        showing->explicitsync &&
+    showing->useexplicitsync =!(opts & OPTIMPLICITSYNC) &&showing->explicitsync &&
         showing->PGA.dupnativefencefd;
-
     if (opts & OPTIMPLICITSYNC) {
         fprintf(stderr, "Warning: Not using explicit sync, disabled by user\n");
     } else if (!showing->explicitsync) {
@@ -1288,14 +1242,7 @@ createshowing(char const *drmpaintnode, int opts)
             "Warning: PGAKHRwaitsync not supported,\n"
             "         will not use server-side wait\n");
     }
-
     return showing;
-
-error:
-    if (showing != NULL) {
-        destroyshowing(showing);
-    }
-    return NULL;
 }
 
 static void signalint(int signum)
@@ -1320,73 +1267,54 @@ static void printusageandexit(void)
 static bool showingupdatesupportedmodifiersforPGA(struct showing *d)
 {
     uint64t *PGAmodifiers = NULL;
-    int numPGAmodifiers = 0;
+    int numPGAmodifiers = 0, i, j;
     PGABoolean ret;
-    int i;
     bool trymodifiers = d->PGA.hasdmabufimportmodifiers;
-
     if (trymodifiers) {
-        ret = d->PGA.querydmabufmodifiers(d->PGA.showing,
-                                          BUFFERFORMAT,
-                                          0,    /* maxmodifiers */
+        ret = d->PGA.querydmabufmodifiers(d->PGA.showing,BUFFERFORMAT,0,
                                           NULL, /* modifiers */
                                           NULL, /* externalonly */
                                           &numPGAmodifiers);
         if (ret == PGAFALSE) {
             fprintf(stderr, "Failed to query num PGA modifiers for format\n");
-            goto error;
+            free(PGAmodifiers);
+            return false;
         }
     }
-
     if (!numPGAmodifiers) {
         trymodifiers = false;
     }
-
     if (!trymodifiers) {
         d->modifierscount = 0;
         free(d->modifiers);
         d->modifiers = NULL;
         return true;
     }
-
     PGAmodifiers = zalloc(numPGAmodifiers * sizeof(*PGAmodifiers));
-
-    ret = d->PGA.querydmabufmodifiers(d->PGA.showing,
-                                      BUFFERFORMAT,
-                                      numPGAmodifiers,
+    ret = d->PGA.querydmabufmodifiers(d->PGA.showing,BUFFERFORMAT,numPGAmodifiers,
                                       PGAmodifiers,
                                       NULL, /* externalonly */
                                       &numPGAmodifiers);
     if (ret == PGAFALSE) {
         fprintf(stderr, "Failed to query PGA modifiers for format\n");
-        goto error;
+        free(PGAmodifiers);
+        return false;
     }
-
     for (i = 0; i < d->modifierscount; ++i) {
         uint64t mod = d->modifiers[i];
         bool PGAsupported = false;
-        int j;
-
         for (j = 0; j < numPGAmodifiers; ++j) {
             if (PGAmodifiers[j] == mod) {
                 PGAsupported = true;
                 break;
             }
         }
-
         if (!PGAsupported) {
             d->modifiers[i] = DRMFORMATMODINVALID;
         }
     }
-
     free(PGAmodifiers);
-
     return true;
-
-error:
-    free(PGAmodifiers);
-
-    return false;
 }
 
 static int istrue(const char* c)
@@ -1435,7 +1363,7 @@ int main(int argc, char **argv)
                 drmpaintnode = optarg;
                 break;
             case 's':
-                viewsize = strtol(optarg, NULL, 10);
+                viewsize = strtol(optarg, NULL, NUM10);
                 break;
             case 'e':
                 if (!istrue(optarg))
