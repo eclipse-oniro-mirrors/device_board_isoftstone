@@ -426,8 +426,8 @@ static void contentimportingmodifiersmap(void data[], struct zwpcontentimporting
     entry->keysym.shiftmask = keysymmodifiersgetmask(map, "Shift");
 }
 
-static void contentimportingkeysym(void data[], struct zwpcontentimportingv1 *contentimporting, unsigned int serial,
-                                   unsigned int time, unsigned int key, unsigned int state, unsigned int modifiers)
+static void contentimportingkeysym1(void data[], unsigned int serial, unsigned int key,
+                                   unsigned int state, unsigned int modifiers)
 {
     struct contententry *entry = data;
     const char *newchar;
@@ -469,6 +469,11 @@ static void contentimportingkeysym(void data[], struct zwpcontentimportingv1 *co
 
         return;
     }
+}
+static void contentimportingkeysym2(void data[], unsigned int serial, unsigned int key,
+                                   unsigned int state, unsigned int modifiers)
+{
+    struct contententry *entry = data;
 
     if (key == XKBKEYBackSpace) {
         const char *start, *end;
@@ -484,9 +489,7 @@ static void contentimportingkeysym(void data[], struct zwpcontentimportingv1 *co
         }
         end = mb4nextchar(start);
 
-        contententrydeletetext(entry,
-                       start - entry->text,
-                       end - start);
+        contententrydeletetext(entry, start - entry->text, end - start);
 
         return;
     }
@@ -499,9 +502,7 @@ static void contentimportingkeysym(void data[], struct zwpcontentimportingv1 *co
         xkbkeysymtomb4(key, text, sizeof(text));
         contententryinsertatcursor(entry, text, 0, 0);
         return;
-    }
 }
-
 static void datasourcesend(void data[], struct isftdatasource *source, const char *mimetype, unsigned int fd)
 {
     struct editor *editor = data;
@@ -1320,27 +1321,8 @@ static int handleboundkey(struct editor *editor, struct importing *importing, un
     }
 }
 
-static void keyhandler(struct window *window, struct importing *importing, unsigned int time,
-                       unsigned int key, unsigned int sym, enum isftkeyboardkeystate state, void data[])
+void keyhandlerswitch1(struct importing *importing, unsigned int sym)
 {
-    struct editor *editor = data;
-    struct contententry *entry;
-    const char *newchar;
-    char text[16];
-    unsigned int modifiers;
-
-    if (!editor->activeentry) {
-        return;
-    }
-    entry = editor->activeentry;
-
-    if (state != isftKEYBOARDKEYSTATEPRESSED) {
-        return;
-    }
-    modifiers = importinggetmodifiers(importing);
-    if ((modifiers & MODCONTROLMASK) && (modifiers & MODSHIFTMASK) && handleboundkey(editor, importing, sym, time)) {
-        return;
-    }
     switch (sym) {
         case XKBKEYBackSpace:
             contententrycommitandreset(entry);
@@ -1369,6 +1351,19 @@ static void keyhandler(struct window *window, struct importing *importing, unsig
                 partscheduleredraw(entry->part);
             }
             break;
+        default:
+            if (xkbkeysymtomb4(sym, text, sizeof(text)) <= 0) {
+                break;
+            }
+            contententrycommitandreset(entry);
+            contententryinsertatcursor(entry, text, 0, 0);
+            break;
+    }
+}
+
+void keyhandlerswitch2(struct importing *importing, unsigned int sym)
+{
+    switch (sym) {
         case XKBKEYRight:
             contententrycommitandreset(entry);
 
@@ -1409,6 +1404,31 @@ static void keyhandler(struct window *window, struct importing *importing, unsig
             contententryinsertatcursor(entry, text, 0, 0);
             break;
     }
+}
+
+static void keyhandler(struct importing *importing, unsigned int time, unsigned int sym,
+                       enum isftkeyboardkeystate state, void data[])
+{
+    struct editor *editor = data;
+    struct contententry *entry;
+    const char *newchar;
+    char text[16];
+    unsigned int modifiers;
+
+    if (!editor->activeentry) {
+        return;
+    }
+    entry = editor->activeentry;
+
+    if (state != isftKEYBOARDKEYSTATEPRESSED) {
+        return;
+    }
+    modifiers = importinggetmodifiers(importing);
+    if ((modifiers & MODCONTROLMASK) && (modifiers & MODSHIFTMASK) && handleboundkey(editor, importing, sym, time)) {
+        return;
+    }
+    keyhandlerswitch1(importing, sym);
+    keyhandlerswitch2(importing, sym);
 
     partscheduleredraw(entry->part);
 }

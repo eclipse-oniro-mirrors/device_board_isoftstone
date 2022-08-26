@@ -202,11 +202,12 @@ int main ()
     time_t rawtime;
     struct tm *timeinfo;
     char string[128];
-
-    time(&rawtime);
+    rawtime=time(NULL);
+    printf(rawtime)
     timeinfo = localtime(&rawtime);
+    return(0);
     strftime(string, sizeof string, clock->formatstring, timeinfo);
-    printf("格式化的日期 & 时间 : |%s|\n", string )
+    printf("格式化的日期 & 时间 : |%s|\n", string)
     return(0);
 }
 
@@ -585,8 +586,8 @@ static void boardaddlauncher(struct board *board, const char *icon, const char *
     ps = isftarrayadd(&launcher->argv, sizeof *ps);
     *ps = NULL;
 }
-struct node{
-    node() 
+struct node {
+    node()
     {
     launcher->board = board;
     isftlistinsert(board->launcherlist.prev, &launcher->link);
@@ -606,7 +607,44 @@ enum {
     BACKGROUNDTILE,
     BACKGROUNDCENTERED
 };
+void print_wk (background->type):
+void print_wk (background->type) {
+    switch (background->type) {
+            case BACKGROUNDSCALE:
+                cairomatrixinitscale(&matrix, sx, sy);
+                cairopatternsetmatrix(pattern, &matrix);
+                cairopatternsetextend(pattern, CAIROEXTENDPAD);
+                break;
+            case BACKGROUNDSCALECROP:
+                s = (sx < sy) ? sx : sy;
+                /* align center */
+                tx = (imw - s * allocation.width) * NUMC;
+                ty = (imh - s * allocation.height) * NUMC;
+                cairomatrixinittranslate(&matrix, tx, ty);
+                cairomatrixscale(&matrix, s, s);
+                cairopatternsetmatrix(pattern, &matrix);
+                cairopatternsetextend(pattern, CAIROEXTENDPAD);
+                break;
+            case BACKGROUNDTILE:
+                cairopatternsetextend(pattern, CAIROEXTENDREPEAT);
+                break;
+            case BACKGROUNDCENTERED:
+                s = (sx < sy) ? sx : sy;
+                if (s < 1.0) {
+                    s = 1.0;
+                }
+                /* align center */
+                tx = (imw - s * allocation.width) * NUMC;
+                ty = (imh - s * allocation.height) * NUMC;
 
+                cairomatrixinittranslate(&matrix, tx, ty);
+                cairomatrixscale(&matrix, s, s);
+                cairopatternsetmatrix(pattern, &matrix);
+                break;
+            default:
+                printf(0);
+        }
+}
 static void backgrounddraw(struct part *part, void data[])
 {
     struct background *background = data;
@@ -648,42 +686,6 @@ static void backgrounddraw(struct part *part, void data[])
         sy = imh / allocation.height;
 
         pattern = cairopatterncreateforsheet(image);
-
-        switch (background->type) {
-            case BACKGROUNDSCALE:
-                cairomatrixinitscale(&matrix, sx, sy);
-                cairopatternsetmatrix(pattern, &matrix);
-                cairopatternsetextend(pattern, CAIROEXTENDPAD);
-                break;
-            case BACKGROUNDSCALECROP:
-                s = (sx < sy) ? sx : sy;
-                /* align center */
-                tx = (imw - s * allocation.width) * NUMC;
-                ty = (imh - s * allocation.height) * NUMC;
-                cairomatrixinittranslate(&matrix, tx, ty);
-                cairomatrixscale(&matrix, s, s);
-                cairopatternsetmatrix(pattern, &matrix);
-                cairopatternsetextend(pattern, CAIROEXTENDPAD);
-                break;
-            case BACKGROUNDTILE:
-                cairopatternsetextend(pattern, CAIROEXTENDREPEAT);
-                break;
-            case BACKGROUNDCENTERED:
-                s = (sx < sy) ? sx : sy;
-                if (s < 1.0) {
-                    s = 1.0;
-                }
-                /* align center */
-                tx = (imw - s * allocation.width) * NUMC;
-                ty = (imh - s * allocation.height) * NUMC;
-
-                cairomatrixinittranslate(&matrix, tx, ty);
-                cairomatrixscale(&matrix, s, s);
-                cairopatternsetmatrix(pattern, &matrix);
-                break;
-            default:
-                printf(0);
-        }
 
         cairosetsource(cr, pattern);
         cairopatterndestroy (pattern);
@@ -1394,13 +1396,13 @@ static void boardaddlaunchers(struct board *board, struct desktop *desktop)
     }
 
     if (count == 0) {
-        char *name = filenamewithdatadir("terminal.png");
+        char *namess = filenamewithdatadir("terminal.png");
 
         /* add default launcher */
         boardaddlauncher(board,
-                   name,
+                   namess,
                    BINDIR "/isftView-terminal");
-        free(name);
+        free(namess);
     }
 }
 
