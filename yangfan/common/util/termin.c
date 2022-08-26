@@ -836,7 +836,7 @@ static void update_title(struct terminal *terminal)
 }
 
 static void resize_handler(struct widget *widget,
-                           int32_t width, int32_t height, void *data)
+                           int32_t width, int32_t height, void data[])
 {
     struct terminal *terminal = data;
     int32_t columns, rows, m;
@@ -860,7 +860,7 @@ static void resize_handler(struct widget *widget,
     update_title(terminal);
 }
 
-static void state_changed_handler(struct window *window, void *data)
+static void state_changed_handler(struct window *window, void data[])
 {
     struct terminal *terminal = data;
     update_title(terminal);
@@ -1008,7 +1008,7 @@ static void glyph_run_add(struct glyph_run *run, int x, int y, union utf8_char *
 }
 
 
-static void redraw_handler(struct widget *widget, void *data)
+static void redraw_handler(struct widget *widget, void data[])
 {
     struct terminal *terminal = data;
     struct rectangle allocation;
@@ -2139,12 +2139,12 @@ static void terminal_data(struct terminal *terminal, const char *data, size_t le
     window_schedule_redraw(terminal->window);
 }
 
-static void data_source_target(void *data, struct wl_data_source *source, const char *mime_type)
+static void data_source_target(void data[], struct wl_data_source *source, const char *mime_type)
 {
     fprintf(stderr, "data_source_target, %s\n", mime_type);
 }
 
-static void data_source_send(void *data,
+static void data_source_send(void data[],
                              struct wl_data_source *source,
                              const char *mime_type, int32_t fd)
 {
@@ -2153,20 +2153,20 @@ static void data_source_send(void *data,
     terminal_send_selection(terminal, fd);
 }
 
-static void data_source_cancelled(void *data, struct wl_data_source *source)
+static void data_source_cancelled(void data[], struct wl_data_source *source)
 {
     wl_data_source_destroy(source);
 }
 
-static void data_source_dnd_drop_performed(void *data, struct wl_data_source *source)
+static void data_source_dnd_drop_performed(void data[], struct wl_data_source *source)
 {
 }
 
-static void data_source_dnd_finished(void *data, struct wl_data_source *source)
+static void data_source_dnd_finished(void data[], struct wl_data_source *source)
 {
 }
 
-static void data_source_action(void *data,
+static void data_source_action(void data[],
                                struct wl_data_source *source, uint32_t dnd_action)
 {
 }
@@ -2184,7 +2184,7 @@ static const char text_mime_type[] = "text/plain;charset=utf-8";
 
 static void data_handler(struct window *window,
                          struct input *input,
-                         float x, float y, const char **types, void *data)
+                         float x, float y, const char **types, void data[])
 {
     int i, has_text = 0;
 
@@ -2202,21 +2202,21 @@ static void data_handler(struct window *window,
 }
 
 static void drop_handler(struct window *window, struct input *input,
-                         int32_t x, int32_t y, void *data)
+                         int32_t x, int32_t y, void data[])
 {
     struct terminal *terminal = data;
 
     input_receive_drag_data_to_fd(input, text_mime_type, terminal->master);
 }
 
-static void fullscreen_handler(struct window *window, void *data)
+static void fullscreen_handler(struct window *window, void data[])
 {
     struct terminal *terminal = data;
 
     window_set_fullscreen(window, !window_is_fullscreen(terminal->window));
 }
 
-static void close_handler(void *data)
+static void close_handler(void data[])
 {
     struct terminal *terminal = data;
 
@@ -2308,7 +2308,7 @@ static int handle_bound_key(struct terminal *terminal,
 
 static void key_handler(struct window *window, struct input *input, uint32_t time,
                         uint32_t key, uint32_t sym, enum wl_keyboard_key_state state,
-                        void *data)
+                        void data[])
 {
     struct terminal *terminal = data;
     char ch[MAX_RESPONSE];
@@ -2540,7 +2540,7 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
 }
 
 static void keyboard_focus_handler(struct window *window,
-                                   struct input *device, void *data)
+                                   struct input *device, void data[])
 {
     struct terminal *terminal = data;
 
@@ -2658,7 +2658,7 @@ static void terminal_minimize(struct terminal *terminal)
     window_set_minimized(terminal->window);
 }
 
-static void menu_func(void *data, struct input *input, int index)
+static void menu_func(void data[], struct input *input, int index)
 {
     struct window *window = data;
     struct terminal *terminal = window_get_user_data(window);
@@ -2715,7 +2715,7 @@ static void click_handler(struct widget *widget, struct terminal *terminal,
 static void button_handler(struct widget *widget,
                            struct input *input, uint32_t time,
                            uint32_t button,
-                           enum wl_pointer_button_state state, void *data)
+                           enum wl_pointer_button_state state, void data[])
 {
     struct terminal *terminal = data;
     int32_t x, y;
@@ -2738,14 +2738,14 @@ static void button_handler(struct widget *widget,
 }
 
 static int enter_handler(struct widget *widget,
-                         struct input *input, float x, float y, void *data)
+                         struct input *input, float x, float y, void data[])
 {
     return CURSOR_IBEAM;
 }
 
 static int motion_handler(struct widget *widget,
                           struct input *input, uint32_t time,
-                          float x, float y, void *data)
+                          float x, float y, void data[])
 {
     struct terminal *terminal = data;
 
@@ -2769,7 +2769,7 @@ static void axis_handler(struct widget *widget,
                          struct input *input, uint32_t time,
                          uint32_t axis,
                          wl_fixed_t value,
-                         void *data)
+                         void data[])
 {
     struct terminal *terminal = data;
     int lines;
@@ -2810,7 +2810,7 @@ static void axis_handler(struct widget *widget,
 }
 
 static void output_handler(struct window *window, struct output *output, int enter,
-                           void *data)
+                           void data[])
 {
     if (enter)
         window_set_buffer_transform(window, output_get_transform(output));
@@ -2820,7 +2820,7 @@ static void output_handler(struct window *window, struct output *output, int ent
 
 static void touch_down_handler(struct widget *widget, struct input *input,
                                uint32_t serial, uint32_t time, int32_t id,
-                               float x, float y, void *data)
+                               float x, float y, void data[])
 {
     struct terminal *terminal = data;
 
@@ -2829,7 +2829,7 @@ static void touch_down_handler(struct widget *widget, struct input *input,
 }
 
 static void touch_up_handler(struct widget *widget, struct input *input,
-                             uint32_t serial, uint32_t time, int32_t id, void *data)
+                             uint32_t serial, uint32_t time, int32_t id, void data[])
 {
     struct terminal *terminal = data;
 
@@ -2838,7 +2838,7 @@ static void touch_up_handler(struct widget *widget, struct input *input,
 }
 
 static void touch_motion_handler(struct widget *widget, struct input *input,
-                                 uint32_t time, int32_t id, float x, float y, void *data)
+                                 uint32_t time, int32_t id, float x, float y, void data[])
 {
     struct terminal *terminal = data;
 

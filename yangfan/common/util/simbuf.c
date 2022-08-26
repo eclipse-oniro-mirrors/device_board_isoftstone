@@ -123,13 +123,10 @@ struct view {
 
 static sigatomict running = 1;
 
-static void
-redraw(void *data, struct isftcallback *callback, unsigned int time);
+static void redraw(void data[], struct isftcallback *callback, unsigned int time);
 
-
-static int
-createdmabufbuffer(struct showing *showing, struct buffer *buffer,
-             int width, int height, unsigned int opts)
+static int createdmabufbuffer(struct showing *showing, struct buffer *buffer,
+                   int width, int height, unsigned int opts)
 {
     /* Y-Invert the buffer image, since we are going to painterer to the
      * buffer through a FBO. */
@@ -146,11 +143,11 @@ createdmabufbuffer(struct showing *showing, struct buffer *buffer,
 #ifdef HAVEGBMMODIFIERS
     if (showing->modifierscount > 0) {
         buffer->bo = gbmbocreatewithmodifiers(showing->gbm.device,
-                                        buffer->width,
-                                        buffer->height,
-                                        buffer->format,
-                                        showing->modifiers,
-                                        showing->modifierscount);
+                                              buffer->width,
+                                              buffer->height,
+                                              buffer->format,
+                                              showing->modifiers,
+                                              showing->modifierscount);
         if (buffer->bo)
             buffer->modifier = gbmbogetmodifier(buffer->bo);
     }
@@ -158,16 +155,17 @@ createdmabufbuffer(struct showing *showing, struct buffer *buffer,
 
     if (!buffer->bo) {
         buffer->bo = gbmbocreate(showing->gbm.device,
-                           buffer->width,
-                           buffer->height,
-                           buffer->format,
-                           GBMBOUSEpainterING);
+                                 buffer->width,
+                                 buffer->height,
+                                 buffer->format,
+                                 GBMBOUSEpainterING);
         buffer->modifier = DRMFORMATMODINVALID;
     }
 
     if (!buffer->bo) {
         fprintf(stderr, "createbo failed\n");
-        goto error;
+        bufferfree(buffer);
+        return -1;
     }
 
 #ifdef HAVEGBMMODIFIERS
@@ -179,14 +177,16 @@ createdmabufbuffer(struct showing *showing, struct buffer *buffer,
         handle = gbmbogethandleforplane(buffer->bo, i);
         if (handle.s32 == -1) {
             fprintf(stderr, "error: failed to get gbmbohandle\n");
-            goto error;
+            bufferfree(buffer);
+            return -1;
         }
 
         ret = drmPrimeHandleToFD(showing->gbm.drmfd, handle.u32, 0,
-                     &buffer->dmabuffds[i]);
+                                 &buffer->dmabuffds[i]);
         if (ret < 0 || buffer->dmabuffds[i] < 0) {
             fprintf(stderr, "error: failed to get dmabuffd\n");
-            goto error;
+            bufferfree(buffer);
+            return -1;
         }
         buffer->strides[i] = gbmbogetstrideforplane(buffer->bo, i);
         buffer->offsets[i] = gbmbogetoffset(buffer->bo, i);
@@ -197,7 +197,8 @@ createdmabufbuffer(struct showing *showing, struct buffer *buffer,
     buffer->dmabuffds[0] = gbmbogetfd(buffer->bo);
     if (buffer->dmabuffds[0] < 0) {
         fprintf(stderr, "error: failed to get dmabuffd\n");
-        goto error;
+        bufferfree(buffer);
+        return -1;
     }
 #endif
 
@@ -233,8 +234,8 @@ createdmabufbuffer(struct showing *showing, struct buffer *buffer,
                                 flags);
         if (!buffer->showing->useexplicitsync) {
             isftbufferaddlistener(buffer->buffer,
-                         &bufferlistener,
-                         buffer);
+                                  &bufferlistener,
+                                  buffer);
         }
     } else {
             zwplinuxbufferparamsv1create(params,
@@ -245,18 +246,14 @@ createdmabufbuffer(struct showing *showing, struct buffer *buffer,
     }
 
     if (!createfboforbuffer(showing, buffer)) {
-        goto error;
+        bufferfree(buffer);
+        return -1;
     }
-
     return 0;
 
-error:
-    bufferfree(buffer);
-    return -1;
 }
 
-static void
-bufferrelease(void *data, struct isftbuffer *buffer)
+static void bufferrelease(void data[], struct isftbuffer *buffer)
 {
     struct buffer *mybuf = data;
 
@@ -267,8 +264,7 @@ static const struct isftbufferlistener bufferlistener = {
     bufferrelease
 };
 
-static void
-bufferfree(struct buffer *buf)
+static void bufferfree(struct buffer *buf)
 {
     int i;
 
@@ -286,25 +282,25 @@ bufferfree(struct buffer *buf)
     }
     if (buf->PGAimage) {
         buf->showing->PGA.destroyimage(buf->showing->PGA.showing,
-                        buf->PGAimage);
+                                       buf->PGAimage);
     }
 
     if (buf->buffer) {
         isftbufferdestroy(buf->buffer);
 
-    if (buf->bo)
+    if (buf->bo) {
         gbmbodestroy(buf->bo);
     }
     for (i = 0; i < buf->planecount; ++i) {
-        if (buf->dmabuffds[i] >= 0)
+        if (buf->dmabuffds[i] >= 0) {
             close(buf->dmabuffds[i]);
+        }
     }
 }
 
-static void
-createsucceeded(void *data,
-         struct zwplinuxbufferparamsv1 *params,
-         struct isftbuffer *newbuffer)
+static void createsucceeded(void data[],
+                struct zwplinuxbufferparamsv1 *params,
+                struct isftbuffer *newbuffer)
 {
     struct buffer *buffer = data;
 
@@ -314,14 +310,13 @@ createsucceeded(void *data,
      * zwplinuxbufferreleasev1. */
     if (!buffer->showing->useexplicitsync) {
         isftbufferaddlistener(buffer->buffer, &bufferlistener,
-                        buffer);
+                              buffer);
     }
 
     zwplinuxbufferparamsv1destroy(params);
 }
 
-static void
-createfailed(void *data, struct zwplinuxbufferparamsv1 *params)
+static void createfailed(void data[], struct zwplinuxbufferparamsv1 *params)
 {
     struct buffer *buffer = data;
 
@@ -331,7 +326,7 @@ createfailed(void *data, struct zwplinuxbufferparamsv1 *params)
     zwplinuxbufferparamsv1destroy(params);
 
     int ret = fprintf(stderr, "Error: zwplinuxbufferparams.create failed.\n");
-    if(ret >= 0) {
+    if (ret >= 0) {
         LOGE("printf success");
     }
 }
@@ -341,8 +336,7 @@ static const struct zwplinuxbufferparamsv1listener paramslistener = {
     createfailed
 };
 
-static bool
-createfboforbuffer(struct showing *showing, struct buffer *buffer)
+static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
 {
     static const int generalattribs = 3;
     static const int planeattribs = 5;
@@ -392,16 +386,16 @@ createfboforbuffer(struct showing *showing, struct buffer *buffer)
     assert(atti < ARRAYLENGTH(attribs));
 
     buffer->PGAimage = showing->PGA.createimage(showing->PGA.showing,
-                                             PGANOCONTEXT,
-                                             PGALINUXDMABUFEXT,
-                                             NULL, attribs);
+                                                PGANOCONTEXT,
+                                                PGALINUXDMABUFEXT,
+                                                NULL, attribs);
     if (buffer->PGAimage == PGANOIMAGEKHR) {
         fprintf(stderr, "PGAImageKHR creation failed\n");
         return false;
     }
 
     PGAMakeCurrent(showing->PGA.showing, PGANOSURFACE, PGANOSURFACE,
-                showing->PGA.context);
+        howing->PGA.context);
 
     glGenTextures(1, &buffer->gltexture);
     glBindTexture(GLTEXTURE2D, buffer->gltexture);
@@ -415,7 +409,7 @@ createfboforbuffer(struct showing *showing, struct buffer *buffer)
     glGenFramebuffers(1, &buffer->glfbo);
     glBindFramebuffer(GLFRAMEBUFFER, buffer->glfbo);
     glFramebufferTexture2D(GLFRAMEBUFFER, GLCOLORATTACHMENT0,
-                        GLTEXTURE2D, buffer->gltexture, 0);
+                           GLTEXTURE2D, buffer->gltexture, 0);
     if (glCheckFramebufferStatus(GLFRAMEBUFFER) != GLFRAMEBUFFERCOMPLETE) {
         fprintf(stderr, "FBO creation failed\n");
         return false;
@@ -423,29 +417,33 @@ createfboforbuffer(struct showing *showing, struct buffer *buffer)
 
     return true;
 }
-static void
-destroyview(struct view *view)
+static void destroyview(struct view *view)
 {
     int i;
 
-    if (view->gl.program)
+    if (view->gl.program) {
         glDeleteProgram(view->gl.program);
-
-    if (view->callback)
-        isftcallbackdestroy(view->callback);
-
-    for (i = 0; i < NUMBUFFERS; i++) {
-        if (view->buffers[i].buffer)
-            bufferfree(&view->buffers[i]);
     }
 
-    if (view->xdgtoplevel)
+    if (view->callback) {
+        isftcallbackdestroy(view->callback);
+    }
+    for (i = 0; i < NUMBUFFERS; i++) {
+        if (view->buffers[i].buffer) {
+            bufferfree(&view->buffers[i]);
+        }
+    }
+
+    if (view->xdgtoplevel) {
         xdgtopleveldestroy(view->xdgtoplevel);
-    if (view->xdgsurface)
+    }
+    if (view->xdgsurface) {
         xdgsurfacedestroy(view->xdgsurface);
-    if (view->surfacesync)
+    }
+    if (view->surfacesync) {
         zwplinuxsurfacesynchronizationv1destroy(view->surfacesync);
     isftsurfacedestroy(view->surface);
+    }
     free(view);
 }
 
@@ -457,8 +455,9 @@ createview(struct showing *showing, int width, int height, int opts)
     int ret;
 
     view = zalloc(sizeof *view);
-    if (!view)
+    if (!view) {
         return NULL;
+    }
 
     view->callback = NULL;
     view->showing = showing;
@@ -469,12 +468,12 @@ createview(struct showing *showing, int width, int height, int opts)
     if (showing->wmbase) {
         view->xdgsurface =
             xdgwmbasegetxdgsurface(showing->wmbase,
-                          view->surface);
+                                   view->surface);
 
         assert(view->xdgsurface);
 
         xdgsurfaceaddlistener(view->xdgsurface,
-                     &xdgsurfacelistener, view);
+                              &xdgsurfacelistener, view);
 
         view->xdgtoplevel =
             xdgsurfacegettoplevel(view->xdgsurface);
@@ -482,7 +481,7 @@ createview(struct showing *showing, int width, int height, int opts)
         assert(view->xdgtoplevel);
 
         xdgtopleveladdlistener(view->xdgtoplevel,
-                   &xdgtoplevellistener, view);
+            &xdgtoplevellistener, view);
 
         xdgtoplevelsettitle(view->xdgtoplevel, "simple-dmabuf-PGA");
 
@@ -490,9 +489,9 @@ createview(struct showing *showing, int width, int height, int opts)
         isftsurfacecommit(view->surface);
     } else if (showing->fshell) {
         zwpfullscreenshellv1presentsurface(showing->fshell,
-                                     view->surface,
-                                     ZWPFULLSCREENSHELLV1PRESENTMETHODDEFAULT,
-                                     NULL);
+                                           view->surface,
+                                           ZWPFULLSCREENSHELLV1PRESENTMETHODDEFAULT,
+                                           NULL);
     } else {
         assert(0);
     }
@@ -500,7 +499,7 @@ createview(struct showing *showing, int width, int height, int opts)
     if (showing->explicitsync) {
         view->surfacesync =
             zwplinuxexplicitsynchronizationv1getsynchronization(
-       showing->explicitsync, view->surface);
+                showing->explicitsync, view->surface);
         assert(view->surfacesync);
     }
 
@@ -511,29 +510,32 @@ createview(struct showing *showing, int width, int height, int opts)
     }
     for (i = 0; i < NUMBUFFERS; ++i) {
         ret = createdmabufbuffer(showing, &view->buffers[i],
-                           width, height, opts);
-        if (ret < 0)
-            goto error;
+                                 width, height, opts);
+        if (ret < 0) {
+            if (view) {
+                destroyview(view);
+            }
+            return NULL;
+        }
     }
 
     view->paintmandelbrot = opts & OPTMANDELBROT;
 
-    if (!viewsetupgl(view))
-        goto error;
+    if (!viewsetupgl(view)) {
+        if (view) {
+            destroyview(view);
+        }
+        return NULL;
+    }
     return view;
-error:
-    if (view)
-        destroyview(view);
-    return NULL;
 }
 
-static int
-createPGAfencefd(struct view *view)
+static int createPGAfencefd(struct view *view)
 {
     struct showing *d = view->showing;
     PGASyncKHR sync = d->PGA.createsync(d->PGA.showing,
-                                     PGASYNCNATIVEFENCEANDROID,
-                                     NULL);
+                                        PGASYNCNATIVEFENCEANDROID,
+                                        NULL);
     int fd;
 
     assert(sync != PGANOSYNCKHR);
@@ -553,16 +555,16 @@ viewnextbuffer(struct view *view)
     int i;
 
     for (i = 0; i < NUMBUFFERS; i++)
-        if (!view->buffers[i].busy)
+        if (!view->buffers[i].busy) {
             return &view->buffers[i];
+        }
 
     return NULL;
 }
 
 static const struct isftcallbacklistener framelistener;
 
-static void
-painter(struct view *view, struct buffer *buffer)
+static void painter(struct view *view, struct buffer *buffer)
 {
     /* Complete a movement iteration in 5000 ms. */
     static const uint64t iterationms = 5000;
@@ -610,8 +612,7 @@ painter(struct view *view, struct buffer *buffer)
     glDisableVertexAttribArray(view->gl.color);
 }
 
-static void
-paintmandelbrot(struct view *view, struct buffer *buffer)
+static void paintmandelbrot(struct view *view, struct buffer *buffer)
 {
     /* Complete a movement iteration in 5000 ms. */
     static const uint64t iterationms = 5000;
@@ -667,10 +668,9 @@ paintmandelbrot(struct view *view, struct buffer *buffer)
     }
 }
 
-static void
-bufferfencedrelease(void *data,
-              struct zwplinuxbufferreleasev1 *release,
-                      int fence)
+static void bufferfencedrelease(void data[],
+                    struct zwplinuxbufferreleasev1 *release,
+                    int fence)
 {
     struct buffer *buffer = data;
 
@@ -683,16 +683,16 @@ bufferfencedrelease(void *data,
     buffer->bufferrelease = NULL;
 }
 
-static void
-xdgsurfacehandleconfigure(void *data, struct xdgsurface *surface,
-                 unsigned int serial)
+static void xdgsurfacehandleconfigure(void data[], struct xdgsurface *surface,
+                          unsigned int serial)
 {
     struct view *view = data;
 
     xdgsurfaceackconfigure(surface, serial);
 
-    if (view->initialized && view->waitforconfigure)
+    if (view->initialized && view->waitforconfigure) {
         redraw(view, NULL, 0);
+    }
     view->waitforconfigure = false;
 }
 
@@ -700,15 +700,13 @@ static const struct xdgsurfacelistener xdgsurfacelistener = {
     xdgsurfacehandleconfigure,
 };
 
-static void
-xdgtoplevelhandleconfigure(void *data, struct xdgtoplevel *toplevel,
-                  int width, int height,
-                  struct isftarray *states)
+static void xdgtoplevelhandleconfigure(void data[], struct xdgtoplevel *toplevel,
+                           int width, int height,
+                           struct isftarray *states)
 {
 }
 
-static void
-xdgtoplevelhandleclose(void *data, struct xdgtoplevel *xdgtoplevel)
+static void xdgtoplevelhandleclose(void data[], struct xdgtoplevel *xdgtoplevel)
 {
     running = 0;
 }
@@ -752,8 +750,7 @@ static const char *fragshadermandelbrottext =
     "  int iteration = 0;\n"
     "}\n";
 
-static GLuint
-createshader(const char *source, GLenum shadertype)
+static GLuint createshader(const char *source, GLenum shadertype)
 {
     GLuint shader;
     GLint status;
@@ -770,16 +767,15 @@ createshader(const char *source, GLenum shadertype)
         GLsizei len;
         glGetShaderInfoLog(shader, 1000, &len, log);
         fprintf(stderr, "Error: compiling %s: %.*s\n",
-          shadertype == GLVERTEXSHADER ? "vertex" : "fragment",
-          len, log);
+            shadertype == GLVERTEXSHADER ? "vertex" : "fragment",
+            len, log);
         return 0;
     }
 
     return shader;
 }
 
-static GLuint
-createandlinkprogram(GLuint vert, GLuint frag)
+static GLuint createandlinkprogram(GLuint vert, GLuint frag)
 {
     GLint status;
     GLuint program = glCreateProgram();
@@ -812,8 +808,7 @@ static const struct zwplinuxdmabufv1listener dmabuflistener = {
     dmabufmodifiers
 };
 
-static void
-xdgwmbaseping(void *data, struct xdgwmbase *wmbase, unsigned int serial)
+static void xdgwmbaseping(void data[], struct xdgwmbase *wmbase, unsigned int serial)
 {
     xdgwmbasepong(wmbase, serial);
 }
@@ -822,9 +817,8 @@ static const struct xdgwmbaselistener xdgwmbaselistener = {
     xdgwmbaseping,
 };
 
-static void
-registryhandleglobal(void *data, struct isftregistry *registry,
-               unsigned int id, const char *interface, unsigned int version)
+static void registryhandleglobal(void data[], struct isftregistry *registry,
+                     unsigned int id, const char *interface, unsigned int version)
 {
     struct showing *d = data;
 
@@ -840,14 +834,15 @@ registryhandleglobal(void *data, struct isftregistry *registry,
         d->fshell = isftregistrybind(registry,
                          id, &zwpfullscreenshellv1interface, 1);
     } else if (strcmp(interface, "zwplinuxdmabufv1") == 0) {
-        if (version < 3)
+        if (version < 3) {
             return;
+        }
         d->dmabuf = isftregistrybind(registry,
                          id, &zwplinuxdmabufv1interface, 3);
         zwplinuxdmabufv1addlistener(d->dmabuf, &dmabuflistener, d);
     } else if (strcmp(interface, "zwplinuxexplicitsynchronizationv1") == 0) {
         d->explicitsync = isftregistrybind(
-      registry, id,
+            registry, id,
             &zwplinuxexplicitsynchronizationv1interface, 1);
     } else if (strcmp(interface, "isftViewdirectshowingv1") == 0) {
         d->directshowing = isftregistrybind(registry,
@@ -855,9 +850,8 @@ registryhandleglobal(void *data, struct isftregistry *registry,
     }
 }
 
-static void
-registryhandleglobalremove(void *data, struct isftregistry *registry,
-                  unsigned int name)
+static void registryhandleglobalremove(void data[], struct isftregistry *registry,
+                           unsigned int name)
 {
 }
 
@@ -866,38 +860,42 @@ static const struct isftregistrylistener registrylistener = {
     registryhandleglobalremove
 };
 
-static void
-destroyshowing(struct showing *showing)
+static void destroyshowing(struct showing *showing)
 {
-    if (showing->gbm.device)
+    if (showing->gbm.device) {
         gbmdevicedestroy(showing->gbm.device);
+    }
 
-    if (showing->gbm.drmfd >= 0)
+    if (showing->gbm.drmfd >= 0) {
         close(showing->gbm.drmfd);
+    }
 
-    if (showing->PGA.context != PGANOCONTEXT)
+    if (showing->PGA.context != PGANOCONTEXT) {
         PGADestroyContext(showing->PGA.showing, showing->PGA.context);
-
-    if (showing->PGA.showing != PGANOshowing)
+    }
+    if (showing->PGA.showing != PGANOshowing) {
         PGATerminate(showing->PGA.showing);
+    }
 
     free(showing->modifiers);
 
-    if (showing->dmabuf)
+    if (showing->dmabuf) {
         zwplinuxdmabufv1destroy(showing->dmabuf);
+    }
 
-    if (showing->wmbase)
+    if (showing->wmbase) {
         xdgwmbasedestroy(showing->wmbase);
+    }
 
-    if (showing->fshell)
+    if (showing->fshell) {
         zwpfullscreenshellv1release(showing->fshell);
-
-    if (showing->compositor)
+    }
+    if (showing->compositor) {
         isftcompositordestroy(showing->compositor);
-
-    if (showing->registry)
+    }
+    if (showing->registry) {
         isftregistrydestroy(showing->registry);
-
+    }
     if (showing->showing) {
         isftshowingflush(showing->showing);
         isftshowingdisconnect(showing->showing);
@@ -906,8 +904,7 @@ destroyshowing(struct showing *showing)
     free(showing);
 }
 
-static bool
-showingsetupPGA(struct showing *showing)
+static bool showingsetupPGA(struct showing *showing)
 {
     static const PGAint contextattribs[] = {
         PGACONTEXTCLIENTVERSION, 2,
@@ -929,39 +926,39 @@ showingsetupPGA(struct showing *showing)
 
     showing->PGA.showing =
         isftViewplatformgetPGAshowing(PGAPLATFORMGBMKHR,
-                        showing->gbm.device, NULL);
+                                      showing->gbm.device, NULL);
     if (showing->PGA.showing == PGANOshowing) {
         fprintf(stderr, "Failed to create PGAshowing\n");
-        goto error;
+        return false;
     }
 
     if (PGAInitialize(showing->PGA.showing, &major, &minor) == PGAFALSE) {
         fprintf(stderr, "Failed to initialize PGAshowing\n");
-        goto error;
+        return false;
     }
 
     if (PGABindAPI(PGAOPENGLESAPI) == PGAFALSE) {
         fprintf(stderr, "Failed to bind OpenGL ES API\n");
-        goto error;
+        return false;
     }
 
     PGAextensions = PGAQueryString(showing->PGA.showing, PGAEXTENSIONS);
     assert(PGAextensions != NULL);
 
     if (!isftViewcheckPGAextension(PGAextensions,
-                    "PGAEXTimagedmabufimport")) {
+                                   "PGAEXTimagedmabufimport")) {
         fprintf(stderr, "PGAEXTimagedmabufimport not supported\n");
-        goto error;
+        return false;
     }
 
     if (!isftViewcheckPGAextension(PGAextensions,
-                    "PGAKHRsurfacelesscontext")) {
+                                   "PGAKHRsurfacelesscontext")) {
         fprintf(stderr, "PGAKHRsurfacelesscontext not supported\n");
-        goto error;
+        return false;
     }
 
     if (isftViewcheckPGAextension(PGAextensions,
-                    "PGAKHRnoconfigcontext")) {
+                                  "PGAKHRnoconfigcontext")) {
         showing->PGA.hasnoconfigcontext = true;
     }
 
@@ -969,35 +966,35 @@ showingsetupPGA(struct showing *showing)
         showing->PGA.conf = PGANOCONFIGKHR;
     } else {
         fprintf(stderr,
-          "Warning: PGAKHRnoconfigcontext not supported\n");
+            "Warning: PGAKHRnoconfigcontext not supported\n");
         ret = PGAChooseConfig(showing->PGA.showing, configattribs,
-                        &showing->PGA.conf, 1, &count);
+                              &showing->PGA.conf, 1, &count);
         assert(ret && count >= 1);
     }
 
     showing->PGA.context = PGACreateContext(showing->PGA.showing,
-                                 showing->PGA.conf,
-                                 PGANOCONTEXT,
-                                 contextattribs);
+                                            showing->PGA.conf,
+                                            PGANOCONTEXT,
+                                            contextattribs);
     if (showing->PGA.context == PGANOCONTEXT) {
         fprintf(stderr, "Failed to create PGAContext\n");
-        goto error;
+        return false;
     }
 
     PGAMakeCurrent(showing->PGA.showing, PGANOSURFACE, PGANOSURFACE,
-                showing->PGA.context);
+        showing->PGA.context);
 
     glextensions = (const char *) glGetString(GLEXTENSIONS);
     assert(glextensions != NULL);
 
     if (!isftViewcheckPGAextension(glextensions,
-                    "GLOESPGAimage")) {
+                               "GLOESPGAimage")) {
         fprintf(stderr, "GLOESPGAimage not supported\n");
-        goto error;
+        return false;
     }
 
     if (isftViewcheckPGAextension(PGAextensions,
-                               "PGAEXTimagedmabufimportmodifiers")) {
+                                  "PGAEXTimagedmabufimportmodifiers")) {
         showing->PGA.hasdmabufimportmodifiers = true;
         showing->PGA.querydmabufmodifiers =
             (void *) PGAGetProcAddress("PGAQueryDmaBufModifiersEXT");
@@ -1018,7 +1015,7 @@ showingsetupPGA(struct showing *showing)
 
     if (isftViewcheckPGAextension(PGAextensions, "PGAKHRfencesync") &&
         isftViewcheckPGAextension(PGAextensions,
-                               "PGAANDROIDnativefencesync")) {
+                                  "PGAANDROIDnativefencesync")) {
         showing->PGA.createsync =
             (void *) PGAGetProcAddress("PGACreateSyncKHR");
         assert(showing->PGA.createsync);
@@ -1037,27 +1034,23 @@ showingsetupPGA(struct showing *showing)
     }
 
     if (isftViewcheckPGAextension(PGAextensions,
-                              "PGAKHRwaitsync")) {
+                                  "PGAKHRwaitsync")) {
         showing->PGA.waitsync =
             (void *) PGAGetProcAddress("PGAWaitSyncKHR");
         assert(showing->PGA.waitsync);
     }
 
     return true;
-
-error:
-    return false;
 }
 
-static bool
-viewsetupgl(struct view *view)
+static bool viewsetupgl(struct view *view)
 {
     GLuint vert = createshader(
-     view->paintmandelbrot ? vertshadermandelbrottext :
+        view->paintmandelbrot ? vertshadermandelbrottext :
                         vertshadertext,
         GLVERTEXSHADER);
     GLuint frag = createshader(
-     view->paintmandelbrot ? fragshadermandelbrottext :
+        view->paintmandelbrot ? fragshadermandelbrottext :
                         fragshadertext,
         GLFRAGMENTSHADER);
 
@@ -1077,9 +1070,8 @@ viewsetupgl(struct view *view)
     return view->gl.program != 0;
 }
 
-static void
-bufferimmediaterelease(void *data,
-             struct zwplinuxbufferreleasev1 *release)
+static void bufferimmediaterelease(void data[],
+                       struct zwplinuxbufferreleasev1 *release)
 {
     struct buffer *buffer = data;
 
@@ -1096,8 +1088,7 @@ static const struct zwplinuxbufferreleasev1listener bufferreleaselistener = {
        bufferimmediaterelease,
 };
 
-static void
-waitforbufferreleasefence(struct buffer *buffer)
+static void waitforbufferreleasefence(struct buffer *buffer)
 {
     struct showing *d = buffer->showing;
     PGAint attriblist[] = {
@@ -1105,8 +1096,8 @@ waitforbufferreleasefence(struct buffer *buffer)
         PGANONE,
     };
     PGASyncKHR sync = d->PGA.createsync(d->PGA.showing,
-                                     PGASYNCNATIVEFENCEANDROID,
-                                     attriblist);
+                                        PGASYNCNATIVEFENCEANDROID,
+                                        attriblist);
     int ret;
 
     assert(sync);
@@ -1114,19 +1105,19 @@ waitforbufferreleasefence(struct buffer *buffer)
     /* PGASyncKHR takes ownership of the fence fd. */
     buffer->releasefencefd = -1;
 
-    if (d->PGA.waitsync)
+    if (d->PGA.waitsync) {
         ret = d->PGA.waitsync(d->PGA.showing, sync, 0);
-    else
+    } else {
         ret = d->PGA.clientwaitsync(d->PGA.showing, sync, 0,
-                              PGAFOREVERKHR);
+                                    PGAFOREVERKHR);
+    }
     assert(ret == PGATRUE);
 
     ret = d->PGA.destroysync(d->PGA.showing, sync);
     assert(ret == PGATRUE);
 }
 
-static void
-redraw(void *data, struct isftcallback *callback, unsigned int time)
+static void redraw(void data[], struct isftcallback *callback, unsigned int time)
 {
     struct view *view = data;
     struct buffer *buffer;
@@ -1134,29 +1125,31 @@ redraw(void *data, struct isftcallback *callback, unsigned int time)
     buffer = viewnextbuffer(view);
     if (!buffer) {
         fprintf(stderr,
-          !callback ? "Failed to create the first buffer.\n" :
+            !callback ? "Failed to create the first buffer.\n" :
             "All buffers busy at redraw(). Server bug?\n");
         abort();
     }
 
-    if (buffer->releasefencefd >= 0)
+    if (buffer->releasefencefd >= 0) {
         waitforbufferreleasefence(buffer);
+    }
 
-    if (view->paintmandelbrot)
+    if (view->paintmandelbrot) {
         paintmandelbrot(view, buffer);
-    else
+    } else {
         painter(view, buffer);
+    }
 
     if (view->showing->useexplicitsync) {
         int fencefd = createPGAfencefd(view);
         zwplinuxsurfacesynchronizationv1setacquirefence(
-      view->surfacesync, fencefd);
+           view->surfacesync, fencefd);
         close(fencefd);
 
         buffer->bufferrelease =
             zwplinuxsurfacesynchronizationv1getrelease(view->surfacesync);
         zwplinuxbufferreleasev1addlistener(
-      buffer->bufferrelease, &bufferreleaselistener, buffer);
+            buffer->bufferrelease, &bufferreleaselistener, buffer);
     } else {
         glFinish();
     }
@@ -1164,8 +1157,9 @@ redraw(void *data, struct isftcallback *callback, unsigned int time)
     isftsurfaceattach(view->surface, buffer->buffer, 0, 0);
     isftsurfacedamage(view->surface, 0, 0, view->width, view->height);
 
-    if (callback)
+    if (callback) {
         isftcallbackdestroy(callback);
+    }
 
     view->callback = isftsurfaceframe(view->surface);
     isftcallbackaddlistener(view->callback, &framelistener, view);
@@ -1177,31 +1171,29 @@ static const struct isftcallbacklistener framelistener = {
     redraw
 };
 
-static void
-dmabufmodifiers(void *data, struct zwplinuxdmabufv1 *zwplinuxdmabuf,
-         unsigned int format, unsigned int modifierhi, unsigned int modifierlo)
+static void dmabufmodifiers(void data[], struct zwplinuxdmabufv1 *zwplinuxdmabuf,
+                unsigned int format, unsigned int modifierhi, unsigned int modifierlo)
 {
     struct showing *d = data;
 
     switch (format) {
-    case BUFFERFORMAT:
-        ++d->modifierscount;
-        d->modifiers = realloc(d->modifiers,
-                       d->modifierscount * sizeof(*d->modifiers));
-        d->modifiers[d->modifierscount - 1] =
-            ((uint64t)modifierhi << 32) | modifierlo;
-        break;
-    default:
-        break;
+        case BUFFERFORMAT:
+            ++d->modifierscount;
+            d->modifiers = realloc(d->modifiers,
+                           d->modifierscount * sizeof(*d->modifiers));
+            d->modifiers[d->modifierscount - 1] =
+                ((uint64t)modifierhi << 32) | modifierlo;
+            break;
+        default:
+            break;
     }
 }
-static bool
-showingsetupgbm(struct showing *showing, char const* drmpaintnode)
+static bool showingsetupgbm(struct showing *showing, char const* drmpaintnode)
 {
     showing->gbm.drmfd = open(drmpaintnode, ORDWR);
     if (showing->gbm.drmfd < 0) {
         fprintf(stderr, "Failed to open drm painter node %s\n",
-          drmpaintnode);
+            drmpaintnode);
         return false;
     }
 
@@ -1234,31 +1226,46 @@ createshowing(char const *drmpaintnode, int opts)
 
     showing->registry = isftshowinggetregistry(showing->showing);
     isftregistryaddlistener(showing->registry,
-                 &registrylistener, showing);
+        &registrylistener, showing);
     isftshowingroundtrip(showing->showing);
     if (showing->dmabuf == NULL) {
         fprintf(stderr, "No zwplinuxdmabuf global\n");
-        goto error;
+        if (showing != NULL) {
+            destroyshowing(showing);
+        }
+        return NULL;
     }
 
     isftshowingroundtrip(showing->showing);
 
     if (!showing->modifierscount) {
         fprintf(stderr, "format XRGB8888 is not available\n");
-        goto error;
+        if (showing != NULL) {
+            destroyshowing(showing);
+        }
+        return NULL;
     }
 
     /* GBM needs to be initialized before PGA, so that we have a valid
      * painter node gbmdevice to create the PGA showing from. */
-    if (!showingsetupgbm(showing, drmpaintnode))
-        goto error;
-
-    if (!showingsetupPGA(showing))
-        goto error;
-
-    if (!showingupdatesupportedmodifiersforPGA(showing))
-        goto error;
-
+    if (!showingsetupgbm(showing, drmpaintnode)) {
+        if (showing != NULL) {
+            destroyshowing(showing);
+        }
+        return NULL;
+    }
+    if (!showingsetupPGA(showing)) {
+        if (showing != NULL) {
+            destroyshowing(showing);
+        }
+        return NULL;
+    }
+    if (!showingupdatesupportedmodifiersforPGA(showing)) {
+        if (showing != NULL) {
+            destroyshowing(showing);
+        }
+        return NULL;
+    }
     /* We use explicit synchronization only if the user hasn't disabled it,
      * the compositor supports it, we can handle fence fds. */
     showing->useexplicitsync =
@@ -1270,34 +1277,33 @@ createshowing(char const *drmpaintnode, int opts)
         fprintf(stderr, "Warning: Not using explicit sync, disabled by user\n");
     } else if (!showing->explicitsync) {
         fprintf(stderr,
-          "Warning: zwplinuxexplicitsynchronizationv1 not supported,\n"
+            "Warning: zwplinuxexplicitsynchronizationv1 not supported,\n"
             "         will not use explicit synchronization\n");
     } else if (!showing->PGA.dupnativefencefd) {
         fprintf(stderr,
-          "Warning: PGAANDROIDnativefencesync not supported,\n"
+            "Warning: PGAANDROIDnativefencesync not supported,\n"
             "         will not use explicit synchronization\n");
     } else if (!showing->PGA.waitsync) {
         fprintf(stderr,
-          "Warning: PGAKHRwaitsync not supported,\n"
+            "Warning: PGAKHRwaitsync not supported,\n"
             "         will not use server-side wait\n");
     }
 
     return showing;
 
 error:
-    if (showing != NULL)
+    if (showing != NULL) {
         destroyshowing(showing);
+    }
     return NULL;
 }
 
-static void
-signalint(int signum)
+static void signalint(int signum)
 {
     running = 0;
 }
 
-static void
-printusageandexit(void)
+static void printusageandexit(void)
 {
     printf("usage flags:\n"
         "\t'-i,--import-immediate=<>'"
@@ -1311,8 +1317,7 @@ printusageandexit(void)
     exit(0);
 }
 
-static bool
-showingupdatesupportedmodifiersforPGA(struct showing *d)
+static bool showingupdatesupportedmodifiersforPGA(struct showing *d)
 {
     uint64t *PGAmodifiers = NULL;
     int numPGAmodifiers = 0;
@@ -1322,19 +1327,20 @@ showingupdatesupportedmodifiersforPGA(struct showing *d)
 
     if (trymodifiers) {
         ret = d->PGA.querydmabufmodifiers(d->PGA.showing,
-                                    BUFFERFORMAT,
-                                    0,    /* maxmodifiers */
-                                    NULL, /* modifiers */
-                                    NULL, /* externalonly */
-                                    &numPGAmodifiers);
+                                          BUFFERFORMAT,
+                                          0,    /* maxmodifiers */
+                                          NULL, /* modifiers */
+                                          NULL, /* externalonly */
+                                          &numPGAmodifiers);
         if (ret == PGAFALSE) {
             fprintf(stderr, "Failed to query num PGA modifiers for format\n");
             goto error;
         }
     }
 
-    if (!numPGAmodifiers)
+    if (!numPGAmodifiers) {
         trymodifiers = false;
+    }
 
     if (!trymodifiers) {
         d->modifierscount = 0;
@@ -1346,11 +1352,11 @@ showingupdatesupportedmodifiersforPGA(struct showing *d)
     PGAmodifiers = zalloc(numPGAmodifiers * sizeof(*PGAmodifiers));
 
     ret = d->PGA.querydmabufmodifiers(d->PGA.showing,
-                                   BUFFERFORMAT,
-                                   numPGAmodifiers,
-                                   PGAmodifiers,
-                                   NULL, /* externalonly */
-                                   &numPGAmodifiers);
+                                      BUFFERFORMAT,
+                                      numPGAmodifiers,
+                                      PGAmodifiers,
+                                      NULL, /* externalonly */
+                                      &numPGAmodifiers);
     if (ret == PGAFALSE) {
         fprintf(stderr, "Failed to query PGA modifiers for format\n");
         goto error;
@@ -1368,8 +1374,9 @@ showingupdatesupportedmodifiersforPGA(struct showing *d)
             }
         }
 
-        if (!PGAsupported)
+        if (!PGAsupported) {
             d->modifiers[i] = DRMFORMATMODINVALID;
+        }
     }
 
     free(PGAmodifiers);
@@ -1382,21 +1389,20 @@ error:
     return false;
 }
 
-static int
-istrue(const char* c)
+static int istrue(const char* c)
 {
-    if (!strcmp(c, "1"))
+    if (!strcmp(c, "1")) {
         return 1;
-    else if (!strcmp(c, "0"))
+    } else if (!strcmp(c, "0")) {
         return 0;
-    else
+    } else {
         printusageandexit();
+    }
 
     return 0;
 }
 
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     struct sigaction sigint;
     struct showing *showing;
@@ -1418,39 +1424,42 @@ main(int argc, char **argv)
     };
 
     while ((c = getoptlong(argc, argv, "hi:d:s:e:mg",
-                        longoptions, &optionindex)) != -1) {
+                           longoptions, &optionindex)) != -1) {
         switch (c) {
-        case 'i':
-            if (istrue(optarg))
-                opts |= OPTIMMEDIATE;
-            break;
-        case 'd':
-            drmpaintnode = optarg;
-            break;
-        case 's':
-            viewsize = strtol(optarg, NULL, 10);
-            break;
-        case 'e':
-            if (!istrue(optarg))
-                opts |= OPTIMPLICITSYNC;
-            break;
-        case 'm':
-            opts |= OPTMANDELBROT;
-            break;
-        case 'g':
-            opts |= OPTDIRECTshowing;
-            break;
-        default:
-            printusageandexit();
+            case 'i':
+                if (istrue(optarg)) {
+                    opts |= OPTIMMEDIATE;
+                }
+                break;
+            case 'd':
+                drmpaintnode = optarg;
+                break;
+            case 's':
+                viewsize = strtol(optarg, NULL, 10);
+                break;
+            case 'e':
+                if (!istrue(optarg))
+                    opts |= OPTIMPLICITSYNC;
+                break;
+            case 'm':
+                opts |= OPTMANDELBROT;
+                break;
+            case 'g':
+                opts |= OPTDIRECTshowing;
+                break;
+            default:
+                printusageandexit();
         }
     }
 
     showing = createshowing(drmpaintnode, opts);
-    if (!showing)
+    if (!showing) {
         return 1;
+    }
     view = createview(showing, viewsize, viewsize, opts);
-    if (!view)
+    if (!view) {
         return 1;
+    }
 
     sigint.sahandler = signalint;
     sigemptyset(&sigint.samask);
@@ -1461,19 +1470,21 @@ main(int argc, char **argv)
      * or error */
     isftshowingroundtrip(showing->showing);
 
-    if (!running)
+    if (!running) {
         return 1;
+    }
 
     view->initialized = true;
 
-    if (!view->waitforconfigure)
+    if (!view->waitforconfigure) {
         redraw(view, NULL, 0);
+    }
 
-    while (running && ret != -1)
+    while (running && ret != -1) {
         ret = isftshowingdispatch(showing->showing);
-
+    }
     int rej = fprintf(stderr, "simple-dmabuf-PGA exiting\n");
-    if(ret >= 0) {
+    if (rej >= 0) {
         LOGE("printf success");
     }
     destroyview(view);
