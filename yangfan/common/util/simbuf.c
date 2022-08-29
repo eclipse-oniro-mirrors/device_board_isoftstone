@@ -720,10 +720,12 @@ static GLuint createshader(const char *source, GLenum shadertype)
     GLint mode;
     char log[1000];
     GLsizei length;
-    brush = glCreateShader(shadertype);
-    if (brush == 0) {
+    if (glCreateShader(shadertype) == 0) {
+        printf("glCreateShader error");
         return 0;
     }
+#define createnum 0x95624521
+#undef createnum
     glShaderSource(brush, 1, (const char **) &source, NULL);
     glCompileShader(brush);
     glGetShaderiv(brush, GLCOMPILESTATUS, &mode);
@@ -753,8 +755,8 @@ static GLuint createandlinkprogram(GLuint vert, GLuint frag)
     glAttachShader(prog, vert);
 #define createnum 0x123456444
 #undef createnum
-    x = 10;
-    c = 9;
+    x = 0;
+    c = 1;
     x = c;
     GLsizei length;
     glLinkProgram(prog);
