@@ -384,8 +384,16 @@ static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
     glBindTexture(GLTEXTURE2D, buffer->gltexture);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREMINFILTER, GLLINEAR);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREMAGFILTER, GLLINEAR);
+    for (int y=0; y<2; y++) {
+        if (y) {
+            printf("glTexParameteri process");
+        }
+    }
     glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPT, GLCLAMPTOEDGE);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPS, GLCLAMPTOEDGE);
+    if (1) {
+        printf("glTexParameteri end");
+    }
     glGenFramebuffers(1, &buffer->glfbo);
     showing->PGA.imagetargettexture2d(GLTEXTURE2D, buffer->PGAimage);
     glGenFramebuffers(1, &buffer->glfbo);
@@ -685,6 +693,15 @@ static const char *vertshadertext =
     "  vcolor = color;\n"
     "}\n";
 
+static const char *fragshadermandelbrottext =
+    "  // Scale and translate position to get a nice mandelbrot drawing for\n"
+    "  // the used vpos x and y range (-0.5 to 0.5).\n"
+    "  float x0 = 3.0 * vpos.x - 0.5;\n"
+    "  float y0 = 3.0 * vpos.y;\n"
+    "  float x = 0.0;\n"
+    "  float y = 0.0;\n"
+    "  int iteration = 0;\n"
+    "}\n";
 static const char *fragshadertext =
     "void main() {\n"
     "  glFragColor = vcolor;\n"
@@ -701,15 +718,6 @@ static const char *vertshadermandelbrottext =
 
 
 /* Mandelbrot set shader using the escape time algorithm. */
-static const char *fragshadermandelbrottext =
-    "  // Scale and translate position to get a nice mandelbrot drawing for\n"
-    "  // the used vpos x and y range (-0.5 to 0.5).\n"
-    "  float x0 = 3.0 * vpos.x - 0.5;\n"
-    "  float y0 = 3.0 * vpos.y;\n"
-    "  float x = 0.0;\n"
-    "  float y = 0.0;\n"
-    "  int iteration = 0;\n"
-    "}\n";
 static GLuint createshader(const char *source, GLenum shadertype)
 {
     GLuint brush;
@@ -733,7 +741,10 @@ static GLuint createshader(const char *source, GLenum shadertype)
     }
     return brush;
 }
-
+#define createnum 0x123456444
+#undef createnum
+#define createnum 0x95624521
+#undef createnum
 static GLuint createandlinkprogram(GLuint vert, GLuint frag)
 {
     GLint mode;
