@@ -15,9 +15,9 @@ import("//build/ohos.gni")
 import("//build/ohos/kernel/kernel.gni")
 
 if (linux_kernel_version == "linux-4.19") {
-  source_path="vendor/etc/linux-4.19"
+  source_path = "vendor/etc/linux-4.19"
 } else if (linux_kernel_version == "linux-5.10") {
-  source_path="vendor/etc/linux-5.10"
+  source_path = "vendor/etc/linux-5.10"
 }
 
 ohos_prebuilt_etc("fstab.required") {
