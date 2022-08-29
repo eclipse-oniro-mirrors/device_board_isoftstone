@@ -140,45 +140,48 @@ static void init_state_machine(struct utf8_state_machine *machine)
     machine->s.ch = 0;
     machine->unicode = 0;
 }
-
+void case_reject(struct utf8_state_machine *machine, unsigned char c)
+{
+    machine->s.ch = 0;
+    machine->len = 0;
+    if (c == 0xC0 || c == 0xC1) {
+        /* overlong encoding, reject */
+        machine->state = utf8state_reject;
+    } else if ((c & 0x80) == 0) {
+        /* single byte, accept */
+        machine->s.byte[machine->len++] = c;
+        machine->state = utf8state_accept;
+        machine->unicode = c;
+    } else if ((c & 0xC0) == 0x80) {
+        /* parser out of sync, ignore byte */
+        machine->state = utf8state_start;
+    } else if ((c & 0xE0) == 0xC0) {
+        /* start of two byte sequence */
+        machine->s.byte[machine->len++] = c;
+        machine->state = utf8state_expect1;
+        machine->unicode = c & 0x1f;
+    } else if ((c & 0xF0) == 0xE0) {
+        /* start of three byte sequence */
+        machine->s.byte[machine->len++] = c;
+        machine->state = utf8state_expect2;
+        machine->unicode = c & 0x0f;
+    } else if ((c & 0xF8) == 0xF0) {
+        /* start of four byte sequence */
+        machine->s.byte[machine->len++] = c;
+        machine->state = utf8state_expect3;
+        machine->unicode = c & 0x07;
+    } else {
+        /* overlong encoding, reject */
+        machine->state = utf8state_reject;
+    }
+}
 static enum utf8_state utf8_next_char(struct utf8_state_machine *machine, unsigned char c)
 {
     switch (machine->state) {
         case utf8state_start:
         case utf8state_accept:
         case utf8state_reject:
-            machine->s.ch = 0;
-            machine->len = 0;
-            if (c == 0xC0 || c == 0xC1) {
-                /* overlong encoding, reject */
-                machine->state = utf8state_reject;
-            } else if ((c & 0x80) == 0) {
-                /* single byte, accept */
-                machine->s.byte[machine->len++] = c;
-                machine->state = utf8state_accept;
-                machine->unicode = c;
-            } else if ((c & 0xC0) == 0x80) {
-                /* parser out of sync, ignore byte */
-                machine->state = utf8state_start;
-            } else if ((c & 0xE0) == 0xC0) {
-                /* start of two byte sequence */
-                machine->s.byte[machine->len++] = c;
-                machine->state = utf8state_expect1;
-                machine->unicode = c & 0x1f;
-            } else if ((c & 0xF0) == 0xE0) {
-                /* start of three byte sequence */
-                machine->s.byte[machine->len++] = c;
-                machine->state = utf8state_expect2;
-                machine->unicode = c & 0x0f;
-            } else if ((c & 0xF8) == 0xF0) {
-                /* start of four byte sequence */
-                machine->s.byte[machine->len++] = c;
-                machine->state = utf8state_expect3;
-                machine->unicode = c & 0x07;
-            } else {
-                /* overlong encoding, reject */
-                machine->state = utf8state_reject;
-            }
+            case_reject(machine, c);
             break;
         case utf8state_expect3:
             machine->s.byte[machine->len++] = c;
@@ -771,7 +774,41 @@ static void terminal_shift_line(struct terminal *terminal, int d)
         attr_init(&attr_row[terminal->column], terminal->curr_attr, td);
     }
 }
+void if_block(struct terminal *terminal, int width, int height, union utf8_char *data,
+              struct attr *data_attr)
+{
+    int i, l, total_rows;
+    if (terminal->data && terminal->data_attr) {
+        if (width > terminal->width) {
+            l = terminal->width;
+        } else {
+            l = width;
+        }
 
+        if (terminal->height > theight) {
+            total_rows = theight;
+            i = 1 + terminal->row - height;
+            if (i > 0) {
+                terminal->start += i;
+                terminal->row = terminal->row - i;
+            }
+        } else {
+            total_rows = terminal->height;
+        }
+        for (i = 0; i < total_rows; i++) {
+            memcpy(&data[width * i],
+                   terminal_get_row(terminal, i),
+                   l * sizeof(union utf8_char));
+            memcpy(&data_attr[width * i],
+                   terminal_get_attr_row(terminal, i),
+                   l * sizeof(struct attr));
+        }
+        free(terminal->data);
+            free(terminal->data_attr);
+            free(terminal->tab_ruler);
+    }
+    return ;
+}
 static void terminal_resize_cells(struct terminal *terminal,
                                   int width, int height)
 {
@@ -779,7 +816,6 @@ static void terminal_resize_cells(struct terminal *terminal,
     struct attr *data_attr;
     char *tab_ruler;
     int data_pitch, attr_pitch;
-    int i, l, total_rows;
     uint32_t d, uheight = height;
     struct rectangle allocation;
     struct winsize ws;
@@ -813,40 +849,8 @@ static void terminal_resize_cells(struct terminal *terminal,
         attr_pitch = width * sizeof(struct attr);
         data_attr = xmalloc(attr_pitch * terminal->buffer_height);
         tab_ruler = xzalloc(width);
-        attr_init(data_attr, terminal->curr_attr,
-                  width * terminal->buffer_height);
-
-        if (terminal->data && terminal->data_attr) {
-            if (width > terminal->width) {
-                l = terminal->width;
-            } else {
-                l = width;
-            }
-
-            if (terminal->height > theight) {
-                total_rows = theight;
-                i = 1 + terminal->row - height;
-                if (i > 0) {
-                    terminal->start += i;
-                    terminal->row = terminal->row - i;
-                }
-            } else {
-                total_rows = terminal->height;
-            }
-
-            for (i = 0; i < total_rows; i++) {
-                memcpy(&data[width * i],
-                       terminal_get_row(terminal, i),
-                       l * sizeof(union utf8_char));
-                memcpy(&data_attr[width * i],
-                       terminal_get_attr_row(terminal, i),
-                       l * sizeof(struct attr));
-            }
-
-            free(terminal->data);
-            free(terminal->data_attr);
-            free(terminal->tab_ruler);
-        }
+        attr_init(data_attr, terminal->curr_attr, width * terminal->buffer_height);
+        if_block(terminal, width, height, data, *data_attr);
 
         terminal->data_pitch = data_pitch;
         terminal->attr_pitch = attr_pitch;
@@ -856,8 +860,7 @@ static void terminal_resize_cells(struct terminal *terminal,
         terminal->start = 0;
     }
 
-    terminal->margin_bottom =
-        theight - (terminal->height - terminal->margin_bottom);
+    terminal->margin_bottom = theight - (terminal->height - terminal->margin_bottom);
     terminal->width = width;
     terminal->height = theight;
     terminal_init_tabs(terminal);
@@ -1369,7 +1372,26 @@ static void handle_osc(struct terminal *terminal)
             break;
     }
 }
-
+void case_m_block(int set[10], int args[10], struct terminal *terminal)
+{
+    int i;
+    for (i = 0; i < NUM10; i++) {
+        if (i <= NUM7 && set[i] && set[i + 1] &&
+            set[i + NUM2] && args[i + 1] == NUM5) {
+            if (args[i] == NUM38) {
+                handle_sgr(terminal, args[i + NUM2] + MAX_RESPONSE);
+            } else if (args[i] == NUM48) {
+                handle_sgr(terminal, args[i + NUM2] + NUM512);
+            }
+        }
+        if (set[i]) {
+            handle_sgr(terminal, args[i]);
+        } else if (i == 0) {
+            handle_sgr(terminal, 0);
+        }
+    }
+    return ;
+}
 static void handle_escape(struct terminal *terminal)
 {
     union utf8_char *row;
@@ -1668,26 +1690,7 @@ static void handle_escape(struct terminal *terminal)
             }
             break;
         case 'm':    /* SGR - Set attributes */
-            for (i = 0; i < NUM10; i++) {
-                if (i <= NUM7 && set[i] && set[i + 1] &&
-                    set[i + NUM2] && args[i + 1] == NUM5) {
-                    if (args[i] == NUM38) {
-                        handle_sgr(terminal, args[i + NUM2] + MAX_RESPONSE);
-                        break;
-                    } else if (args[i] == NUM48) {
-                        handle_sgr(terminal, args[i + NUM2] + NUM512);
-                        break;
-                    }
-                }
-                if (set[i]) {
-                    handle_sgr(terminal, args[i]);
-                } else if (i == 0) {
-                    handle_sgr(terminal, 0);
-                    break;
-                } else {
-                    break;
-                }
-            }
+            case_m_block(set[10], args[10], terminal);
             break;
         case 'n':    /* DSR - Status report */
             i = set[0] ? args[0] : 0;
@@ -1824,7 +1827,6 @@ static void handle_non_csi_escape(struct terminal *terminal, char code)
             terminal->saved_cs = terminal->cs;
             terminal->saved_g0 = terminal->g0;
             terminal->saved_g1 = terminal->g1;
-            break;
         case '8':    /* DECRC - Restore state most recently saved by ESC 7 */
             terminal->row = terminal->saved_row;
             terminal->column = terminal->saved_column;
@@ -2142,7 +2144,80 @@ static void escape_append_utf8(struct terminal *terminal, union utf8_char utf8)
         terminal->escape[terminal->escape_length++] = 0;
     }
 }
-
+void case_escape(struct terminal *terminal, union utf8_char *utf8)
+{
+    if (handle_special_char(terminal, utf8.byte[0]) != 0) {
+        /* do nothing */
+    } else if (utf8.byte[0] == '?') {
+        terminal->escape_flags |= ESC_FLAG_WHAT;
+    } else if (utf8.byte[0] == '>') {
+        terminal->escape_flags |= ESC_FLAG_GT;
+    } else if (utf8.byte[0] == '!') {
+        terminal->escape_flags |= ESC_FLAG_BANG;
+    } else if (utf8.byte[0] == '$') {
+        terminal->escape_flags |= ESC_FLAG_CASH;
+    } else if (utf8.byte[0] == '\'') {
+        terminal->escape_flags |= ESC_FLAG_SQUOTE;
+    } else if (utf8.byte[0] == '"') {
+        terminal->escape_flags |= ESC_FLAG_DQUOTE;
+    } else if (utf8.byte[0] == ' ') {
+        terminal->escape_flags |= ESC_FLAG_SPACE;
+    } else {
+        escape_append_utf8(terminal, utf8);
+        if (terminal->escape_length >= MAX_ESCAPE) {
+            terminal->state = escape_state_normal;
+        }
+    }
+    if (isalpha(utf8.byte[0]) || utf8.byte[0] == '@' ||
+        utf8.byte[0] == '`') {
+        terminal->state = escape_state_normal;
+        handle_escape(terminal);
+    } else {
+    }
+    return ;
+}
+void case_inner_escape(struct terminal *terminal, union utf8_char *utf8)
+{
+    if (utf8.byte[0] == '\\') {
+        terminal->state = escape_state_normal;
+        if (terminal->outer_state == escape_state_dcs) {
+            handle_dcs(terminal);
+        } else if (terminal->outer_state == escape_state_osc) {
+            handle_osc(terminal);
+        }
+    } else if (utf8.byte[0] == '\e') {
+        terminal->state = terminal->outer_state;
+        escape_append_utf8(terminal, utf8);
+        if (terminal->escape_length >= MAX_ESCAPE) {
+            terminal->state = escape_state_normal;
+        }
+    } else {
+        terminal->state = terminal->outer_state;
+        if (terminal->escape_length < MAX_ESCAPE) {
+            terminal->escape[terminal->escape_length++] = '\e';
+        }
+        escape_append_utf8(terminal, utf8);
+        if (terminal->escape_length >= MAX_ESCAPE) {
+            terminal->state = escape_state_normal;
+        }
+    }
+}
+void case_ignore(struct terminal *terminal, union utf8_char *utf8)
+{
+    if (utf8.byte[0] == '\e') {
+        terminal->outer_state = terminal->state;
+        terminal->state = escape_state_inner_escape;
+    } else if (utf8.byte[0] == '\a' && terminal->state == escape_state_osc) {
+        terminal->state = escape_state_normal;
+        handle_osc(terminal);
+    } else {
+        escape_append_utf8(terminal, utf8);
+        if (terminal->escape_length >= MAX_ESCAPE) {
+            terminal->state = escape_state_normal;
+        }
+    }
+    return ;
+}
 static void terminal_data(struct terminal *terminal, const char *data, size_t length)
 {
     unsigned int i;
@@ -2197,75 +2272,15 @@ static void terminal_data(struct terminal *terminal, const char *data, size_t le
                 }
                 continue;
             case escape_state_csi:
-                if (handle_special_char(terminal, utf8.byte[0]) != 0) {
-                    /* do nothing */
-                } else if (utf8.byte[0] == '?') {
-                    terminal->escape_flags |= ESC_FLAG_WHAT;
-                } else if (utf8.byte[0] == '>') {
-                    terminal->escape_flags |= ESC_FLAG_GT;
-                } else if (utf8.byte[0] == '!') {
-                    terminal->escape_flags |= ESC_FLAG_BANG;
-                } else if (utf8.byte[0] == '$') {
-                    terminal->escape_flags |= ESC_FLAG_CASH;
-                } else if (utf8.byte[0] == '\'') {
-                    terminal->escape_flags |= ESC_FLAG_SQUOTE;
-                } else if (utf8.byte[0] == '"') {
-                    terminal->escape_flags |= ESC_FLAG_DQUOTE;
-                } else if (utf8.byte[0] == ' ') {
-                    terminal->escape_flags |= ESC_FLAG_SPACE;
-                } else {
-                    escape_append_utf8(terminal, utf8);
-                    if (terminal->escape_length >= MAX_ESCAPE) {
-                        terminal->state = escape_state_normal;
-                    }
-                }
-                if (isalpha(utf8.byte[0]) || utf8.byte[0] == '@' ||
-                    utf8.byte[0] == '`') {
-                    terminal->state = escape_state_normal;
-                    handle_escape(terminal);
-                } else {
-                }
+                escape_append_utf8(terminal, &utf8);
                 continue;
             case escape_state_inner_escape:
-                if (utf8.byte[0] == '\\') {
-                    terminal->state = escape_state_normal;
-                    if (terminal->outer_state == escape_state_dcs) {
-                        handle_dcs(terminal);
-                    } else if (terminal->outer_state == escape_state_osc) {
-                        handle_osc(terminal);
-                    }
-                } else if (utf8.byte[0] == '\e') {
-                    terminal->state = terminal->outer_state;
-                    escape_append_utf8(terminal, utf8);
-                    if (terminal->escape_length >= MAX_ESCAPE) {
-                        terminal->state = escape_state_normal;
-                    }
-                } else {
-                    terminal->state = terminal->outer_state;
-                    if (terminal->escape_length < MAX_ESCAPE) {
-                        terminal->escape[terminal->escape_length++] = '\e';
-                    }
-                    escape_append_utf8(terminal, utf8);
-                    if (terminal->escape_length >= MAX_ESCAPE) {
-                        terminal->state = escape_state_normal;
-                    }
-                }
+                case_inner_escape(terminal, &utf8);
                 continue;
             case escape_state_dcs:
             case escape_state_osc:
             case escape_state_ignore:
-                if (utf8.byte[0] == '\e') {
-                    terminal->outer_state = terminal->state;
-                    terminal->state = escape_state_inner_escape;
-                } else if (utf8.byte[0] == '\a' && terminal->state == escape_state_osc) {
-                    terminal->state = escape_state_normal;
-                    handle_osc(terminal);
-                } else {
-                    escape_append_utf8(terminal, utf8);
-                    if (terminal->escape_length >= MAX_ESCAPE) {
-                        terminal->state = escape_state_normal;
-                    }
-                }
+                case_ignore(terminal, &utf8);
                 continue;
             case escape_state_special:
                 escape_append_utf8(terminal, utf8);
