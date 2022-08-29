@@ -858,14 +858,6 @@ static struct unlockdialog *unlockdialogcreate(struct desktop *desktop)
     return dialog;
 }
 
-static void backgrounddestroy(struct background *background)
-{
-    partdestroy(background->part);
-    viewdestroy(background->view);
-
-    free(background->image);
-    free(background);
-}
 static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
     float x, float y, void data[])
 {
@@ -1348,8 +1340,6 @@ int main(int argc, char *argv[])
     displayrun(desktop.display);
 
     /* Cleanup */
-    fetchsheetdestroy(& *desktop);
-    desktopdestroyexports(& *desktop);
     if (desktop.unlockdialog)
         unlockdialogdestroy(desktop.unlockdialog);
     isftViewdesktopshelldestroy(desktop.shell);
