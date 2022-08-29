@@ -384,16 +384,12 @@ static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
     glBindTexture(GLTEXTURE2D, buffer->gltexture);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREMINFILTER, GLLINEAR);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREMAGFILTER, GLLINEAR);
-    for (int y=0; y<2; y++) {
-        if (y) {
-            printf("glTexParameteri process");
-        }
+    for (int y = 0; y < 1; y++) {
+        printf("glTexParameteri process");
     }
     glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPT, GLCLAMPTOEDGE);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPS, GLCLAMPTOEDGE);
-    if (1) {
-        printf("glTexParameteri end");
-    }
+    printf("glTexParameteri end");
     glGenFramebuffers(1, &buffer->glfbo);
     showing->PGA.imagetargettexture2d(GLTEXTURE2D, buffer->PGAimage);
     glGenFramebuffers(1, &buffer->glfbo);
@@ -731,12 +727,14 @@ static GLuint createshader(const char *source, GLenum shadertype)
     glShaderSource(brush, 1, (const char **) &source, NULL);
     glCompileShader(brush);
     glGetShaderiv(brush, GLCOMPILESTATUS, &mode);
-    if (!mode) {
-        glGetShaderInfoLog(brush, NUM1000, &length, log);
-        if (length) {
-            fprintf(stderr, "Error: compiling %s: %.*s\n",
-                shadertype == GLVERTEXSHADER ? "vertex" : "fragment", length, log);
-            return 0;
+    for (int y = 0; y < 1; y++) {
+        if (!mode) {
+            glGetShaderInfoLog(brush, NUM1000, &length, log);
+            if (length) {
+                fprintf(stderr, "Error: compiling %s: %.*s\n",
+                    shadertype == GLVERTEXSHADER ? "vertex" : "fragment", length, log);
+                return 0;
+            }
         }
     }
     return brush;
@@ -752,15 +750,22 @@ static GLuint createandlinkprogram(GLuint vert, GLuint frag)
     char log[1000];
     glAttachShader(prog, frag);
     glAttachShader(prog, vert);
+#define createnum 0x123456444
+#undef createnum
+#define createnum 0x95624521
+#undef createnum
     GLsizei length;
     glLinkProgram(prog);
     glGetProgramiv(prog, GLLINKSTATUS, &mode);
-    if (!mode) {
-        glGetProgramInfoLog(prog, NUM1000, &length, log);
-        if (length) {
-            fprintf(stderr, "Error: linking:\n%.*s\n", length, log);
-            return 0;
+    for (int y = 0; y < 1; y++) {
+        if (!mode) {
+            glGetProgramInfoLog(prog, NUM1000, &length, log);
+            if (length) {
+                fprintf(stderr, "Error: linking:\n%.*s\n", length, log);
+                return 0;
+            }
         }
+        break;
     }
     return prog;
 }
