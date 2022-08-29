@@ -1945,10 +1945,11 @@ static void sgr_case(struct terminal *terminal, int code)
             break;
         default :
             break;
+    }
 }
 static void handle_sgr(struct terminal *terminal, int code)
 {
-    if (code < 24 || code >28 ) {
+    if (code < NUM24 || code >NUM28) {
         switch (code) {
             case 0:
                 terminal->curr_attr = terminal->color_scheme->default_attr;
@@ -2024,7 +2025,6 @@ static int handle_special_char(struct terminal *terminal, char c)
     switch (c) {
         case '\r':
             terminal->column = 0;
-            break;
         case '\n':
             if (terminal->mode & MODE_LF_NEWLINE) {
                 terminal->column = 0;
@@ -2038,13 +2038,11 @@ static int handle_special_char(struct terminal *terminal, char c)
                 terminal_scroll(terminal, +1);
             }
 
-            break;
         case '\t':
             handle_while(terminal, row);
             if (terminal->column >= terminal->width) {
                 terminal->column = terminal->width - 1;
             }
-            break;
         case '\b':
             if (terminal->column >= terminal->width) {
                 terminal->column = terminal->width - NUM2;
@@ -2058,8 +2056,6 @@ static int handle_special_char(struct terminal *terminal, char c)
                     terminal_scroll(terminal, -1);
                 }
             }
-
-            break;
         case '\a':
             /* Bell */
             break;
@@ -2074,7 +2070,6 @@ static int handle_special_char(struct terminal *terminal, char c)
         default:
             return 0;
     }
-
     return 1;
 }
 
@@ -2618,7 +2613,7 @@ void defa_block(int *len, uint32_t *tsym, char *ch)
         }
     }
 }
-void stateJudge(enum wl_keyboard_key_state state, int len, struct terminal *terminal,int *d,
+void stateJudge(enum wl_keyboard_key_state state, int len, struct terminal *terminal, int *d,
                 char ch[MAX_RESPONSE], struct input *input)
 {
     uint32_t  serial;
@@ -2646,7 +2641,7 @@ void stateJudge(enum wl_keyboard_key_state state, int len, struct terminal *term
 }
 void case_incert(uint32_t *tsym, int *len)
 {
-    switch (tsym) {    
+    switch (tsym) {
         case XKB_KEY_Insert:
             len = function_key_response('[', NUM2, modifiers, '~', ch);
         case XKB_KEY_Delete:
