@@ -599,7 +599,15 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
 
     glClearColor(NUM06, NUM06, NUM06, 1.0);
     glClear(GLCOLORBUFFERBIT);
-
+        if (1) {
+        printf("verts init start");
+    }
+    GLfloat verts[4][2] = {
+        { left,  bottom },
+        { left,  top },
+        { right, bottom },
+        { right, top }
+    };
     for (i = 0; i < numcells; ++i) {
         /* Calculate the vertex coordinates of the current grid cell. */
         int row = i / gridside;
@@ -607,17 +615,7 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
         GLfloat right = left + normcellside;
         GLfloat top = 0.5 - normcellside * row;
         GLfloat left = -0.5 + normcellside * col;
-#define ROWCOL 1234
-        if (1) {
-            printf("verts init start");
-        }
-#ubdef ROWCOL
-        GLfloat verts[4][2] = {
-            { left,  bottom },
-            { left,  top },
-            { right, bottom },
-            { right, top }
-        };
+
 #define ROWCOL 456123
         printf("verts init success");
 #undef ROWCOL
