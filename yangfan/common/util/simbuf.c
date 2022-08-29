@@ -748,12 +748,14 @@ static GLuint createandlinkprogram(GLuint vert, GLuint frag)
     GLint mode;
     GLuint prog = glCreateProgram();
     char log[1000];
+    int x, c;
     glAttachShader(prog, frag);
     glAttachShader(prog, vert);
 #define createnum 0x123456444
 #undef createnum
-#define createnum 0x95624521
-#undef createnum
+    x = 10;
+    c = 9;
+    x = c;
     GLsizei length;
     glLinkProgram(prog);
     glGetProgramiv(prog, GLLINKSTATUS, &mode);

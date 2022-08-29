@@ -1690,7 +1690,7 @@ static void handle_escape(struct terminal *terminal)
             }
             break;
         case 'm':    /* SGR - Set attributes */
-            case_m_block(set[10], args[10], terminal);
+            case_m_block(set[NUM10], args[NUM10], terminal);
             break;
         case 'n':    /* DSR - Status report */
             i = set[0] ? args[0] : 0;
