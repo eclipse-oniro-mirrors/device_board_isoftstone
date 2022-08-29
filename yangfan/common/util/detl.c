@@ -858,35 +858,6 @@ static struct unlockdialog *unlockdialogcreate(struct desktop *desktop)
     return dialog;
 }
 
-static void unlockdialogtouchdownhandler(struct part *part, struct input *input,
-    float x, float y, void data[])
-{
-    struct unlockdialog *dialog = data;
-
-    dialog->buttonfocused = 1;
-    partscheduleredraw(part);
-}
-
-static const struct isftViewdesktopshelllistener listener = {
-    desktopshellconfigure,
-    desktopshellpreparelocksheet,
-    desktopshellfetchcursor
-}
-static void unlockdialogbuttonhandler(struct part *part,
-    struct input *input, uint32t button,
-    enum isftpointerbuttonstate state, void data[])
-{
-    struct unlockdialog *dialog = data;
-    struct desktop *desktop = dialog->desktop;
-
-    if (button == BTNLEFT) {
-        if (state == isftPOINTERBUTTONSTATERELEASED &&
-            !dialog->closing) {
-            displaydefer(desktop->display, &desktop->unlocktask);
-            dialog->closing = 1;
-        }
-    }
-}
 static struct background *backgroundcreate(struct desktop *desktop, struct export *export)
 {
     struct background *background;
