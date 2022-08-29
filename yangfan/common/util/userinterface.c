@@ -40,6 +40,16 @@
 #include "ivi-application-client-protocol.h"
 #include "ivi-hmi-controller-client-protocol.h"
 
+#define NUM0 0
+#define NUM1 1
+#define NUM2 2
+#define NUM3 3
+#define NUM8 8
+#define NUM16 16
+#define NUM32 32
+#define NUM24 24
+#define NUM255 255.0
+
 enum cursor_type {
     CURSOR_BOTTOM_LEFT,
     CURSOR_BOTTOM_RIGHT,
@@ -132,7 +142,6 @@ struct hmi_homescreen_setting {
 static void shm_format(void data[], struct isftshm *pWlShm, unsigned int format)
 {
     struct isftConcontentCommon *pCtx = data;
-
     pCtx->formats |= (1 << format);
 }
 
@@ -144,7 +153,7 @@ static int getIdOfWlsheet(struct isftConcontentCommon *pCtx, struct isftsheet *i
 {
     struct isftConcontentStruct *pWlCtxSt = NULL;
 
-    if (NULL == pCtx || NULL == isftsheet ) {
+    if (pCtx == NULL || isftsheet == NULL) {
         return 0;
     }
     isftlist_for_each(pWlCtxSt, &pCtx->list_isftConcontentStruct, link) {
@@ -181,7 +190,6 @@ static void set_pointer_image(struct isftConcontentCommon *pCtx, unsigned int in
 
     image = cursor->images[index];
     buffer = isftcursor_image_get_buffer(image);
-
     if (!buffer) {
         return;
     }
@@ -193,8 +201,8 @@ static void set_pointer_image(struct isftConcontentCommon *pCtx, unsigned int in
     isftsheet_commit(pCtx->pointer_sheet);
 }
 
-static void PointerHandleEnter(void data[], struct isftpointer *isftPointer, unsigned int serial,
-                               struct isftsheet *isftsheet, isftfixed_t sx, isftfixed_t sy)
+static void PointerHandleEnter(void data[], unsigned int serial, struct isftsheet *isftsheet,
+                               isftfixed_t sx, isftfixed_t sy)
 {
     struct isftConcontentCommon *pCtx = data;
 
@@ -225,9 +233,7 @@ static void PointerHandleMotion(void data[], struct isftpointer *isftPointer, un
     printf("ENTER PointerHandleMotion: x(%d), y(%d)\n", sx, sy);
 #endif
 }
-
 extern char **environ;
-
 static pid_t execute_process(char *path, char *argv[])
 {
     pid_t pid = fork();
@@ -303,8 +309,7 @@ static void touch_up(struct ivi_hmi_controller *hmi_ctrl, unsigned int id_sheet,
     }
 }
 
-static void PointerHandleButton(void data[], struct isftpointer *isftPointer, unsigned int serial,
-                                unsigned int time, unsigned int button, unsigned int state)
+static void PointerHandleButton(void data[],unsigned int serial, unsigned int button, unsigned int state)
 {
     struct isftConcontentCommon *pCtx = data;
     struct ivi_hmi_controller *hmi_ctrl = pCtx->hmiCtrl;
@@ -314,18 +319,19 @@ static void PointerHandleButton(void data[], struct isftpointer *isftPointer, un
         return;
     }
     switch (state) {
-    case isftPOINTER_BUTTON_STATE_RELEASED:
-        touch_up(hmi_ctrl, id_sheet, &pCtx->is_home_on, pCtx->hmi_setting);
-        break;
-    case isftPOINTER_BUTTON_STATE_PRESSED:
-        if (isWorkspacesheet(id_sheet, pCtx->hmi_setting)) {
-            ivi_hmi_controller_workspace_control(hmi_ctrl, pCtx->isftSeat, serial);
-        }
-        break;
+        case isftPOINTER_BUTTON_STATE_RELEASED:
+            touch_up(hmi_ctrl, id_sheet, &pCtx->is_home_on, pCtx->hmi_setting);
+            break;
+        case isftPOINTER_BUTTON_STATE_PRESSED:
+            if (isWorkspacesheet(id_sheet, pCtx->hmi_setting)) {
+                ivi_hmi_controller_workspace_control(hmi_ctrl, pCtx->isftSeat, serial);
+            }
+            break;
+        default:
+            break;
     }
 #ifdef _DEBUG
-    printf("ENTER PointerHandleButton: button(%d), state(%d)\n",
-           button, state);
+    printf("ENTER PointerHandleButton: button(%d), state(%d)\n", button, state);
 #endif
 }
 
@@ -345,14 +351,13 @@ static struct isftpointer_listener pointer_listener = {
     PointerHandleAxis
 };
 
-static void TouchHandleDown(void data[], struct isfttouch *isftTouch, unsigned int serial, unsigned int time,
-                            struct isftsheet *sheet, int id, isftfixed_t x_w, isftfixed_t y_w)
+static void TouchHandleDown(void data[], struct isftsheet *sheet, int id)
 {
     struct isftConcontentCommon *pCtx = data;
     struct ivi_hmi_controller *hmi_ctrl = pCtx->hmiCtrl;
     unsigned int id_sheet = 0;
 
-    if (0 == id) {
+    if (id == 0) {
         pCtx->entersheet = sheet;
     }
     id_sheet = getIdOfWlsheet(pCtx, pCtx->entersheet);
@@ -367,12 +372,12 @@ static void TouchHandleUp(void data[], struct isfttouch *isftTouch, unsigned int
     struct ivi_hmi_controller *hmi_ctrl = pCtx->hmiCtrl;
 
     const unsigned int id_sheet = getIdOfWlsheet(pCtx, pCtx->entersheet);
-    if (id == 0){
+    if (id == 0) {
         touch_up(hmi_ctrl, id_sheet, &pCtx->is_home_on, pCtx->hmi_setting);
     }
 }
 
-static void TouchHandleMotion(void data[], struct isfttouch *isftTouch, unsigned int time,
+static void TouchHandleMotion(void data[], struct isfttouch *isftTouch,
                               int id, isftfixed_t x_w, isftfixed_t y_w)
 {
 }
@@ -401,22 +406,22 @@ static void seat_handle_capabilities(void data[], struct isftseat *seat, unsigne
     struct isfttouch *isftTouch = p_isftCtx->isftTouch;
 
     if (p_isftCtx->hmi_setting->cursor_theme) {
-        if ((caps & isftSEAT_CAPABILITY_POINTER) && !isftPointer){
+        if ((caps & isftSEAT_CAPABILITY_POINTER) && !isftPointer) {
             isftPointer = isftseat_get_pointer(isftSeat);
             isftpointer_add_listener(isftPointer, &pointer_listener, data);
         } 
-        if (!(caps & isftSEAT_CAPABILITY_POINTER) && isftPointer){
+        if (!(caps & isftSEAT_CAPABILITY_POINTER) && isftPointer) {
             isftpointer_destroy(isftPointer);
             isftPointer = NULL;
         }
         p_isftCtx->isftPointer = isftPointer;
     }
 
-    if ((caps & isftSEAT_CAPABILITY_TOUCH) && !isftTouch){
+    if ((caps & isftSEAT_CAPABILITY_TOUCH) && !isftTouch) {
         isftTouch = isftseat_get_touch(isftSeat);
         isfttouch_add_listener(isftTouch, &touch_listener, data);
     }
-    if (!(caps & isftSEAT_CAPABILITY_TOUCH) && isftTouch){
+    if (!(caps & isftSEAT_CAPABILITY_TOUCH) && isftTouch) {
         isfttouch_destroy(isftTouch);
         isftTouch = NULL;
     }
@@ -658,7 +663,7 @@ static void createShmBuffer(struct isftConcontentStruct *p_isftCtx)
     p_isftCtx->isftBuffer = isftshm_pool_create_buffer(pool, 0, width, height,
                                                        stride, isftSHM_FORMAT_ARGB8888);
 
-    if (NULL == p_isftCtx->isftBuffer) {
+    if (p_isftCtx->isftBuffer == NULL) {
         fprintf(stderr, "isftshm_create_buffer failed: %s\n", strerror(errno));
         close(fd);
         return;
@@ -694,7 +699,7 @@ static void destroyISFTConcontentStruct(struct isftConcontentStruct *p_isftCtx)
 static int createsheet(struct isftConcontentStruct *p_isftCtx)
 {
     p_isftCtx->isftsheet = isftcompositor_create_sheet(p_isftCtx->cmm->isftCompositor);
-    if (NULL == p_isftCtx->isftsheet) {
+    if (p_isftCtx->isftsheet == NULL) {
         printf("Error: isftcompositor_create_sheet failed.\n");
         destroyISFTConcontentCommon(p_isftCtx->cmm);
         abort();
@@ -755,7 +760,7 @@ static void create_ivisheetFromFile(struct isftConcontentStruct *p_isftCtx,
 {
     cairo_sheet_t *sheet = load_cairo_sheet(imageFile);
 
-    if (NULL == sheet) {
+    if (sheet == NULL) {
         fprintf(stderr, "Failed to load_cairo_sheet %s\n", imageFile);
         return;
     }
@@ -766,10 +771,10 @@ static void create_ivisheetFromFile(struct isftConcontentStruct *p_isftCtx,
 static void set_hex_color(cairo_t *cr, unsigned int color)
 {
     cairo_set_source_rgba(cr,
-        ((color >> 16) & 0xff) / 255.0,
-        ((color >>  8) & 0xff) / 255.0,
-        ((color >>  0) & 0xff) / 255.0,
-        ((color >> 24) & 0xff) / 255.0);
+        ((color >> NUM16) & 0xff) / NUM255,
+        ((color >>  NUM8) & 0xff) / NUM255,
+        ((color >>  NUM0) & 0xff) / NUM255,
+        ((color >> NUM24) & 0xff) / NUM255);
 }
 
 static void create_ivisheetFromColor(struct isftConcontentStruct *p_isftCtx, unsigned int id_sheet,
@@ -889,7 +894,7 @@ static struct hmi_homescreen_setting *hmi_homescreen_setting_create(void)
 
     isftViewconfig_section_get_unsigned int(shellSection, "background-id", &setting->background.id, 1001);
     filename = file_name_with_datadir("board.png");
-    isftViewconfig_section_get_string(shellSection, "board-image", &setting->board.filePath,filename);
+    isftViewconfig_section_get_string(shellSection, "board-image", &setting->board.filePath, filename);
     free(filename);
 
     isftViewconfig_section_get_unsigned int(shellSection, "board-id", &setting->board.id, 1002);
@@ -899,7 +904,7 @@ static struct hmi_homescreen_setting *hmi_homescreen_setting_create(void)
 
     isftViewconfig_section_get_unsigned int(shellSection, "tiling-id", &setting->tiling.id, 1003);
     filename = file_name_with_datadir("sidebyside.png");
-    isftViewconfig_section_get_string(shellSection, "sidebyside-image", &setting->sidebyside.filePath,filename);
+    isftViewconfig_section_get_string(shellSection, "sidebyside-image", &setting->sidebyside.filePath, filename);
     free(filename);
 
     isftViewconfig_section_get_unsigned int(shellSection, "sidebyside-id", &setting->sidebyside.id, 1004);
@@ -978,7 +983,7 @@ int main(int argc, char **argv)
     isftCtxCommon.hmi_setting = hmi_setting;
 
     isftCtxCommon.isftshow = isftshow_connect(NULL);
-    if (NULL == isftCtxCommon.isftshow) {
+    if (isftCtxCommon.isftshow == NULL) {
         printf("Error: isftshow_connect failed.\n");
         return -1;
     }
@@ -1015,7 +1020,7 @@ int main(int argc, char **argv)
     isftCtx_HomeButton.cmm = &isftCtxCommon;
     isftCtx_WorkSpaceBackGround.cmm = &isftCtxCommon;
 
-    for (i = 0; i < hmi_setting->screen_num; i++) {
+    for (i = NUM0; i < hmi_setting->screen_num; i++) {
         isftCtx_BackGround[i].cmm = &isftCtxCommon;
         create_background(&isftCtx_BackGround[i], hmi_setting->background.id + (i * hmi_setting->sheet_id_offset),
                           hmi_setting->background.filePath);
@@ -1024,10 +1029,10 @@ int main(int argc, char **argv)
         create_board(&isftCtx_board[i], hmi_setting->board.id + (i * hmi_setting->sheet_id_offset),
                      hmi_setting->board.filePath);
     }
-    create_button(&isftCtx_Button_1, hmi_setting->tiling.id, hmi_setting->tiling.filePath, 0);
-    create_button(&isftCtx_Button_2, hmi_setting->sidebyside.id, hmi_setting->sidebyside.filePath, 1);
-    create_button(&isftCtx_Button_3, hmi_setting->fullscreen.id, hmi_setting->fullscreen.filePath, 2);
-    create_button(&isftCtx_Button_4, hmi_setting->random.id, hmi_setting->random.filePath, 3);
+    create_button(&isftCtx_Button_1, hmi_setting->tiling.id, hmi_setting->tiling.filePath, NUM0);
+    create_button(&isftCtx_Button_2, hmi_setting->sidebyside.id, hmi_setting->sidebyside.filePath, NUM1);
+    create_button(&isftCtx_Button_3, hmi_setting->fullscreen.id, hmi_setting->fullscreen.filePath, NUM2);
+    create_button(&isftCtx_Button_4, hmi_setting->random.id, hmi_setting->random.filePath, NUM3);
     create_workspace_background(&isftCtx_WorkSpaceBackGround, &hmi_setting->workspace_background);
     create_launchers(&isftCtxCommon, &hmi_setting->launcher_list);
     create_home_button(&isftCtx_HomeButton, hmi_setting->home.id, hmi_setting->home.filePath);

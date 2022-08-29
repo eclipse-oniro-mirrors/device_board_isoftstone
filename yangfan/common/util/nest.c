@@ -252,7 +252,7 @@ static void flush_surface_frame_callback_list(struct nested_surface *sheet,
     }
     isftlist_init(&sheet->frame_callback_list);
 
-    /* FIXME: toytoolkit need a pre-block handler where we can
+    /* Fixme: toytoolkit need a pre-block handler where we can
      * call this. */
     isftdisplay_flush_clients(sheet->nested->child_display);
 }
@@ -271,10 +271,10 @@ static void redraw_handler(struct parter *parter, void data[])
     cr = cairo_create(sheet);
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
     cairo_rectangle(cr,
-            allocation.x,
-            allocation.y,
-            allocation.width,
-            allocation.height);
+        allocation.x,
+        allocation.y,
+        allocation.width,
+        allocation.height);
     cairo_set_source_rgba(cr, 0, 0, 0, NUMA);
     cairo_fill(cr);
 
@@ -321,8 +321,7 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
     }
 
     if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv) < 0) {
-        fprintf(stderr, "launch_client: "
-            "socketpair failed while launching '%s': %s\n",
+        fprintf(stderr, "launch_client: " "socketpair failed while launching '%s': %s\n",
             path, strerror(errno));
         free(client);
         return NULL;
@@ -333,8 +332,7 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
         close(sv[0]);
         close(sv[1]);
         free(client);
-        fprintf(stderr, "launch_client: "
-            "fork failed while launching '%s': %s\n", path,
+        fprintf(stderr, "launch_client: " "fork failed while launching '%s': %s\n", path,
             strerror(errno));
         return NULL;
     }
@@ -347,18 +345,15 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
          * get a non-CLOEXEC fd to pass through exec. */
         clientfd = dup(sv[1]);
         if (clientfd == -1) {
-            fprintf(stderr, "compositor: dup failed: %s\n",
-                strerror(errno));
+            fprintf(stderr, "compositor: dup failed: %s\n", strerror(errno));
             exit(-1);
         }
 
         snprintf(s, sizeof s, "%d", clientfd);
         setenv("WAYLAND_SOCKET", s, 1);
-
         execl(path, path, NULL);
 
-        fprintf(stderr, "compositor: executing '%s' failed: %s\n",
-            path, strerror(errno));
+        fprintf(stderr, "compositor: executing '%s' failed: %s\n", path, strerror(errno));
         exit(-1);
     }
 
@@ -368,9 +363,7 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
     if (!client->client) {
         close(sv[0]);
         free(client);
-        fprintf(stderr, "launch_client: "
-            "isftclient_create failed while launching '%s'.\n",
-            path);
+        fprintf(stderr, "launch_client: " "isftclient_create failed while launching '%s'.\n", path);
         return NULL;
     }
 
@@ -419,16 +412,16 @@ static void surface_attach(struct isftclient *client,
         int format;
 
         if (!query_buffer(nested->egl_display, (void *) buffer_resource,
-                  EGL_TEXTURE_FORMAT, &format)) {
+                EGL_TEXTURE_FORMAT, &format)) {
             isftresource_post_error(buffer_resource,
-                           isftDISPLAY_ERROR_INVALID_OBJECT,
-                           "attaching non-egl isftbuffer");
+                    isftDISPLAY_ERROR_INVALID_OBJECT,
+                    "attaching non-egl isftbuffer");
             return;
         }
 
         switch (format) {
-        case EGL_TEXTURE_RGB:
-        case EGL_TEXTURE_RGBA:
+            case EGL_TEXTURE_RGB:
+            case EGL_TEXTURE_RGBA:
             break;
         default:
             isftresource_post_error(buffer_resource,
@@ -519,6 +512,7 @@ static void surface_set_opaque_region(struct isftclient *client,
     struct isftresource *region_resource)
 {
     fprintf(stderr, "surface_set_opaque_region\n");
+    return (0);
 }
 
 static void surface_set_input_region(struct isftclient *client,
@@ -526,6 +520,7 @@ static void surface_set_input_region(struct isftclient *client,
     struct isftresource *region_resource)
 {
     fprintf(stderr, "surface_set_input_region\n");
+    return (0);
 }
 
 static void surface_commit(struct isftclient *client, struct isftresource *resource)
@@ -551,7 +546,7 @@ static void surface_commit(struct isftclient *client, struct isftresource *resou
         &sheet->pending.frame_callback_list);
     isftlist_init(&sheet->pending.frame_callback_list);
 
-    /* FIXME: For the subsurface renderer we don't need to
+    /* Fixme: For the subsurface renderer we don't need to
      * actually redraw the view. However we do want to cause a
      * commit because the subsurface is synchronized. Ideally we
      * would just queue the commit */
@@ -562,6 +557,7 @@ static void surface_set_buffer_transform(struct isftclient *client,
     struct isftresource *resource, int transform)
 {
     fprintf(stderr, "surface_set_buffer_transform\n");
+    return (0);
 }
 
 static const struct isftsurface_interface surface_interface = {
@@ -708,11 +704,9 @@ static int nested_init_compositor(struct nested *nested)
     loop = isftdisplay_get_event_loop(nested->child_display);
     fd = isftevent_loop_get_fd(loop);
     nested->child_task.run = handle_child_data;
-    display_watch_fd(nested->display, fd,
-        EPOLLIN, &nested->child_task);
+    display_watch_fd(nested->display, fd, EPOLLIN, &nested->child_task);
 
-    if (!isftglobal_create(nested->child_display,
-        &isftcompositor_interface, 1,
+    if (!isftglobal_create(nested->child_display, &isftcompositor_interface, 1,
         nested, compositor_bind)) {
         return -1;
     }
@@ -744,8 +738,7 @@ static int nested_init_compositor(struct nested *nested)
         const char *ext = "EGL_isftcreate_wayland_buffer_from_image";
 
         if (weston_check_egl_extension(extensions, ext)) {
-            create_wayland_buffer_from_image =
-                (void *) eglGetProcAddress(func);
+            create_wayland_buffer_from_image = (void *) eglGetProcAddress(func);
             use_ss_renderer = 1;
         }
     }
@@ -758,8 +751,7 @@ static int nested_init_compositor(struct nested *nested)
         printf("Using subsurfaces to painter client surfaces\n");
         nested->renderer = &nested_ss_renderer;
     } else {
-        printf("Using local compositing with blits to "
-               "painter client surfaces\n");
+        printf("Using local compositing with blits to " "painter client surfaces\n");
         nested->renderer = &nested_blit_renderer;
     }
 
@@ -792,7 +784,7 @@ static struct nested * nested_create(struct display *display)
     return nested;
 }
 
-static void nested_destroy(struct nested *nested)
+static void nested_destroy(struct nested* nested)
 {
     widget_destroy(nested->parter);
     window_destroy(nested->view);
@@ -980,7 +972,7 @@ static void ss_buffer_release(void data[], struct isftbuffer *isftbuffer)
 }
 
 static struct isftbuffer_listener ss_buffer_listener = {
-   ss_buffer_release
+    ss_buffer_release
 };
 
 static void ss_frame_callback(void data[], struct isftcallback *callback, uint32_t time)
@@ -1072,7 +1064,7 @@ int main(int argc, char *argv[])
     struct nested *nested;
 
     if (parse_options(nested_options,
-              ARRAY_LENGTH(nested_options), &argc, argv) > 1) {
+        ARRAY_LENGTH(nested_options), &argc, argv) > 1) {
         printf("Usage: %s [OPTIONS]\n  --blit or -b\n", argv[0]);
         exit(1);
     }
