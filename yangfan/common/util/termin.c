@@ -1,24 +1,16 @@
 /*
- * Copyright © 2008 Kristian Høgsberg
+ * Copyright (c) 2020-2030 iSoftStone Information Technology (Group) Co.,Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include "config.h"
@@ -1245,7 +1237,7 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
                 if (sr) {
                     terminal_resize(terminal, NUM132, NUM24);
                 } else {
-                    terminal_resize(terminal, 80, NUM24);
+                    terminal_resize(terminal, NUM80, NUM24);
                 }
                 /* set columns, but also home cursor and clear screen */
                 terminal->row = 0; terminal->column = 0;
@@ -2349,9 +2341,8 @@ static const struct wl_data_source_listener data_source_listener = {
 
 static const char text_mime_type[] = "text/plain;charset=utf-8";
 
-static void data_handler(struct window *window,
-                         struct input *input,
-                         float x, float y, const char **types, void data[])
+static void data_handler(struct input *input,
+                         const char **types)
 {
     int i, has_text = 0;
 
@@ -2687,7 +2678,7 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
                 ch[len++] = tsym;
             } else {
                 ret = xkb_keysym_to_utf8(tsym, ch + len,
-                             MAX_RESPONSE - len);
+                                         MAX_RESPONSE - len);
                 if (ret < 0) {
                     fprintf(stderr,
                         "Warning: buffer too small to encode "
@@ -2894,7 +2885,7 @@ static void show_menu(struct terminal *terminal, struct input *input, uint32_t t
 }
 
 static void click_handler(struct widget *widget, struct terminal *terminal,
-                          struct input *input, int32_t x, int32_t y,
+                          int32_t x, int32_t y,
                           uint32_t time)
 {
     if (time - terminal->click_time < NUM500) {
@@ -2912,20 +2903,27 @@ static void click_handler(struct widget *widget, struct terminal *terminal,
             widget_schedule_redraw(widget);
     }
 }
-
+uint32_t *button_tb(uint32_t time,
+                    uint32_t button,)
+{
+    uint32_t p[2];
+    p[0] = time;
+    p[1] = button;
+    return p;
+}
 static void button_handler(struct widget *widget,
-                           struct input *input, uint32_t time,
-                           uint32_t button,
+                           struct input *input, uint32_t *p,
                            enum wl_pointer_button_state state, void data[])
 {
     struct terminal *terminal = data;
     int32_t x, y;
-
-    switch (button) {
+    uint32_t *w;
+    w = p;
+    switch (w[1]) {
         case BTN_LEFT:
             if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
                 input_get_position(input, &x, &y);
-                click_handler(widget, terminal, input, x, y, time);
+                click_handler(widget, terminal, input, x, y, w[0]);
             } else {
                 terminal->dragging = SELECT_NONE;
             }
@@ -2933,7 +2931,7 @@ static void button_handler(struct widget *widget,
 
         case BTN_RIGHT:
             if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-                show_menu(terminal, input, time);
+                show_menu(terminal, input, w[0]);
             }
             break;
         default :
@@ -2948,8 +2946,8 @@ static int enter_handler(struct widget *widget,
 }
 
 static int motion_handler(struct widget *widget,
-                          struct input *input, uint32_t time,
-                          float x, float y, void data[])
+                          struct input *input,
+                          void data[])
 {
     struct terminal *terminal = data;
 
@@ -2971,7 +2969,6 @@ static int motion_handler(struct widget *widget,
 #define AXIS_UNITS_PER_LINE 256
 
 static void axis_handler(struct widget *widget,
-                         struct input *input, uint32_t time,
                          uint32_t axis,
                          wl_fixed_t value,
                          void data[])
@@ -3027,20 +3024,33 @@ static void output_handler(struct window *window, struct output *output, int ent
     window_set_buffer_scale(window, window_get_output_scale(window));
     window_schedule_redraw(window);
 }
-
+struct touchti {
+    uint32_t time;
+    int32_t id;
+    float x;
+    float y;
+};
+struct touchti timeidxy(uint32_t time, int32_t id,
+                        float x, float y)
+{
+    struct touchti touchidxy;
+    touchidxy.time = time;
+    touchidxy.id = id;
+    touchidxy.x = x;
+    touchidxy.y = y;
+    return touchidxy;
+}
 static void touch_down_handler(struct widget *widget, struct input *input,
-                               uint32_t serial, uint32_t time, int32_t id,
-                               float x, float y, void data[])
+                               struct touchti touchtdxy, void data[])
 {
     struct terminal *terminal = data;
-
+    struct touchti touchidxy = touchtdxy;
     if (id == 0) {
         click_handler(widget, terminal, input, x, y, time);
     }
 }
 
-static void touch_up_handler(struct widget *widget, struct input *input,
-                             uint32_t serial, uint32_t time, int32_t id, void data[])
+static void touch_up_handler(int32_t id, void data[])
 {
     struct terminal *terminal = data;
 
@@ -3049,8 +3059,8 @@ static void touch_up_handler(struct widget *widget, struct input *input,
     }
 }
 
-static void touch_motion_handler(struct widget *widget, struct input *input,
-                                 uint32_t time, int32_t id, float x, float y, void data[])
+static void touch_motion_handler(struct widget *widget,
+                                 int32_t id, float x, float y, void data[])
 {
     struct terminal *terminal = data;
 
@@ -3142,9 +3152,8 @@ terminal_create(struct display *display)
     /* Compute the average ascii glyph width */
     cairo_text_extents(cr, TERMINAL_DRAW_SINGLE_WIDE_CHARACTERS,
                        &text_extents);
-    terminal->average_width = howmany
-        (text_extents.width,
-         strlen(TERMINAL_DRAW_SINGLE_WIDE_CHARACTERS));
+    terminal->average_width = howmany(text_extents.width,
+                                      strlen(TERMINAL_DRAW_SINGLE_WIDE_CHARACTERS));
     terminal->average_width = ceil(terminal->average_width);
 
     cairo_destroy(cr);

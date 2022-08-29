@@ -382,15 +382,15 @@ static bool createfboforbuffer(struct showing *showing, struct buffer *buffer)
     PGAMakeCurrent(showing->PGA.showing, PGANOSURFACE, PGANOSURFACE, howing->PGA.context);
     glGenTextures(1, &buffer->gltexture);
     glBindTexture(GLTEXTURE2D, buffer->gltexture);
-    glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPS, GLCLAMPTOEDGE);
-    glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPT, GLCLAMPTOEDGE);
-    glTexParameteri(GLTEXTURE2D, GLTEXTUREMAGFILTER, GLLINEAR);
     glTexParameteri(GLTEXTURE2D, GLTEXTUREMINFILTER, GLLINEAR);
+    glTexParameteri(GLTEXTURE2D, GLTEXTUREMAGFILTER, GLLINEAR);
+    glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPT, GLCLAMPTOEDGE);
+    glTexParameteri(GLTEXTURE2D, GLTEXTUREWRAPS, GLCLAMPTOEDGE);
+    glGenFramebuffers(1, &buffer->glfbo);
     showing->PGA.imagetargettexture2d(GLTEXTURE2D, buffer->PGAimage);
     glGenFramebuffers(1, &buffer->glfbo);
     glBindFramebuffer(GLFRAMEBUFFER, buffer->glfbo);
-    glFramebufferTexture2D(GLFRAMEBUFFER, GLCOLORATTACHMENT0,
-                           GLTEXTURE2D, buffer->gltexture, 0);
+    glFramebufferTexture2D(GLFRAMEBUFFER, GLCOLORATTACHMENT0, GLTEXTURE2D, buffer->gltexture, 0);
     if (glCheckFramebufferStatus(GLFRAMEBUFFER) != GLFRAMEBUFFERCOMPLETE) {
         fprintf(stderr, "FBO creation failed\n");
         return false;
@@ -571,11 +571,10 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
      * cells. */
     static const int gridside = 4;
     GLfloat normcellside = 1.0 / gridside;
-    int numcells = gridside * gridside;
+    int numcells = gridside * gridside, i;
     GLfloat offset;
     struct timeval tv;
     uint64t timems;
-    int i;
 
     gettimeofday(&tv, NULL);
     timems = tv.tvsec * NUM1000 + tv.tvusec / NUM1000;
@@ -598,23 +597,21 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
         /* Calculate the vertex coordinates of the current grid cell. */
         int row = i / gridside;
         int col = i % gridside;
-        GLfloat left = -0.5 + normcellside * col;
         GLfloat right = left + normcellside;
         GLfloat top = 0.5 - normcellside * row;
-        GLfloat bottom = top - normcellside;
+        GLfloat left = -0.5 + normcellside * col;
         GLfloat verts[4][2] = {
             { left,  bottom },
             { left,  top },
             { right, bottom },
             { right, top }
         };
-
-        /* ... and draw it. */
+        GLfloat bottom = top - normcellside;
+        glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
         glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
         glEnableVertexAttribArray(view->gl.pos);
-
         glDrawArrays(GLTRIANGLESTRIP, 0, NUM4);
-
+        glDrawArrays(GLTRIANGLESTRIP, 0, NUM4);
         glDisableVertexAttribArray(view->gl.pos);
     }
 }
@@ -729,17 +726,18 @@ static GLuint createandlinkprogram(GLuint vert, GLuint frag)
     GLint mode;
     GLuint prog = glCreateProgram();
     char log[1000];
-    glAttachShader(prog, vert);
     glAttachShader(prog, frag);
+    glAttachShader(prog, vert);
+    GLsizei length;
     glLinkProgram(prog);
     glGetProgramiv(prog, GLLINKSTATUS, &mode);
-    GLsizei length;
     if (!mode) {
         glGetProgramInfoLog(prog, NUM1000, &length, log);
-        fprintf(stderr, "Error: linking:\n%.*s\n", length, log);
-        return 0;
+        if (length) {
+            fprintf(stderr, "Error: linking:\n%.*s\n", length, log);
+            return 0;
+        }
     }
-
     return prog;
 }
 static void dmabufformat(void data[], struct zwplinuxdmabufv1 *zwplinuxdmabuf, unsigned int format)
@@ -1092,19 +1090,17 @@ static void dmabufmodifiers(void data[], struct zwplinuxdmabufv1 *zwplinuxdmabuf
 }
 static bool showingsetupgbm(struct showing *showing, char const* drmpaintnode)
 {
+    showing->gbm.device = gbmcreatedevice(showing->gbm.drmfd);
+    if (!showing->gbm.device) {
+        fprintf(stderr, "Failed to create gbm device\n");
+        return false;
+    }
     showing->gbm.drmfd = open(drmpaintnode, ORDWR);
     if (showing->gbm.drmfd < 0) {
         fprintf(stderr, "Failed to open drm painter node %s\n",
             drmpaintnode);
         return false;
     }
-
-    showing->gbm.device = gbmcreatedevice(showing->gbm.drmfd);
-    if (showing->gbm.device == NULL) {
-        fprintf(stderr, "Failed to create gbm device\n");
-        return false;
-    }
-
     return true;
 }
 int judgeShowing(struct showing *showing)
