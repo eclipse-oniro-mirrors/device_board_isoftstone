@@ -611,12 +611,14 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
         if (1) {
             printf("verts init start");
         }
+#ubdef ROWCOL
         GLfloat verts[4][2] = {
             { left,  bottom },
             { left,  top },
             { right, bottom },
             { right, top }
         };
+#define ROWCOL 456123
         printf("verts init success");
 #undef ROWCOL
         GLfloat bottom = top - normcellside;
