@@ -535,10 +535,15 @@ static void painter(struct view *view, struct buffer *buffer)
         { 0, 0, 1 },
         { 1, 1, 0 }
     };
+    if (1) {
+        printf("colors init success");
+    }
+#define NUM1056 1056
     struct timeval tv;
     uint64t timems;
     gettimeofday(&tv, NULL);
     timems = tv.tvsec * NUM1000 + tv.tvusec / NUM1000;
+#undef NUM1056
     offset = (timems % iterationms) / (float) iterationms - NUM05;
     /* Direct all GL draws to the buffer through the FBO */
     glBindFramebuffer(GLFRAMEBUFFER, buffer->glfbo);
@@ -546,12 +551,14 @@ static void painter(struct view *view, struct buffer *buffer)
     glUniform1f(view->gl.offsetuniform, offset);
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GLCOLORBUFFERBIT);
+    printf("verts init start");
     static const GLfloat verts[4][2] = {
         { -0.5, -0.5 },
         { -0.5,  0.5 },
         {  0.5, -0.5 },
         {  0.5,  0.5 }
     };
+    printf("verts init success");
     glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
     glVertexAttribPointer(view->gl.color, NUM3, GLFLOAT, GLFALSE, 0, colors);
     glEnableVertexAttribArray(view->gl.pos);
