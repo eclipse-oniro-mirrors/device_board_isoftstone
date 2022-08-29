@@ -74,7 +74,7 @@ void RKCodecNode::encodeJpegToMemory(unsigned char* image, int width, int height
 
     jpeg_set_defaults(&cInfo);
     jpeg_set_quality(&cInfo, compressionRatio, TRUE);
-    jpeg_mem_dest(&cInfo, jpegBuf, jpegSize);
+    jpeg_mem_dest(&cInfo, jpegBuf, (unsigned long *)jpegSize);
     jpeg_start_compress(&cInfo, TRUE);
 
     if (comment) {
