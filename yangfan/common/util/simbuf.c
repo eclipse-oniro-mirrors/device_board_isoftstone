@@ -608,12 +608,16 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
         GLfloat top = 0.5 - normcellside * row;
         GLfloat left = -0.5 + normcellside * col;
 #define ROWCOL 1234
+        if (1) {
+            printf("verts init start");
+        }
         GLfloat verts[4][2] = {
             { left,  bottom },
             { left,  top },
             { right, bottom },
             { right, top }
         };
+        printf("verts init success");
 #undef ROWCOL
         GLfloat bottom = top - normcellside;
         glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
