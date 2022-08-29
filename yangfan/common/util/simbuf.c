@@ -607,12 +607,14 @@ static void paintmandelbrot(struct view *view, struct buffer *buffer)
         GLfloat right = left + normcellside;
         GLfloat top = 0.5 - normcellside * row;
         GLfloat left = -0.5 + normcellside * col;
+#define ROWCOL 1234
         GLfloat verts[4][2] = {
             { left,  bottom },
             { left,  top },
             { right, bottom },
             { right, top }
         };
+#undef ROWCOL
         GLfloat bottom = top - normcellside;
         glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
         glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
