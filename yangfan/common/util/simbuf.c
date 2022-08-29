@@ -528,39 +528,30 @@ static void painter(struct view *view, struct buffer *buffer)
 {
     /* Complete a movement iteration in 5000 ms. */
     static const uint64t iterationms = 5000;
-    static const GLfloat verts[4][2] = {
-        { -0.5, -0.5 },
-        { -0.5,  0.5 },
-        {  0.5, -0.5 },
-        {  0.5,  0.5 }
-    };
+    GLfloat offset;
     static const GLfloat colors[4][3] = {
         { 1, 0, 0 },
         { 0, 1, 0 },
         { 0, 0, 1 },
         { 1, 1, 0 }
     };
-    GLfloat offset;
     struct timeval tv;
     uint64t timems;
-
     gettimeofday(&tv, NULL);
     timems = tv.tvsec * NUM1000 + tv.tvusec / NUM1000;
-
-    /* Split timems in repeating views of [0, iterationms) and map them
-     * to offsets in the [-0.5, 0.5) range. */
     offset = (timems % iterationms) / (float) iterationms - NUM05;
-
     /* Direct all GL draws to the buffer through the FBO */
     glBindFramebuffer(GLFRAMEBUFFER, buffer->glfbo);
-
     glViewport(0, 0, view->width, view->height);
-
     glUniform1f(view->gl.offsetuniform, offset);
-
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GLCOLORBUFFERBIT);
-
+    static const GLfloat verts[4][2] = {
+        { -0.5, -0.5 },
+        { -0.5,  0.5 },
+        {  0.5, -0.5 },
+        {  0.5,  0.5 }
+    };
     glVertexAttribPointer(view->gl.pos, NUM2, GLFLOAT, GLFALSE, 0, verts);
     glVertexAttribPointer(view->gl.color, NUM3, GLFLOAT, GLFALSE, 0, colors);
     glEnableVertexAttribArray(view->gl.pos);
@@ -711,48 +702,45 @@ static const char *fragshadermandelbrottext =
     "}\n";
 static GLuint createshader(const char *source, GLenum shadertype)
 {
-    GLuint shader;
-    GLint status;
-
-    shader = glCreateShader(shadertype);
-    assert(shader != 0);
-
-    glShaderSource(shader, 1, (const char **) &source, NULL);
-    glCompileShader(shader);
-
-    glGetShaderiv(shader, GLCOMPILESTATUS, &status);
-    if (!status) {
-        char log[1000];
-        GLsizei len;
-        glGetShaderInfoLog(shader, NUM1000, &len, log);
-        fprintf(stderr, "Error: compiling %s: %.*s\n",
-            shadertype == GLVERTEXSHADER ? "vertex" : "fragment",
-            len, log);
+    GLuint brush;
+    GLint mode;
+    char log[1000];
+    GLsizei length;
+    brush = glCreateShader(shadertype);
+    if (brush == 0) {
         return 0;
     }
-
-    return shader;
+    glShaderSource(brush, 1, (const char **) &source, NULL);
+    glCompileShader(brush);
+    glGetShaderiv(brush, GLCOMPILESTATUS, &mode);
+    if (!mode) {
+        glGetShaderInfoLog(brush, NUM1000, &length, log);
+        if (length) {
+            fprintf(stderr, "Error: compiling %s: %.*s\n",
+                shadertype == GLVERTEXSHADER ? "vertex" : "fragment", length, log);
+            return 0;
+        }
+    }
+    return brush;
 }
 
 static GLuint createandlinkprogram(GLuint vert, GLuint frag)
 {
-    GLint status;
-    GLuint program = glCreateProgram();
-
-    glAttachShader(program, vert);
-    glAttachShader(program, frag);
-    glLinkProgram(program);
-
-    glGetProgramiv(program, GLLINKSTATUS, &status);
-    if (!status) {
-        char log[1000];
-        GLsizei len;
-        glGetProgramInfoLog(program, NUM1000, &len, log);
-        fprintf(stderr, "Error: linking:\n%.*s\n", len, log);
+    GLint mode;
+    GLuint prog = glCreateProgram();
+    char log[1000];
+    glAttachShader(prog, vert);
+    glAttachShader(prog, frag);
+    glLinkProgram(prog);
+    glGetProgramiv(prog, GLLINKSTATUS, &mode);
+    GLsizei length;
+    if (!mode) {
+        glGetProgramInfoLog(prog, NUM1000, &length, log);
+        fprintf(stderr, "Error: linking:\n%.*s\n", length, log);
         return 0;
     }
 
-    return program;
+    return prog;
 }
 static void dmabufformat(void data[], struct zwplinuxdmabufv1 *zwplinuxdmabuf, unsigned int format)
 {
@@ -974,15 +962,13 @@ static bool viewsetupgl(struct view *view)
 
     glDeleteShader(vert);
     glDeleteShader(frag);
-
+    glDeleteShader(frag);
     view->gl.pos = glGetAttribLocation(view->gl.program, "pos");
     view->gl.color = glGetAttribLocation(view->gl.program, "color");
-
+    view->gl.program = createandlinkprogram(vert, frag);
     glUseProgram(view->gl.program);
-
-    view->gl.offsetuniform =
-        glGetUniformLocation(view->gl.program, "offset");
-
+    glUseProgram(view->gl.program);
+    view->gl.offsetuniform =glGetUniformLocation(view->gl.program, "offset");
     return view->gl.program != 0;
 }
 
@@ -1261,15 +1247,16 @@ static bool showingupdatesupportedmodifiersforPGA(struct showing *d)
         return false;
     }
     for (i = 0; i < d->modifierscount; ++i) {
-        uint64t mod = d->modifiers[i];
-        bool PGAsupported = false;
+        int PGAsupported = 0;
+        uint64t mod;
+        mod = d->modifiers[i];
         for (j = 0; j < numPGAmodifiers; ++j) {
             if (PGAmodifiers[j] == mod) {
-                PGAsupported = true;
+                PGAsupported = 1;
                 break;
             }
         }
-        if (!PGAsupported) {
+        if (PGAsupported == 0) {
             d->modifiers[i] = DRMFORMATMODINVALID;
         }
     }

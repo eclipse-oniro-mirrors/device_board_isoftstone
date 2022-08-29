@@ -100,11 +100,25 @@ static int terminal_run(struct terminal *terminal, const char *path);
 #define NUM1037 1037
 #define NUM1039 1039
 #define NUM1049 1049
+#define NUM107 107
+#define NUM127 127
+#define NUM128 128
+#define NUM132 132
+#define NUM80 80
+#define NUM90 90
+#define NUM64 64
+#define NUM232 232
+#define NUM500 500
+#define NUM512 512
+#define NUM777 777
+#define NUM2560 256.0
+#define NUM97 97
+#define NUM768 768
 enum NumBer {
     NUM0 = 0.5, NUM1, NUM2 = 2, NUM3, NUM4, NUM5, NUM6, NUM7, NUM8, NUM9, NUM10,
     NUM11, NUM12, NUM13, NUM14, NUM15, NUM16, NUM17, NUM18, NUM19, NUM20,
     NUM21, NUM22, NUM23, NUM24, NUM25, NUM26, NUM27, NUM28, NUM29, NUM30,
-    NUM32 = 32, NUM37 = 37, NUM38, NUM39, NUM40,
+    NUM32 = 32, NUM37 = 37, NUM38, NUM39, NUM40, NUM47 = 47, NUM48, NUM49,
 };
 union utf8_char {
     unsigned char byte[4];
@@ -176,7 +190,7 @@ static enum utf8_state utf8_next_char(struct utf8_state_machine *machine, unsign
             break;
         case utf8state_expect3:
             machine->s.byte[machine->len++] = c;
-            machine->unicode = (machine->unicode << 6) | (c & 0x3f);
+            machine->unicode = (machine->unicode << NUM6) | (c & 0x3f);
             if ((c & 0xC0) == 0x80) {
                 /* all good, continue */
                 machine->state = utf8state_expect2;
@@ -187,7 +201,7 @@ static enum utf8_state utf8_next_char(struct utf8_state_machine *machine, unsign
             break;
         case utf8state_expect2:
             machine->s.byte[machine->len++] = c;
-            machine->unicode = (machine->unicode << 6) | (c & 0x3f);
+            machine->unicode = (machine->unicode << NUM6) | (c & 0x3f);
             if ((c & 0xC0) == 0x80) {
                 /* all good, continue */
                 machine->state = utf8state_expect1;
@@ -198,7 +212,7 @@ static enum utf8_state utf8_next_char(struct utf8_state_machine *machine, unsign
             break;
         case utf8state_expect1:
             machine->s.byte[machine->len++] = c;
-            machine->unicode = (machine->unicode << 6) | (c & 0x3f);
+            machine->unicode = (machine->unicode << NUM6) | (c & 0x3f);
             if ((c & 0xC0) == 0x80) {
                 /* all good, accept */
                 machine->state = utf8state_accept;
@@ -221,7 +235,7 @@ static uint32_t get_unicode(union utf8_char utf8)
     int i;
 
     init_state_machine(&machine);
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < NUM4; i++) {
         utf8_next_char(&machine, utf8.byte[i]);
         if (machine.state == utf8state_accept ||
             machine.state == utf8state_reject) {
@@ -502,7 +516,7 @@ static void terminal_init_tabs(struct terminal *terminal)
     int i = 0;
 
     while (i < terminal->width) {
-        if (i % 8 == 0) {
+        if (i % NUM8 == 0) {
             terminal->tab_ruler[i] = 1;
         } else {
             terminal->tab_ruler[i] = 0;
@@ -547,20 +561,20 @@ static void init_color_table(struct terminal *terminal)
     int c, r;
     struct terminal_color *color_table = terminal->color_table;
 
-    for (c = 0; c < 256; c ++) {
+    for (c = 0; c < MAX_RESPONSE; c ++) {
         if (c < NUM16) {
             color_table[c] = terminal->color_scheme->palette[c];
-        } else if (c < 232) {
+        } else if (c < NUM232) {
             r = c - NUM16;
-            color_table[c].b = ((double)(r % 6) / 6.0);
-            r /= 6;
-            color_table[c].g = ((double)(r % 6) / 6.0);
-            r /= 6;
-            color_table[c].r = ((double)(r % 6) / 6.0);
+            color_table[c].b = ((double)(r % NUM6) / 6.0); /* color NUM6.0 */
+            r /= NUM6;
+            color_table[c].g = ((double)(r % NUM6) / 6.0); /* color NUM6.0 */
+            r /= NUM6;
+            color_table[c].r = ((double)(r % NUM6) / 6.0); /* color NUM6.0 */
             color_table[c].a = 1.0;
         } else {
-            r = (c - 232) * 10 + 8;
-            color_table[c].r = ((double) r) / 256.0;
+            r = (c - NUM232) * NUM10 + NUM8;
+            color_table[c].r = ((double) r) / NUM2560;
             color_table[c].g = color_table[c].r;
             color_table[c].b = color_table[c].r;
             color_table[c].a = 1.0;
@@ -654,42 +668,43 @@ static void terminal_decode_attr(struct terminal *terminal, int row, int col,
 static void terminal_scroll_buffer(struct terminal *terminal, int d)
 {
     int i;
-
-    terminal->start += d;
-    if (d < 0) {
-        d = 0 - d;
-        for (i = 0; i < d; i++) {
+    int td;
+    td = d;
+    terminal->start += td;
+    if (td < 0) {
+        td = 0 - td;
+        for (i = 0; i < td; i++) {
             memset(terminal_get_row(terminal, i), 0, terminal->data_pitch);
             attr_init(terminal_get_attr_row(terminal, i),
                 terminal->curr_attr, terminal->width);
         }
     } else {
-        for (i = terminal->height - d; i < terminal->height; i++) {
+        for (i = terminal->height - td; i < terminal->height; i++) {
             memset(terminal_get_row(terminal, i), 0, terminal->data_pitch);
             attr_init(terminal_get_attr_row(terminal, i),
                 terminal->curr_attr, terminal->width);
         }
     }
 
-    terminal->selection_start_row -= d;
-    terminal->selection_end_row -= d;
+    terminal->selection_start_row -= td;
+    terminal->selection_end_row -= td;
 }
 
 static void terminal_scroll_window(struct terminal *terminal, int d)
 {
-    int i;
+    int i, td;
     int window_height;
     int from_row, to_row;
-
+    td = d;
     // scrolling range is inclusive
     window_height = terminal->margin_bottom - terminal->margin_top + 1;
-    d = d % (window_height + 1);
-    if (d < 0) {
-        d = 0 - d;
+    td = td % (window_height + 1);
+    if (td < 0) {
+        td = 0 - td;
         to_row = terminal->margin_bottom;
-        from_row = terminal->margin_bottom - d;
+        from_row = terminal->margin_bottom - td;
 
-        for (i = 0; i < (window_height - d); i++) {
+        for (i = 0; i < (window_height - td); i++) {
             memcpy(terminal_get_row(terminal, to_row - i),
                    terminal_get_row(terminal, from_row - i),
                    terminal->data_pitch);
@@ -697,16 +712,16 @@ static void terminal_scroll_window(struct terminal *terminal, int d)
                    terminal_get_attr_row(terminal, from_row - i),
                    terminal->attr_pitch);
         }
-        for (i = terminal->margin_top; i < (terminal->margin_top + d); i++) {
+        for (i = terminal->margin_top; i < (terminal->margin_top + td); i++) {
             memset(terminal_get_row(terminal, i), 0, terminal->data_pitch);
             attr_init(terminal_get_attr_row(terminal, i),
                 terminal->curr_attr, terminal->width);
         }
     } else {
         to_row = terminal->margin_top;
-        from_row = terminal->margin_top + d;
+        from_row = terminal->margin_top + td;
 
-        for (i = 0; i < (window_height - d); i++) {
+        for (i = 0; i < (window_height - td); i++) {
             memcpy(terminal_get_row(terminal, to_row + i),
                    terminal_get_row(terminal, from_row + i),
                    terminal->data_pitch);
@@ -714,7 +729,7 @@ static void terminal_scroll_window(struct terminal *terminal, int d)
                    terminal_get_attr_row(terminal, from_row + i),
                    terminal->attr_pitch);
         }
-        for (i = terminal->margin_bottom - d + 1; i <= terminal->margin_bottom; i++) {
+        for (i = terminal->margin_bottom - td + 1; i <= terminal->margin_bottom; i++) {
             memset(terminal_get_row(terminal, i), 0, terminal->data_pitch);
             attr_init(terminal_get_attr_row(terminal, i),
                 terminal->curr_attr, terminal->width);
@@ -735,33 +750,33 @@ static void terminal_shift_line(struct terminal *terminal, int d)
 {
     union utf8_char *row;
     struct attr *attr_row;
-
+    int td = d;
     row = terminal_get_row(terminal, terminal->row);
     attr_row = terminal_get_attr_row(terminal, terminal->row);
 
-    if ((terminal->width + d) <= terminal->column) {
-        d = terminal->column + 1 - terminal->width;
+    if ((terminal->width + td) <= terminal->column) {
+        td = terminal->column + 1 - terminal->width;
     }
-    if ((terminal->column + d) >= terminal->width) {
-        d = terminal->width - terminal->column - 1;
+    if ((terminal->column + td) >= terminal->width) {
+        td = terminal->width - terminal->column - 1;
     }
 
-    if (d < 0) {
-        d = 0 - d;
+    if (td < 0) {
+        td = 0 - td;
         memmove(&row[terminal->column],
-                &row[terminal->column + d],
-            (terminal->width - terminal->column - d) * sizeof(union utf8_char));
-        memmove(&attr_row[terminal->column], &attr_row[terminal->column + d],
-                (terminal->width - terminal->column - d) * sizeof(struct attr));
-        memset(&row[terminal->width - d], 0, d * sizeof(union utf8_char));
-        attr_init(&attr_row[terminal->width - d], terminal->curr_attr, d);
+                &row[terminal->column + td],
+            (terminal->width - terminal->column - td) * sizeof(union utf8_char));
+        memmove(&attr_row[terminal->column], &attr_row[terminal->column + td],
+                (terminal->width - terminal->column - td) * sizeof(struct attr));
+        memset(&row[terminal->width - td], 0, td * sizeof(union utf8_char));
+        attr_init(&attr_row[terminal->width - td], terminal->curr_attr, td);
     } else {
-        memmove(&row[terminal->column + d], &row[terminal->column],
-            (terminal->width - terminal->column - d) * sizeof(union utf8_char));
-        memmove(&attr_row[terminal->column + d], &attr_row[terminal->column],
-            (terminal->width - terminal->column - d) * sizeof(struct attr));
-        memset(&row[terminal->column], 0, d * sizeof(union utf8_char));
-        attr_init(&attr_row[terminal->column], terminal->curr_attr, d);
+        memmove(&row[terminal->column + td], &row[terminal->column],
+            (terminal->width - terminal->column - td) * sizeof(union utf8_char));
+        memmove(&attr_row[terminal->column + td], &attr_row[terminal->column],
+            (terminal->width - terminal->column - td) * sizeof(struct attr));
+        memset(&row[terminal->column], 0, td * sizeof(union utf8_char));
+        attr_init(&attr_row[terminal->column], terminal->curr_attr, td);
     }
 }
 
@@ -776,22 +791,22 @@ static void terminal_resize_cells(struct terminal *terminal,
     uint32_t d, uheight = height;
     struct rectangle allocation;
     struct winsize ws;
-
+    int theight = height;
     if (uheight > terminal->buffer_height) {
-        height = terminal->buffer_height;
+        theight = terminal->buffer_height;
     }
 
-    if (terminal->width == width && terminal->height == height) {
+    if (terminal->width == width && terminal->height == theight) {
         return;
     }
 
     if (terminal->data && width <= terminal->max_width) {
         d = 0;
-        if (height < terminal->height && height <= terminal->row) {
-            d = terminal->height - height;
-        } else if (height > terminal->height &&
+        if (theight < terminal->height && theight <= terminal->row) {
+            d = terminal->height - theight;
+        } else if (theight > terminal->height &&
              terminal->height - 1 == terminal->row) {
-            d = terminal->height - height;
+            d = terminal->height - theight;
             if (terminal->log_size < uheight) {
                 d = -terminal->start;
             }
@@ -816,8 +831,8 @@ static void terminal_resize_cells(struct terminal *terminal,
                 l = width;
             }
 
-            if (terminal->height > height) {
-                total_rows = height;
+            if (terminal->height > theight) {
+                total_rows = theight;
                 i = 1 + terminal->row - height;
                 if (i > 0) {
                     terminal->start += i;
@@ -850,9 +865,9 @@ static void terminal_resize_cells(struct terminal *terminal,
     }
 
     terminal->margin_bottom =
-        height - (terminal->height - terminal->margin_bottom);
+        theight - (terminal->height - terminal->margin_bottom);
     terminal->width = width;
-    terminal->height = height;
+    terminal->height = theight;
     terminal_init_tabs(terminal);
 
     /* Update the window size */
@@ -881,21 +896,21 @@ static void resize_handler(struct widget *widget,
                            int32_t width, int32_t height, void data[])
 {
     struct terminal *terminal = data;
-    int32_t columns, rows, m;
+    int32_t columns, rows, m, twidth = width;
 
     if (terminal->pace_pipe >= 0) {
         close(terminal->pace_pipe);
         terminal->pace_pipe = -1;
     }
     m = NUM2 * terminal->margin;
-    columns = (width - m) / (int32_t) terminal->average_width;
+    columns = (twidth - m) / (int32_t) terminal->average_width;
     rows = (height - m) / (int32_t) terminal->extents.height;
 
     if (!window_is_fullscreen(terminal->window) &&
         !window_is_maximized(terminal->window)) {
-        width = columns * terminal->average_width + m;
+        twidth = columns * terminal->average_width + m;
         height = rows * terminal->extents.height + m;
-        widget_set_size(terminal->widget, width, height);
+        widget_set_size(terminal->widget, twidth, height);
     }
 
     terminal_resize_cells(terminal, columns, rows);
@@ -981,7 +996,7 @@ static void terminal_send_selection(struct terminal *terminal, int fd)
             if (!attr.attr.s) {
                 continue;
             }
-            len = strnlen((char *) p_row[col].byte, 4);
+            len = strnlen((char *) p_row[col].byte, NUM4);
             if (len > 0) {
                 fwrite(p_row[col].byte, 1, len, fp);
             }
@@ -991,7 +1006,9 @@ static void terminal_send_selection(struct terminal *terminal, int fd)
             }
         }
     }
-    fclose(fp);
+    if (fclose(fp) != 0) {
+        printf("fclose faild");
+    }
 }
 
 struct glyph_run {
@@ -1050,9 +1067,9 @@ static void glyph_run_add(struct glyph_run *run, int x, int y, union utf8_char *
 
     cairo_move_to(run->cr, x, y);
     cairo_scaled_font_text_to_glyphs (font, x, y,
-                      (char *) c->byte, 4,
-                      &run->g, &num_glyphs,
-                      NULL, NULL, NULL);
+                                      (char *) c->byte, NUM4,
+                                      &run->g, &num_glyphs,
+                                      NULL, NULL, NULL);
     run->g += num_glyphs;
     run->count += num_glyphs;
 }
@@ -1226,9 +1243,9 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
                 break;
             case NUM3:  /* DECCOLM */
                 if (sr) {
-                    terminal_resize(terminal, 132, 24);
+                    terminal_resize(terminal, NUM132, NUM24);
                 } else {
-                    terminal_resize(terminal, 80, 24);
+                    terminal_resize(terminal, 80, NUM24);
                 }
                 /* set columns, but also home cursor and clear screen */
                 terminal->row = 0; terminal->column = 0;
@@ -1352,11 +1369,11 @@ static void handle_osc(struct terminal *terminal)
             break;
         case NUM7: /* shell cwd as uri */
             break;
-        case 777: /* Desktop notifications */
+        case NUM777: /* Desktop notifications */
             break;
         default:
             fprintf(stderr, "Unknown OSC escape code %d, text %s\n",
-                code, p);
+                    code, p);
             break;
     }
 }
@@ -1662,11 +1679,11 @@ static void handle_escape(struct terminal *terminal)
             for (i = 0; i < NUM10; i++) {
                 if (i <= NUM7 && set[i] && set[i + 1] &&
                     set[i + NUM2] && args[i + 1] == NUM5) {
-                    if (args[i] == 38) {
-                        handle_sgr(terminal, args[i + NUM2] + 256);
+                    if (args[i] == NUM38) {
+                        handle_sgr(terminal, args[i + NUM2] + MAX_RESPONSE);
                         break;
-                    } else if (args[i] == 48) {
-                        handle_sgr(terminal, args[i + NUM2] + 512);
+                    } else if (args[i] == NUM48) {
+                        handle_sgr(terminal, args[i + NUM2] + NUM512);
                         break;
                     }
                 }
@@ -1682,9 +1699,9 @@ static void handle_escape(struct terminal *terminal)
             break;
         case 'n':    /* DSR - Status report */
             i = set[0] ? args[0] : 0;
-            if (i == 0 || i == 5) {
-                terminal_write(terminal, "\e[0n", 4);
-            } else if (i == 6) {
+            if (i == 0 || i == NUM5) {
+                terminal_write(terminal, "\e[0n", NUM4);
+            } else if (i == NUM6) {
                 snprintf(response, MAX_RESPONSE, "\e[%d;%dR",
                          terminal->origin_mode ?
                          terminal->row+terminal->margin_top : terminal->row+1,
@@ -1935,7 +1952,7 @@ static void handle_sgr(struct terminal *terminal, int code)
         case NUM39:
             terminal->curr_attr.fg = terminal->color_scheme->default_attr.fg;
             break;
-        case 49:
+        case NUM49:
             terminal->curr_attr.bg = terminal->color_scheme->default_attr.bg;
             break;
         default:
@@ -1944,16 +1961,16 @@ static void handle_sgr(struct terminal *terminal, int code)
                 if (terminal->curr_attr.a & ATTRMASK_BOLD) {
                     terminal->curr_attr.fg += NUM8;
                 }
-            } else if (code >= NUM40 && code <= 47) {
+            } else if (code >= NUM40 && code <= NUM47) {
                 terminal->curr_attr.bg = code - NUM40;
-            } else if (code >= 90 && code <= 97) {
-                terminal->curr_attr.fg = code - 90 + NUM8;
-            } else if (code >= NUM100 && code <= 107) {
+            } else if (code >= NUM90 && code <= NUM97) {
+                terminal->curr_attr.fg = code - NUM90 + NUM8;
+            } else if (code >= NUM100 && code <= NUM107) {
                 terminal->curr_attr.bg = code - NUM100 + NUM8;
-            } else if (code >= 256 && code < 512) {
-                terminal->curr_attr.fg = code - 256;
-            } else if (code >= 512 && code < 768) {
-                terminal->curr_attr.bg = code - 512;
+            } else if (code >= MAX_RESPONSE && code < NUM512) {
+                terminal->curr_attr.fg = code - MAX_RESPONSE;
+            } else if (code >= NUM512 && code < NUM768) {
+                terminal->curr_attr.bg = code - NUM512;
             } else {
                 fprintf(stderr, "Unknown SGR code: %d\n", code);
             }
@@ -2057,14 +2074,14 @@ static void handle_char(struct terminal *terminal, union utf8_char utf8)
     /* There are a whole lot of non-characters, control codes,
      * and formatting codes that should probably be ignored,
      * for example: */
-    if (strncmp((char*) utf8.byte, "\xEF\xBB\xBF", 3) == 0) {
+    if (strncmp((char*) utf8.byte, "\xEF\xBB\xBF", NUM3) == 0) {
         /* BOM, ignore */
         return;
     }
 
     /* Some of these non-characters should be translated, e.g.: */
-    if (utf8.byte[0] < 32) {
-        utf8.byte[0] = utf8.byte[0] + 64;
+    if (utf8.byte[0] < NUM32) {
+        utf8.byte[0] = utf8.byte[0] + NUM64;
     }
 
     /* handle right margin effects */
@@ -2116,11 +2133,11 @@ static void escape_append_utf8(struct terminal *terminal, union utf8_char utf8)
     if ((utf8.byte[0] & 0x80) == 0x00) {
         len = 1;
     } else if ((utf8.byte[0] & 0xE0) == 0xC0) {
-        len = 2;
+        len = NUM2;
     } else if ((utf8.byte[0] & 0xF0) == 0xE0) {
-        len = 3;
+        len = NUM3;
     } else if ((utf8.byte[0] & 0xF8) == 0xF0) {
-        len = 4;
+        len = NUM4;
     } else {
         len = 1;  /* Invalid, cannot happen */
     }
@@ -2288,7 +2305,10 @@ static void terminal_data(struct terminal *terminal, const char *data, size_t le
 
 static void data_source_target(void data[], struct wl_data_source *source, const char *mime_type)
 {
-    fprintf(stderr, "data_source_target, %s\n", mime_type);
+    int ret = fprintf(stderr, "data_source_target, %s\n", mime_type);
+    if (ret < 0) {
+        printf("fprintf error");
+    }
 }
 
 static void data_source_send(void data[],
@@ -2466,7 +2486,7 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
 {
     struct terminal *terminal = data;
     char ch[MAX_RESPONSE];
-    uint32_t modifiers, serial;
+    uint32_t modifiers, serial tsym = sym;
     int ret, len = 0, d;
     bool convert_utf8 = true;
 
@@ -2474,56 +2494,56 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
     if ((modifiers & MOD_CONTROL_MASK) &&
         (modifiers & MOD_SHIFT_MASK) &&
         state == WL_KEYBOARD_KEY_STATE_PRESSED &&
-        handle_bound_key(terminal, input, sym, time)) {
+        handle_bound_key(terminal, input, tsym, time)) {
         return;
     }
 
     /* Map keypad symbols to 'normal' equivalents before processing */
-    switch (sym) {
+    switch (tsym) {
         case XKB_KEY_KP_Space:
-            sym = XKB_KEY_space;
+            tsym = XKB_KEY_space;
             break;
         case XKB_KEY_KP_Tab:
-            sym = XKB_KEY_Tab;
+            tsym = XKB_KEY_Tab;
             break;
         case XKB_KEY_KP_Enter:
-            sym = XKB_KEY_Return;
+            tsym = XKB_KEY_Return;
             break;
         case XKB_KEY_KP_Left:
-            sym = XKB_KEY_Left;
+            tsym = XKB_KEY_Left;
             break;
         case XKB_KEY_KP_Up:
-            sym = XKB_KEY_Up;
+            tsym = XKB_KEY_Up;
             break;
         case XKB_KEY_KP_Right:
-            sym = XKB_KEY_Right;
+            tsym = XKB_KEY_Right;
             break;
         case XKB_KEY_KP_Down:
-            sym = XKB_KEY_Down;
+            tsym = XKB_KEY_Down;
             break;
         case XKB_KEY_KP_Equal:
-            sym = XKB_KEY_equal;
+            tsym = XKB_KEY_equal;
             break;
         case XKB_KEY_KP_Multiply:
-            sym = XKB_KEY_asterisk;
+            tsym = XKB_KEY_asterisk;
             break;
         case XKB_KEY_KP_Add:
-            sym = XKB_KEY_plus;
+            tsym = XKB_KEY_plus;
             break;
         case XKB_KEY_KP_Separator:
             /* Note this is actually locale-dependent and should mostly be
              * a comma.  But leave it as period until we one day start
              * doing the right thing. */
-            sym = XKB_KEY_period;
+            tsym = XKB_KEY_period;
             break;
         case XKB_KEY_KP_Subtract:
-            sym = XKB_KEY_minus;
+            tsym = XKB_KEY_minus;
             break;
         case XKB_KEY_KP_Decimal:
-            sym = XKB_KEY_period;
+            tsym = XKB_KEY_period;
             break;
         case XKB_KEY_KP_Divide:
-            sym = XKB_KEY_slash;
+            tsym = XKB_KEY_slash;
             break;
         case XKB_KEY_KP_0:
         case XKB_KEY_KP_1:
@@ -2535,13 +2555,13 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
         case XKB_KEY_KP_7:
         case XKB_KEY_KP_8:
         case XKB_KEY_KP_9:
-            sym = (sym - XKB_KEY_KP_0) + XKB_KEY_0;
+            tsym = (tsym - XKB_KEY_KP_0) + XKB_KEY_0;
             break;
         default:
             break;
     }
 
-    switch (sym) {
+    switch (tsym) {
         case XKB_KEY_BackSpace:
             if (modifiers & MOD_ALT_MASK) {
                 ch[len++] = 0x1b;
@@ -2555,7 +2575,7 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
         case XKB_KEY_Scroll_Lock:
         case XKB_KEY_Sys_Req:
         case XKB_KEY_Escape:
-            ch[len++] = sym & 0x7f;
+            ch[len++] = tsym & 0x7f;
             break;
 
         case XKB_KEY_Return:
@@ -2632,41 +2652,41 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
             break;
         default:
             /* Handle special keys with alternate mappings */
-            len = apply_key_map(terminal->key_mode, sym, modifiers, ch);
+            len = apply_key_map(terminal->key_mode, tsym, modifiers, ch);
             if (len != 0) {
                 break;
             }
             if (modifiers & MOD_CONTROL_MASK) {
-                if (sym >= '3' && sym <= '7') {
-                    sym = (sym & 0x1f) + NUM8;
+                if (tsym >= '3' && tsym <= '7') {
+                    tsym = (tsym & 0x1f) + NUM8;
                 }
 
-                if (!((sym >= '!' && sym <= '/') ||
-                    (sym >= '8' && sym <= '?') ||
-                    (sym >= '0' && sym <= '2'))) {
-                    sym = sym & 0x1f;
-                } else if (sym == '2') {
-                    sym = 0x00;
-                } else if (sym == '/') {
-                    sym = 0x1F;
-                } else if (sym == '8' || sym == '?') {
-                    sym = 0x7F;
+                if (!((tsym >= '!' && tsym <= '/') ||
+                    (tsym >= '8' && tsym <= '?') ||
+                    (tsym >= '0' && tsym <= '2'))) {
+                    tsym = tsym & 0x1f;
+                } else if (tsym == '2') {
+                    tsym = 0x00;
+                } else if (tsym == '/') {
+                    tsym = 0x1F;
+                } else if (tsym == '8' || tsym == '?') {
+                    tsym = 0x7F;
                 }
             }
             if (modifiers & MOD_ALT_MASK) {
                 if (terminal->mode & MODE_ALT_SENDS_ESC) {
                     ch[len++] = 0x1b;
                 } else {
-                    sym = sym | 0x80;
+                    tsym = tsym | 0x80;
                     convert_utf8 = false;
                 }
             }
 
-            if ((sym < 128) ||
-                (!convert_utf8 && sym < 256)) {
-                ch[len++] = sym;
+            if ((tsym < NUM128) ||
+                (!convert_utf8 && tsym < MAX_RESPONSE)) {
+                ch[len++] = tsym;
             } else {
-                ret = xkb_keysym_to_utf8(sym, ch + len,
+                ret = xkb_keysym_to_utf8(tsym, ch + len,
                              MAX_RESPONSE - len);
                 if (ret < 0) {
                     fprintf(stderr,
@@ -2715,7 +2735,7 @@ static int wordsep(int ch)
 {
     const char extra[] = "-,./?%&#:_=+@~";
 
-    if (ch > 127 || ch < 0) {
+    if (ch > NUM127 || ch < 0) {
         return 1;
     }
 
@@ -2837,8 +2857,11 @@ static void menu_func(void data[], struct input *input, int index)
     struct window *window = data;
     struct terminal *terminal = window_get_user_data(window);
 
-    fprintf(stderr, "picked entry %d\n", index);
-\
+    int ret = fprintf(stderr, "picked entry %d\n", index);
+    if (ret < 0) {
+        printf("fprintf error");
+    }
+
     switch (index) {
         case 0:
             terminal_new_instance(terminal);
@@ -2874,14 +2897,14 @@ static void click_handler(struct widget *widget, struct terminal *terminal,
                           struct input *input, int32_t x, int32_t y,
                           uint32_t time)
 {
-    if (time - terminal->click_time < 500) {
+    if (time - terminal->click_time < NUM500) {
         terminal->click_count++;
     } else {
         terminal->click_count = 1;
     }
 
     terminal->click_time = time;
-    terminal->dragging = (terminal->click_count - 1) % 3 + SELECT_CHAR;
+    terminal->dragging = (terminal->click_count - 1) % NUM3 + SELECT_CHAR;
 
     terminal->selection_end_x = terminal->selection_start_x = x;
     terminal->selection_end_y = terminal->selection_start_y = y;
@@ -3043,7 +3066,11 @@ static void touch_motion_handler(struct widget *widget, struct input *input,
 }
 
 #ifndef howmany
-#define howmany(x, y) (((x) + ((y) - 1)) / (y))
+static double howmany(int x, int y)
+{
+    return (((x) + ((y) - 1)) / (y));
+}
+
 #endif
 
 static struct terminal *
@@ -3247,8 +3274,9 @@ int main(int argc, char *argv[])
 
     /* as wcwidth is locale-dependent,
        wcwidth needs setlocale call to function properly. */
-    setlocale(LC_ALL, "");
-
+    if (setlocale(LC_ALL, "") == NULL) {
+        printf("setlocale error");
+    }
     option_shell = getenv("SHELL");
     if (!option_shell) {
         option_shell = "/bin/bash";
