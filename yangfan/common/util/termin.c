@@ -811,14 +811,14 @@ void if_block(struct terminal *terminal, int width, int height, union utf8_char 
 }
 void ifJudge(uint32_t *d, struct terminal *terminal, int theight)
 {
-    d = 0;
+    *d = 0;
     if (theight < terminal->height && theight <= terminal->row) {
-        d = terminal->height - theight;
+        *d = terminal->height - theight;
     } else if (theight > terminal->height &&
          terminal->height - 1 == terminal->row) {
-        d = terminal->height - theight;
+        *d = terminal->height - theight;
         if (terminal->log_size < uheight) {
-            d = -terminal->start;
+            *d = -terminal->start;
         }
     }
     terminal->start += d;
@@ -1694,7 +1694,7 @@ static void handle_escape(struct terminal *terminal)
             }
             break;
         case 'm':    /* SGR - Set attributes */
-            case_m_block(set[10], args[10], terminal);
+            case_m_block(set[NUM10], args[NUM10], terminal);
             break;
         case 'n':    /* DSR - Status report */
             i = set[0] ? args[0] : 0;
@@ -1902,35 +1902,31 @@ static void handle_special_escape(struct terminal *terminal, char special, char 
     }
 }
 
-static void handle_sgr(struct terminal *terminal, int code)
+static void sgr_if(struct terminal *terminal, int dcode)
+{
+    int code = dcode;
+    if (code >= NUM30 && code <= NUM37) {
+        terminal->curr_attr.fg = code - NUM30;
+        if (terminal->curr_attr.a & ATTRMASK_BOLD) {
+            terminal->curr_attr.fg += NUM8;
+        }
+    } else if (code >= NUM40 && code <= NUM47) {
+        terminal->curr_attr.bg = code - NUM40;
+    } else if (code >= NUM90 && code <= NUM97) {
+        terminal->curr_attr.fg = code - NUM90 + NUM8;
+    } else if (code >= NUM100 && code <= NUM107) {
+        terminal->curr_attr.bg = code - NUM100 + NUM8;
+    } else if (code >= MAX_RESPONSE && code < NUM512) {
+        terminal->curr_attr.fg = code - MAX_RESPONSE;
+    } else if (code >= NUM512 && code < NUM768) {
+        terminal->curr_attr.bg = code - NUM512;
+    } else {
+        fprintf(stderr, "Unknown SGR code: %d\n", code);
+    }
+}
+static void sgr_case(struct terminal *terminal, int code)
 {
     switch (code) {
-        case 0:
-            terminal->curr_attr = terminal->color_scheme->default_attr;
-            break;
-        case 1:
-            terminal->curr_attr.a |= ATTRMASK_BOLD;
-            if (terminal->curr_attr.fg < NUM8) {
-                terminal->curr_attr.fg += NUM8;
-            }
-            break;
-        case NUM4:
-            terminal->curr_attr.a |= ATTRMASK_UNDERLINE;
-            break;
-        case NUM5:
-            terminal->curr_attr.a |= ATTRMASK_BLINK;
-            break;
-        case NUM8:
-            terminal->curr_attr.a |= ATTRMASK_CONCEALED;
-            break;
-        case NUM2:
-        case NUM21:
-        case NUM22:
-            terminal->curr_attr.a &= ~ATTRMASK_BOLD;
-            if (terminal->curr_attr.fg < NUM16 && terminal->curr_attr.fg >= NUM8) {
-                terminal->curr_attr.fg -= NUM8;
-            }
-            break;
         case NUM24:
             terminal->curr_attr.a &= ~ATTRMASK_UNDERLINE;
             break;
@@ -1947,35 +1943,75 @@ static void handle_sgr(struct terminal *terminal, int code)
         case NUM28:
             terminal->curr_attr.a &= ~ATTRMASK_CONCEALED;
             break;
-        case NUM39:
-            terminal->curr_attr.fg = terminal->color_scheme->default_attr.fg;
+        default :
             break;
-        case NUM49:
-            terminal->curr_attr.bg = terminal->color_scheme->default_attr.bg;
-            break;
-        default:
-            if (code >= NUM30 && code <= NUM37) {
-                terminal->curr_attr.fg = code - NUM30;
-                if (terminal->curr_attr.a & ATTRMASK_BOLD) {
+}
+static void handle_sgr(struct terminal *terminal, int code)
+{
+    if (code < 24 || code >28 ) {
+        switch (code) {
+            case 0:
+                terminal->curr_attr = terminal->color_scheme->default_attr;
+                break;
+            case 1:
+                terminal->curr_attr.a |= ATTRMASK_BOLD;
+                if (terminal->curr_attr.fg < NUM8) {
                     terminal->curr_attr.fg += NUM8;
                 }
-            } else if (code >= NUM40 && code <= NUM47) {
-                terminal->curr_attr.bg = code - NUM40;
-            } else if (code >= NUM90 && code <= NUM97) {
-                terminal->curr_attr.fg = code - NUM90 + NUM8;
-            } else if (code >= NUM100 && code <= NUM107) {
-                terminal->curr_attr.bg = code - NUM100 + NUM8;
-            } else if (code >= MAX_RESPONSE && code < NUM512) {
-                terminal->curr_attr.fg = code - MAX_RESPONSE;
-            } else if (code >= NUM512 && code < NUM768) {
-                terminal->curr_attr.bg = code - NUM512;
-            } else {
-                fprintf(stderr, "Unknown SGR code: %d\n", code);
-            }
-            break;
+                break;
+            case NUM4:
+                terminal->curr_attr.a |= ATTRMASK_UNDERLINE;
+                break;
+            case NUM5:
+                terminal->curr_attr.a |= ATTRMASK_BLINK;
+                break;
+            case NUM8:
+                terminal->curr_attr.a |= ATTRMASK_CONCEALED;
+                break;
+            case NUM2:
+            case NUM21:
+            case NUM22:
+                terminal->curr_attr.a &= ~ATTRMASK_BOLD;
+                if (terminal->curr_attr.fg < NUM16 && terminal->curr_attr.fg >= NUM8) {
+                    terminal->curr_attr.fg -= NUM8;
+                }
+                break;
+            case NUM39:
+                terminal->curr_attr.fg = terminal->color_scheme->default_attr.fg;
+                break;
+            case NUM49:
+                terminal->curr_attr.bg = terminal->color_scheme->default_attr.bg;
+                break;
+            default:
+                sgr_if(terminal, code);
+                break;
+        }
+    } else {
+        sgr_case(terminal, code);
     }
 }
 
+/* Returns 1 if c was special, otherwise 0 */
+static void handle_while(struct terminal *terminal, union utf8_char *row)
+{
+    union utf8_char *roww;
+    roww = row;
+    while (terminal->column < terminal->width) {
+        if (terminal->mode & MODE_IRM) {
+            terminal_shift_line(terminal, +1);
+        }
+
+        if (roww[terminal->column].byte[0] == '\0') {
+            roww[terminal->column].byte[0] = ' ';
+            roww[terminal->column].byte[1] = '\0';
+            attr_row[terminal->column] = terminal->curr_attr;
+        }
+        terminal->column++;
+        if (terminal->tab_ruler[terminal->column]) {
+            break;
+        }
+    }
+}
 /* Returns 1 if c was special, otherwise 0 */
 static int handle_special_char(struct terminal *terminal, char c)
 {
@@ -2004,26 +2040,10 @@ static int handle_special_char(struct terminal *terminal, char c)
 
             break;
         case '\t':
-            while (terminal->column < terminal->width) {
-                if (terminal->mode & MODE_IRM) {
-                    terminal_shift_line(terminal, +1);
-                }
-
-                if (row[terminal->column].byte[0] == '\0') {
-                    row[terminal->column].byte[0] = ' ';
-                    row[terminal->column].byte[1] = '\0';
-                    attr_row[terminal->column] = terminal->curr_attr;
-                }
-
-                terminal->column++;
-                if (terminal->tab_ruler[terminal->column]) {
-                    break;
-                }
-            }
+            handle_while(terminal, row);
             if (terminal->column >= terminal->width) {
                 terminal->column = terminal->width - 1;
             }
-
             break;
         case '\b':
             if (terminal->column >= terminal->width) {
@@ -2222,6 +2242,45 @@ void case_ignore(struct terminal *terminal, union utf8_char *utf8)
     }
     return ;
 }
+void terminal_data_switch1(union utf8_char utf8, struct terminal *terminal)
+{
+    switch (utf8.byte[0]) {
+        case 'P':  /* DCS */
+            terminal->state = escape_state_dcs;
+            break;
+        case '[':  /* CSI */
+            terminal->state = escape_state_csi;
+            break;
+        case ']':  /* OSC */
+            terminal->state = escape_state_osc;
+            break;
+        case '#':
+        case '(':
+        case ')':  /* special */
+            terminal->state = escape_state_special;
+            break;
+        case '^':  /* PM (not implemented) */
+        case '_':  /* APC (not implemented) */
+            terminal->state = escape_state_ignore;
+            break;
+        default:
+            terminal->state = escape_state_normal;
+            handle_non_csi_escape(terminal, utf8.byte[0]);
+            break;
+    }
+}
+void terminal_data_if(union utf8_char utf8, struct terminal *terminal)
+{
+    if (utf8.byte[0] == '\e') {
+        terminal->state = escape_state_escape;
+        terminal->outer_state = escape_state_normal;
+        terminal->escape[0] = '\e';
+        terminal->escape_length = 1;
+        terminal->escape_flags = 0;
+    } else {
+        handle_char(terminal, utf8);
+    } /* if */
+}
 static void terminal_data(struct terminal *terminal, const char *data, size_t length)
 {
     unsigned int i;
@@ -2250,30 +2309,7 @@ static void terminal_data(struct terminal *terminal, const char *data, size_t le
         switch (terminal->state) {
             case escape_state_escape:
                 escape_append_utf8(terminal, utf8);
-                switch (utf8.byte[0]) {
-                    case 'P':  /* DCS */
-                        terminal->state = escape_state_dcs;
-                        break;
-                    case '[':  /* CSI */
-                        terminal->state = escape_state_csi;
-                        break;
-                    case ']':  /* OSC */
-                        terminal->state = escape_state_osc;
-                        break;
-                    case '#':
-                    case '(':
-                    case ')':  /* special */
-                        terminal->state = escape_state_special;
-                        break;
-                    case '^':  /* PM (not implemented) */
-                    case '_':  /* APC (not implemented) */
-                        terminal->state = escape_state_ignore;
-                        break;
-                    default:
-                        terminal->state = escape_state_normal;
-                        handle_non_csi_escape(terminal, utf8.byte[0]);
-                        break;
-                }
+                terminal_data_switch1(utf8, terminal);
                 continue;
             case escape_state_csi:
                 escape_append_utf8(terminal, &utf8);
@@ -2300,15 +2336,7 @@ static void terminal_data(struct terminal *terminal, const char *data, size_t le
 
         /* this is valid, because ASCII characters are never used to
          * introduce a multibyte sequence in UTF-8 */
-        if (utf8.byte[0] == '\e') {
-            terminal->state = escape_state_escape;
-            terminal->outer_state = escape_state_normal;
-            terminal->escape[0] = '\e';
-            terminal->escape_length = 1;
-            terminal->escape_flags = 0;
-        } else {
-            handle_char(terminal, utf8);
-        } /* if */
+        terminal_data_if(utf8, terminal);
     } /* for */
 
     window_schedule_redraw(terminal->window);
@@ -2489,72 +2517,42 @@ static int handle_bound_key(struct terminal *terminal,
             return 0;
     }
 }
-
-static void key_handler(struct window *window, struct input *input, uint32_t time,
-                        uint32_t key, uint32_t sym, enum wl_keyboard_key_state state,
-                        void data[])
+void tsSwitch(uint32_t *tsym)
 {
-    struct terminal *terminal = data;
-    char ch[MAX_RESPONSE];
-    uint32_t modifiers, serial tsym = sym;
-    int ret, len = 0, d;
-    bool convert_utf8 = true;
-
-    modifiers = input_get_modifiers(input);
-    if ((modifiers & MOD_CONTROL_MASK) &&
-        (modifiers & MOD_SHIFT_MASK) &&
-        state == WL_KEYBOARD_KEY_STATE_PRESSED &&
-        handle_bound_key(terminal, input, tsym, time)) {
-        return;
-    }
-
-    /* Map keypad symbols to 'normal' equivalents before processing */
     switch (tsym) {
         case XKB_KEY_KP_Space:
-            tsym = XKB_KEY_space;
+            *tsym = XKB_KEY_space;
             break;
         case XKB_KEY_KP_Tab:
-            tsym = XKB_KEY_Tab;
+            *tsym = XKB_KEY_Tab;
             break;
         case XKB_KEY_KP_Enter:
-            tsym = XKB_KEY_Return;
+            *tsym = XKB_KEY_Return;
             break;
         case XKB_KEY_KP_Left:
-            tsym = XKB_KEY_Left;
+            *tsym = XKB_KEY_Left;
             break;
         case XKB_KEY_KP_Up:
-            tsym = XKB_KEY_Up;
+            *tsym = XKB_KEY_Up;
             break;
         case XKB_KEY_KP_Right:
-            tsym = XKB_KEY_Right;
-            break;
+            *tsym = XKB_KEY_Right;
         case XKB_KEY_KP_Down:
-            tsym = XKB_KEY_Down;
-            break;
+            *tsym = XKB_KEY_Down;
         case XKB_KEY_KP_Equal:
-            tsym = XKB_KEY_equal;
-            break;
+            *tsym = XKB_KEY_equal;
         case XKB_KEY_KP_Multiply:
-            tsym = XKB_KEY_asterisk;
-            break;
+            *tsym = XKB_KEY_asterisk;
         case XKB_KEY_KP_Add:
-            tsym = XKB_KEY_plus;
-            break;
+            *tsym = XKB_KEY_plus;
         case XKB_KEY_KP_Separator:
-            /* Note this is actually locale-dependent and should mostly be
-             * a comma.  But leave it as period until we one day start
-             * doing the right thing. */
-            tsym = XKB_KEY_period;
-            break;
+            *tsym = XKB_KEY_period;
         case XKB_KEY_KP_Subtract:
-            tsym = XKB_KEY_minus;
-            break;
+            *tsym = XKB_KEY_minus;
         case XKB_KEY_KP_Decimal:
-            tsym = XKB_KEY_period;
-            break;
+            *tsym = XKB_KEY_period;
         case XKB_KEY_KP_Divide:
-            tsym = XKB_KEY_slash;
-            break;
+            *tsym = XKB_KEY_slash;
         case XKB_KEY_KP_0:
         case XKB_KEY_KP_1:
         case XKB_KEY_KP_2:
@@ -2565,151 +2563,65 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
         case XKB_KEY_KP_7:
         case XKB_KEY_KP_8:
         case XKB_KEY_KP_9:
-            tsym = (tsym - XKB_KEY_KP_0) + XKB_KEY_0;
+            *tsym = (tsym - XKB_KEY_KP_0) + XKB_KEY_0;
             break;
         default:
             break;
     }
+    return ;
+}
+void defa_block(int *len, uint32_t *tsym, char *ch)
+{
+    bool convert_utf8 = true;
+    int ret;
+    *len = apply_key_map(terminal->key_mode, tsym, modifiers, ch);
+    if (len != 0) {
+        return ;
+    }
+    if (modifiers & MOD_CONTROL_MASK) {
+        if (tsym >= '3' && tsym <= '7') {
+            *tsym = (tsym & 0x1f) + NUM8;
+        }
 
-    switch (tsym) {
-        case XKB_KEY_BackSpace:
-            if (modifiers & MOD_ALT_MASK) {
-                ch[len++] = 0x1b;
-            }
-            ch[len++] = 0x7f;
-            break;
-        case XKB_KEY_Tab:
-        case XKB_KEY_Linefeed:
-        case XKB_KEY_Clear:
-        case XKB_KEY_Pause:
-        case XKB_KEY_Scroll_Lock:
-        case XKB_KEY_Sys_Req:
-        case XKB_KEY_Escape:
-            ch[len++] = tsym & 0x7f;
-            break;
-
-        case XKB_KEY_Return:
-            if (terminal->mode & MODE_LF_NEWLINE) {
-                ch[len++] = 0x0D;
-                ch[len++] = 0x0A;
-            } else {
-                ch[len++] = 0x0D;
-            }
-            break;
-
-        case XKB_KEY_Shift_L:
-        case XKB_KEY_Shift_R:
-        case XKB_KEY_Control_L:
-        case XKB_KEY_Control_R:
-        case XKB_KEY_Alt_L:
-        case XKB_KEY_Alt_R:
-        case XKB_KEY_Meta_L:
-        case XKB_KEY_Meta_R:
-        case XKB_KEY_Super_L:
-        case XKB_KEY_Super_R:
-        case XKB_KEY_Hyper_L:
-        case XKB_KEY_Hyper_R:
-            break;
-
-        case XKB_KEY_Insert:
-            len = function_key_response('[', NUM2, modifiers, '~', ch);
-            break;
-        case XKB_KEY_Delete:
-            if (terminal->mode & MODE_DELETE_SENDS_DEL) {
-                ch[len++] = '\x04';
-            } else {
-                len = function_key_response('[', NUM3, modifiers, '~', ch);
-            }
-            break;
-        case XKB_KEY_Page_Up:
-            len = function_key_response('[', NUM5, modifiers, '~', ch);
-            break;
-        case XKB_KEY_Page_Down:
-            len = function_key_response('[', NUM6, modifiers, '~', ch);
-            break;
-        case XKB_KEY_F1:
-            len = function_key_response('O', 1, modifiers, 'P', ch);
-            break;
-        case XKB_KEY_F2:
-            len = function_key_response('O', 1, modifiers, 'Q', ch);
-            break;
-        case XKB_KEY_F3:
-            len = function_key_response('O', 1, modifiers, 'R', ch);
-            break;
-        case XKB_KEY_F4:
-            len = function_key_response('O', 1, modifiers, 'S', ch);
-            break;
-        case XKB_KEY_F5:
-            len = function_key_response('[', NUM15, modifiers, '~', ch);
-            break;
-        case XKB_KEY_F6:
-            len = function_key_response('[', NUM17, modifiers, '~', ch);
-            break;
-        case XKB_KEY_F7:
-            len = function_key_response('[', NUM18, modifiers, '~', ch);
-            break;
-        case XKB_KEY_F8:
-            len = function_key_response('[', NUM19, modifiers, '~', ch);
-            break;
-        case XKB_KEY_F9:
-            len = function_key_response('[', NUM20, modifiers, '~', ch);
-            break;
-        case XKB_KEY_F10:
-            len = function_key_response('[', NUM21, modifiers, '~', ch);
-            break;
-        case XKB_KEY_F12:
-            len = function_key_response('[', NUM24, modifiers, '~', ch);
-            break;
-        default:
-            /* Handle special keys with alternate mappings */
-            len = apply_key_map(terminal->key_mode, tsym, modifiers, ch);
-            if (len != 0) {
-                break;
-            }
-            if (modifiers & MOD_CONTROL_MASK) {
-                if (tsym >= '3' && tsym <= '7') {
-                    tsym = (tsym & 0x1f) + NUM8;
-                }
-
-                if (!((tsym >= '!' && tsym <= '/') ||
-                    (tsym >= '8' && tsym <= '?') ||
-                    (tsym >= '0' && tsym <= '2'))) {
-                    tsym = tsym & 0x1f;
-                } else if (tsym == '2') {
-                    tsym = 0x00;
-                } else if (tsym == '/') {
-                    tsym = 0x1F;
-                } else if (tsym == '8' || tsym == '?') {
-                    tsym = 0x7F;
-                }
-            }
-            if (modifiers & MOD_ALT_MASK) {
-                if (terminal->mode & MODE_ALT_SENDS_ESC) {
-                    ch[len++] = 0x1b;
-                } else {
-                    tsym = tsym | 0x80;
-                    convert_utf8 = false;
-                }
-            }
-
-            if ((tsym < NUM128) ||
-                (!convert_utf8 && tsym < MAX_RESPONSE)) {
-                ch[len++] = tsym;
-            } else {
-                ret = xkb_keysym_to_utf8(tsym, ch + len,
-                                         MAX_RESPONSE - len);
-                if (ret < 0) {
-                    fprintf(stderr,
-                        "Warning: buffer too small to encode "
-                        "UTF8 character\n");
-                } else {
-                    len += ret;
-                }
-            }
-
-            break;
+        if (!((tsym >= '!' && tsym <= '/') ||
+            (tsym >= '8' && tsym <= '?') ||
+            (tsym >= '0' && tsym <= '2'))) {
+            *tsym = tsym & 0x1f;
+        } else if (tsym == '2') {
+            *tsym = 0x00;
+        } else if (tsym == '/') {
+            *tsym = 0x1F;
+        } else if (tsym == '8' || tsym == '?') {
+            *tsym = 0x7F;
+        }
+    }
+    if (modifiers & MOD_ALT_MASK) {
+        if (terminal->mode & MODE_ALT_SENDS_ESC) {
+            ch[len++] = 0x1b;
+        } else {
+            *tsym = tsym | 0x80;
+            convert_utf8 = false;
+        }
     }
 
+    if ((tsym < NUM128) ||
+        (!convert_utf8 && tsym < MAX_RESPONSE)) {
+        ch[len++] = tsym;
+    } else {
+        ret = xkb_keysym_to_utf8(tsym, ch + len,
+                                 MAX_RESPONSE - len);
+        if (ret < 0) {
+            fprintf(stderr, "Warning: buffer too small to encode "
+                    "UTF8 character\n");
+        } else {
+            *len += ret;
+        }
+    }
+}
+void stateJudge(enum wl_keyboard_key_state state, int len, struct terminal *terminal,int *d,
+                char ch[MAX_RESPONSE], struct input *input)
+{
+    uint32_t  serial;
     if (state == WL_KEYBOARD_KEY_STATE_PRESSED && len > 0) {
         if (terminal->scrolling) {
             d = terminal->saved_start - terminal->start;
@@ -2731,6 +2643,103 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
             terminal->hide_cursor_serial = serial;
         }
     }
+}
+void case_incert(uint32_t *tsym, int *len)
+{
+    switch (tsym) {    
+        case XKB_KEY_Insert:
+            len = function_key_response('[', NUM2, modifiers, '~', ch);
+        case XKB_KEY_Delete:
+            if (terminal->mode & MODE_DELETE_SENDS_DEL) {
+                ch[len++] = '\x04';
+            } else {
+                len = function_key_response('[', NUM3, modifiers, '~', ch);
+            }
+        case XKB_KEY_Page_Up:
+            *len = function_key_response('[', NUM5, modifiers, '~', ch);
+        case XKB_KEY_Page_Down:
+            *len = function_key_response('[', NUM6, modifiers, '~', ch);
+        case XKB_KEY_F1:
+            *len = function_key_response('O', 1, modifiers, 'P', ch);
+        case XKB_KEY_F2:
+            *len = function_key_response('O', 1, modifiers, 'Q', ch);
+        case XKB_KEY_F3:
+            *len = function_key_response('O', 1, modifiers, 'R', ch);
+        case XKB_KEY_F4:
+            *len = function_key_response('O', 1, modifiers, 'S', ch);
+        case XKB_KEY_F5:
+            *len = function_key_response('[', NUM15, modifiers, '~', ch);
+        case XKB_KEY_F6:
+            *len = function_key_response('[', NUM17, modifiers, '~', ch);
+        case XKB_KEY_F7:
+            *len = function_key_response('[', NUM18, modifiers, '~', ch);
+        case XKB_KEY_F8:
+            *len = function_key_response('[', NUM19, modifiers, '~', ch);
+        case XKB_KEY_F9:
+            *len = function_key_response('[', NUM20, modifiers, '~', ch);
+        case XKB_KEY_F10:
+            *len = function_key_response('[', NUM21, modifiers, '~', ch);
+        case XKB_KEY_F12:
+            *len = function_key_response('[', NUM24, modifiers, '~', ch);
+        default:
+            defa_block(&len, &tsym, &ch);
+            break;
+    }
+}
+static void key_handler(struct window *window, struct input *input, uint32_t time,
+                        uint32_t key, uint32_t sym, enum wl_keyboard_key_state state,
+                        void data[])
+{
+    struct terminal *terminal = data;
+    char ch[MAX_RESPONSE];
+    uint32_t modifiers, serial tsym = sym;
+    int ret, len = 0, d;
+    modifiers = input_get_modifiers(input);
+    if ((modifiers & MOD_CONTROL_MASK) && (modifiers & MOD_SHIFT_MASK) &&
+        state == WL_KEYBOARD_KEY_STATE_PRESSED && handle_bound_key(terminal, input, tsym, time)) {
+        return;
+    }
+    /* Map keypad symbols to 'normal' equivalents before processing */
+    tsSwitch(&tsym);
+    switch (tsym) {
+        case XKB_KEY_BackSpace:
+            if (modifiers & MOD_ALT_MASK) {
+                ch[len++] = 0x1b;
+            }
+            ch[len++] = 0x7f;
+        case XKB_KEY_Tab:
+        case XKB_KEY_Linefeed:
+        case XKB_KEY_Clear:
+        case XKB_KEY_Pause:
+        case XKB_KEY_Scroll_Lock:
+        case XKB_KEY_Sys_Req:
+        case XKB_KEY_Escape:
+            ch[len++] = tsym & 0x7f;
+        case XKB_KEY_Return:
+            if (terminal->mode & MODE_LF_NEWLINE) {
+                ch[len++] = 0x0D;
+                ch[len++] = 0x0A;
+            } else {
+                ch[len++] = 0x0D;
+            }
+        case XKB_KEY_Shift_L:
+        case XKB_KEY_Shift_R:
+        case XKB_KEY_Control_L:
+        case XKB_KEY_Control_R:
+        case XKB_KEY_Alt_L:
+        case XKB_KEY_Alt_R:
+        case XKB_KEY_Meta_L:
+        case XKB_KEY_Meta_R:
+        case XKB_KEY_Super_L:
+        case XKB_KEY_Super_R:
+        case XKB_KEY_Hyper_L:
+        case XKB_KEY_Hyper_R:
+            break;
+        default:
+            break;
+    }
+    case_incert(&tsym, &len)
+    stateJudge(state, len, terminal, &d, ch[MAX_RESPONSE], input);
 }
 
 static void keyboard_focus_handler(struct window *window,
