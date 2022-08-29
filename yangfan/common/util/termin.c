@@ -3106,8 +3106,8 @@ terminal_create(struct display *display)
     init_color_table(terminal);
 
     terminal->display = display;
-    terminal->margin = 5;
-    terminal->buffer_height = 1024;
+    terminal->margin = NUM5;
+    terminal->buffer_height = 1024;  /* height NUM 1024 */
     terminal->end = 1;
 
     window_set_user_data(terminal->window, terminal);
@@ -3159,8 +3159,8 @@ terminal_create(struct display *display)
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
 
-    terminal_resize(terminal, 20, 5); /* Set minimum size first */
-    terminal_resize(terminal, 80, 25);
+    terminal_resize(terminal, NUM20, NUM5); /* Set minimum size first */
+    terminal_resize(terminal, NUM80, NUM25);
 
     wl_list_insert(terminal_list.prev, &terminal->link);
 
@@ -3258,7 +3258,7 @@ static int terminal_run(struct terminal *terminal, const char *path)
     } else if (option_maximize) {
         window_set_maximized(terminal->window, 1);
     } else {
-        terminal_resize(terminal, 80, 24);
+        terminal_resize(terminal, NUM80, NUM24);
     }
 
     return 0;
