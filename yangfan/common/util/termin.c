@@ -809,6 +809,22 @@ void if_block(struct terminal *terminal, int width, int height, union utf8_char 
     }
     return ;
 }
+void ifJudge(uint32_t *d, struct terminal *terminal, int theight)
+{
+    d = 0;
+    if (theight < terminal->height && theight <= terminal->row) {
+        d = terminal->height - theight;
+    } else if (theight > terminal->height &&
+         terminal->height - 1 == terminal->row) {
+        d = terminal->height - theight;
+        if (terminal->log_size < uheight) {
+            d = -terminal->start;
+        }
+    }
+    terminal->start += d;
+    terminal->row -= d;
+    return ;
+}
 static void terminal_resize_cells(struct terminal *terminal,
                                   int width, int height)
 {
@@ -829,19 +845,7 @@ static void terminal_resize_cells(struct terminal *terminal,
     }
 
     if (terminal->data && width <= terminal->max_width) {
-        d = 0;
-        if (theight < terminal->height && theight <= terminal->row) {
-            d = terminal->height - theight;
-        } else if (theight > terminal->height &&
-             terminal->height - 1 == terminal->row) {
-            d = terminal->height - theight;
-            if (terminal->log_size < uheight) {
-                d = -terminal->start;
-            }
-        }
-
-        terminal->start += d;
-        terminal->row -= d;
+        ifJudge(&d, terminal, theight);
     } else {
         terminal->max_width = width;
         data_pitch = width * sizeof(union utf8_char);
@@ -1690,7 +1694,7 @@ static void handle_escape(struct terminal *terminal)
             }
             break;
         case 'm':    /* SGR - Set attributes */
-            case_m_block(set[NUM10], args[NUM10], terminal);
+            case_m_block(set[10], args[10], terminal);
             break;
         case 'n':    /* DSR - Status report */
             i = set[0] ? args[0] : 0;
@@ -3097,7 +3101,31 @@ static double howmany(int x, int y)
 }
 
 #endif
+void progressTer(struct terminal *terminal)
+{
+    window_set_user_data(terminal->window, terminal);
+    window_set_key_handler(terminal->window, key_handler);
+    window_set_keyboard_focus_handler(terminal->window,
+                                      keyboard_focus_handler);
+    window_set_fullscreen_handler(terminal->window, fullscreen_handler);
+    window_set_output_handler(terminal->window, output_handler);
+    window_set_close_handler(terminal->window, close_handler);
+    window_set_state_changed_handler(terminal->window, state_changed_handler);
 
+    window_set_data_handler(terminal->window, data_handler);
+    window_set_drop_handler(terminal->window, drop_handler);
+
+    widget_set_redraw_handler(terminal->widget, redraw_handler);
+    widget_set_resize_handler(terminal->widget, resize_handler);
+    widget_set_button_handler(terminal->widget, button_handler);
+    widget_set_enter_handler(terminal->widget, enter_handler);
+    widget_set_motion_handler(terminal->widget, motion_handler);
+    widget_set_axis_handler(terminal->widget, axis_handler);
+    widget_set_touch_up_handler(terminal->widget, touch_up_handler);
+    widget_set_touch_down_handler(terminal->widget, touch_down_handler);
+    widget_set_touch_motion_handler(terminal->widget, touch_motion_handler);
+    return ;
+}
 static struct terminal *
 terminal_create(struct display *display)
 {
@@ -3124,40 +3152,17 @@ terminal_create(struct display *display)
     terminal->margin = NUM5;
     terminal->buffer_height = 1024;  /* height NUM 1024 */
     terminal->end = 1;
-
-    window_set_user_data(terminal->window, terminal);
-    window_set_key_handler(terminal->window, key_handler);
-    window_set_keyboard_focus_handler(terminal->window,
-                                      keyboard_focus_handler);
-    window_set_fullscreen_handler(terminal->window, fullscreen_handler);
-    window_set_output_handler(terminal->window, output_handler);
-    window_set_close_handler(terminal->window, close_handler);
-    window_set_state_changed_handler(terminal->window, state_changed_handler);
-
-    window_set_data_handler(terminal->window, data_handler);
-    window_set_drop_handler(terminal->window, drop_handler);
-
-    widget_set_redraw_handler(terminal->widget, redraw_handler);
-    widget_set_resize_handler(terminal->widget, resize_handler);
-    widget_set_button_handler(terminal->widget, button_handler);
-    widget_set_enter_handler(terminal->widget, enter_handler);
-    widget_set_motion_handler(terminal->widget, motion_handler);
-    widget_set_axis_handler(terminal->widget, axis_handler);
-    widget_set_touch_up_handler(terminal->widget, touch_up_handler);
-    widget_set_touch_down_handler(terminal->widget, touch_down_handler);
-    widget_set_touch_motion_handler(terminal->widget, touch_motion_handler);
+    progressTer(terminal);
 
     surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
     cr = cairo_create(surface);
     cairo_set_font_size(cr, option_font_size);
-    cairo_select_font_face (cr, option_font,
-                            CAIRO_FONT_SLANT_NORMAL,
+    cairo_select_font_face (cr, option_font, CAIRO_FONT_SLANT_NORMAL,
                             CAIRO_FONT_WEIGHT_BOLD);
     terminal->font_bold = cairo_get_scaled_font (cr);
     cairo_scaled_font_reference(terminal->font_bold);
 
-    cairo_select_font_face (cr, option_font,
-                            CAIRO_FONT_SLANT_NORMAL,
+    cairo_select_font_face (cr, option_font, CAIRO_FONT_SLANT_NORMAL,
                             CAIRO_FONT_WEIGHT_NORMAL);
     terminal->font_normal = cairo_get_scaled_font (cr);
     cairo_scaled_font_reference(terminal->font_normal);
@@ -3165,8 +3170,7 @@ terminal_create(struct display *display)
     cairo_font_extents(cr, &terminal->extents);
 
     /* Compute the average ascii glyph width */
-    cairo_text_extents(cr, TERMINAL_DRAW_SINGLE_WIDE_CHARACTERS,
-                       &text_extents);
+    cairo_text_extents(cr, TERMINAL_DRAW_SINGLE_WIDE_CHARACTERS, &text_extents);
     terminal->average_width = howmany(text_extents.width,
                                       strlen(TERMINAL_DRAW_SINGLE_WIDE_CHARACTERS));
     terminal->average_width = ceil(terminal->average_width);
@@ -3178,7 +3182,6 @@ terminal_create(struct display *display)
     terminal_resize(terminal, NUM80, NUM25);
 
     wl_list_insert(terminal_list.prev, &terminal->link);
-
     return terminal;
 }
 
