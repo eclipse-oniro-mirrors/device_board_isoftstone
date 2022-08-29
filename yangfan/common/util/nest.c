@@ -412,21 +412,21 @@ static void surface_attach(struct isftclient *client,
         int format;
 
         if (!query_buffer(nested->egl_display, (void *) buffer_resource,
-                EGL_TEXTURE_FORMAT, &format)) {
+            EGL_TEXTURE_FORMAT, &format)) {
             isftresource_post_error(buffer_resource,
-                    isftDISPLAY_ERROR_INVALID_OBJECT,
-                    "attaching non-egl isftbuffer");
+                isftDISPLAY_ERROR_INVALID_OBJECT,
+                "attaching non-egl isftbuffer");
             return;
         }
 
         switch (format) {
             case EGL_TEXTURE_RGB:
             case EGL_TEXTURE_RGBA:
-            break;
-        default:
-            isftresource_post_error(buffer_resource,
-                isftDISPLAY_ERROR_INVALID_OBJECT,
-                "invalid format");
+                break;
+            default:
+                isftresource_post_error(buffer_resource,
+                    isftDISPLAY_ERROR_INVALID_OBJECT,
+                    "invalid format");
             return;
         }
 
@@ -467,8 +467,7 @@ static void nested_surface_attach(struct nested_surface *sheet,
     nested->renderer->surface_attach(sheet, buffer);
 }
 
-static void surface_damage(struct isftclient *client,
-    struct isftresource *resource,
+static void surface_damage(struct isftresource *resource,
     int32_t x, int32_t y, int32_t width, int32_t height)
 {
     struct nested_surface *sheet = isftresource_get_user_data(resource);
@@ -512,7 +511,7 @@ static void surface_set_opaque_region(struct isftclient *client,
     struct isftresource *region_resource)
 {
     fprintf(stderr, "surface_set_opaque_region\n");
-    return (0);
+    return ;
 }
 
 static void surface_set_input_region(struct isftclient *client,
@@ -520,7 +519,7 @@ static void surface_set_input_region(struct isftclient *client,
     struct isftresource *region_resource)
 {
     fprintf(stderr, "surface_set_input_region\n");
-    return (0);
+    return ;
 }
 
 static void surface_commit(struct isftclient *client, struct isftresource *resource)
@@ -557,7 +556,7 @@ static void surface_set_buffer_transform(struct isftclient *client,
     struct isftresource *resource, int transform)
 {
     fprintf(stderr, "surface_set_buffer_transform\n");
-    return (0);
+    return ;
 }
 
 static const struct isftsurface_interface surface_interface = {
@@ -631,7 +630,7 @@ static void region_destroy(struct isftclient *client, struct isftresource *resou
     isftresource_destroy(resource);
 }
 
-static void region_add(struct isftclient *client, struct isftresource *resource,
+static void region_add(struct isftresource *resource,
     int32_t x, int32_t y, int32_t width, int32_t height)
 {
     struct nested_region *region = isftresource_get_user_data(resource);
@@ -639,7 +638,7 @@ static void region_add(struct isftclient *client, struct isftresource *resource,
         x, y, width, height);
 }
 
-static void region_subtract(struct isftclient *client, struct isftresource *resource,
+static void region_subtract(struct isftresource *resource,
     int32_t x, int32_t y, int32_t width, int32_t height)
 {
     struct nested_region *region = isftresource_get_user_data(resource);
@@ -752,13 +751,12 @@ static int nested_init_compositor(struct nested *nested)
         nested->renderer = &nested_ss_renderer;
     } else {
         printf("Using local compositing with blits to " "painter client surfaces\n");
-        nested->renderer = &nested_blit_renderer;
     }
 
     return 0;
 }
 
-static struct nested * nested_create(struct display *display)
+static struct Nested * Nested_create(struct display *display)
 {
     struct nested *nested;
 

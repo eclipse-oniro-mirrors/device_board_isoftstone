@@ -15,13 +15,12 @@
 
 #include "config.h"
 
-#include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#include <linux/input.h>
+#include <sys/wait.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -30,12 +29,13 @@
 #include <errno.h>
 #include <wayland-cursor.h>
 #include <wayland-client-protocol.h>
-#include "shared/cairo-util.h"
 #include <libweston/config-parser.h>
+#include <libweston/zalloc.h>
+#include <linux/input.h>
+#include "shared/cairo-util.h"
 #include "shared/helpers.h"
 #include "shared/os-compatibility.h"
 #include "shared/xalloc.h"
-#include <libweston/zalloc.h>
 #include "shared/file-util.h"
 #include "ivi-application-client-protocol.h"
 #include "ivi-hmi-controller-client-protocol.h"
@@ -159,7 +159,7 @@ static int getIdOfWlsheet(struct isftConcontentCommon *pCtx, struct isftsheet *i
     isftlist_for_each(pWlCtxSt, &pCtx->list_isftConcontentStruct, link) {
         if (pWlCtxSt->isftsheet == isftsheet) {
             return pWlCtxSt->id_sheet;
-        }    
+        }
 }
 
     return -1;
@@ -233,7 +233,7 @@ static void PointerHandleMotion(void data[], struct isftpointer *isftPointer, un
     printf("ENTER PointerHandleMotion: x(%d), y(%d)\n", sx, sy);
 #endif
 }
-extern char **environ;
+
 static pid_t execute_process(char *path, char *argv[])
 {
     pid_t pid = fork();
@@ -309,7 +309,7 @@ static void touch_up(struct ivi_hmi_controller *hmi_ctrl, unsigned int id_sheet,
     }
 }
 
-static void PointerHandleButton(void data[],unsigned int serial, unsigned int button, unsigned int state)
+static void PointerHandleButton(void data[], unsigned int serial, unsigned int button, unsigned int state)
 {
     struct isftConcontentCommon *pCtx = data;
     struct ivi_hmi_controller *hmi_ctrl = pCtx->hmiCtrl;
@@ -409,7 +409,7 @@ static void seat_handle_capabilities(void data[], struct isftseat *seat, unsigne
         if ((caps & isftSEAT_CAPABILITY_POINTER) && !isftPointer) {
             isftPointer = isftseat_get_pointer(isftSeat);
             isftpointer_add_listener(isftPointer, &pointer_listener, data);
-        } 
+        }
         if (!(caps & isftSEAT_CAPABILITY_POINTER) && isftPointer) {
             isftpointer_destroy(isftPointer);
             isftPointer = NULL;
@@ -613,7 +613,7 @@ static void create_cursors(struct isftConcontentCommon *cmm)
         cursor = NULL;
 
         for (j = 0; !cursor && j < cursors[i].count; ++j) {
-            cursor = isftcursor_theme_get_cursor( cmm->cursor_theme, cursors[i].names[j]);
+            cursor = isftcursor_theme_get_cursor(cmm->cursor_theme, cursors[i].names[j]);
         }
 
         if (!cursor) {
@@ -885,7 +885,7 @@ static struct hmi_homescreen_setting *hmi_homescreen_setting_create(void)
     config = isftViewconfig_parse(config_file);
     shellSection = isftViewconfig_get_section(config, "ivi-shell", NULL, NULL);
     isftViewconfig_section_get_string(shellSection, "cursor-theme", &setting->cursor_theme, NULL);
-    isftViewconfig_section_get_int(shellSection, "cursor-size", &setting->cursor_size, 32);
+    isftViewconfig_section_get_int(shellSection, "cursor-size", &setting->cursor_size, NUM32);
     isftViewconfig_section_get_unsigned int(shellSection, "workspace-layer-id", &workspace_layer_id, 3000);
 
     filename = file_name_with_datadir("background.png");
