@@ -1073,7 +1073,8 @@ static void glyph_run_add(struct glyph_run *run, int x, int y, union utf8_char *
     run->count += num_glyphs;
 }
 
-void for_block(struct terminal *terminal, union decoded_attr attr, double average_width, struct cairo_t *cr, struct glyph_run run)
+void for_block(struct terminal *terminal, union decoded_attr attr, double average_width,
+               struct cairo_t *cr, struct glyph_run run)
 {
     int row, col, text_x, text_y;
     union utf8_char *p_row;
@@ -1298,7 +1299,7 @@ static void handle_term_parameter(struct terminal *terminal, int code, int sr)
     int i;
 
     if (terminal->escape_flags & ESC_FLAG_WHAT) {
-        if (code < 8) {
+        if (code < NUM8) {
             handle_switch1(terminal, code);
         } else {
             handle_switch2(terminal, code);
