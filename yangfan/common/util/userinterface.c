@@ -704,9 +704,9 @@ static void create_cursors(struct isftConcontentCommon *cmm)
             }
             cursor = isftcursor_theme_get_cursor(cmm->cursor_theme, cursors[i].names[j]);
         }
-        if (!cursor) {
+        if (!cursor) 
             fprintf(stderr, "could not load cursor '%s'\n", cursors[i].names[0]);
-        }
+        
         cmm->cursors[i] = cursor;
     }
 }
