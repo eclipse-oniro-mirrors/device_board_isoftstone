@@ -464,36 +464,36 @@ static void export_compute_transform(struct isftViewexport *export, pixman_trans
     fh = pixman_int_to_fixed(export->height);
 
     switch (export->transform) {
-    case isftexport_TRANSFORM_FLIPPED:
-    case isftexport_TRANSFORM_FLIPPED_90:
-    case isftexport_TRANSFORM_FLIPPED_180:
-    case isftexport_TRANSFORM_FLIPPED_270:
-        pixman_transform_scale(transform, NULL,
-                       pixman_int_to_fixed (-1),
-                       pixman_int_to_fixed (1));
-        pixman_transform_translate(transform, NULL, fw, 0);
+        case isftexport_TRANSFORM_FLIPPED:
+        case isftexport_TRANSFORM_FLIPPED_90:
+        case isftexport_TRANSFORM_FLIPPED_180:
+        case isftexport_TRANSFORM_FLIPPED_270:
+            pixman_transform_scale(transform, NULL, pixman_int_to_fixed (-1), pixman_int_to_fixed (1));
+            pixman_transform_translate(transform, NULL, fw, 0);
+        default:
+            break;
     }
 
     switch (export->transform) {
-    default:
-    case isftexport_TRANSFORM_NORMAL:
-    case isftexport_TRANSFORM_FLIPPED:
-        break;
-    case isftexport_TRANSFORM_90:
-    case isftexport_TRANSFORM_FLIPPED_90:
-        pixman_transform_rotate(transform, NULL, 0, -pixman_fixed_1);
-        pixman_transform_translate(transform, NULL, 0, fw);
-        break;
-    case isftexport_TRANSFORM_180:
-    case isftexport_TRANSFORM_FLIPPED_180:
-        pixman_transform_rotate(transform, NULL, -pixman_fixed_1, 0);
-        pixman_transform_translate(transform, NULL, fw, fh);
-        break;
-    case isftexport_TRANSFORM_270:
-    case isftexport_TRANSFORM_FLIPPED_270:
-        pixman_transform_rotate(transform, NULL, 0, pixman_fixed_1);
-        pixman_transform_translate(transform, NULL, fh, 0);
-        break;
+        default:
+        case isftexport_TRANSFORM_NORMAL:
+        case isftexport_TRANSFORM_FLIPPED:
+            break;
+        case isftexport_TRANSFORM_90:
+        case isftexport_TRANSFORM_FLIPPED_90:
+            pixman_transform_rotate(transform, NULL, 0, -pixman_fixed_1);
+            pixman_transform_translate(transform, NULL, 0, fw);
+            break;
+        case isftexport_TRANSFORM_180:
+        case isftexport_TRANSFORM_FLIPPED_180:
+            pixman_transform_rotate(transform, NULL, -pixman_fixed_1, 0);
+            pixman_transform_translate(transform, NULL, fw, fh);
+            break;
+        case isftexport_TRANSFORM_270:
+        case isftexport_TRANSFORM_FLIPPED_270:
+            pixman_transform_rotate(transform, NULL, 0, pixman_fixed_1);
+            pixman_transform_translate(transform, NULL, fh, 0);
+            break;
     }
 
     pixman_transform_scale(transform, NULL,
@@ -822,46 +822,59 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
 
     so = zalloc(sizeof *so);
     if (so == NULL) {
-        goto err_close;
+        close(parent_fd);
+        return NULL;
     }
     isftlist_init(&so->seat_list);
 
     so->parent.show = isftshow_connect_to_fd(parent_fd);
     if (!so->parent.show) {
-        goto err_alloc;
+        free(so);
     }
     so->parent.registry = isftshow_get_registry(so->parent.show);
     if (!so->parent.registry) {
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
     isftregistry_add_listener(so->parent.registry, &registry_listener, so);
     isftshow_roundtrip(so->parent.show);
     if (so->parent.shm == NULL) {
         isftViewlog("Screen share failed: No isftshm found\n");
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
     if (so->parent.fshell == NULL) {
         isftViewlog("Screen share failed: "
                "Parent does not support isftfullscreen_shell\n");
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
     if (so->parent.compositor == NULL) {
         isftViewlog("Screen share failed: No isftcompositor found\n");
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
 
     /* Get SHM formats */
     isftshow_roundtrip(so->parent.show);
     if (!(so->parent.shm_formats & (1 << isftSHM_FORMAT_XRGB8888))) {
         isftViewlog("Screen share failed: isftSHM_FORMAT_XRGB8888 not available\n");
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
 
     so->parent.sheet =
         isftcompositor_create_sheet(so->parent.compositor);
     if (!so->parent.sheet) {
         isftViewlog("Screen share failed: %s\n", strerror(errno));
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
 
     so->parent.mode_feedback =
@@ -869,7 +882,9 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
                                  so->parent.sheet, so->parent.export, export->current_mode->refresh);
     if (!so->parent.mode_feedback) {
         isftViewlog("Screen share failed: %s\n", strerror(errno));
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
     zwp_fullscreen_shell_mode_feedback_v1_add_listener(so->parent.mode_feedback,
                                &mode_feedback_listener, so);
@@ -882,7 +897,9 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
                      shared_export_handle_task, so);
     if (!so->task_source) {
         isftViewlog("Screen share failed: %s\n", strerror(errno));
-        goto err_show;
+        isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
+            groupdestroy(seat);
+        isftshow_disconnect(so->parent.show);
     }
 
     /* Ok, everything's created.  We should be good to go */
@@ -899,16 +916,6 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
     isftViewexport_damage(export);
 
     return so;
-
-err_show:
-    isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
-        groupdestroy(seat);
-    isftshow_disconnect(so->parent.show);
-err_alloc:
-    free(so);
-err_close:
-    close(parent_fd);
-    return NULL;
 }
 
 static void shared_export_destroy(struct shared_export *so)
