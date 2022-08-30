@@ -457,5 +457,5 @@ RetCode RKCodecNode::CancelCapture(const int32_t streamId)
     return RC_OK;
 }
 
-static REGISTERNODE(RKCodecNode, {"RKCodec"})
+REGISTERNODE(RKCodecNode, {"RKCodec"})
 } // namespace OHOS::Camera
