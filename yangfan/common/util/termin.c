@@ -1429,8 +1429,9 @@ void escape_switch1(char **p, int *count, int **set, int **args, struct terminal
             break;
     }
 }
-void escape_switch2()
+void escape_switch2(char *p, int count2, int *set, int *args, struct terminal *terminal)
 {
+    int count = count2;
     switch (*p) {
         case 'D':    /* CUB - Move cursor left <count> columns */
             count = set[0] ? args[0] : 1;
@@ -1473,8 +1474,9 @@ void escape_switch2()
             break;
     }
 }
-void escape_switch3()
+void escape_switch3(char *p, int count3, int *set, int *args, struct terminal *terminal)
 {
+    int count = count3;
     switch (*p) {
         case 'I':    /* CHT */
             count = set[0] ? args[0] : 1;
@@ -1523,7 +1525,7 @@ void escape_switch3()
             break;
     }
 }
-void escape_switch4()
+void escape_switch4(char *p, int count4, int *set, int *args, struct terminal *terminal)
 {
     switch (*p) {
         case 'H':    /* CUP - Move cursor to <x, y> (origin at 1,1) */
@@ -1573,8 +1575,9 @@ void escape_switch4()
             break;
     }
 }
-void escape_switch5()
-{
+void escape_switch5(char *p, int count5, int *set, int *args, struct terminal *terminal)
+{    
+    int count = count5;
     switch (*p) {
         case 'L':    /* IL - Insert <count> blank lines */
             count = set[0] ? args[0] : 1;
@@ -1622,8 +1625,9 @@ void escape_switch5()
             break;
     }
 }
-void escape_switch6()
+void escape_switch6(char *p, int count6, int *set, int *args, struct terminal *terminal)
 {
+    int count = count6;
     switch (*p) {
         case 'S':    /* SU */
             terminal_scroll(terminal, set[0] ? args[0] : 1);
@@ -1668,8 +1672,9 @@ void escape_switch6()
             break;
     }
 }
-void escape_switch7()
+void escape_switch7(char *p, int count7, int *set, int *args, struct terminal *terminal)
 {
+    int count = count7;
     switch (*p) {
         case 'b':    /* REP */
             count = set[0] ? args[0] : 1;
@@ -1717,8 +1722,9 @@ void escape_switch7()
             break;
     }
 }
-void escape_switch7()
+void escape_switch8(char *p, int count8, int *set, int *args, struct terminal *terminal)
 {
+    int count = count8;
     switch (*p) {
         case 'n':    /* DSR - Status report */
             i = set[0] ? args[0] : 0;
@@ -1765,7 +1771,7 @@ void escape_switch7()
             break;
     }
 }
-void escape_switch8()
+void escape_switch9(int *set, int *args, struct terminal *terminal)
 {
     switch (args[0]) {
         case NUM4:  /* resize px */
@@ -1819,7 +1825,7 @@ static void handle_escape(struct terminal *terminal)
     int args[10], set[10] = { 0, };
     char response[MAX_RESPONSE] = {0, };
     struct rectangle allocation;
-	
+
     terminal->escape[terminal->escape_length++] = '\0';
     i = 0;
     p = &terminal->escape[NUM2];
@@ -1840,10 +1846,24 @@ static void handle_escape(struct terminal *terminal)
         if (!set[0]) {
             break;
         }
-        escape_switch8();
+        escape_switch9(set, args, terminal);
     } else if (*p == '@' || *p == 'A' || *p == 'B' || *p == 'C') {
-        escape_switch1(&p, &count, &set, &args);
-    }
+        escape_switch1(&p, &count, &set, &args, terminal);
+    } else if (*p == 'D' || *p == 'E' || *p == 'F' || *p == 'G' || *p == 'f') {
+        escape_switch2(p, count, set, args, terminal);
+    } else if (*p == 'I' || *p == 'J') {
+        escape_switch3(p, count, set, args, terminal);
+    } else if (*p == 'H' || *p == 'K' || *p == 's' || *p == 'u') {
+        escape_switch4(p, count, set, args, terminal);
+    } else if (*p == 'L' || *p == 'M' || *p == 'P') {
+        escape_switch5(p, count, set, args, terminal);
+    } else if (*p == 'S' || *p == 'T' || *p == 'X' || *p == 'Z' || *p == '`') {
+        escape_switch6(p, count, set, args, terminal);
+    } else if (*p == 'b' || *p == 'c' || *p == 'd' || *p == 'g' || *p == 'h' || *p == 'l' || *p == 'm') {
+        escape_switch7(p, count, set, args, terminal);
+    } else (*p == 'n' || *p == 'r') {
+        escape_switch8(p, count, set, args, terminal);
+    } 
 }
 
 static void handle_non_csi_escape(struct terminal *terminal, char code)
