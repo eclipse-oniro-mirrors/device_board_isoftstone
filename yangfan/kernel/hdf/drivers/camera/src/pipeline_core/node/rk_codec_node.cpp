@@ -165,7 +165,7 @@ void  RKCodecNode::xYUV422ToRGBA(uint8_t *yuv422, uint8_t *rgba, int width, int 
         Y = *(yuv422 + (i * 2));
         // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, U is offset by 1 bits
         U = *(yuv422 + (i / 2 * 4) + 1);
-        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, V is offset by 2 bits
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, V is offset by 3 bits
         V = *(yuv422 + (i / 2 * 4) + 3);
 
         // 1164/1000 equals 1.164, 2018/1000 equals 2.018, Y is offset by 16 bits, U is offset by 128 bits
@@ -212,7 +212,7 @@ void  RKCodecNode::xYUV422ToRGB(uint8_t *yuv422, uint8_t *rgb, int width, int he
         Y = *(yuv422 + (i * 2));
         // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, U is offset by 1 bits
         U = *(yuv422 + (i / 2 * 4) + 1);
-        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, V is offset by 2 bits
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, V is offset by 3 bits
         V = *(yuv422 + (i / 2 * 4) + 3);
 
         // 1164/1000 equals 1.164, 2018/1000 equals 2.018, Y is offset by 16 bits, U is offset by 128 bits
