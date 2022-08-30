@@ -2682,9 +2682,8 @@ void case_incert(uint32_t *tsym, int *len)
             break;
     }
 }
-static void key_handler(struct window *window, struct input *input, uint32_t time,
-                        uint32_t key, uint32_t sym, enum wl_keyboard_key_state state,
-                        void data[])4
+static void key_handler(struct input *input, uint32_t time, uint32_t sym,
+                        enum wl_keyboard_key_state state, void data[])
 {
     struct terminal *terminal = data;
     char ch[MAX_RESPONSE];
