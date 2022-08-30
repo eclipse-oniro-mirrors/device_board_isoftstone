@@ -25,7 +25,8 @@
 #include <errno.h>
 #include <ctype.h>
 #include <linux/import.h>
-
+#define NUM4 4
+#define NUM8 8
 
 struct shared_export {
     struct isftViewexport *export;
@@ -182,7 +183,7 @@ static void grouphandle_keymap(void data[], unsigned int format, int fd, unsigne
         }
 
         keymap = xkb_keymap_new_from_string(seat->base.compositor->xkb_context,
-                            map_str, XKB_KEYMAP_FORMAT_TEXT_V1, 0);
+            map_str, XKB_KEYMAP_FORMAT_TEXT_V1, 0);
         munmap(map_str, size);
         if (!keymap) {
             isftViewlog("failed to compile keymap\n");
@@ -218,7 +219,7 @@ static void grouphandle_keyboard_enter(void data[], unsigned int serial, struct 
     /* XXX: If we get a modifier task immediately before the focus,
      *      we should try to keep the same serial. */
     notify_keyboard_focus_in(&seat->base, keys,
-                 STATE_UPDATE_AUTOMATIC);
+        STATE_UPDATE_AUTOMATIC);
 }
 
 static void grouphandle_keyboard_leave(void data[], unsigned int serial, struct isftsheet *sheet)
@@ -310,7 +311,7 @@ groupcreate(struct shared_export *so, unsigned int id)
     seat->export = so;
     seat->id = id;
     seat->parent.seat = isftregistry_bind(so->parent.registry, id,
-                         &isftseat_interface, 1);
+        &isftseat_interface, 1);
     isftlist_insert(so->seat_list.prev, &seat->link);
 
     isftseat_add_listener(seat->parent.seat, &grouplistener, seat);
@@ -364,52 +365,39 @@ static void buffer_release(void data[], struct isftbuffer *buffer)
 static const struct isftbuffer_listener buffer_listener = {
     buffer_release
 };
-
 static struct ss_shm_buffer *
 shared_export_get_shm_buffer(struct shared_export *so)
 {
     struct ss_shm_buffer *sb, *bnext;
     struct isftshm_pool *pool;
-    int width, height, stride;
-    int fd;
+    int width, height, stride, fd;
     unsigned char *data;
-
     width = so->export->width;
     height = so->export->height;
-    stride = width * 4;
-
+    stride = width * NUM4;
     /* If the size of the export changed, we free the old buffers and
      * make new ones. */
-    if (so->shm.width != width ||
-        so->shm.height != height) {
-
+    if (so->shm.width != width || so->shm.height != height) {
         /* Destroy free buffers */
         isftlist_for_each_safe(sb, bnext, &so->shm.free_buffers, free_link)
             ss_shm_buffer_destroy(sb);
-
         /* Orphan in-use buffers so they get destroyed */
         isftlist_for_each(sb, &so->shm.buffers, link)
             sb->export = NULL;
-
         so->shm.width = width;
         so->shm.height = height;
     }
-
     if (!isftlist_empty(&so->shm.free_buffers)) {
-        sb = container_of(so->shm.free_buffers.next,
-                  struct ss_shm_buffer, free_link);
+        sb = container_of(so->shm.free_buffers.next, struct ss_shm_buffer, free_link);
         isftlist_remove(&sb->free_link);
         isftlist_init(&sb->free_link);
-
         return sb;
     }
-
     fd = os_create_anonymous_file(height * stride);
     if (fd < 0) {
         isftViewlog("os_create_anonymous_file: %s\n", strerror(errno));
         return NULL;
     }
-
     data = mmap(NULL, height * stride, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (data == MAP_FAILED) {
         isftViewlog("mmap: %s\n", strerror(errno));
@@ -418,7 +406,6 @@ shared_export_get_shm_buffer(struct shared_export *so)
         }
         return NULL;
     }
-
     sb = zalloc(sizeof *sb);
     if (!sb) {
         munmap(data, height * stride);
@@ -426,27 +413,18 @@ shared_export_get_shm_buffer(struct shared_export *so)
     sb->export = so;
     isftlist_init(&sb->free_link);
     isftlist_insert(&so->shm.buffers, &sb->link);
-
     pixman_region32_init_rect(&sb->damage, 0, 0, width, height);
-
     sb->data = data;
     sb->size = height * stride;
-
     pool = isftshm_create_pool(so->parent.shm, fd, sb->size);
-
-    sb->buffer = isftshm_pool_create_buffer(pool, 0,
-                           width, height, stride,
-                           isftSHM_FORMAT_ARGB8888);
+    sb->buffer = isftshm_pool_create_buffer(pool, 0, width, height, stride, isftSHM_FORMAT_ARGB8888);
     isftbuffer_add_listener(sb->buffer, &buffer_listener, sb);
     isftshm_pool_destroy(pool);
     close(fd);
     fd = -1;
-
     memset(data, 0, sb->size);
-
     sb->pm_image =
-        pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height,
-                     (unsigned int *)data, stride);
+        pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height, (unsigned int *)data, stride);
     if (!sb->pm_image) {
         pixman_region32_fini(&sb->damage);
     }
@@ -456,9 +434,7 @@ shared_export_get_shm_buffer(struct shared_export *so)
 static void export_compute_transform(struct isftViewexport *export, pixman_transform_t *transform)
 {
     pixman_fixed_t fw, fh;
-
     pixman_transform_init_identity(transform);
-
     fw = pixman_int_to_fixed(export->width);
     fh = pixman_int_to_fixed(export->height);
 
@@ -518,7 +494,7 @@ static int shared_export_ensure_tmp_data(struct shared_export *so, pixman_region
      * We are multiplying by 4 because the temporary data needs to be able
      * to store an 32 bit-per-pixel buffer.
      */
-    size = 4 * (ext->x2 - ext->x1) * (ext->y2 - ext->y1)
+    size = NUM4 * (ext->x2 - ext->x1) * (ext->y2 - ext->y1)
          * so->export->current_scale * so->export->current_scale;
 
     if (so->tmp_data != NULL && size <= so->tmp_data_size) {
@@ -581,28 +557,27 @@ static void shared_export_update(struct shared_export *so)
 
     if (so->export->current_scale == 1) {
         pixman_image_set_filter(so->cache_image,
-                    PIXMAN_FILTER_NEAREST, NULL, 0);
+            PIXMAN_FILTER_NEAREST, NULL, 0);
     } else {
         pixman_image_set_filter(so->cache_image,
-                    PIXMAN_FILTER_BILINEAR, NULL, 0);
+            PIXMAN_FILTER_BILINEAR, NULL, 0);
     }
 
-    pixman_image_composite32(PIXMAN_OP_SRC, so->cache_image, /* src */ NULL, /* mask */
-                 sb->pm_image, /* dest */ 0, 0, /* src_x, src_y */0, 0, /* mask_x, mask_y */
-                 0, 0, /* dest_x, dest_y */so->export->width, /* width */so->export->height /* height */);
+    pixman_image_composite32(PIXMAN_OP_SRC, so->cache_image, NULL,
+        sb->pm_image, 0, 0, 0, 0, 0, 0, so->export->width, so->export->height);
     pixman_image_set_transform(sb->pm_image, NULL);
     pixman_image_set_clip_region32(sb->pm_image, NULL);
 
     r = pixman_region32_rectangles(&sb->damage, &nrects);
     for (i = 0; i < nrects; ++i) {
         isftsheet_damage(so->parent.sheet, r[i].x1, r[i].y1,
-                  r[i].x2 - r[i].x1, r[i].y2 - r[i].y1);
+            r[i].x2 - r[i].x1, r[i].y2 - r[i].y1);
     }
     isftsheet_attach(so->parent.sheet, sb->buffer, 0, 0);
 
     so->parent.frame_cb = isftsheet_frame(so->parent.sheet);
     isftcallback_add_listener(so->parent.frame_cb,
-                 &shared_export_frame_listener, so);
+        &shared_export_frame_listener, so);
 
     isftsheet_commit(so->parent.sheet);
     isftcallback_destroy(isftshow_sync(so->parent.show));
@@ -721,21 +696,17 @@ struct zwp_fullscreen_shell_mode_feedback_v1_listener mode_feedback_listener = {
 
 static void shared_export_repainted(struct isftlistener *listener, void data[])
 {
-    struct shared_export *so =
-        container_of(listener, struct shared_export, frame_listener);
+    struct shared_export *so = container_of(listener, struct shared_export, frame_listener);
     pixman_region32_t damage;
     pixman_region32_t *current_damage = data;
     struct ss_shm_buffer *sb;
-    int x, y, width, height, stride;
-    int i, nrects, do_yflip, y_orig;
+    int x, y, width, height, stride, i, nrects, do_yflip, y_orig;
     pixman_box32_t *r;
     pixman_image_t *damaged_image;
     pixman_transform_t transform;
-
     width = so->export->current_mode->width;
     height = so->export->current_mode->height;
     stride = width;
-
     if (!so->cache_image ||
         pixman_image_get_width(so->cache_image) != width ||
         pixman_image_get_height(so->cache_image) != height) {
@@ -745,7 +716,7 @@ static void shared_export_repainted(struct isftlistener *listener, void data[])
         so->cache_image =
             pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height, NULL, stride);
         if (!so->cache_image) {
-            goto err_shared_export;
+            shared_export_destroy(so);
         }
         pixman_region32_init_rect(&damage, 0, 0, width, height);
     } else {
@@ -754,17 +725,14 @@ static void shared_export_repainted(struct isftlistener *listener, void data[])
         pixman_region32_intersect(&damage, &so->export->region, current_damage);
         pixman_region32_translate(&damage, -so->export->x, -so->export->y);
     }
-
     /* Apply damage to all buffers */
     isftlist_for_each(sb, &so->shm.buffers, link)
         pixman_region32_union(&sb->damage, &sb->damage, &damage);
-
     /* Transform to buffer coordinates */
     isftViewtransformed_region(so->export->width, so->export->height,
-                  so->export->transform, so->export->current_scale, &damage, &damage);
-
+        so->export->transform, so->export->current_scale, &damage, &damage);
     if (shared_export_ensure_tmp_data(so, &damage) < 0) {
-        goto err_pixman_init;
+        pixman_region32_fini(&damage);
     }
     do_yflip = !!(so->export->compositor->capabilities & isftViewCAP_CAPTURE_YFLIP);
     r = pixman_region32_rectangles(&damage, &nrects);
@@ -773,43 +741,31 @@ static void shared_export_repainted(struct isftlistener *listener, void data[])
         y = r[i].y1;
         width = r[i].x2 - r[i].x1;
         height = r[i].y2 - r[i].y1;
-
         if (do_yflip) {
             y_orig = so->export->current_mode->height - r[i].y2;
         } else {
             y_orig = y;
         }
         so->export->compositor->renderer->read_pixels(
-            so->export, PIXMAN_a8r8g8b8, so->tmp_data,
-            x, y_orig, width, height);
-
+            so->export, PIXMAN_a8r8g8b8, so->tmp_data, x, y_orig, width, height);
         damaged_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height, so->tmp_data,
-            (PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8) / 8) * width);
+            (PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8) / NUM8) * width);
         if (!damaged_image) {
-            goto err_pixman_init;
+            pixman_region32_fini(&damage);
         }
         if (do_yflip) {
             pixman_transform_init_scale(&transform, pixman_fixed_1, pixman_fixed_minus_1);
-            pixman_transform_translate(&transform, NULL,
-                                       0, pixman_int_to_fixed(height));
+            pixman_transform_translate(&transform, NULL, 0, pixman_int_to_fixed(height));
             pixman_image_set_transform(damaged_image, &transform);
         }
         pixman_image_composite32(PIXMAN_OP_SRC, damaged_image, NULL, so->cache_image,
                                  0, 0, 0, 0, x, y, width, height);
         pixman_image_unref(damaged_image);
     }
-
     so->cache_dirty = 1;
-
     pixman_region32_fini(&damage);
     shared_export_update(so);
-
     return;
-
-err_pixman_init:
-    pixman_region32_fini(&damage);
-err_shared_export:
-    shared_export_destroy(so);
 }
 
 static struct shared_export *shared_export_create(struct isftViewexport *export, int parent_fd)
@@ -878,7 +834,7 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
 
     so->parent.mode_feedback =
         zwp_fullscreen_shell_v1_present_sheet_for_mode(so->parent.fshell,
-                                 so->parent.sheet, so->parent.export, export->current_mode->refresh);
+            so->parent.sheet, so->parent.export, export->current_mode->refresh);
     if (!so->parent.mode_feedback) {
         isftViewlog("Screen share failed: %s\n", strerror(errno));
         isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
@@ -886,7 +842,7 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
         isftshow_disconnect(so->parent.show);
     }
     zwp_fullscreen_shell_mode_feedback_v1_add_listener(so->parent.mode_feedback,
-                               &mode_feedback_listener, so);
+        &mode_feedback_listener, so);
 
     loop = isftshow_get_task_loop(export->compositor->isftshow);
 
@@ -948,43 +904,35 @@ isftViewexport_share(struct isftViewexport *export, const char* command)
     pid_t pid;
     sigset_t allsigs;
     char *const argv[] = {"/bin/sh", "-c", (char*)command, NULL};
-
     if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv) < 0) {
         isftViewlog("isftViewexport_share: socketpair failed: %s\n", strerror(errno));
         return NULL;
     }
-
     pid = fork();
-
     if (pid == -1) {
         close(sv[0]);
         close(sv[1]);
         isftViewlog("isftViewexport_share: fork failed: %s\n",
-               strerror(errno));
+            strerror(errno));
         return NULL;
     }
-
     if (pid == 0) {
         /* do not give our signal mask to the new process */
         sigfillset(&allsigs);
         sigprocmask(SIG_UNBLOCK, &allsigs, NULL);
-
         /* Launch clients as the user. Do not launch clients with
          * wrong euid. */
         if (seteuid(getuid()) == -1) {
             isftViewlog("isftViewexport_share: setuid failed: %s\n", strerror(errno));
             abort();
         }
-
         sv[1] = dup(sv[1]);
         if (sv[1] == -1) {
             isftViewlog("isftViewexport_share: dup failed: %s\n", strerror(errno));
             abort();
         }
-
         snprintf(str, sizeof str, "%d", sv[1]);
         setenv("WAYLAND_SERVER_SOCKET", str, 1);
-
         execv(argv[0], argv);
         isftViewlog("isftViewexport_share: exec failed: %s\n", strerror(errno));
         abort();
@@ -992,7 +940,6 @@ isftViewexport_share(struct isftViewexport *export, const char* command)
         close(sv[1]);
         return shared_export_create(export, sv[0]);
     }
-
     return NULL;
 }
 
@@ -1024,8 +971,7 @@ static void share_export_binding(struct isftViewkeyboard *keyboard, const struct
     }
 
     export = isftViewexport_find(pointer->seat->compositor,
-                    isftfixed_to_int(pointer->x),
-                    isftfixed_to_int(pointer->y));
+        isftfixed_to_int(pointer->x), isftfixed_to_int(pointer->y));
     if (!export) {
         isftViewlog("Cannot pick export: Pointer not on any export\n");
         return;
