@@ -1073,66 +1073,25 @@ static void glyph_run_add(struct glyph_run *run, int x, int y, union utf8_char *
     run->count += num_glyphs;
 }
 
-
-static void redraw_handler(struct widget *widget, void data[])
+void for_block(struct terminal *terminal, union decoded_attr attr, double average_width, struct cairo_t *cr, struct glyph_run run)
 {
-    struct terminal *terminal = data;
-    struct rectangle allocation;
-    cairo_t *cr;
-    int top_margin, side_margin;
-    int row, col, cursor_x, cursor_y;
+    int row, col, text_x, text_y;
     union utf8_char *p_row;
-    union decoded_attr attr;
-    int text_x, text_y;
-    cairo_surface_t *surface;
-    double d;
-    struct glyph_run run;
-    cairo_font_extents_t extents;
-    double average_width;
     double unichar_width;
-
-    surface = window_get_surface(terminal->window);
-    widget_get_allocation(terminal->widget, &allocation);
-    cr = widget_cairo_create(terminal->widget);
-    cairo_rectangle(cr, allocation.x, allocation.y,
-                    allocation.width, allocation.height);
-    cairo_clip(cr);
-    cairo_push_group(cr);
-
-    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    terminal_set_color(terminal, cr, terminal->color_scheme->border);
-    cairo_paint(cr);
-
-    cairo_set_scaled_font(cr, terminal->font_normal);
-
-    extents = terminal->extents;
-    average_width = terminal->average_width;
-    side_margin = (allocation.width - terminal->width * average_width) / NUM2;
-    top_margin = (allocation.height - terminal->height * extents.height) / NUM2;
-
-    cairo_set_line_width(cr, 1.0);
-    cairo_translate(cr, allocation.x + side_margin,
-                    allocation.y + top_margin);
-    /* paint the background */
     for (row = 0; row < terminal->height; row++) {
         p_row = terminal_get_row(terminal, row);
         for (col = 0; col < terminal->width; col++) {
-            /* get the attributes for this character cell */
             terminal_decode_attr(terminal, row, col, &attr);
-
             if (attr.attr.bg == terminal->color_scheme->border) {
                 continue;
             }
-
             if (is_wide(p_row[col])) {
                 unichar_width = NUM2 * average_width;
             } else {
                 unichar_width = average_width;
             }
-
             terminal_set_color(terminal, cr, attr.attr.bg);
-            cairo_move_to(cr, col * average_width,
-                          row * extents.height);
+            cairo_move_to(cr, col * average_width, row * extents.height);
             cairo_rel_line_to(cr, unichar_width, 0);
             cairo_rel_line_to(cr, 0, extents.height);
             cairo_rel_line_to(cr, -unichar_width, 0);
@@ -1140,19 +1099,13 @@ static void redraw_handler(struct widget *widget, void data[])
             cairo_fill(cr);
         }
     }
-
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-
-    /* paint the foreground */
     glyph_run_init(&run, terminal, cr);
     for (row = 0; row < terminal->height; row++) {
         p_row = terminal_get_row(terminal, row);
         for (col = 0; col < terminal->width; col++) {
-            /* get the attributes for this character cell */
             terminal_decode_attr(terminal, row, col, &attr);
-
             glyph_run_flush(&run, attr);
-
             text_x = col * average_width;
             text_y = extents.ascent + row * extents.height;
             if (attr.attr.a & ATTRMASK_UNDERLINE) {
@@ -1161,48 +1114,63 @@ static void redraw_handler(struct widget *widget, void data[])
                 cairo_line_to(cr, text_x + average_width, (double) text_y + NUM1);
                 cairo_stroke(cr);
             }
-
-                        /* skip space glyph (RLE) we use as a placeholder of
-                           the right half of a double-width character,
-                           because RLE is not available in every font. */
             if (p_row[col].ch == 0x200B) {
                 continue;
             }
-
             glyph_run_add(&run, text_x, text_y, &p_row[col]);
         }
     }
+}
 
+static void redraw_handler(struct widget *widget, void data[])
+{
+    struct terminal *terminal = data;
+    struct rectangle allocation;
+    cairo_t *cr;
+    int top_margin, side_margin, cursor_x, cursor_y;
+    union utf8_char *p_row;
+    union decoded_attr attr;
+    cairo_surface_t *surface;
+    double d, average_width, unichar_width;
+    struct glyph_run run;
+    cairo_font_extents_t extents;
+    surface = window_get_surface(terminal->window);
+    widget_get_allocation(terminal->widget, &allocation);
+    cr = widget_cairo_create(terminal->widget);
+    cairo_rectangle(cr, allocation.x, allocation.y, allocation.width, allocation.height);
+    cairo_clip(cr);
+    cairo_push_group(cr);
+    cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
+    terminal_set_color(terminal, cr, terminal->color_scheme->border);
+    cairo_paint(cr);
+    cairo_set_scaled_font(cr, terminal->font_normal);
+    extents = terminal->extents;
+    average_width = terminal->average_width;
+    side_margin = (allocation.width - terminal->width * average_width) / NUM2;
+    top_margin = (allocation.height - terminal->height * extents.height) / NUM2;
+    cairo_set_line_width(cr, 1.0);
+    cairo_translate(cr, allocation.x + side_margin, allocation.y + top_margin);
+    for_block(terminal, attr, average_width, cr, run);
     attr.key = ~0;
     glyph_run_flush(&run, attr);
-
-    if ((terminal->mode & MODE_SHOW_CURSOR) &&
-        !window_has_focus(terminal->window)) {
+    if ((terminal->mode & MODE_SHOW_CURSOR) && !window_has_focus(terminal->window)) {
         d = NUM0;
-
         cairo_set_line_width(cr, 1);
-        cairo_move_to(cr, terminal->column * average_width + d,
-                      terminal->row * extents.height + d);
+        cairo_move_to(cr, terminal->column * average_width + d, terminal->row * extents.height + d);
         cairo_rel_line_to(cr, average_width - NUM2 * d, 0);
         cairo_rel_line_to(cr, 0, extents.height - NUM2 * d);
         cairo_rel_line_to(cr, -average_width + NUM2 * d, 0);
         cairo_close_path(cr);
-
         cairo_stroke(cr);
     }
-
     cairo_pop_group_to_source(cr);
     cairo_paint(cr);
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
-
     if (terminal->send_cursor_position) {
-        cursor_x = side_margin + allocation.x +
-                terminal->column * average_width;
-        cursor_y = top_margin + allocation.y +
-                terminal->row * extents.height;
-        window_set_text_cursor_position(terminal->window,
-                                        cursor_x, cursor_y);
+        cursor_x = side_margin + allocation.x + terminal->column * average_width;
+        cursor_y = top_margin + allocation.y + terminal->row * extents.height;
+        window_set_text_cursor_position(terminal->window, cursor_x, cursor_y);
         terminal->send_cursor_position = 0;
     }
 }
@@ -1221,103 +1189,119 @@ static void handle_char(struct terminal *terminal, union utf8_char utf8);
 
 static void handle_sgr(struct terminal *terminal, int code);
 
+void handle_switch1(struct terminal *terminal, int code)
+{
+    switch (code) {
+        case 1:  /* DECCKM */
+            if (sr) {
+                terminal->key_mode = KM_APPLICATION;
+            } else {
+                terminal->key_mode = KM_NORMAL;
+            }
+            break;
+        case NUM2:  /* DECANM */
+            /* No VT52 support yet */
+            terminal->g0 = CS_US;
+            terminal->g1 = CS_US;
+            terminal->cs = terminal->g0;
+            break;
+        case NUM3:  /* DECCOLM */
+            if (sr) {
+                terminal_resize(terminal, NUM132, NUM24);
+            } else {
+                terminal_resize(terminal, NUM80, NUM24);
+            }
+            /* set columns, but also home cursor and clear screen */
+            terminal->row = 0; terminal->column = 0;
+            for (i = 0; i < terminal->height; i++) {
+                memset(terminal_get_row(terminal, i),
+                    0, terminal->data_pitch);
+                attr_init(terminal_get_attr_row(terminal, i),
+                    terminal->curr_attr, terminal->width);
+            }
+            break;
+        case NUM5:  /* DECSCNM */
+            if (sr) {
+                terminal->mode |=  MODE_INVERSE;
+            } else {
+                terminal->mode &= ~MODE_INVERSE;
+            }
+            break;
+        case NUM6:  /* DECOM */
+            terminal->origin_mode = sr;
+            if (terminal->origin_mode) {
+                terminal->row = terminal->margin_top;
+            } else {
+                terminal->row = 0;
+            }
+            terminal->column = 0;
+            break;
+        default :
+            fprintf(stderr, "Unknown parameter: ?%d\n", code);
+            break;
+    }
+}
+void handle_switch2(struct terminal *terminal, int code)
+{
+    switch (code) {
+        case NUM7:  /* DECAWM */
+            if (sr) {
+                terminal->mode |=  MODE_AUTOWRAP;
+            } else {
+                terminal->mode &= ~MODE_AUTOWRAP;
+            }
+            break;
+        case NUM8:  /* DECARM */
+            if (sr) {
+                terminal->mode |=  MODE_AUTOREPEAT;
+            } else {
+                terminal->mode &= ~MODE_AUTOREPEAT;
+            }
+            break;
+        case NUM12:  /* Very visible cursor (CVVIS) */
+            break;
+        case NUM25:
+            if (sr) {
+                terminal->mode |=  MODE_SHOW_CURSOR;
+            } else {
+                terminal->mode &= ~MODE_SHOW_CURSOR;
+            }
+            break;
+        case NUM1034:   /* smm/rmm, meta mode on/off */
+            /* ignore */
+            break;
+        case NUM1037:   /* deleteSendsDel */
+            if (sr) {
+                terminal->mode |=  MODE_DELETE_SENDS_DEL;
+            } else {
+                terminal->mode &= ~MODE_DELETE_SENDS_DEL;
+            }
+            break;
+        case NUM1039:   /* altSendsEscape */
+            if (sr) {
+                terminal->mode |=  MODE_ALT_SENDS_ESC;
+            } else {
+                terminal->mode &= ~MODE_ALT_SENDS_ESC;
+            }
+            break;
+        case NUM1049:   /* rmcup/smcup, alternate screen */
+            /* Ignore.  Should be possible to implement,
+            * but it's kind of annoying. */
+            break;
+        default:
+            fprintf(stderr, "Unknown parameter: ?%d\n", code);
+            break;
+    }
+}
 static void handle_term_parameter(struct terminal *terminal, int code, int sr)
 {
     int i;
 
     if (terminal->escape_flags & ESC_FLAG_WHAT) {
-        switch (code) {
-            case 1:  /* DECCKM */
-                if (sr) {
-                    terminal->key_mode = KM_APPLICATION;
-                } else {
-                    terminal->key_mode = KM_NORMAL;
-                }
-                break;
-            case NUM2:  /* DECANM */
-                /* No VT52 support yet */
-                terminal->g0 = CS_US;
-                terminal->g1 = CS_US;
-                terminal->cs = terminal->g0;
-                break;
-            case NUM3:  /* DECCOLM */
-                if (sr) {
-                    terminal_resize(terminal, NUM132, NUM24);
-                } else {
-                    terminal_resize(terminal, NUM80, NUM24);
-                }
-                /* set columns, but also home cursor and clear screen */
-                terminal->row = 0; terminal->column = 0;
-                for (i = 0; i < terminal->height; i++) {
-                    memset(terminal_get_row(terminal, i),
-                        0, terminal->data_pitch);
-                    attr_init(terminal_get_attr_row(terminal, i),
-                        terminal->curr_attr, terminal->width);
-                }
-                break;
-            case NUM5:  /* DECSCNM */
-                if (sr) {
-                    terminal->mode |=  MODE_INVERSE;
-                } else {
-                    terminal->mode &= ~MODE_INVERSE;
-                }
-                break;
-            case NUM6:  /* DECOM */
-                terminal->origin_mode = sr;
-                if (terminal->origin_mode) {
-                    terminal->row = terminal->margin_top;
-                } else {
-                    terminal->row = 0;
-                }
-                terminal->column = 0;
-                break;
-            case NUM7:  /* DECAWM */
-                if (sr) {
-                    terminal->mode |=  MODE_AUTOWRAP;
-                } else {
-                    terminal->mode &= ~MODE_AUTOWRAP;
-                }
-                break;
-            case NUM8:  /* DECARM */
-                if (sr) {
-                    terminal->mode |=  MODE_AUTOREPEAT;
-                } else {
-                    terminal->mode &= ~MODE_AUTOREPEAT;
-                }
-                break;
-            case NUM12:  /* Very visible cursor (CVVIS) */
-                break;
-            case NUM25:
-                if (sr) {
-                    terminal->mode |=  MODE_SHOW_CURSOR;
-                } else {
-                    terminal->mode &= ~MODE_SHOW_CURSOR;
-                }
-                break;
-            case NUM1034:   /* smm/rmm, meta mode on/off */
-                /* ignore */
-                break;
-            case NUM1037:   /* deleteSendsDel */
-                if (sr) {
-                    terminal->mode |=  MODE_DELETE_SENDS_DEL;
-                } else {
-                    terminal->mode &= ~MODE_DELETE_SENDS_DEL;
-                }
-                break;
-            case NUM1039:   /* altSendsEscape */
-                if (sr) {
-                    terminal->mode |=  MODE_ALT_SENDS_ESC;
-                } else {
-                    terminal->mode &= ~MODE_ALT_SENDS_ESC;
-                }
-                break;
-            case NUM1049:   /* rmcup/smcup, alternate screen */
-                /* Ignore.  Should be possible to implement,
-                * but it's kind of annoying. */
-                break;
-            default:
-                fprintf(stderr, "Unknown parameter: ?%d\n", code);
-                break;
+        if (code < 8) {
+            handle_switch1(terminal, code);
+        } else {
+            handle_switch2(terminal, code);
         }
     } else {
         switch (code) {
