@@ -154,86 +154,86 @@ void RKCodecNode::SerchIFps(unsigned char* buf, size_t bufSize, std::shared_ptr<
     }
 }
 
-void  RKCodecNode::xYUV422ToRGBA(uint8_t * yuv422, uint8_t * rgba, int width, int height)
+void  RKCodecNode::xYUV422ToRGBA(uint8_t *yuv422, uint8_t *rgba, int width, int height)
 {
     int R,G,B,Y,U,V;
+    int ynum = width * height;
+    int i;
 
-    int ynum=width*height;
-    int i;  
+    for (i=0; i<ynum; i++) {
+        Y = *(yuv422 + (i * 2));         // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average
+        U = *(yuv422 + (i / 2 * 4) + 1); // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, and 1 is the offset of U
+        V = *(yuv422 + (i / 2 * 4) + 3); // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, and 3 is the offset of V
 
-    for(i=0; i<ynum; i++){
-        Y = *(yuv422 + (i * 2));
-        U = *(yuv422 + (i / 2 * 4) + 1);
-        V = *(yuv422 + (i / 2 * 4) + 3);
-
+        // YUYV format to RGB format algorithm, 1164 / 1000 equals 1.164
         B = (1164 * (Y - 16) + 2018 * (U - 128)) / 1000;
         G = (1164 * (Y - 16) - 391 * (U - 128) - 813 * (V - 128)) / 1000;
         R = (1164 * (Y - 16) + 1596 * (V - 128)) / 1000;
 
-        if (R>255) {
-            R=255;
+        if (R > 255) { // RGB colors are stored up to 255
+            R = 255;   // RGB colors are stored up to 255
         }
-        if (R<0) {
+        if (R < 0) {
             R=0;
         }
-        if (G>255) {
-            G=255;
+        if (G > 255) { // RGB colors are stored up to 255
+            G = 255;   // RGB colors are stored up to 255
         }
-        if (G<0) {
-            G=0;
+        if (G < 0) {
+            G = 0;
         }
-        if (B>255)
-            B=255;
+        if (B > 255) { // RGB colors are stored up to 255
+            B = 255;   // RGB colors are stored up to 255
         }
-        if (B<0) {
-            B=0;
+        if (B < 0) {
+            B = 0;
         }
 
-        *(rgba + (i * 4)) = R;
-        *(rgba + (i * 4) + 1) = G;
-        *(rgba + (i * 4) + 2) = B;
-        *(rgba + (i * 4) + 3) = 255;
+        *(rgba + (i * 4)) = R;       // RGBA 3 primary colors are arranged in order, and a is the filling bit
+        *(rgba + (i * 4) + 1) = G;   // RGBA 3 primary colors are arranged in order, and a is the filling bit, 1 is the offset of G
+        *(rgba + (i * 4) + 2) = B;   // RGBA 3 primary colors are arranged in order, and a is the filling bit, 2 is the offset of B
+        *(rgba + (i * 4) + 3) = 255; // RGBA 3 primary colors are arranged in order, and a is the filling bit, 3 is the offset of A
     }
 }
 
 void  RKCodecNode::xYUV422ToRGB(uint8_t *yuv422, uint8_t *rgb, int width, int height)
 {
     int R,G,B,Y,U,V;
-
     int ynum = width * height;
     int i;  
 
-    for(i=0; i<ynum; i++){
-        Y = *(yuv422 + (i * 2));
-        U = *(yuv422 + (i / 2 * 4) + 1);
-        V = *(yuv422 + (i / 2 * 4) + 3);
+    for (i=0; i<ynum; i++) {
+        Y = *(yuv422 + (i * 2));         // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average
+        U = *(yuv422 + (i / 2 * 4) + 1); // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, and 1 is the offset of U
+        V = *(yuv422 + (i / 2 * 4) + 3); // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, and 3 is the offset of V
 
+        // YUYV format to RGB format algorithm, 1164 / 1000 equals 1.164
         B = (1164 * (Y - 16) + 2018 * (U - 128)) / 1000;
         G = (1164 * (Y - 16) - 391 * (U - 128) - 813 * (V - 128)) / 1000;
         R = (1164 * (Y - 16) + 1596 * (V - 128)) / 1000;
 
-        if (R>255) {
-            R=255;
+        if (R > 255) { // RGB colors are stored up to 255
+            R = 255;   // RGB colors are stored up to 255
         }
-        if (R<0) {
-            R=0;
+        if (R < 0) {
+            R = 0;
         }
-        if (G>255) {
-            G=255;
+        if (G > 255) { // RGB colors are stored up to 255
+            G = 255;   // RGB colors are stored up to 255
         }
-        if (G<0) {
-            G=0;
+        if (G < 0) {
+            G = 0;
         }
-        if (B>255) {
-            B=255;
+        if (B > 255) { // RGB colors are stored up to 255
+            B = 255;   // RGB colors are stored up to 255
         }
-        if (B<0) {
-            B=0;
+        if (B < 0) {
+            B = 0;
         }
 
-        *(rgb + (i * 3)) = R;
-        *(rgb + (i * 3) + 1) = G;
-        *(rgb + (i * 3) + 2) = B;
+        *(rgb + (i * 3)) = R;      // RGB 3 primary colors are arranged in order
+        *(rgb + (i * 3) + 1) = G;  // RGB 3 primary colors are arranged in order, and 1 is the offset of G
+        *(rgb + (i * 3) + 2) = B;  // RGB 3 primary colors are arranged in order, and 2 is the offset of B
     }  
 }
 
@@ -243,9 +243,9 @@ void  RKCodecNode::xRGBAToRGB(uint8_t *rgba, uint8_t *rgb, int width, int height
     int i;
 
     for(i=0; i<ynum; i++){
-        *(rgb+(i*3)) = *(rgba+(i*4));
-        *(rgb+(i*3)+1) = *(rgba+(i*4)+1);
-        *(rgb+(i*3)+2) = *(rgba+(i*4)+2);
+        *(rgb + (i * 3)) = *(rgba + (i * 4));
+        *(rgb + (i * 3) + 1) = *(rgba + (i * 4) + 1);
+        *(rgb + (i * 3) + 2) = *(rgba + (i * 4) + 2);
     }
 }
 
@@ -259,8 +259,8 @@ void RKCodecNode::Yuv422ToRGBA8888(std::shared_ptr<IBuffer>& buffer)
     previewWidth_ = buffer->GetWidth();
     previewHeight_ = buffer->GetHeight();
 
-    int temp_src_size = previewWidth_*previewHeight_*2;
-    int temp_dst_size = previewWidth_*previewHeight_*4;
+    int temp_src_size = previewWidth_ * previewHeight_ * 2;
+    int temp_dst_size = previewWidth_ * previewHeight_ * 4;
 
     if (buffer->GetSize() < temp_dst_size) {
         CAMERA_LOGI("RKCodecNode::Yuv422ToRGBA8888 buffer too small");
@@ -448,5 +448,5 @@ RetCode RKCodecNode::CancelCapture(const int32_t streamId)
     return RC_OK;
 }
 
-REGISTERNODE(RKCodecNode, {"RKCodec"})
+static REGISTERNODE(RKCodecNode, {"RKCodec"})
 } // namespace OHOS::Camera
