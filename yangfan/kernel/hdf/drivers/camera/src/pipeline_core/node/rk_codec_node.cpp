@@ -54,7 +54,7 @@ RetCode RKCodecNode::Flush(const int32_t streamId)
 }
 
 void RKCodecNode::encodeJpegToMemory(unsigned char* image, int width, int height,
-        const char* comment, size_t* jpegSize, unsigned char** jpegBuf)
+    const char* comment, size_t* jpegSize, unsigned char** jpegBuf)
 {
     struct jpeg_compress_struct cInfo;
     struct jpeg_error_mgr jErr;
@@ -74,7 +74,7 @@ void RKCodecNode::encodeJpegToMemory(unsigned char* image, int width, int height
 
     jpeg_set_defaults(&cInfo);
     jpeg_set_quality(&cInfo, compressionRatio, TRUE);
-    jpeg_mem_dest(&cInfo, jpegBuf, jpegSize);
+    jpeg_mem_dest(&cInfo, jpegBuf, (unsigned long *)jpegSize);
     jpeg_start_compress(&cInfo, TRUE);
 
     if (comment) {
@@ -152,94 +152,112 @@ void RKCodecNode::SerchIFps(unsigned char* buf, size_t bufSize, std::shared_ptr<
         CAMERA_LOGI("ForkNode::ForkBuffers SetEsKeyFrame == 0 nalu == 0x%{public}x idx = %{public}d\n",
             nalType, idx);
     }
-
 }
 
-
-
-
-
-void  RKCodecNode::xYUV422ToRGBA(uint8_t * yuv422, uint8_t * rgba, int width, int height)  
+void  RKCodecNode::xYUV422ToRGBA(uint8_t *yuv422, uint8_t *rgba, int width, int height)
 {
-       int R,G,B,Y,U,V;
+    int R, G, B, Y, U, V;
+    int ynum = width * height;
+    int i;
 
-       int ynum=width*height;  
-       int i;  
+    for (i=0; i<ynum; i++) {
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average
+        Y = *(yuv422 + (i * 2));
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, U is offset by 1 bits
+        U = *(yuv422 + (i / 2 * 4) + 1);
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, V is offset by 3 bits
+        V = *(yuv422 + (i / 2 * 4) + 3);
 
-       for(i=0;i<ynum;i++){  
-		   Y = *(yuv422+(i*2));
-		   U = *(yuv422+(i/2*4)+1);
-		   V = *(yuv422+(i/2*4)+3);
+        // 1164/1000 equals 1.164, 2018/1000 equals 2.018, Y is offset by 16 bits, U is offset by 128 bits
+        B = (1164 * (Y - 16) + 2018 * (U - 128)) / 1000;
+        // 1164/1000 = 1.164, 391/1000 = 0.391, 813/1000 = 0.813, Y is offset by 16 bits, U is offset by 128 bits
+        G = (1164 * (Y - 16) - 391 * (U - 128) - 813 * (V - 128)) / 1000;
+        // 1164/1000 equals 1.164, 1596/1000 equals 1.596, Y is offset by 16 bits, V is offset by 128 bits
+        R = (1164 * (Y - 16) + 1596 * (V - 128)) / 1000;
 
-		   B = (1164 * (Y - 16) + 2018 * (U - 128))/1000;
-		   G = (1164 * (Y - 16) - 391 * (U - 128) - 813 * (V - 128))/1000;
-		   R = (1164 * (Y - 16) + 1596 * (V - 128))/1000;
+        if (R > 255) { // RGB colors are stored up to 255
+            R = 255;   // RGB colors are stored up to 255
+        }
+        if (R < 0) {
+            R = 0;
+        }
+        if (G > 255) { // RGB colors are stored up to 255
+            G = 255;   // RGB colors are stored up to 255
+        }
+        if (G < 0) {
+            G = 0;
+        }
+        if (B > 255) { // RGB colors are stored up to 255
+            B = 255;   // RGB colors are stored up to 255
+        }
+        if (B < 0) {
+            B = 0;
+        }
 
-		   if (R>255)R=255;
-		   if (R<0)R=0;
-		   if (G>255)G=255;
-		   if (G<0)G=0;
-		   if (B>255)B=255;
-		   if (B<0)B=0;
-
-
-		   *(rgba+(i*4)) = R;
-		   *(rgba+(i*4)+1) = G;
-		   *(rgba+(i*4)+2) = B;
-		   *(rgba+(i*4)+3) = 255;
-		   
-	   }  
-
+        *(rgba + (i * 4)) = R;       // RGBA occupies 4 bits
+        *(rgba + (i * 4) + 1) = G;   // RGBA occupies 4 bits, G is offset by 1 bits
+        *(rgba + (i * 4) + 2) = B;   // RGBA occupies 4 bits, B is offset by 2 bits
+        *(rgba + (i * 4) + 3) = 255; // RGBA occupies 4 bits, A is offset by 3 bits, and is filled with 255
+    }
 }
 
-
-void  RKCodecNode::xYUV422ToRGB(uint8_t * yuv422, uint8_t * rgb, int width, int height)  
+void  RKCodecNode::xYUV422ToRGB(uint8_t *yuv422, uint8_t *rgb, int width, int height)
 {
-       int R,G,B,Y,U,V;
+    int R, G, B, Y, U, V;
+    int ynum = width * height;
+    int i;
 
-       int ynum=width*height;  
-       int i;  
+    for (i=0; i<ynum; i++) {
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average
+        Y = *(yuv422 + (i * 2));
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, U is offset by 1 bits
+        U = *(yuv422 + (i / 2 * 4) + 1);
+        // Two pixels occupy 4 bytes of storage space, and one pixel occupies 2 bytes on average, V is offset by 3 bits
+        V = *(yuv422 + (i / 2 * 4) + 3);
 
-       for(i=0;i<ynum;i++){  
-		   Y = *(yuv422+(i*2));
-		   U = *(yuv422+(i/2*4)+1);
-		   V = *(yuv422+(i/2*4)+3);
+        // 1164/1000 equals 1.164, 2018/1000 equals 2.018, Y is offset by 16 bits, U is offset by 128 bits
+        B = (1164 * (Y - 16) + 2018 * (U - 128)) / 1000;
+        // 1164/1000 = 1.164, 391/1000 = 0.391, 813/1000 = 0.813, Y is offset by 16 bits, U is offset by 128 bits
+        G = (1164 * (Y - 16) - 391 * (U - 128) - 813 * (V - 128)) / 1000;
+        // 1164/1000 equals 1.164, 1596/1000 equals 1.596, Y is offset by 16 bits, V is offset by 128 bits
+        R = (1164 * (Y - 16) + 1596 * (V - 128)) / 1000;
 
-		   B = (1164 * (Y - 16) + 2018 * (U - 128))/1000;
-		   G = (1164 * (Y - 16) - 391 * (U - 128) - 813 * (V - 128))/1000;
-		   R = (1164 * (Y - 16) + 1596 * (V - 128))/1000;
+        if (R > 255) { // RGB colors are stored up to 255
+            R = 255;   // RGB colors are stored up to 255
+        }
+        if (R < 0) {
+            R = 0;
+        }
+        if (G > 255) { // RGB colors are stored up to 255
+            G = 255;   // RGB colors are stored up to 255
+        }
+        if (G < 0) {
+            G = 0;
+        }
+        if (B > 255) { // RGB colors are stored up to 255
+            B = 255;   // RGB colors are stored up to 255
+        }
+        if (B < 0) {
+            B = 0;
+        }
 
-		   if (R>255)R=255;
-		   if (R<0)R=0;
-		   if (G>255)G=255;
-		   if (G<0)G=0;
-		   if (B>255)B=255;
-		   if (B<0)B=0;
-
-
-		   *(rgb+(i*3)) = R;
-		   *(rgb+(i*3)+1) = G;
-		   *(rgb+(i*3)+2) = B;
-		   
-	   }  
-
+        *(rgb + (i * 3)) = R;      // RGB occupies 3 bits
+        *(rgb + (i * 3) + 1) = G;  // RGB occupies 3 bits, G is offset by 1 bits
+        *(rgb + (i * 3) + 2) = B;  // RGB occupies 3 bits, B is offset by 2 bits
+    }  
 }
 
-
-void  RKCodecNode::xRGBAToRGB(uint8_t * rgba, uint8_t * rgb, int width, int height)  
+void  RKCodecNode::xRGBAToRGB(uint8_t *rgba, uint8_t *rgb, int width, int height)
 {
+    int ynum = width * height;
+    int i;
 
-       int ynum=width*height;  
-       int i;  
-
-       for(i=0;i<ynum;i++){ 
-		   *(rgb+(i*3)) = *(rgba+(i*4));
-		   *(rgb+(i*3)+1) = *(rgba+(i*4)+1);
-		   *(rgb+(i*3)+2) = *(rgba+(i*4)+2);		   
-	   }  
-
+    for(i=0; i<ynum; i++){
+        *(rgb + (i * 3)) = *(rgba + (i * 4));
+        *(rgb + (i * 3) + 1) = *(rgba + (i * 4) + 1);
+        *(rgb + (i * 3) + 2) = *(rgba + (i * 4) + 2);
+    }
 }
-
 
 void RKCodecNode::Yuv422ToRGBA8888(std::shared_ptr<IBuffer>& buffer)
 {
@@ -251,16 +269,14 @@ void RKCodecNode::Yuv422ToRGBA8888(std::shared_ptr<IBuffer>& buffer)
     previewWidth_ = buffer->GetWidth();
     previewHeight_ = buffer->GetHeight();
 
-
-	int temp_src_size = previewWidth_*previewHeight_*2;
-	int temp_dst_size = previewWidth_*previewHeight_*4;
+    int temp_src_size = previewWidth_ * previewHeight_ * 2;
+    int temp_dst_size = previewWidth_ * previewHeight_ * 4;
 
     if (buffer->GetSize() < temp_dst_size) {
         CAMERA_LOGI("RKCodecNode::Yuv422ToRGBA8888 buffer too small");
         return;
     }
 
-	
     void* temp_src = malloc(temp_src_size);
     if (temp_src == nullptr) {
         CAMERA_LOGI("RKCodecNode::Yuv422ToRGBA8888 malloc buffer == nullptr");
@@ -273,25 +289,21 @@ void RKCodecNode::Yuv422ToRGBA8888(std::shared_ptr<IBuffer>& buffer)
         return;
     }
 
-
     int ret = memcpy_s(temp_src, temp_src_size, (const void *)buffer->GetVirAddress(), temp_src_size);
     if (ret != 0) {
         printf("memcpy_s failed!\n");
     }
 
+    xYUV422ToRGBA((uint8_t *)temp_src, (uint8_t *)temp_dst,previewWidth_,previewHeight_);
 
-	xYUV422ToRGBA((uint8_t *)temp_src, (uint8_t *)temp_dst,previewWidth_,previewHeight_);
+    ret = memcpy_s((void *)buffer->GetVirAddress(), temp_dst_size,temp_dst , temp_dst_size);
+    if (ret != 0) {
+        printf("memcpy_s failed!\n");
+    }
 
-
-	ret = memcpy_s((void *)buffer->GetVirAddress(), temp_dst_size,temp_dst , temp_dst_size);
-	if (ret != 0) {
-		printf("memcpy_s failed!\n");
-	}
-
-	free(temp_src);
-	free(temp_dst);
+    free(temp_src);
+    free(temp_dst);
 }
-
 
 void RKCodecNode::Yuv422ToJpeg(std::shared_ptr<IBuffer>& buffer)
 {
@@ -300,16 +312,14 @@ void RKCodecNode::Yuv422ToJpeg(std::shared_ptr<IBuffer>& buffer)
         return;
     }
 
-
-	int temp_src_size = previewWidth_*previewHeight_*2;
-	int temp_dst_size = previewWidth_*previewHeight_*3;
-
+    int temp_src_size = previewWidth_ * previewHeight_ * 2;
+    int temp_dst_size = previewWidth_ * previewHeight_ * 3;
 
     if (buffer->GetSize() < temp_dst_size) {
         CAMERA_LOGI("RKCodecNode::Yuv422ToJpeg buffer too small");
         return;
     }
-	
+    
     void* temp_src = malloc(temp_src_size);
     if (temp_src == nullptr) {
         CAMERA_LOGI("RKCodecNode::Yuv422ToJpeg malloc buffer == nullptr");
@@ -327,18 +337,17 @@ void RKCodecNode::Yuv422ToJpeg(std::shared_ptr<IBuffer>& buffer)
         printf("memcpy_s failed!\n");
     }
 
-	xYUV422ToRGB((uint8_t *)temp_src, (uint8_t *)temp_dst,previewWidth_,previewHeight_);
+    xYUV422ToRGB((uint8_t *)temp_src, (uint8_t *)temp_dst,previewWidth_,previewHeight_);
 
     unsigned char* jBuf = nullptr;
     size_t jpegSize = 0;
 
     encodeJpegToMemory((unsigned char *)temp_dst, previewWidth_, previewHeight_, nullptr, &jpegSize, &jBuf);
-
-	if (jBuf==nullptr){
-		CAMERA_LOGI("RKCodecNode::Yuv422ToJpeg buffer == nullptr");
-		free(temp_dst);
-		return;
-	}
+    if (jBuf == nullptr){
+        CAMERA_LOGI("RKCodecNode::Yuv422ToJpeg buffer == nullptr");
+        free(temp_dst);
+        return;
+    }
 
     ret = memcpy_s((unsigned char*)buffer->GetVirAddress(), jpegSize, jBuf, jpegSize);
     if (ret != 0) {
@@ -348,12 +357,11 @@ void RKCodecNode::Yuv422ToJpeg(std::shared_ptr<IBuffer>& buffer)
     buffer->SetEsFrameSize(jpegSize);
 
     free(jBuf);
-	free(temp_src);
-	free(temp_dst);
+    free(temp_src);
+    free(temp_dst);
 
-	CAMERA_LOGE("RKCodecNode::Yuv422ToJpeg jpegSize = %{public}d\n", jpegSize);
+    CAMERA_LOGE("RKCodecNode::Yuv422ToJpeg jpegSize = %{public}d\n", jpegSize);
 }
-
 
 void RKCodecNode::Yuv420ToH264(std::shared_ptr<IBuffer>& buffer)
 {
@@ -418,7 +426,7 @@ void RKCodecNode::DeliverBuffer(std::shared_ptr<IBuffer>& buffer)
     } else if (buffer->GetEncodeType() == ENCODE_TYPE_H264) {
         //Yuv420ToH264(buffer);
     } else {
-        Yuv422ToRGBA8888(buffer);		
+        Yuv422ToRGBA8888(buffer);
     }
 
     outPutPorts_ = GetOutPorts();
