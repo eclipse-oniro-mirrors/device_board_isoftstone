@@ -2741,31 +2741,12 @@ static int wordsep(int ch)
     return ch == 0 || !(isalpha(ch) || isdigit(ch) || strchr(extra, ch));
 }
 
-static int recompute_selection(struct terminal *terminal)
+void assignTer(int start_row, int end_row, struct terminal *terminal, int side_margin, int cw)
 {
-    struct rectangle allocation;
-    int col, x, width, height;
-    int start_row, end_row;
-    int word_start, eol;
-    int side_margin, top_margin;
-    int start_x, end_x;
-    int cw, ch;
+    int start_x, end_x, eol, x, word_start,col;
     union utf8_char *data = NULL;
-
-    cw = terminal->average_width;
-    ch = terminal->extents.height;
-    widget_get_allocation(terminal->widget, &allocation);
-    width = terminal->width * cw;
-    height = terminal->height * ch;
-    side_margin = allocation.x + (allocation.width - width) / NUM2;
-    top_margin = allocation.y + (allocation.height - height) / NUM2;
-
-    start_row = (terminal->selection_start_y - top_margin + ch) / ch - 1;
-    end_row = (terminal->selection_end_y - top_margin + ch) / ch - 1;
-
-    if (start_row < end_row ||
-        (start_row == end_row &&
-         terminal->selection_start_x < terminal->selection_end_x)) {
+    if (start_row < end_row || (start_row == end_row &&
+        terminal->selection_start_x < terminal->selection_end_x)) {
         terminal->selection_start_row = start_row;
         terminal->selection_end_row = end_row;
         start_x = terminal->selection_start_x;
@@ -2776,15 +2757,13 @@ static int recompute_selection(struct terminal *terminal)
         start_x = terminal->selection_end_x;
         end_x = terminal->selection_start_x;
     }
-
     eol = 0;
     if (terminal->selection_start_row < 0) {
         terminal->selection_start_row = 0;
         terminal->selection_start_col = 0;
     } else {
         x = side_margin + cw / NUM2;
-        data = terminal_get_row(terminal,
-                    terminal->selection_start_row);
+        data = terminal_get_row(terminal, terminal->selection_start_row);
         word_start = 0;
         for (col = 0; col < terminal->width; col++, x += cw) {
             if (col == 0 || wordsep(data[col - 1].ch)) {
@@ -2797,7 +2776,6 @@ static int recompute_selection(struct terminal *terminal)
                 break;
             }
         }
-
         switch (terminal->dragging) {
             case SELECT_LINE:
                 terminal->selection_start_col = 0;
@@ -2812,7 +2790,24 @@ static int recompute_selection(struct terminal *terminal)
                 break;
         }
     }
+}
+static int recompute_selection(struct terminal *terminal)
+{
+    struct rectangle allocation;
+    int col, x, width, height, start_row, end_row, start_x, end_x, cw, ch;
+    int word_start, eol, side_margin, top_margin;
+    union utf8_char *data = NULL;
+    cw = terminal->average_width;
+    ch = terminal->extents.height;
+    widget_get_allocation(terminal->widget, &allocation);
+    width = terminal->width * cw;
+    height = terminal->height * ch;
+    side_margin = allocation.x + (allocation.width - width) / NUM2;
+    top_margin = allocation.y + (allocation.height - height) / NUM2;
+    start_row = (terminal->selection_start_y - top_margin + ch) / ch - 1;
+    end_row = (terminal->selection_end_y - top_margin + ch) / ch - 1;
 
+    assignTer(start_row, end_row, terminal, side_margin, cw);
     if (terminal->selection_end_row >= terminal->height) {
         terminal->selection_end_row = terminal->height;
         terminal->selection_end_col = 0;
@@ -2830,7 +2825,6 @@ static int recompute_selection(struct terminal *terminal)
         }
         terminal->selection_end_col = col;
     }
-
     if (terminal->selection_end_col != terminal->selection_start_col ||
         terminal->selection_start_row != terminal->selection_end_row) {
         col = terminal->selection_end_col;
@@ -2842,7 +2836,6 @@ static int recompute_selection(struct terminal *terminal)
             terminal->selection_start_col = eol;
         }
     }
-
     return 1;
 }
 
