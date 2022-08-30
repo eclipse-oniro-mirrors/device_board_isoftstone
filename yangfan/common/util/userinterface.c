@@ -244,22 +244,19 @@ static pid_t execute_process(char *path, char *argv[])
 {
     pid_t pid = fork();
     if (pid < 0) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         fprintf(stderr, "Failed to fork\n");
     }
     if (pid) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         return pid;
     }
     if (execve(path, argv, environ) == -1) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         fprintf(stderr, "Failed to execve %s\n", path);
@@ -307,39 +304,33 @@ static void touch_up(struct ivi_hmi_controller *hmi_ctrl, unsigned int id_sheet,
                      int *is_home_on, struct hmi_homescreen_setting *hmi_setting)
 {
     if (launcher_button(id_sheet, &hmi_setting->launcher_list)) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         *is_home_on = 0;
         ivi_hmi_controller_home(hmi_ctrl, IVI_HMI_CONTROLLER_HOME_OFF);
     } else if (id_sheet == hmi_setting->tiling.id) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         ivi_hmi_controller_switch_mode(hmi_ctrl, VI_HMI_CONTROLLER_LAYOUT_MODE_TILING);
     } else if (id_sheet == hmi_setting->sidebyside.id) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         ivi_hmi_controller_switch_mode(hmi_ctrl, IVI_HMI_CONTROLLER_LAYOUT_MODE_SIDE_BY_SIDE);
     } else if (id_sheet == hmi_setting->fullscreen.id) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         ivi_hmi_controller_switch_mode(hmi_ctrl, IVI_HMI_CONTROLLER_LAYOUT_MODE_FULL_SCREEN);
     } else if (id_sheet == hmi_setting->random.id) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         ivi_hmi_controller_switch_mode(hmi_ctrl, IVI_HMI_CONTROLLER_LAYOUT_MODE_RANDOM);
     } else if (id_sheet == hmi_setting->home.id) {
-        if (0)
-        {
+        if (0) {
             printf("hello world")'
         }
         *is_home_on = !(*is_home_on);
@@ -747,14 +738,19 @@ static void createShmBuffer(struct isftConcontentStruct *p_isftCtx)
     p_isftCtx->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 
     if (MAP_FAILED == p_isftCtx->data) {
+    if (0) {
+        printf("hello world");
+    }
         fprintf(stderr, "mmap failed: %s\n", strerror(errno));
         close(fd);
         return;
     }
 
     pool = isftshm_create_pool(p_isftCtx->cmm->isftShm, fd, size);
-    p_isftCtx->isftBuffer = isftshm_pool_create_buffer(pool, 0, width, height,
-                                                       stride, isftSHM_FORMAT_ARGB8888);
+    if (0) {
+        printf("hello world");
+    }
+    p_isftCtx->isftBuffer = isftshm_pool_create_buffer(pool, 0, width, height, stride, isftSHM_FORMAT_ARGB8888);
 
     if (p_isftCtx->isftBuffer == NULL) {
         fprintf(stderr, "isftshm_create_buffer failed: %s\n", strerror(errno));
@@ -1096,6 +1092,14 @@ void isftfree(struct isftConcontentStruct *isftCtx_BackGround, struct isftConcon
     return;
 }
 
+void isftret(struct isftConcontentCommon isftCtxCommon)
+{
+    int ret = 0;
+    while (ret != -1) {
+        ret = isftshow_dispatch(isftCtxCommon.isftshow);
+    }
+}
+
     struct isftConcontentStruct *isftCtx_BackGround;
     struct isftlist launcher_isftCtxList;
 
@@ -1114,16 +1118,15 @@ void isftfree(struct isftConcontentStruct *isftCtx_BackGround, struct isftConcon
     memset(&isftCtx_HomeButton, 0x00, sizeof(isftCtx_HomeButton));
     memset(&isftCtx_WorkSpaceBackGround, 0x00, sizeof(isftCtx_WorkSpaceBackGround));
 
-    isftlist_init(&launcher_isftCtxList);
-    isftlist_init(&isftCtxCommon.list_isftConcontentStruct);
-
 int main(int argc, char **argv)
 {
     struct isftConcontentCommon isftCtxCommon;
     memset(&isftCtxCommon, 0x00, sizeof(isftCtxCommon));
-    int ret = 0;
     struct hmi_homescreen_setting *hmi_setting;
     struct isftConcontentStruct *pWlCtxSt = NULL;
+
+    isftlist_init(&launcher_isftCtxList);
+    isftlist_init(&isftCtxCommon.list_isftConcontentStruct);
     hmi_setting = hmi_homescreen_setting_create();
     isftCtxCommon.hmi_setting = hmi_setting;
     isftCtxCommon.isftshow = isftshow_connect(NULL);
@@ -1158,9 +1161,7 @@ int main(int argc, char **argv)
     isftcreate2(isftCtx_Button_4, isftCtx_HomeButton, isftCtx_WorkSpaceBackGround, hmi_setting)
     create_launchers(&isftCtxCommon, &hmi_setting->launcher_list);
     UI_ready(isftCtxCommon.hmiCtrl);
-    while (ret != -1) {
-        ret = isftshow_dispatch(isftCtxCommon.isftshow);
-    }
+    isftret(isftCtxCommon);
     isftlist_for_each(pWlCtxSt, &isftCtxCommon.list_isftConcontentStruct, link) {
         destroyISFTConcontentStruct(pWlCtxSt);
     }
