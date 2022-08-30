@@ -2613,10 +2613,11 @@ void defa_block(int *len, uint32_t *tsym, char *ch)
         }
     }
 }
-void stateJudge(enum wl_keyboard_key_state state, int len, struct terminal *terminal, int *d,
-                char ch[MAX_RESPONSE], struct input *input)
+void stateJudge(enum wl_keyboard_key_state state, int len, struct terminal *terminal,
+                char *ch, struct input *input)
 {
     uint32_t  serial;
+    int d;
     if (state == WL_KEYBOARD_KEY_STATE_PRESSED && len > 0) {
         if (terminal->scrolling) {
             d = terminal->saved_start - terminal->start;
@@ -2683,7 +2684,7 @@ void case_incert(uint32_t *tsym, int *len)
 }
 static void key_handler(struct window *window, struct input *input, uint32_t time,
                         uint32_t key, uint32_t sym, enum wl_keyboard_key_state state,
-                        void data[])
+                        void data[])4
 {
     struct terminal *terminal = data;
     char ch[MAX_RESPONSE];
@@ -2734,7 +2735,7 @@ static void key_handler(struct window *window, struct input *input, uint32_t tim
             break;
     }
     case_incert(&tsym, &len)
-    stateJudge(state, len, terminal, &d, ch[MAX_RESPONSE], input);
+    stateJudge(state, len, terminal, &ch, input);
 }
 
 static void keyboard_focus_handler(struct window *window,
