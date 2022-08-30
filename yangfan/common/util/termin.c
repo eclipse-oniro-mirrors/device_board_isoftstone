@@ -1576,7 +1576,7 @@ void escape_switch4(char *p, int count4, int *set, int *args, struct terminal *t
     }
 }
 void escape_switch5(char *p, int count5, int *set, int *args, struct terminal *terminal)
-{    
+{
     int count = count5;
     switch (*p) {
         case 'L':    /* IL - Insert <count> blank lines */
@@ -1814,7 +1814,7 @@ void escape_switch9(int *set, int *args, struct terminal *terminal)
                 fprintf(stderr, "Unimplemented windowOp %d\n", args[0]);
             }
             break;
-    }    
+    }
 }
 static void handle_escape(struct terminal *terminal)
 {
@@ -1863,7 +1863,7 @@ static void handle_escape(struct terminal *terminal)
         escape_switch7(p, count, set, args, terminal);
     } else (*p == 'n' || *p == 'r') {
         escape_switch8(p, count, set, args, terminal);
-    } 
+    }
 }
 
 static void handle_non_csi_escape(struct terminal *terminal, char code)
