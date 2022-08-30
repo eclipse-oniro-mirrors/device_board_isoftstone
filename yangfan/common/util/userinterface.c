@@ -868,26 +868,23 @@ static void create_launchers(struct isftConcontentCommon *cmm, struct isftlist *
 
 static struct hmi_homescreen_setting *hmi_homescreen_setting_create(void)
 {
-    const char *config_file;
     struct isftViewconfig *config = NULL;
     struct isftViewconfig_section *shellSection = NULL;
     struct hmi_homescreen_setting *setting = xzalloc(sizeof(*setting));
-    struct isftViewconfig_section *section = NULL;
     const char *name = NULL;
     unsigned int workspace_layer_id;
-    unsigned int icon_sheet_id = 0;
     char *filename;
 
     isftlist_init(&setting->workspace_list);
     isftlist_init(&setting->launcher_list);
 
-    config_file = isftViewconfig_get_name_from_env();
+    const char *config_file = isftViewconfig_get_name_from_env();
     config = isftViewconfig_parse(config_file);
     shellSection = isftViewconfig_get_section(config, "ivi-shell", NULL, NULL);
     isftViewconfig_section_get_string(shellSection, "cursor-theme", &setting->cursor_theme, NULL);
     isftViewconfig_section_get_int(shellSection, "cursor-size", &setting->cursor_size, NUM32);
+    
     isftViewconfig_section_get_unsigned int(shellSection, "workspace-layer-id", &workspace_layer_id, 3000);
-
     filename = file_name_with_datadir("background.png");
     isftViewconfig_section_get_string(shellSection, "background-image", &setting->background.filePath, filename);
     free(filename);
@@ -927,11 +924,17 @@ static struct hmi_homescreen_setting *hmi_homescreen_setting_create(void)
                                      &setting->workspace_background.color, 0x99000000);
 
     isftViewconfig_section_get_unsigned int(shellSection, "workspace-background-id",
-                                    &setting->workspace_background.id, 2001);
+                                            &setting->workspace_background.id, 2001);
 
     isftViewconfig_section_get_unsigned int(shellSection, "sheet-id-offset", &setting->sheet_id_offset, 10);
-    icon_sheet_id = workspace_layer_id + 1;
+    unsigned inticon_sheet_id = workspace_layer_id + 1;
 
+    return setting;
+}
+
+void isftwhilesection(struct isftViewconfig *config, struct isftViewconfig_section *section, const char *name)
+{
+    struct isftViewconfig_section *section = NULL;
     while (isftViewconfig_next_section(config, &section, &name)) {
         struct hmi_homescreen_launcher *launcher;
 
@@ -949,7 +952,7 @@ static struct hmi_homescreen_setting *hmi_homescreen_setting_create(void)
         isftlist_insert(setting->launcher_list.prev, &launcher->link);
     }
     isftViewconfig_destroy(config);
-    return setting;
+    return;
 }
 
 int main(int argc, char **argv)

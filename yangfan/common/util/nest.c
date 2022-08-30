@@ -427,7 +427,7 @@ static void surface_attach(struct isftclient *client,
                 isftresource_post_error(buffer_resource,
                     isftDISPLAY_ERROR_INVALID_OBJECT,
                     "invalid format");
-            return;
+                return;
         }
 
         buffer = nested_buffer_from_resource(buffer_resource);
@@ -510,16 +510,17 @@ static void surface_set_opaque_region(struct isftclient *client,
     struct isftresource *resource,
     struct isftresource *region_resource)
 {
-    fprintf(stderr, "surface_set_opaque_region\n");
-    return ;
+    int ret = sprintf(stderr, "surface_set_opaque_region\n");
+    if (ret < 0) {
+        printf("sprintf error");
+    }
 }
 
 static void surface_set_input_region(struct isftclient *client,
     struct isftresource *resource,
     struct isftresource *region_resource)
 {
-    fprintf(stderr, "surface_set_input_region\n");
-    return ;
+    printf(stderr, "surface_set_input_region\n");
 }
 
 static void surface_commit(struct isftclient *client, struct isftresource *resource)
@@ -555,8 +556,7 @@ static void surface_commit(struct isftclient *client, struct isftresource *resou
 static void surface_set_buffer_transform(struct isftclient *client,
     struct isftresource *resource, int transform)
 {
-    fprintf(stderr, "surface_set_buffer_transform\n");
-    return ;
+    printf(stderr, "surface_set_buffer_transform\n");
 }
 
 static const struct isftsurface_interface surface_interface = {
@@ -756,7 +756,7 @@ static int nested_init_compositor(struct nested *nested)
     return 0;
 }
 
-static struct Nested * Nested_create(struct display *display)
+static struct nested *nested_create(struct display *display)
 {
     struct nested *nested;
 
