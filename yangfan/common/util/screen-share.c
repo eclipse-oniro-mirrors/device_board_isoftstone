@@ -22,10 +22,9 @@
 #include <sys/socket.h>
 #include <sys/mman.h>
 #include <signal.h>
-#include <linux/import.h>
 #include <errno.h>
 #include <ctype.h>
-
+#include <linux/import.h>
 
 
 struct shared_export {
