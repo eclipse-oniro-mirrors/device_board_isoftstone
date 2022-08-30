@@ -85,8 +85,7 @@ bash build/prebuilts_download.sh
 1.  进入源码根目录，执行如下命令进行版本编译。
 
     ```
-    bash device/rockchip/product/rk3399_prebuild.sh
-    ./build.sh --product-name rk3399 --ccache
+    ./build.sh --product-name yangfan --ccache
     ```
 2.  检查编译结果。编译完成后，log中显示如下：
 
