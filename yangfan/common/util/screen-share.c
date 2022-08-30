@@ -99,9 +99,7 @@ struct screen_share {
     char *command;
 };
 
-static void grouphandle_pointer_enter(void *data, struct isftpointer *pointer,
-                                      unsigned int serial, struct isftsheet *sheet,
-                                      isftfixed_t x, isftfixed_t y)
+static void grouphandle_pointer_enter(void data[], unsigned int serial)
 {
     struct ss_seat *seat = data;
 
@@ -111,7 +109,7 @@ static void grouphandle_pointer_enter(void *data, struct isftpointer *pointer,
     notify_pointer_focus(&seat->base, NULL, 0, 0);
 }
 
-static void grouphandle_pointer_leave(void *data, struct isftpointer *pointer,
+static void grouphandle_pointer_leave(void data[], struct isftpointer *pointer,
                                       unsigned int serial, struct isftsheet *sheet)
 {
     struct ss_seat *seat = data;
@@ -119,8 +117,7 @@ static void grouphandle_pointer_leave(void *data, struct isftpointer *pointer,
     notify_pointer_focus(&seat->base, NULL, 0, 0);
 }
 
-static void grouphandle_motion(void *data, struct isftpointer *pointer,
-                               unsigned int time, isftfixed_t x, isftfixed_t y)
+static void grouphandle_motion(void data[], unsigned int time, isftfixed_t x, isftfixed_t y)
 {
     struct ss_seat *seat = data;
     struct timespec ts;
@@ -134,8 +131,7 @@ static void grouphandle_motion(void *data, struct isftpointer *pointer,
     notify_pointer_frame(&seat->base);
 }
 
-static void grouphandle_button(void *data, struct isftpointer *pointer, unsigned int serial, 
-                               unsigned int time, unsigned int button, unsigned int state)
+static void grouphandle_button(void data[], unsigned int time, unsigned int button, unsigned int state)
 {
     struct ss_seat *seat = data;
     struct timespec ts;
@@ -146,8 +142,7 @@ static void grouphandle_button(void *data, struct isftpointer *pointer, unsigned
     notify_pointer_frame(&seat->base);
 }
 
-static void grouphandle_axis(void *data, struct isftpointer *pointer, unsigned int time,
-                             unsigned int axis, isftfixed_t value)
+static void grouphandle_axis(void data[], unsigned int time, unsigned int axis, isftfixed_t value)
 {
     struct ss_seat *seat = data;
     struct isftViewpointer_axis_task isftViewtask;
@@ -171,32 +166,28 @@ static const struct isftpointer_listener grouppointer_listener = {
     grouphandle_axis,
 };
 
-static void grouphandle_keymap(void *data, struct isftkeyboard *isftkeyboard,
-                               unsigned int format, int fd, unsigned int size)
+static void grouphandle_keymap(void data[], unsigned int format, int fd, unsigned int size)
 {
     struct ss_seat *seat = data;
     struct xkb_keymap *keymap;
     char *map_str;
 
     if (!data) {
-        goto error_no_seat;
+        close(fd);
     }
     if (format == isftKEYBOARD_KEYMAP_FORMAT_XKB_V1) {
         map_str = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
         if (map_str == MAP_FAILED) {
             isftViewlog("mmap failed: %s\n", strerror(errno));
-            goto error;
+            isftkeyboard_release(seat->parent.keyboard);
         }
 
         keymap = xkb_keymap_new_from_string(seat->base.compositor->xkb_context,
-                            map_str,
-                            XKB_KEYMAP_FORMAT_TEXT_V1,
-                            0);
+                            map_str, XKB_KEYMAP_FORMAT_TEXT_V1, 0);
         munmap(map_str, size);
-
         if (!keymap) {
             isftViewlog("failed to compile keymap\n");
-            goto error;
+            isftkeyboard_release(seat->parent.keyboard);
         }
 
         seat->keyboard_state_update = STATE_UPDATE_NONE;
@@ -206,7 +197,7 @@ static void grouphandle_keymap(void *data, struct isftkeyboard *isftkeyboard,
         seat->keyboard_state_update = STATE_UPDATE_AUTOMATIC;
     } else {
         isftViewlog("Invalid keymap\n");
-        goto error;
+        isftkeyboard_release(seat->parent.keyboard);
     }
 
     close(fd);
@@ -219,15 +210,9 @@ static void grouphandle_keymap(void *data, struct isftkeyboard *isftkeyboard,
     xkb_keymap_unref(keymap);
 
     return;
-
-error:
-    isftkeyboard_release(seat->parent.keyboard);
-error_no_seat:
-    close(fd);
 }
 
-static void grouphandle_keyboard_enter(void *data, struct isftkeyboard *keyboard,
-                                       unsigned int serial, struct isftsheet *sheet, struct isftarray *keys)
+static void grouphandle_keyboard_enter(void data[], unsigned int serial, struct isftarray *keys)
 {
     struct ss_seat *seat = data;
 
@@ -237,16 +222,15 @@ static void grouphandle_keyboard_enter(void *data, struct isftkeyboard *keyboard
                  STATE_UPDATE_AUTOMATIC);
 }
 
-static void grouphandle_keyboard_leave(void *data, struct isftkeyboard *keyboard,
-                                       unsigned int serial, struct isftsheet *sheet)
+static void grouphandle_keyboard_leave(void data[], unsigned int serial, struct isftsheet *sheet)
 {
     struct ss_seat *seat = data;
 
     notify_keyboard_focus_out(&seat->base);
 }
 
-static void grouphandle_key(void *data, struct isftkeyboard *keyboard,
-                            unsigned int serial, unsigned int time, unsigned int key, unsigned int state)
+static void grouphandle_key(void data[], unsigned int serial, unsigned int time,
+                            unsigned int key, unsigned int state)
 {
     struct ss_seat *seat = data;
     struct timespec ts;
@@ -257,9 +241,8 @@ static void grouphandle_key(void *data, struct isftkeyboard *keyboard,
                isftKEYBOARD_KEY_STATE_RELEASED, seat->keyboard_state_update);
 }
 
-static void grouphandle_modifiers(void *data, struct isftkeyboard *isftkeyboard,
-                                  unsigned int serial_in, unsigned int mods_depressed,
-                                  unsigned int mods_latched, unsigned int mods_locked, unsigned int group)
+static void grouphandle_modifiers(void data[], unsigned int serial_in, unsigned int mods_depressed,
+                                  unsigned int mods_latched, unsigned int group)
 {
     struct ss_seat *seat = data;
     struct isftViewcompositor *c = seat->base.compositor;
@@ -275,9 +258,7 @@ static void grouphandle_modifiers(void *data, struct isftkeyboard *isftkeyboard,
         serial_out = isftshow_next_serial(c->isftshow);
     }
     keyboard = isftViewseat_get_keyboard(&seat->base);
-    xkb_state_update_mask(keyboard->xkb_state.state,
-                  mods_depressed, mods_latched,
-                  mods_locked, 0, 0, group);
+    xkb_state_update_mask(keyboard->xkb_state.state, mods_depressed, mods_latched, mods_locked, 0, 0, group);
     notify_modifiers(&seat->base, serial_out);
 }
 
@@ -289,15 +270,14 @@ static const struct isftkeyboard_listener groupkeyboard_listener = {
     grouphandle_modifiers,
 };
 
-static void grouphandle_capabilities(void *data, struct isftseat *seat, enum isftseat_capability caps)
+static void grouphandle_capabilities(void data[], struct isftseat *seat, enum isftseat_capability caps)
 {
     struct ss_seat *ss_seat = data;
 
     if ((caps & isftSEAT_CAPABILITY_POINTER) && !ss_seat->parent.pointer) {
         ss_seat->parent.pointer = isftseat_get_pointer(seat);
         isftpointer_set_user_data(ss_seat->parent.pointer, ss_seat);
-        isftpointer_add_listener(ss_seat->parent.pointer,
-                    &grouppointer_listener, ss_seat);
+        isftpointer_add_listener(ss_seat->parent.pointer, &grouppointer_listener, ss_seat);
         isftViewseat_init_pointer(&ss_seat->base);
     } else if (!(caps & isftSEAT_CAPABILITY_POINTER) && ss_seat->parent.pointer) {
         isftpointer_destroy(ss_seat->parent.pointer);
@@ -307,8 +287,7 @@ static void grouphandle_capabilities(void *data, struct isftseat *seat, enum isf
     if ((caps & isftSEAT_CAPABILITY_KEYBOARD) && !ss_seat->parent.keyboard) {
         ss_seat->parent.keyboard = isftseat_get_keyboard(seat);
         isftkeyboard_set_user_data(ss_seat->parent.keyboard, ss_seat);
-        isftkeyboard_add_listener(ss_seat->parent.keyboard,
-                     &groupkeyboard_listener, ss_seat);
+        isftkeyboard_add_listener(ss_seat->parent.keyboard, &groupkeyboard_listener, ss_seat);
     } else if (!(caps & isftSEAT_CAPABILITY_KEYBOARD) && ss_seat->parent.keyboard) {
         isftkeyboard_destroy(ss_seat->parent.keyboard);
         ss_seat->parent.keyboard = NULL;
@@ -372,7 +351,7 @@ static void ss_shm_buffer_destroy(struct ss_shm_buffer *buffer)
     free(buffer);
 }
 
-static void buffer_release(void *data, struct isftbuffer *buffer)
+static void buffer_release(void data[], struct isftbuffer *buffer)
 {
     struct ss_shm_buffer *sb = data;
 
@@ -435,12 +414,15 @@ shared_export_get_shm_buffer(struct shared_export *so)
     data = mmap(NULL, height * stride, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (data == MAP_FAILED) {
         isftViewlog("mmap: %s\n", strerror(errno));
-        goto out_close;
+        if (fd != -1) {
+            close(fd);
+        }
+        return NULL;
     }
 
     sb = zalloc(sizeof *sb);
     if (!sb) {
-        goto out_unmap;
+        munmap(data, height * stride);
     }
     sb->export = so;
     isftlist_init(&sb->free_link);
@@ -467,19 +449,9 @@ shared_export_get_shm_buffer(struct shared_export *so)
         pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height,
                      (unsigned int *)data, stride);
     if (!sb->pm_image) {
-        goto out_pixman_error;
+        pixman_region32_fini(&sb->damage);
     }
     return sb;
-
-out_pixman_error:
-    pixman_region32_fini(&sb->damage);
-out_unmap:
-    munmap(data, height * stride);
-out_close:
-    if (fd != -1) {
-        close(fd);
-    }
-    return NULL;
 }
 
 static void export_compute_transform(struct isftViewexport *export, pixman_transform_t *transform)
@@ -569,7 +541,7 @@ static int shared_export_ensure_tmp_data(struct shared_export *so, pixman_region
 
 static void shared_export_update(struct shared_export *so);
 
-static void shared_export_frame_callback(void *data, struct isftcallback *cb, unsigned int time)
+static void shared_export_frame_callback(void data[], struct isftcallback *cb, unsigned int time)
 {
     struct shared_export *so = data;
 
@@ -603,7 +575,6 @@ static void shared_export_update(struct shared_export *so)
         shared_export_destroy(so);
         return;
     }
-
     export_compute_transform(so->export, &transform);
     pixman_image_set_transform(so->cache_image, &transform);
 
@@ -617,24 +588,17 @@ static void shared_export_update(struct shared_export *so)
                     PIXMAN_FILTER_BILINEAR, NULL, 0);
     }
 
-    pixman_image_composite32(PIXMAN_OP_SRC,
-                 so->cache_image, /* src */
-                 NULL, /* mask */
-                 sb->pm_image, /* dest */
-                 0, 0, /* src_x, src_y */
-                 0, 0, /* mask_x, mask_y */
-                 0, 0, /* dest_x, dest_y */
-                 so->export->width, /* width */
-                 so->export->height /* height */);
-
+    pixman_image_composite32(PIXMAN_OP_SRC, so->cache_image, /* src */ NULL, /* mask */
+                 sb->pm_image, /* dest */ 0, 0, /* src_x, src_y */0, 0, /* mask_x, mask_y */
+                 0, 0, /* dest_x, dest_y */so->export->width, /* width */so->export->height /* height */);
     pixman_image_set_transform(sb->pm_image, NULL);
     pixman_image_set_clip_region32(sb->pm_image, NULL);
 
     r = pixman_region32_rectangles(&sb->damage, &nrects);
-    for (i = 0; i < nrects; ++i)
+    for (i = 0; i < nrects; ++i) {
         isftsheet_damage(so->parent.sheet, r[i].x1, r[i].y1,
                   r[i].x2 - r[i].x1, r[i].y2 - r[i].y1);
-
+    }
     isftsheet_attach(so->parent.sheet, sb->buffer, 0, 0);
 
     so->parent.frame_cb = isftsheet_frame(so->parent.sheet);
@@ -650,7 +614,7 @@ static void shared_export_update(struct shared_export *so)
     pixman_region32_init(&sb->damage);
 }
 
-static void shm_handle_format(void *data, struct isftshm *isftshm, unsigned int format)
+static void shm_handle_format(void data[], struct isftshm *isftshm, unsigned int format)
 {
     struct shared_export *so = data;
 
@@ -661,37 +625,30 @@ struct isftshm_listener shm_listener = {
     shm_handle_format
 };
 
-static void registry_handle_global(void *data, struct isftregistry *registry, unsigned int id,
-                                   const char *interface, unsigned int version)
+static void registry_handle_global(void data[], struct isftregistry *registry, unsigned int id,
+                                   const char *interface)
 {
     struct shared_export *so = data;
 
     if (strcmp(interface, "isftcompositor") == 0) {
         so->parent.compositor =
-            isftregistry_bind(registry,
-                     id, &isftcompositor_interface, 1);
+            isftregistry_bind(registry, id, &isftcompositor_interface, 1);
     } else if (strcmp(interface, "isftexport") == 0 && !so->parent.export) {
         so->parent.export =
-            isftregistry_bind(registry,
-                     id, &isftexport_interface, 1);
+            isftregistry_bind(registry, id, &isftexport_interface, 1);
     } else if (strcmp(interface, "isftseat") == 0) {
         groupcreate(so, id);
     } else if (strcmp(interface, "isftshm") == 0) {
         so->parent.shm =
-            isftregistry_bind(registry,
-                     id, &isftshm_interface, 1);
+            isftregistry_bind(registry, id, &isftshm_interface, 1);
         isftshm_add_listener(so->parent.shm, &shm_listener, so);
     } else if (strcmp(interface, "zwp_fullscreen_shell_v1") == 0) {
         so->parent.fshell =
-            isftregistry_bind(registry,
-                     id,
-                     &zwp_fullscreen_shell_v1_interface,
-                     1);
+            isftregistry_bind(registry, id, &zwp_fullscreen_shell_v1_interface, 1);
     }
 }
 
-static void registry_handle_global_remove(void *data, struct isftregistry *registry,
-                                          unsigned int name)
+static void registry_handle_global_remove(void data[], unsigned int name)
 {
     struct shared_export *so = data;
     struct ss_seat *seat, *next;
@@ -707,7 +664,7 @@ static const struct isftregistry_listener registry_listener = {
     registry_handle_global_remove
 };
 
-static int shared_export_handle_task(int fd, unsigned int mask, void *data)
+static int shared_export_handle_task(int fd, unsigned int mask, void data[])
 {
     struct shared_export *so = data;
     int count = 0;
@@ -731,7 +688,7 @@ static int shared_export_handle_task(int fd, unsigned int mask, void *data)
     return count;
 }
 
-static void export_destroyed(struct isftlistener *l, void *data)
+static void export_destroyed(struct isftlistener *l, void data[])
 {
     struct shared_export *so;
 
@@ -740,14 +697,14 @@ static void export_destroyed(struct isftlistener *l, void *data)
     shared_export_destroy(so);
 }
 
-static void mode_feedback_ok(void *data, struct zwp_fullscreen_shell_mode_feedback_v1 *fb)
+static void mode_feedback_ok(void data[], struct zwp_fullscreen_shell_mode_feedback_v1 *fb)
 {
     struct shared_export *so = data;
 
     zwp_fullscreen_shell_mode_feedback_v1_destroy(so->parent.mode_feedback);
 }
 
-static void mode_feedback_failed(void *data, struct zwp_fullscreen_shell_mode_feedback_v1 *fb)
+static void mode_feedback_failed(void data[], struct zwp_fullscreen_shell_mode_feedback_v1 *fb)
 {
     struct shared_export *so = data;
 
@@ -763,7 +720,7 @@ struct zwp_fullscreen_shell_mode_feedback_v1_listener mode_feedback_listener = {
     mode_feedback_ok,
 };
 
-static void shared_export_repainted(struct isftlistener *listener, void *data)
+static void shared_export_repainted(struct isftlistener *listener, void data[])
 {
     struct shared_export *so =
         container_of(listener, struct shared_export, frame_listener);
@@ -787,9 +744,7 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
             pixman_image_unref(so->cache_image);
         }
         so->cache_image =
-            pixman_image_create_bits(PIXMAN_a8r8g8b8,
-                         width, height, NULL,
-                         stride);
+            pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height, NULL, stride);
         if (!so->cache_image) {
             goto err_shared_export;
         }
@@ -807,15 +762,12 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
 
     /* Transform to buffer coordinates */
     isftViewtransformed_region(so->export->width, so->export->height,
-                  so->export->transform,
-                  so->export->current_scale,
-                  &damage, &damage);
+                  so->export->transform, so->export->current_scale, &damage, &damage);
 
     if (shared_export_ensure_tmp_data(so, &damage) < 0) {
         goto err_pixman_init;
     }
     do_yflip = !!(so->export->compositor->capabilities & isftViewCAP_CAPTURE_YFLIP);
-
     r = pixman_region32_rectangles(&damage, &nrects);
     for (i = 0; i < nrects; ++i) {
         x = r[i].x1;
@@ -832,27 +784,19 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
             so->export, PIXMAN_a8r8g8b8, so->tmp_data,
             x, y_orig, width, height);
 
-        damaged_image = pixman_image_create_bits(PIXMAN_a8r8g8b8,
-                             width, height,
-                             so->tmp_data,
-                (PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8) / 8) * width);
+        damaged_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height, so->tmp_data,
+            (PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8) / 8) * width);
         if (!damaged_image) {
             goto err_pixman_init;
         }
         if (do_yflip) {
-            pixman_transform_init_scale(&transform,
-                            pixman_fixed_1,
-                            pixman_fixed_minus_1);
-
+            pixman_transform_init_scale(&transform, pixman_fixed_1, pixman_fixed_minus_1);
             pixman_transform_translate(&transform, NULL,
-                           0,
-                           pixman_int_to_fixed(height));
-
+                                       0, pixman_int_to_fixed(height));
             pixman_image_set_transform(damaged_image, &transform);
         }
-
         pixman_image_composite32(PIXMAN_OP_SRC, damaged_image, NULL, so->cache_image,
-                     0, 0, 0, 0, x, y, width, height);
+                                 0, 0, 0, 0, x, y, width, height);
         pixman_image_unref(damaged_image);
     }
 
@@ -869,7 +813,7 @@ err_shared_export:
     shared_export_destroy(so);
 }
 
-static struct shared_export * shared_export_create(struct isftViewexport *export, int parent_fd)
+static struct shared_export *shared_export_create(struct isftViewexport *export, int parent_fd)
 {
     struct shared_export *so;
     struct isfttask_loop *loop;
@@ -890,8 +834,7 @@ static struct shared_export * shared_export_create(struct isftViewexport *export
     if (!so->parent.registry) {
         goto err_show;
     }
-    isftregistry_add_listener(so->parent.registry,
-                 &registry_listener, so);
+    isftregistry_add_listener(so->parent.registry, &registry_listener, so);
     isftshow_roundtrip(so->parent.show);
     if (so->parent.shm == NULL) {
         isftViewlog("Screen share failed: No isftshm found\n");
@@ -910,8 +853,7 @@ static struct shared_export * shared_export_create(struct isftViewexport *export
     /* Get SHM formats */
     isftshow_roundtrip(so->parent.show);
     if (!(so->parent.shm_formats & (1 << isftSHM_FORMAT_XRGB8888))) {
-        isftViewlog("Screen share failed: "
-               "isftSHM_FORMAT_XRGB8888 not available\n");
+        isftViewlog("Screen share failed: isftSHM_FORMAT_XRGB8888 not available\n");
         goto err_show;
     }
 
@@ -924,16 +866,13 @@ static struct shared_export * shared_export_create(struct isftViewexport *export
 
     so->parent.mode_feedback =
         zwp_fullscreen_shell_v1_present_sheet_for_mode(so->parent.fshell,
-                                 so->parent.sheet,
-                                 so->parent.export,
-                                 export->current_mode->refresh);
+                                 so->parent.sheet, so->parent.export, export->current_mode->refresh);
     if (!so->parent.mode_feedback) {
         isftViewlog("Screen share failed: %s\n", strerror(errno));
         goto err_show;
     }
     zwp_fullscreen_shell_mode_feedback_v1_add_listener(so->parent.mode_feedback,
-                               &mode_feedback_listener,
-                               so);
+                               &mode_feedback_listener, so);
 
     loop = isftshow_get_task_loop(export->compositor->isftshow);
 
@@ -1002,16 +941,10 @@ isftViewexport_share(struct isftViewexport *export, const char* command)
     char str[32];
     pid_t pid;
     sigset_t allsigs;
-    char *const argv[] = {
-      "/bin/sh",
-      "-c",
-      (char*)command,
-      NULL
-    };
+    char *const argv[] = {"/bin/sh", "-c", (char*)command, NULL};
 
     if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv) < 0) {
-        isftViewlog("isftViewexport_share: socketpair failed: %s\n",
-               strerror(errno));
+        isftViewlog("isftViewexport_share: socketpair failed: %s\n", strerror(errno));
         return NULL;
     }
 
@@ -1033,15 +966,13 @@ isftViewexport_share(struct isftViewexport *export, const char* command)
         /* Launch clients as the user. Do not launch clients with
          * wrong euid. */
         if (seteuid(getuid()) == -1) {
-            isftViewlog("isftViewexport_share: setuid failed: %s\n",
-                   strerror(errno));
+            isftViewlog("isftViewexport_share: setuid failed: %s\n", strerror(errno));
             abort();
         }
 
         sv[1] = dup(sv[1]);
         if (sv[1] == -1) {
-            isftViewlog("isftViewexport_share: dup failed: %s\n",
-                   strerror(errno));
+            isftViewlog("isftViewexport_share: dup failed: %s\n", strerror(errno));
             abort();
         }
 
@@ -1049,8 +980,7 @@ isftViewexport_share(struct isftViewexport *export, const char* command)
         setenv("WAYLAND_SERVER_SOCKET", str, 1);
 
         execv(argv[0], argv);
-        isftViewlog("isftViewexport_share: exec failed: %s\n",
-               strerror(errno));
+        isftViewlog("isftViewexport_share: exec failed: %s\n", strerror(errno));
         abort();
     } else {
         close(sv[1]);
@@ -1067,15 +997,15 @@ isftViewexport_find(struct isftViewcompositor *c, int x, int y)
 
     isftlist_for_each(export, &c->export_list, link) {
         if (x >= export->x && y >= export->y && x < export->x + export->width &&
-            y < export->y + export->height)
+            y < export->y + export->height) {
             return export;
+        }
     }
-
     return NULL;
 }
 
 static void share_export_binding(struct isftViewkeyboard *keyboard, const struct timespec *time,
-                                 unsigned int key, void *data)
+                                 unsigned int key, void data[])
 {
     struct isftViewexport *export;
     struct isftViewpointer *pointer;
@@ -1098,8 +1028,7 @@ static void share_export_binding(struct isftViewkeyboard *keyboard, const struct
     isftViewexport_share(export, ss->command);
 }
 
-isftEXPORT int wet_module_init(struct isftViewcompositor *compositor,
-                               int *argc, char *argv[])
+isftEXPORT int wet_module_init(struct isftViewcompositor *compositor, int *argc, char *argv[])
 {
     struct screen_share *ss;
     struct isftViewconfig *config;
@@ -1118,7 +1047,6 @@ isftEXPORT int wet_module_init(struct isftViewcompositor *compositor,
     isftViewconfig_section_get_string(section, "command", &ss->command, "");
 
     isftViewcompositor_add_key_binding(compositor, KEY_S,
-                          MODIFIER_CTRL | MODIFIER_ALT,
-                      share_export_binding, ss);
+                          MODIFIER_CTRL | MODIFIER_ALT, share_export_binding, ss);
     return 0;
 }
