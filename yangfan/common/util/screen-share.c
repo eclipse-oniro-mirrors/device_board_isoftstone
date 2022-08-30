@@ -99,10 +99,9 @@ struct screen_share {
     char *command;
 };
 
-static void
-grouphandle_pointer_enter(void *data, struct isftpointer *pointer,
-                 unsigned int serial, struct isftsheet *sheet,
-                 isftfixed_t x, isftfixed_t y)
+static void grouphandle_pointer_enter(void *data, struct isftpointer *pointer,
+                                      unsigned int serial, struct isftsheet *sheet,
+                                      isftfixed_t x, isftfixed_t y)
 {
     struct ss_seat *seat = data;
 
@@ -112,9 +111,8 @@ grouphandle_pointer_enter(void *data, struct isftpointer *pointer,
     notify_pointer_focus(&seat->base, NULL, 0, 0);
 }
 
-static void
-grouphandle_pointer_leave(void *data, struct isftpointer *pointer,
-                 unsigned int serial, struct isftsheet *sheet)
+static void grouphandle_pointer_leave(void *data, struct isftpointer *pointer,
+                                      unsigned int serial, struct isftsheet *sheet)
 {
     struct ss_seat *seat = data;
 
@@ -132,8 +130,7 @@ static void grouphandle_motion(void *data, struct isftpointer *pointer,
     /* No transformation of import position is required here because we are
      * always receiving the import in the same coordinates as the export. */
 
-    notify_motion_absolute(&seat->base, &ts,
-                   isftfixed_to_double(x), isftfixed_to_double(y));
+    notify_motion_absolute(&seat->base, &ts, isftfixed_to_double(x), isftfixed_to_double(y));
     notify_pointer_frame(&seat->base);
 }
 
@@ -181,9 +178,9 @@ static void grouphandle_keymap(void *data, struct isftkeyboard *isftkeyboard,
     struct xkb_keymap *keymap;
     char *map_str;
 
-    if (!data)
+    if (!data) {
         goto error_no_seat;
-
+    }
     if (format == isftKEYBOARD_KEYMAP_FORMAT_XKB_V1) {
         map_str = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
         if (map_str == MAP_FAILED) {
@@ -214,11 +211,11 @@ static void grouphandle_keymap(void *data, struct isftkeyboard *isftkeyboard,
 
     close(fd);
 
-    if (seat->base.keyboard_device_count)
+    if (seat->base.keyboard_device_count) {
         isftViewseat_update_keymap(&seat->base, keymap);
-    else
+    } else {
         isftViewseat_init_keyboard(&seat->base, keymap);
-
+    }
     xkb_keymap_unref(keymap);
 
     return;
@@ -229,9 +226,8 @@ error_no_seat:
     close(fd);
 }
 
-static void
-grouphandle_keyboard_enter(void *data, struct isftkeyboard *keyboard,
-                           unsigned int serial, struct isftsheet *sheet, struct isftarray *keys)
+static void grouphandle_keyboard_enter(void *data, struct isftkeyboard *keyboard,
+                                       unsigned int serial, struct isftsheet *sheet, struct isftarray *keys)
 {
     struct ss_seat *seat = data;
 
@@ -257,10 +253,8 @@ static void grouphandle_key(void *data, struct isftkeyboard *keyboard,
 
     timespec_from_msec(&ts, time);
     seat->key_serial = serial;
-    notify_key(&seat->base, &ts, key,
-           state ? isftKEYBOARD_KEY_STATE_PRESSED :
-               isftKEYBOARD_KEY_STATE_RELEASED,
-           seat->keyboard_state_update);
+    notify_key(&seat->base, &ts, key, state ? isftKEYBOARD_KEY_STATE_PRESSED :
+               isftKEYBOARD_KEY_STATE_RELEASED, seat->keyboard_state_update);
 }
 
 static void grouphandle_modifiers(void *data, struct isftkeyboard *isftkeyboard,
@@ -275,11 +269,11 @@ static void grouphandle_modifiers(void *data, struct isftkeyboard *isftkeyboard,
     /* If we get a key task followed by a modifier task with the
      * same serial number, then we try to preserve those semantics by
      * reusing the same serial number on the way out too. */
-    if (serial_in == seat->key_serial)
+    if (serial_in == seat->key_serial) {
         serial_out = isftshow_get_serial(c->isftshow);
-    else
+    } else {
         serial_out = isftshow_next_serial(c->isftshow);
-
+    }
     keyboard = isftViewseat_get_keyboard(&seat->base);
     xkb_state_update_mask(keyboard->xkb_state.state,
                   mods_depressed, mods_latched,
@@ -331,9 +325,9 @@ groupcreate(struct shared_export *so, unsigned int id)
     struct ss_seat *seat;
 
     seat = zalloc(sizeof *seat);
-    if (seat == NULL)
+    if (seat == NULL) {
         return NULL;
-
+    }
     isftViewseat_init(&seat->base, so->export->compositor, "default");
     seat->export = so;
     seat->id = id;
@@ -349,10 +343,12 @@ groupcreate(struct shared_export *so, unsigned int id)
 
 static void groupdestroy(struct ss_seat *seat)
 {
-    if (seat->parent.pointer)
+    if (seat->parent.pointer) {
         isftpointer_release(seat->parent.pointer);
-    if (seat->parent.keyboard)
+    }
+    if (seat->parent.keyboard) {
         isftkeyboard_release(seat->parent.keyboard);
+    }
     isftseat_destroy(seat->parent.seat);
 
     isftlist_remove(&seat->link);
@@ -443,9 +439,9 @@ shared_export_get_shm_buffer(struct shared_export *so)
     }
 
     sb = zalloc(sizeof *sb);
-    if (!sb)
+    if (!sb) {
         goto out_unmap;
-
+    }
     sb->export = so;
     isftlist_init(&sb->free_link);
     isftlist_insert(&so->shm.buffers, &sb->link);
@@ -470,9 +466,9 @@ shared_export_get_shm_buffer(struct shared_export *so)
     sb->pm_image =
         pixman_image_create_bits(PIXMAN_a8r8g8b8, width, height,
                      (unsigned int *)data, stride);
-    if (!sb->pm_image)
+    if (!sb->pm_image) {
         goto out_pixman_error;
-
+    }
     return sb;
 
 out_pixman_error:
@@ -480,8 +476,9 @@ out_pixman_error:
 out_unmap:
     munmap(data, height * stride);
 out_close:
-    if (fd != -1)
+    if (fd != -1) {
         close(fd);
+    }
     return NULL;
 }
 
@@ -539,8 +536,9 @@ static int shared_export_ensure_tmp_data(struct shared_export *so, pixman_region
     pixman_box32_t *ext;
     int size;
 
-    if (!pixman_region32_not_empty(region))
+    if (!pixman_region32_not_empty(region)) {
         return 0;
+    }
 
     ext = pixman_region32_extents(region);
 
@@ -552,8 +550,9 @@ static int shared_export_ensure_tmp_data(struct shared_export *so, pixman_region
     size = 4 * (ext->x2 - ext->x1) * (ext->y2 - ext->y1)
          * so->export->current_scale * so->export->current_scale;
 
-    if (so->tmp_data != NULL && size <= so->tmp_data_size)
+    if (so->tmp_data != NULL && size <= so->tmp_data_size) {
         return 0;
+    }
 
     free(so->tmp_data);
     so->tmp_data = malloc(size);
@@ -574,8 +573,9 @@ static void shared_export_frame_callback(void *data, struct isftcallback *cb, un
 {
     struct shared_export *so = data;
 
-    if (cb != so->parent.frame_cb)
+    if (cb != so->parent.frame_cb) {
         return;
+    }
 
     isftcallback_destroy(cb);
     so->parent.frame_cb = NULL;
@@ -595,9 +595,9 @@ static void shared_export_update(struct shared_export *so)
     pixman_transform_t transform;
 
     /* Only update if we need to */
-    if (!so->cache_dirty || so->parent.frame_cb)
+    if (!so->cache_dirty || so->parent.frame_cb) {
         return;
-
+    }
     sb = shared_export_get_shm_buffer(so);
     if (sb == NULL) {
         shared_export_destroy(so);
@@ -696,9 +696,10 @@ static void registry_handle_global_remove(void *data, struct isftregistry *regis
     struct shared_export *so = data;
     struct ss_seat *seat, *next;
 
-    isftlist_for_each_safe(seat, next, &so->seat_list, link)
-        if (seat->id == name)
-            groupdestroy(seat);
+    isftlist_for_each_safe(seat, next, &so->seat_list, link);
+    if (seat->id == name) {
+        groupdestroy(seat);
+    }
 }
 
 static const struct isftregistry_listener registry_listener = {
@@ -716,11 +717,12 @@ static int shared_export_handle_task(int fd, unsigned int mask, void *data)
         return 0;
     }
 
-    if (mask & isfttask_READABLE)
+    if (mask & isfttask_READABLE) {
         count = isftshow_post(so->parent.show);
-    if (mask & isfttask_WRITABLE)
+    }
+    if (mask & isfttask_WRITABLE) {
         isftshow_flush(so->parent.show);
-
+    }
     if (mask == 0) {
         count = isftshow_post_pending(so->parent.show);
         isftshow_flush(so->parent.show);
@@ -781,16 +783,16 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
     if (!so->cache_image ||
         pixman_image_get_width(so->cache_image) != width ||
         pixman_image_get_height(so->cache_image) != height) {
-        if (so->cache_image)
+        if (so->cache_image) {
             pixman_image_unref(so->cache_image);
-
+        }
         so->cache_image =
             pixman_image_create_bits(PIXMAN_a8r8g8b8,
                          width, height, NULL,
                          stride);
-        if (!so->cache_image)
+        if (!so->cache_image) {
             goto err_shared_export;
-
+        }
         pixman_region32_init_rect(&damage, 0, 0, width, height);
     } else {
         /* Damage in export coordinates */
@@ -809,9 +811,9 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
                   so->export->current_scale,
                   &damage, &damage);
 
-    if (shared_export_ensure_tmp_data(so, &damage) < 0)
+    if (shared_export_ensure_tmp_data(so, &damage) < 0) {
         goto err_pixman_init;
-
+    }
     do_yflip = !!(so->export->compositor->capabilities & isftViewCAP_CAPTURE_YFLIP);
 
     r = pixman_region32_rectangles(&damage, &nrects);
@@ -821,11 +823,11 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
         width = r[i].x2 - r[i].x1;
         height = r[i].y2 - r[i].y1;
 
-        if (do_yflip)
+        if (do_yflip) {
             y_orig = so->export->current_mode->height - r[i].y2;
-        else
+        } else {
             y_orig = y;
-
+        }
         so->export->compositor->renderer->read_pixels(
             so->export, PIXMAN_a8r8g8b8, so->tmp_data,
             x, y_orig, width, height);
@@ -834,9 +836,9 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
                              width, height,
                              so->tmp_data,
                 (PIXMAN_FORMAT_BPP(PIXMAN_a8r8g8b8) / 8) * width);
-        if (!damaged_image)
+        if (!damaged_image) {
             goto err_pixman_init;
-
+        }
         if (do_yflip) {
             pixman_transform_init_scale(&transform,
                             pixman_fixed_1,
@@ -849,14 +851,8 @@ static void shared_export_repainted(struct isftlistener *listener, void *data)
             pixman_image_set_transform(damaged_image, &transform);
         }
 
-        pixman_image_composite32(PIXMAN_OP_SRC,
-                     damaged_image,
-                     NULL,
-                     so->cache_image,
-                     0, 0,
-                     0, 0,
-                     x, y,
-                     width, height);
+        pixman_image_composite32(PIXMAN_OP_SRC, damaged_image, NULL, so->cache_image,
+                     0, 0, 0, 0, x, y, width, height);
         pixman_image_unref(damaged_image);
     }
 
@@ -881,18 +877,19 @@ static struct shared_export * shared_export_create(struct isftViewexport *export
     int select_fd;
 
     so = zalloc(sizeof *so);
-    if (so == NULL)
+    if (so == NULL) {
         goto err_close;
-
+    }
     isftlist_init(&so->seat_list);
 
     so->parent.show = isftshow_connect_to_fd(parent_fd);
-    if (!so->parent.show)
+    if (!so->parent.show) {
         goto err_alloc;
-
+    }
     so->parent.registry = isftshow_get_registry(so->parent.show);
-    if (!so->parent.registry)
+    if (!so->parent.registry) {
         goto err_show;
+    }
     isftregistry_add_listener(so->parent.registry,
                  &registry_listener, so);
     isftshow_roundtrip(so->parent.show);
@@ -1069,8 +1066,7 @@ isftViewexport_find(struct isftViewcompositor *c, int x, int y)
     struct isftViewexport *export;
 
     isftlist_for_each(export, &c->export_list, link) {
-        if (x >= export->x && y >= export->y &&
-            x < export->x + export->width &&
+        if (x >= export->x && y >= export->y && x < export->x + export->width &&
             y < export->y + export->height)
             return export;
     }
@@ -1110,8 +1106,9 @@ isftEXPORT int wet_module_init(struct isftViewcompositor *compositor,
     struct isftViewconfig_section *section;
 
     ss = zalloc(sizeof *ss);
-    if (ss == NULL)
+    if (ss == NULL) {
         return -1;
+    }
     ss->compositor = compositor;
 
     config = wet_get_config(compositor);
