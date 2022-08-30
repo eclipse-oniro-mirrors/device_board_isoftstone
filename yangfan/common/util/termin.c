@@ -1381,74 +1381,57 @@ void case_m_block(int set[10], int args[10], struct terminal *terminal)
     }
     return ;
 }
-static void handle_escape(struct terminal *terminal)
+void escape_switch1(char **p, int *count, int **set, int **args, struct terminal *terminal)
 {
-    union utf8_char *row;
-    struct attr *attr_row;
-    char *p;
-    int i, count, x, y, top, bottom;
-    int args[10], set[10] = { 0, };
-    char response[MAX_RESPONSE] = {0, };
-    struct rectangle allocation;
-
-    terminal->escape[terminal->escape_length++] = '\0';
-    i = 0;
-    p = &terminal->escape[NUM2];
-    while ((isdigit(*p) || *p == ';') && i < NUM10) {
-        if (*p == ';') {
-            if (!set[i]) {
-                args[i] = 0;
-                set[i] = 1;
-            }
-            p++;
-            i++;
-        } else {
-            args[i] = strtol(p, &p, NUM10);
-            set[i] = 1;
-        }
-    }
-
     switch (*p) {
         case '@':    /* ICH - Insert <count> blank characters */
-            count = set[0] ? args[0] : 1;
-            if (count == 0) {
-                count = 1;
+            *count = set[0] ? args[0] : 1;
+            if (*count == 0) {
+                *count = 1;
             }
             terminal_shift_line(terminal, count);
             break;
         case 'A':    /* CUU - Move cursor up <count> rows */
-            count = set[0] ? args[0] : 1;
-            if (count == 0) {
-                count = 1;
+            *count = set[0] ? args[0] : 1;
+            if (*count == 0) {
+                *count = 1;
             }
-            if (terminal->row - count >= terminal->margin_top) {
-                terminal->row -= count;
+            if (terminal->row - *count >= terminal->margin_top) {
+                terminal->row -= *count;
             } else {
                 terminal->row = terminal->margin_top;
             }
             break;
         case 'B':    /* CUD - Move cursor down <count> rows */
-            count = set[0] ? args[0] : 1;
-            if (count == 0) {
-                count = 1;
+            *count = set[0] ? args[0] : 1;
+            if (*count == 0) {
+                *count = 1;
             }
-            if (terminal->row + count <= terminal->margin_bottom) {
-                terminal->row += count;
+            if (terminal->row + *count <= terminal->margin_bottom) {
+                terminal->row += *count;
             } else {
                 terminal->row = terminal->margin_bottom;
             }
             break;
         case 'C':    /* CUF - Move cursor right by <count> columns */
-            count = set[0] ? args[0] : 1;
-            if (count == 0) {
-                count = 1;
+            *count = set[0] ? args[0] : 1;
+            if (*count == 0) {
+                *count = 1;
             }
-            if ((terminal->column + count) < terminal->width) {
-                terminal->column += count;
+            if ((terminal->column + *count) < terminal->width) {
+                terminal->column += *count;
             } else {
                 terminal->column = terminal->width - 1;
             }
             break;
+        default:
+            fprintf(stderr, "Unknown CSI escape: %c\n", *p);
+            break;
+    }
+}
+void escape_switch2()
+{
+    switch (*p) {
         case 'D':    /* CUB - Move cursor left <count> columns */
             count = set[0] ? args[0] : 1;
             if (count == 0) {
@@ -1485,24 +1468,14 @@ static void handle_escape(struct terminal *terminal)
             terminal->column = y - 1;
             break;
         case 'f':    /* HVP - Move cursor to <x, y> */
-        case 'H':    /* CUP - Move cursor to <x, y> (origin at 1,1) */
-            x = (set[1] ? args[1] : 1) - 1;
-            x = x < 0 ? 0 :
-                (x >= terminal->width ? terminal->width - 1 : x);
-
-            y = (set[0] ? args[0] : 1) - 1;
-            if (terminal->origin_mode) {
-                y += terminal->margin_top;
-                y = y < terminal->margin_top ? terminal->margin_top :
-                    (y > terminal->margin_bottom ? terminal->margin_bottom : y);
-            } else {
-                y = y < 0 ? 0 :
-                    (y >= terminal->height ? terminal->height - 1 : y);
-            }
-
-            terminal->row = y;
-            terminal->column = x;
+        default:
+            fprintf(stderr, "Unknown CSI escape: %c\n", *p);
             break;
+    }
+}
+void escape_switch3()
+{
+    switch (*p) {
         case 'I':    /* CHT */
             count = set[0] ? args[0] : 1;
             if (count == 0) {
@@ -1545,6 +1518,32 @@ static void handle_escape(struct terminal *terminal)
                                        terminal->end - terminal->start);
             }
             break;
+        default:
+            fprintf(stderr, "Unknown CSI escape: %c\n", *p);
+            break;
+    }
+}
+void escape_switch4()
+{
+    switch (*p) {
+        case 'H':    /* CUP - Move cursor to <x, y> (origin at 1,1) */
+            x = (set[1] ? args[1] : 1) - 1;
+            x = x < 0 ? 0 :
+                (x >= terminal->width ? terminal->width - 1 : x);
+
+            y = (set[0] ? args[0] : 1) - 1;
+            if (terminal->origin_mode) {
+                y += terminal->margin_top;
+                y = y < terminal->margin_top ? terminal->margin_top :
+                    (y > terminal->margin_bottom ? terminal->margin_bottom : y);
+            } else {
+                y = y < 0 ? 0 :
+                    (y >= terminal->height ? terminal->height - 1 : y);
+            }
+
+            terminal->row = y;
+            terminal->column = x;
+            break;
         case 'K':    /* EL - Erase line */
             row = terminal_get_row(terminal, terminal->row);
             attr_row = terminal_get_attr_row(terminal, terminal->row);
@@ -1561,6 +1560,22 @@ static void handle_escape(struct terminal *terminal)
                 attr_init(attr_row, terminal->curr_attr, terminal->width);
             }
             break;
+        case 's':    /* Save cursor location */
+            terminal->saved_row = terminal->row;
+            terminal->saved_column = terminal->column;
+            break;
+        case 'u':    /* Restore cursor location */
+            terminal->row = terminal->saved_row;
+            terminal->column = terminal->saved_column;
+            break;
+        default:
+            fprintf(stderr, "Unknown CSI escape: %c\n", *p);
+            break;
+    }
+}
+void escape_switch5()
+{
+    switch (*p) {
         case 'L':    /* IL - Insert <count> blank lines */
             count = set[0] ? args[0] : 1;
             if (count == 0) {
@@ -1602,6 +1617,14 @@ static void handle_escape(struct terminal *terminal)
             }
             terminal_shift_line(terminal, 0 - count);
             break;
+        default:
+            fprintf(stderr, "Unknown CSI escape: %c\n", *p);
+            break;
+    }
+}
+void escape_switch6()
+{
+    switch (*p) {
         case 'S':    /* SU */
             terminal_scroll(terminal, set[0] ? args[0] : 1);
             break;
@@ -1640,6 +1663,14 @@ static void handle_escape(struct terminal *terminal)
 
             terminal->column = y - 1;
             break;
+        default:
+            fprintf(stderr, "Unknown CSI escape: %c\n", *p);
+            break;
+    }
+}
+void escape_switch7()
+{
+    switch (*p) {
         case 'b':    /* REP */
             count = set[0] ? args[0] : 1;
             if (count == 0) {
@@ -1681,6 +1712,14 @@ static void handle_escape(struct terminal *terminal)
         case 'm':    /* SGR - Set attributes */
             case_m_block(set[NUM10], args[NUM10], terminal);
             break;
+        default:
+            fprintf(stderr, "Unknown CSI escape: %c\n", *p);
+            break;
+    }
+}
+void escape_switch7()
+{
+    switch (*p) {
         case 'n':    /* DSR - Status report */
             i = set[0] ? args[0] : 0;
             if (i == 0 || i == NUM5) {
@@ -1721,65 +1760,90 @@ static void handle_escape(struct terminal *terminal)
                 terminal->column = 0;
             }
             break;
-        case 's':    /* Save cursor location */
-            terminal->saved_row = terminal->row;
-            terminal->saved_column = terminal->column;
-            break;
-        case 't':    /* windowOps */
-            if (!set[0]) {
-                break;
-            }
-            switch (args[0]) {
-                case NUM4:  /* resize px */
-                    if (set[1] && set[NUM2]) {
-                        widget_schedule_resize(terminal->widget,
-                                               args[NUM2], args[1]);
-                    }
-                    break;
-                case NUM8:  /* resize ch */
-                    if (set[1] && set[NUM2]) {
-                        terminal_resize(terminal, args[NUM2], args[1]);
-                    }
-                    break;
-                case NUM13: /* report position */
-                    widget_get_allocation(terminal->widget, &allocation);
-                    snprintf(response, MAX_RESPONSE, "\e[3;%d;%dt",
-                        allocation.x, allocation.y);
-                    terminal_write(terminal, response, strlen(response));
-                    break;
-                case NUM14: /* report px */
-                    widget_get_allocation(terminal->widget, &allocation);
-                    snprintf(response, MAX_RESPONSE, "\e[4;%d;%dt",
-                        allocation.height, allocation.width);
-                    terminal_write(terminal, response, strlen(response));
-                    break;
-                case NUM18: /* report ch */
-                    snprintf(response, MAX_RESPONSE, "\e[9;%d;%dt",
-                        terminal->height, terminal->width);
-                    terminal_write(terminal, response, strlen(response));
-                    break;
-                case NUM21: /* report title */
-                    snprintf(response, MAX_RESPONSE, "\e]l%s\e\\",
-                        window_get_title(terminal->window));
-                    terminal_write(terminal, response, strlen(response));
-                    break;
-                default:
-                    if (args[0] >= NUM24) {
-                        terminal_resize(terminal, terminal->width, args[0]);
-                    } else {
-                        fprintf(stderr, "Unimplemented windowOp %d\n", args[0]);
-                    }
-                    break;
-            }
-            break;
-        case 'u':    /* Restore cursor location */
-            terminal->row = terminal->saved_row;
-            terminal->column = terminal->saved_column;
-            break;
         default:
             fprintf(stderr, "Unknown CSI escape: %c\n", *p);
             break;
+    }
+}
+void escape_switch8()
+{
+    switch (args[0]) {
+        case NUM4:  /* resize px */
+            if (set[1] && set[NUM2]) {
+                widget_schedule_resize(terminal->widget,
+                                       args[NUM2], args[1]);
+            }
+            break;
+        case NUM8:  /* resize ch */
+            if (set[1] && set[NUM2]) {
+                terminal_resize(terminal, args[NUM2], args[1]);
+            }
+            break;
+        case NUM13: /* report position */
+            widget_get_allocation(terminal->widget, &allocation);
+            snprintf(response, MAX_RESPONSE, "\e[3;%d;%dt",
+                allocation.x, allocation.y);
+            terminal_write(terminal, response, strlen(response));
+            break;
+        case NUM14: /* report px */
+            widget_get_allocation(terminal->widget, &allocation);
+            snprintf(response, MAX_RESPONSE, "\e[4;%d;%dt",
+                allocation.height, allocation.width);
+            terminal_write(terminal, response, strlen(response));
+            break;
+        case NUM18: /* report ch */
+            snprintf(response, MAX_RESPONSE, "\e[9;%d;%dt",
+                terminal->height, terminal->width);
+            terminal_write(terminal, response, strlen(response));
+            break;
+        case NUM21: /* report title */
+            snprintf(response, MAX_RESPONSE, "\e]l%s\e\\",
+                window_get_title(terminal->window));
+            terminal_write(terminal, response, strlen(response));
+            break;
+        default:
+            if (args[0] >= NUM24) {
+                terminal_resize(terminal, terminal->width, args[0]);
+            } else {
+                fprintf(stderr, "Unimplemented windowOp %d\n", args[0]);
+            }
+            break;
+    }    
+}
+static void handle_escape(struct terminal *terminal)
+{
+    union utf8_char *row;
+    struct attr *attr_row;
+    char *p;
+    int i, count, x, y, top, bottom;
+    int args[10], set[10] = { 0, };
+    char response[MAX_RESPONSE] = {0, };
+    struct rectangle allocation;
+	
+    terminal->escape[terminal->escape_length++] = '\0';
+    i = 0;
+    p = &terminal->escape[NUM2];
+    while ((isdigit(*p) || *p == ';') && i < NUM10) {
+        if (*p == ';') {
+            if (!set[i]) {
+                args[i] = 0;
+                set[i] = 1;
+            }
+            p++;
+            i++;
+        } else {
+            args[i] = strtol(p, &p, NUM10);
+            set[i] = 1;
         }
+    }
+    if (*p == 't') {
+        if (!set[0]) {
+            break;
+        }
+        escape_switch8();
+    } else if (*p == '@' || *p == 'A' || *p == 'B' || *p == 'C') {
+        escape_switch1(&p, &count, &set, &args);
+    }
 }
 
 static void handle_non_csi_escape(struct terminal *terminal, char code)
@@ -2743,7 +2807,7 @@ static int wordsep(int ch)
 
 void assignTer(int start_row, int end_row, struct terminal *terminal, int side_margin, int cw)
 {
-    int start_x, end_x, eol, x, word_start,col;
+    int start_x, end_x, eol, x, word_start, col;
     union utf8_char *data = NULL;
     if (start_row < end_row || (start_row == end_row &&
         terminal->selection_start_x < terminal->selection_end_x)) {
