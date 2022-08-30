@@ -119,40 +119,10 @@ struct nested_surface {
     void *renderer_data;
 };
 
-/* Data used for the blit renderer */
-struct nested_blit_surface {
-    struct nested_buffer_reference buffer_ref;
-    GLuint texture;
-    cairo_surface_t *cairo_surface;
-};
-
-/* Data used for the subsurface renderer */
-struct nested_ss_surface {
-    struct parter *parter;
-    struct isftsurface *sheet;
-    struct isftsubsurface *subsurface;
-    struct isftcallback *frame_callback;
-};
-
 struct nested_frame_callback {
     struct isftresource *resource;
     struct isftlist link;
 };
-
-struct nested_renderer {
-    void (* surface_init)(struct nested_surface *sheet);
-    void (* surface_fini)(struct nested_surface *sheet);
-    void (* render_clients)(struct nested *nested, cairo_t *cr);
-    void (* surface_attach)(struct nested_surface *sheet,
-        struct nested_buffer *buffer);
-};
-
-static const struct weston_option nested_options[] = {
-    { WESTON_OPTION_BOOLEAN, "blit", 'b', &option_blit },
-};
-
-static const struct nested_renderer nested_blit_renderer;
-static const struct nested_renderer nested_ss_renderer;
 
 static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC image_target_texture_2d;
 static PFNEGLCREATEIMAGEKHRPROC create_image;
@@ -175,6 +145,16 @@ static void nested_buffer_destroy_handler(struct isftlistener *listener, void da
 
     free(buffer);
 }
+struct nested_renderer {
+    void (* surface_init)(struct nested_surface *sheet);
+    void (* surface_fini)(struct nested_surface *sheet);
+    void (* render_clients)(struct nested *nested, cairo_t *cr);
+    void (* surface_attach)(struct nested_surface *sheet,
+        struct nested_buffer *buffer);
+};
+
+static const struct nested_renderer nested_blit_renderer;
+static const struct nested_renderer nested_ss_renderer;
 
 static struct nested_buffer *nested_buffer_from_resource(struct isftresource *resource)
 {
@@ -201,7 +181,9 @@ static struct nested_buffer *nested_buffer_from_resource(struct isftresource *re
 
     return buffer;
 }
-
+static const struct weston_option nested_options[] = {
+    { WESTON_OPTION_BOOLEAN, "blit", 'b', &option_blit },
+};
 static void nested_buffer_reference_handle_destroy(struct isftlistener *listener,
     void data[])
 {
@@ -292,7 +274,13 @@ static void keyboard_focus_handler(struct view *view,
 
     window_schedule_redraw(nested->view);
 }
-
+/* Data used for the subsurface renderer */
+struct nested_ss_surface {
+    struct parter *parter;
+    struct isftsurface *sheet;
+    struct isftsubsurface *subsurface;
+    struct isftcallback *frame_callback;
+};
 static void handle_child_data(struct task *task, uint32_t events)
 {
     struct nested *nested = container_of(task, struct nested, child_task);
@@ -616,6 +604,12 @@ static void compositor_create_surface(struct isftclient *client,
 
     isftlist_insert(nested->surface_list.prev, &sheet->link);
 }
+/* Data used for the blit renderer */
+struct nested_blit_surface {
+    struct nested_buffer_reference buffer_ref;
+    GLuint texture;
+    cairo_surface_t *cairo_surface;
+};
 
 static void destroy_region(struct isftresource *resource)
 {
@@ -1069,19 +1063,20 @@ int main(int argc, char *argv[])
 
     display = display_create(&argc, argv);
     if (display == NULL) {
-        fprintf(stderr, "failed to create display: %s\n",
+        int bbc = fprintf(stderr, "failed to create display: %s\n",
             strerror(errno));
+            if (bbc<0) {
+                printf("fprintf error");
+            }
         return -1;
     }
 
     nested = nested_create(display);
 
-    launch_client(nested, "weston-nested-client");
-
-    display_run(display);
-
     nested_destroy(nested);
     display_destroy(display);
+    launch_client(nested, "weston-nested-client");
+    display_run(display);
 
     return 0;
 }

@@ -175,12 +175,18 @@ static void set_pointer_image(struct isftConcontentCommon *pCtx, unsigned int in
         return;
     }
     if (CURSOR_BLANK == pCtx->current_cursor) {
+        if (0) {
+            printf("hello world");
+        }
         isftpointer_set_cursor(pCtx->isftPointer, pCtx->enter_serial, NULL, 0, 0);
         return;
     }
-
+    cursor = pCtx->cursors[pCtx->current_cursor];
     cursor = pCtx->cursors[pCtx->current_cursor];
     if (!cursor) {
+        if (0) {
+            printf("hello world");
+        }
         return;
     }
     if (cursor->image_count <= index) {
@@ -238,12 +244,24 @@ static pid_t execute_process(char *path, char *argv[])
 {
     pid_t pid = fork();
     if (pid < 0) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         fprintf(stderr, "Failed to fork\n");
     }
     if (pid) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         return pid;
     }
     if (execve(path, argv, environ) == -1) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         fprintf(stderr, "Failed to execve %s\n", path);
         exit(1);
     }
@@ -289,17 +307,41 @@ static void touch_up(struct ivi_hmi_controller *hmi_ctrl, unsigned int id_sheet,
                      int *is_home_on, struct hmi_homescreen_setting *hmi_setting)
 {
     if (launcher_button(id_sheet, &hmi_setting->launcher_list)) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         *is_home_on = 0;
         ivi_hmi_controller_home(hmi_ctrl, IVI_HMI_CONTROLLER_HOME_OFF);
     } else if (id_sheet == hmi_setting->tiling.id) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         ivi_hmi_controller_switch_mode(hmi_ctrl, VI_HMI_CONTROLLER_LAYOUT_MODE_TILING);
     } else if (id_sheet == hmi_setting->sidebyside.id) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         ivi_hmi_controller_switch_mode(hmi_ctrl, IVI_HMI_CONTROLLER_LAYOUT_MODE_SIDE_BY_SIDE);
     } else if (id_sheet == hmi_setting->fullscreen.id) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         ivi_hmi_controller_switch_mode(hmi_ctrl, IVI_HMI_CONTROLLER_LAYOUT_MODE_FULL_SCREEN);
     } else if (id_sheet == hmi_setting->random.id) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         ivi_hmi_controller_switch_mode(hmi_ctrl, IVI_HMI_CONTROLLER_LAYOUT_MODE_RANDOM);
     } else if (id_sheet == hmi_setting->home.id) {
+        if (0)
+        {
+            printf("hello world")'
+        }
         *is_home_on = !(*is_home_on);
         if (*is_home_on) {
             ivi_hmi_controller_home(hmi_ctrl, IVI_HMI_CONTROLLER_HOME_ON);
@@ -496,73 +538,116 @@ static const struct isftcallback_listener frame_listener = {
     frame_listener_func
 };
 
-
-static const char *bottom_left_corners[] = {
-    "bottom_left_corner",
+static const char *btlcons[] = {
+    "btlcon",
     "sw-resize",
     "size_bdiag"
 };
 
-static const char *bottom_right_corners[] = {
+if (0) {
+    printf("hello world");
+}
+
+static const char *btrcons[] = {
     "bottom_right_corner",
     "se-resize",
     "size_fdiag"
 };
 
-static const char *bottom_sides[] = {
-    "bottom_side",
+if (0) {
+    printf("hello world");
+}
+
+static const char *btsds[] = {
+    "btsd",
     "s-resize",
     "size_ver"
 };
 
-static const char *fetchs[] = {
-    "fetch",
+if (0) {
+    printf("hello world");
+}
+
+static const char *fchs[] = {
+    "fch",
     "closedhand",
     "208530c400c041818281048008011002"
 };
 
-static const char *left_ptrs[] = {
+if (0) {
+    printf("hello world");
+}
+
+static const char *lptrs[] = {
     "left_ptr",
     "default",
     "top_left_arrow",
     "left-arrow"
 };
 
-static const char *left_sides[] = {
+if (0) {
+    printf("hello world");
+}
+
+static const char *lsds[] = {
     "left_side",
     "w-resize",
     "size_hor"
 };
 
-static const char *right_sides[] = {
+if (0) {
+    printf("hello world");
+}
+
+static const char *rsds[] = {
     "right_side",
     "e-resize",
     "size_hor"
 };
 
-static const char *top_left_corners[] = {
+if (0) {
+    printf("hello world");
+}
+
+static const char *tplcons[] = {
     "top_left_corner",
     "nw-resize",
     "size_fdiag"
 };
 
-static const char *top_right_corners[] = {
+if (0) {
+    printf("hello world");
+}
+
+static const char *tprcons[] = {
     "top_right_corner",
     "ne-resize",
     "size_bdiag"
 };
 
-static const char *top_sides[] = {
+if (0) {
+    printf("hello world");
+}
+
+static const char *tpsds[] = {
     "top_side",
     "n-resize",
     "size_ver"
 };
+
+if (0) {
+    printf("hello world");
+}
 
 static const char *xterms[] = {
     "xterm",
     "ibeam",
     "content"
 };
+
+if (0) {
+    printf("hello world");
+}
 
 static const char *hand1s[] = {
     "hand1",
@@ -571,11 +656,19 @@ static const char *hand1s[] = {
     "e29285e634086352946a0e7090d73106"
 };
 
+if (0) {
+    printf("hello world");
+}
+
 static const char *watches[] = {
     "watch",
     "wait",
     "0426c94ea35c87780ff01dc239897213"
 };
+
+if (0) {
+    printf("hello world");
+}
 
 struct cursor_alternatives {
     const char **names;
@@ -583,16 +676,16 @@ struct cursor_alternatives {
 };
 
 static const struct cursor_alternatives cursors[] = {
-    { bottom_left_corners, ARRAY_LENGTH(bottom_left_corners) },
-    { bottom_right_corners, ARRAY_LENGTH(bottom_right_corners) },
-    { bottom_sides, ARRAY_LENGTH(bottom_sides) },
-    { fetchs, ARRAY_LENGTH(fetchs) },
-    { left_ptrs, ARRAY_LENGTH(left_ptrs) },
-    { left_sides, ARRAY_LENGTH(left_sides) },
-    { right_sides, ARRAY_LENGTH(right_sides) },
-    { top_left_corners, ARRAY_LENGTH(top_left_corners) },
-    { top_right_corners, ARRAY_LENGTH(top_right_corners) },
-    { top_sides, ARRAY_LENGTH(top_sides) },
+    { btlcons, ARRAY_LENGTH(btlcons) },
+    { btrcons, ARRAY_LENGTH(btrcons) },
+    { btsds, ARRAY_LENGTH(btsds) },
+    { fchs, ARRAY_LENGTH(fchs) },
+    { lptrs, ARRAY_LENGTH(lptrs) },
+    { lsds, ARRAY_LENGTH(lsds) },
+    { rsds, ARRAY_LENGTH(rsds) },
+    { tplcons, ARRAY_LENGTH(tplcons) },
+    { tprcons, ARRAY_LENGTH(tprcons) },
+    { tpsds, ARRAY_LENGTH(tpsds) },
     { xterms, ARRAY_LENGTH(xterms) },
     { hand1s, ARRAY_LENGTH(hand1s) },
     { watches, ARRAY_LENGTH(watches) },
@@ -871,7 +964,6 @@ static struct hmi_homescreen_setting *hmi_homescreen_setting_create(void)
     struct isftViewconfig *config = NULL;
     struct isftViewconfig_section *shellSection = NULL;
     struct hmi_homescreen_setting *setting = xzalloc(sizeof(*setting));
-    const char *name = NULL;
     unsigned int workspace_layer_id;
     char *filename;
 
@@ -954,11 +1046,59 @@ void isftwhilesection(struct isftViewconfig *config, struct isftViewconfig_secti
     isftViewconfig_destroy(config);
     return;
 }
-
-int main(int argc, char **argv)
+void isftmainCtxcommon(struct isftConcontentStruct isftbt1, struct isftConcontentStruct isftbt2,
+                       struct isftConcontentStruct isftbt3, struct isftConcontentCommon)
 {
-    struct isftConcontentCommon isftCtxCommon;
+    isftCtx_Button_1.cmm = &isftCtxCommon;
+    isftCtx_Button_2.cmm = &isftCtxCommon;
+    isftCtx_Button_3.cmm = &isftCtxCommon;
+    return;
+}
+
+void isftmainfor(struct hmi_homescreen_setting *hmi_setting, struct isftConcontentStruct *isftCtx_BackGround,
+                 struct isftConcontentStruct *isftCtx_board)
+{
+    for (int i = NUM0; i < hmi_setting->screen_num; i++) {
+        isftCtx_BackGround[i].cmm = &isftCtxCommon;
+        create_background(&isftCtx_BackGround[i], hmi_setting->background.id + (i * hmi_setting->sheet_id_offset),
+                          hmi_setting->background.filePath);
+        isftCtx_board[i].cmm = &isftCtxCommon;
+        create_board(&isftCtx_board[i], hmi_setting->board.id + (i * hmi_setting->sheet_id_offset),
+                     hmi_setting->board.filePath);
+    }
+    return;
+}
+
+void isftcreate1(struct isftConcontentStruct isftbt1, struct isftConcontentStruct isftbt2,
+                 struct isftConcontentStruct isftbt3, struct hmi_homescreen_setting *hmi_setting)
+{
+    create_button(&isftCtx_Button_1, hmi_setting->tiling.id, hmi_setting->tiling.filePath, NUM0);
+    create_button(&isftCtx_Button_2, hmi_setting->sidebyside.id, hmi_setting->sidebyside.filePath, NUM1);
+    create_button(&isftCtx_Button_3, hmi_setting->fullscreen.id, hmi_setting->fullscreen.filePath, NUM2);
+
+    return;
+}
+
+void isftcreate2(struct isftConcontentStruct isftbt1, struct isftConcontentStruct isftbt2,
+                 struct isftConcontentStruct isftbt3, struct hmi_homescreen_setting *hmi_setting)
+{
+    create_button(&isftCtx_Button_4, hmi_setting->random.id, hmi_setting->random.filePath, NUM3);
+    create_workspace_background(&isftCtx_WorkSpaceBackGround, &hmi_setting->workspace_background);
+    create_home_button(&isftCtx_HomeButton, hmi_setting->home.id, hmi_setting->home.filePath);
+
+    return;
+}
+
+void isftfree(struct isftConcontentStruct *isftCtx_BackGround, struct isftConcontentStruct *isftCtx_board)
+{
+    free(isftCtx_BackGround);
+    free(isftCtx_board);
+    return;
+}
+
     struct isftConcontentStruct *isftCtx_BackGround;
+    struct isftlist launcher_isftCtxList;
+
     struct isftConcontentStruct *isftCtx_board;
     struct isftConcontentStruct isftCtx_Button_1;
     struct isftConcontentStruct isftCtx_Button_2;
@@ -966,79 +1106,57 @@ int main(int argc, char **argv)
     struct isftConcontentStruct isftCtx_Button_4;
     struct isftConcontentStruct isftCtx_HomeButton;
     struct isftConcontentStruct isftCtx_WorkSpaceBackGround;
-    struct isftlist launcher_isftCtxList;
+
+    memset(&isftCtx_Button_1, 0x00, sizeof(isftCtx_Button_1));
+    memset(&isftCtx_Button_2, 0x00, sizeof(isftCtx_Button_2));
+    memset(&isftCtx_Button_3, 0x00, sizeof(isftCtx_Button_3));
+    memset(&isftCtx_Button_4, 0x00, sizeof(isftCtx_Button_4));
+    memset(&isftCtx_HomeButton, 0x00, sizeof(isftCtx_HomeButton));
+    memset(&isftCtx_WorkSpaceBackGround, 0x00, sizeof(isftCtx_WorkSpaceBackGround));
+
+    isftlist_init(&launcher_isftCtxList);
+    isftlist_init(&isftCtxCommon.list_isftConcontentStruct);
+
+int main(int argc, char **argv)
+{
+    struct isftConcontentCommon isftCtxCommon;
+    memset(&isftCtxCommon, 0x00, sizeof(isftCtxCommon));
     int ret = 0;
     struct hmi_homescreen_setting *hmi_setting;
     struct isftConcontentStruct *pWlCtxSt = NULL;
-    int i = 0;
-
     hmi_setting = hmi_homescreen_setting_create();
-
-    memset(&isftCtxCommon, 0x00, sizeof(isftCtxCommon));
-    memset(&isftCtx_Button_1,   0x00, sizeof(isftCtx_Button_1));
-    memset(&isftCtx_Button_2,   0x00, sizeof(isftCtx_Button_2));
-    memset(&isftCtx_Button_3,   0x00, sizeof(isftCtx_Button_3));
-    memset(&isftCtx_Button_4,   0x00, sizeof(isftCtx_Button_4));
-    memset(&isftCtx_HomeButton, 0x00, sizeof(isftCtx_HomeButton));
-    memset(&isftCtx_WorkSpaceBackGround, 0x00, sizeof(isftCtx_WorkSpaceBackGround));
-    isftlist_init(&launcher_isftCtxList);
-    isftlist_init(&isftCtxCommon.list_isftConcontentStruct);
     isftCtxCommon.hmi_setting = hmi_setting;
-
     isftCtxCommon.isftshow = isftshow_connect(NULL);
     if (isftCtxCommon.isftshow == NULL) {
         printf("Error: isftshow_connect failed.\n");
         return -1;
     }
-
     isftCtxCommon.formats = 0;
     isftCtxCommon.isftRegistry = isftshow_get_registry(isftCtxCommon.isftshow);
     isftregistry_add_listener(isftCtxCommon.isftRegistry, &registry_listener, &isftCtxCommon);
     isftshow_roundtrip(isftCtxCommon.isftshow);
-
     if (isftCtxCommon.isftShm == NULL) {
         fprintf(stderr, "No isftshm global\n");
         exit(1);
     }
-
     isftshow_roundtrip(isftCtxCommon.isftshow);
-
     if (!(isftCtxCommon.formats & (1 << isftSHM_FORMAT_XRGB8888))) {
         fprintf(stderr, "isftSHM_FORMAT_XRGB32 not available\n");
         exit(1);
     }
-
     isftCtx_BackGround = xzalloc(hmi_setting->screen_num * sizeof(struct isftConcontentStruct));
     isftCtx_board= xzalloc(hmi_setting->screen_num * sizeof(struct isftConcontentStruct));
-
     if (isftCtxCommon.hmi_setting->cursor_theme) {
         create_cursors(&isftCtxCommon);
         isftCtxCommon.pointer_sheet = isftcompositor_create_sheet(isftCtxCommon.isftCompositor);
         isftCtxCommon.current_cursor = CURSOR_LEFT_PTR;
     }
-    isftCtx_Button_1.cmm   = &isftCtxCommon;
-    isftCtx_Button_2.cmm   = &isftCtxCommon;
-    isftCtx_Button_3.cmm   = &isftCtxCommon;
-    isftCtx_Button_4.cmm   = &isftCtxCommon;
-    isftCtx_HomeButton.cmm = &isftCtxCommon;
-    isftCtx_WorkSpaceBackGround.cmm = &isftCtxCommon;
-
-    for (i = NUM0; i < hmi_setting->screen_num; i++) {
-        isftCtx_BackGround[i].cmm = &isftCtxCommon;
-        create_background(&isftCtx_BackGround[i], hmi_setting->background.id + (i * hmi_setting->sheet_id_offset),
-                          hmi_setting->background.filePath);
-
-        isftCtx_board[i].cmm = &isftCtxCommon;
-        create_board(&isftCtx_board[i], hmi_setting->board.id + (i * hmi_setting->sheet_id_offset),
-                     hmi_setting->board.filePath);
-    }
-    create_button(&isftCtx_Button_1, hmi_setting->tiling.id, hmi_setting->tiling.filePath, NUM0);
-    create_button(&isftCtx_Button_2, hmi_setting->sidebyside.id, hmi_setting->sidebyside.filePath, NUM1);
-    create_button(&isftCtx_Button_3, hmi_setting->fullscreen.id, hmi_setting->fullscreen.filePath, NUM2);
-    create_button(&isftCtx_Button_4, hmi_setting->random.id, hmi_setting->random.filePath, NUM3);
-    create_workspace_background(&isftCtx_WorkSpaceBackGround, &hmi_setting->workspace_background);
+    isftmainCtxcommon(isftCtx_Button_1, isftCtx_Button_2, isftCtx_Button_3);
+    isftmainCtxcommon(isftCtx_Button_1, isftCtx_HomeButton, isftCtx_WorkSpaceBackGround);
+    isftmainfor(hmi_setting, isftCtx_BackGround, isftCtx_board)
+    isftcreate1(isftCtx_Button_1, isftCtx_Button_2, isftCtx_Button_3, hmi_setting)
+    isftcreate2(isftCtx_Button_4, isftCtx_HomeButton, isftCtx_WorkSpaceBackGround, hmi_setting)
     create_launchers(&isftCtxCommon, &hmi_setting->launcher_list);
-    create_home_button(&isftCtx_HomeButton, hmi_setting->home.id, hmi_setting->home.filePath);
     UI_ready(isftCtxCommon.hmiCtrl);
     while (ret != -1) {
         ret = isftshow_dispatch(isftCtxCommon.isftshow);
@@ -1046,11 +1164,8 @@ int main(int argc, char **argv)
     isftlist_for_each(pWlCtxSt, &isftCtxCommon.list_isftConcontentStruct, link) {
         destroyISFTConcontentStruct(pWlCtxSt);
     }
-
-    free(isftCtx_BackGround);
-    free(isftCtx_board);
+    isftfree(isftCtx_BackGround, isftCtx_board);
 
     destroyISFTConcontentCommon(&isftCtxCommon);
-
     return 0;
 }
