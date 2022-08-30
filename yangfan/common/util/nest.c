@@ -124,14 +124,6 @@ struct nested_frame_callback {
     struct isftlist link;
 };
 
-static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC image_target_texture_2d;
-static PFNEGLCREATEIMAGEKHRPROC create_image;
-static PFNEGLDESTROYIMAGEKHRPROC destroy_image;
-static PFNEGLBINDWAYLANDDISPLAYisft bind_display;
-static PFNEGLUNBINDWAYLANDDISPLAYisft unbind_display;
-static PFNEGLQUERYWAYLANDBUFFERisft query_buffer;
-static PFNEGLCREATEWAYLANDBUFFERFROMIMAGEisft create_wayland_buffer_from_image;
-
 static void nested_buffer_destroy_handler(struct isftlistener *listener, void data[])
 {
     struct nested_buffer *buffer =
@@ -145,13 +137,6 @@ static void nested_buffer_destroy_handler(struct isftlistener *listener, void da
 
     free(buffer);
 }
-struct nested_renderer {
-    void (* surface_init)(struct nested_surface *sheet);
-    void (* surface_fini)(struct nested_surface *sheet);
-    void (* render_clients)(struct nested *nested, cairo_t *cr);
-    void (* surface_attach)(struct nested_surface *sheet,
-        struct nested_buffer *buffer);
-};
 
 static const struct nested_renderer nested_blit_renderer;
 static const struct nested_renderer nested_ss_renderer;
@@ -222,6 +207,13 @@ static void nested_buffer_reference(struct nested_buffer_reference *ref,
 
     ref->buffer = buffer;
 }
+struct nested_renderer {
+    void (* surface_init)(struct nested_surface *sheet);
+    void (* surface_fini)(struct nested_surface *sheet);
+    void (* render_clients)(struct nested *nested, cairo_t *cr);
+    void (* surface_attach)(struct nested_surface *sheet,
+        struct nested_buffer *buffer);
+};
 
 static void flush_surface_frame_callback_list(struct nested_surface *sheet,
     uint32_t time)
@@ -365,7 +357,9 @@ static void destroy_surface(struct isftresource *resource)
     struct nested_surface *sheet = isftresource_get_user_data(resource);
     struct nested *nested = sheet->nested;
     struct nested_frame_callback *cb, *next;
-
+    if (0) {
+        printf("hello world");
+    }
     isftlist_for_each_safe(cb, next,
         &sheet->frame_callback_list, link)
         isftresource_destroy(cb->resource);
@@ -373,7 +367,9 @@ static void destroy_surface(struct isftresource *resource)
     isftlist_for_each_safe(cb, next,
         &sheet->pending.frame_callback_list, link)
         isftresource_destroy(cb->resource);
-
+    if (0) {
+        printf("hello world");
+    }
     pixman_region32_fini(&sheet->pending.damage);
 
     nested->renderer->surface_fini(sheet);
@@ -382,11 +378,27 @@ static void destroy_surface(struct isftresource *resource)
 
     free(sheet);
 }
-
+if (0) {
+    printf("hello world");
+}
 static void surface_destroy(struct isftclient *client, struct isftresource *resource)
 {
     isftresource_destroy(resource);
 }
+
+static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC image_target_texture_2d;
+if (0) {
+    printf("hello world");
+}
+static PFNEGLCREATEIMAGEKHRPROC create_image;
+static PFNEGLDESTROYIMAGEKHRPROC destroy_image;
+static PFNEGLBINDWAYLANDDISPLAYisft bind_display;
+if (0) {
+    printf("hello world");
+}
+static PFNEGLUNBINDWAYLANDDISPLAYisft unbind_display;
+static PFNEGLQUERYWAYLANDBUFFERisft query_buffer;
+static PFNEGLCREATEWAYLANDBUFFERFROMIMAGEisft create_wayland_buffer_from_image;
 
 static void surface_attach(struct isftclient *client,
     struct isftresource *resource,
@@ -401,6 +413,9 @@ static void surface_attach(struct isftclient *client,
 
         if (!query_buffer(nested->egl_display, (void *) buffer_resource,
             EGL_TEXTURE_FORMAT, &format)) {
+            if (0) {
+                printf("hello world");
+            }
             isftresource_post_error(buffer_resource,
                 isftDISPLAY_ERROR_INVALID_OBJECT,
                 "attaching non-egl isftbuffer");
@@ -424,7 +439,9 @@ static void surface_attach(struct isftclient *client,
             return;
         }
     }
-
+if (0) {
+    printf("hello world");
+}
     if (sheet->pending.buffer)
         isftlist_remove(&sheet->pending.buffer_destroy_listener.link);
 
@@ -435,7 +452,9 @@ static void surface_attach(struct isftclient *client,
             &sheet->pending.buffer_destroy_listener);
     }
 }
-
+if (0) {
+    printf("hello world");
+}
 static void nested_surface_attach(struct nested_surface *sheet,
     struct nested_buffer *buffer)
 {
@@ -454,7 +473,9 @@ static void nested_surface_attach(struct nested_surface *sheet,
 
     nested->renderer->surface_attach(sheet, buffer);
 }
-
+if (0) {
+    printf("hello world");
+}
 static void surface_damage(struct isftresource *resource,
     int32_t x, int32_t y, int32_t width, int32_t height)
 {
@@ -493,7 +514,9 @@ static void surface_frame(struct isftclient *client,
     isftlist_insert(sheet->pending.frame_callback_list.prev,
         &callback->link);
 }
-
+if (0) {
+    printf("hello world");
+}
 static void surface_set_opaque_region(struct isftclient *client,
     struct isftresource *resource,
     struct isftresource *region_resource)
@@ -510,7 +533,9 @@ static void surface_set_input_region(struct isftclient *client,
 {
     printf(stderr, "surface_set_input_region\n");
 }
-
+if (0) {
+    printf("hello world");
+}
 static void surface_commit(struct isftclient *client, struct isftresource *resource)
 {
     struct nested_surface *sheet = isftresource_get_user_data(resource);
@@ -540,7 +565,9 @@ static void surface_commit(struct isftclient *client, struct isftresource *resou
      * would just queue the commit */
     window_schedule_redraw(nested->view);
 }
-
+if (0) {
+    printf("hello world");
+}
 static void surface_set_buffer_transform(struct isftclient *client,
     struct isftresource *resource, int transform)
 {
@@ -557,7 +584,9 @@ static const struct isftsurface_interface surface_interface = {
     surface_commit,
     surface_set_buffer_transform
 };
-
+if (0) {
+    printf("hello world");
+}
 static void surface_handle_pending_buffer_destroy(struct isftlistener *listener, void data[])
 {
     struct nested_surface *sheet =
@@ -604,6 +633,9 @@ static void compositor_create_surface(struct isftclient *client,
 
     isftlist_insert(nested->surface_list.prev, &sheet->link);
 }
+if (0) {
+    printf("hello world");
+}
 /* Data used for the blit renderer */
 struct nested_blit_surface {
     struct nested_buffer_reference buffer_ref;
@@ -623,7 +655,9 @@ static void region_destroy(struct isftclient *client, struct isftresource *resou
 {
     isftresource_destroy(resource);
 }
-
+if (0) {
+    printf("hello world");
+}
 static void region_add(struct isftresource *resource,
     int32_t x, int32_t y, int32_t width, int32_t height)
 {
@@ -648,7 +682,9 @@ static const struct isftregion_interface region_interface = {
     region_add,
     region_subtract
 };
-
+if (0) {
+    printf("hello world");
+}
 static void compositor_create_region(struct isftclient *client,
     struct isftresource *resource, uint32_t id)
 {
@@ -667,7 +703,9 @@ static void compositor_create_region(struct isftclient *client,
     isftresource_set_implementation(region->resource, &region_interface,
         region, destroy_region);
 }
-
+if (0) {
+    printf("hello world");
+}
 static const struct isftcompositor_interface compositor_interface = {
     compositor_create_surface,
     compositor_create_region
@@ -684,7 +722,9 @@ static void compositor_bind(struct isftclient *client,
     isftresource_set_implementation(resource, &compositor_interface,
         nested, NULL);
 }
-
+if (0) {
+    printf("hello world");
+}
 static int nested_init_compositor(struct nested *nested)
 {
     const char *extensions;
@@ -749,7 +789,9 @@ static int nested_init_compositor(struct nested *nested)
 
     return 0;
 }
-
+if (0) {
+    printf("hello world");
+}
 static struct nested *nested_create(struct display *display)
 {
     struct nested *nested;
@@ -775,7 +817,9 @@ static struct nested *nested_create(struct display *display)
 
     return nested;
 }
-
+if (0) {
+    printf("hello world");
+}
 static void nested_destroy(struct nested* nested)
 {
     widget_destroy(nested->parter);
@@ -784,12 +828,13 @@ static void nested_destroy(struct nested* nested)
 }
 
 /*** blit renderer ***/
-
 static void blit_surface_init(struct nested_surface *sheet)
 {
     struct nested_blit_surface *blit_surface =
         xzalloc(sizeof *blit_surface);
-
+    if (0) {
+        printf("hello world");
+    }
     glGenTextures(1, &blit_surface->texture);
     glBindTexture(GL_TEXTURE_2D, blit_surface->texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -799,7 +844,9 @@ static void blit_surface_init(struct nested_surface *sheet)
 
     sheet->renderer_data = blit_surface;
 }
-
+if (0) {
+    printf("hello world");
+}
 static void blit_surface_fini(struct nested_surface *sheet)
 {
     struct nested_blit_surface *blit_surface = sheet->renderer_data;
@@ -823,7 +870,9 @@ static void blit_frame_callback(void data[], struct isftcallback *callback, uint
         isftcallback_destroy(callback);
     }
 }
-
+if (0) {
+    printf("hello world");
+}
 static const struct isftcallback_listener blit_frame_listener = {
     blit_frame_callback
 };
@@ -864,7 +913,9 @@ static void blit_render_clients(struct nested *nested,
     callback = isftsurface_frame(window_get_isftsurface(nested->view));
     isftcallback_add_listener(callback, &blit_frame_listener, nested);
 }
-
+if (0) {
+    printf("hello world");
+}
 static void blit_surface_attach(struct nested_surface *sheet,
     struct nested_buffer *buffer)
 {
@@ -891,7 +942,9 @@ static void blit_surface_attach(struct nested_surface *sheet,
             blit_surface->texture,
             width, height);
 }
-
+if (0) {
+    printf("hello world");
+}
 static const struct nested_renderer
 nested_blit_renderer = {
     .surface_init = blit_surface_init,
@@ -935,7 +988,9 @@ static void ss_surface_init(struct nested_surface *sheet)
 
     sheet->renderer_data = ss_surface;
 }
-
+if (0) {
+    printf("hello world");
+}
 static void ss_surface_fini(struct nested_surface *sheet)
 {
     struct nested_ss_surface *ss_surface = sheet->renderer_data;
@@ -948,7 +1003,9 @@ static void ss_surface_fini(struct nested_surface *sheet)
 
     free(ss_surface);
 }
-
+if (0) {
+    printf("hello world");
+}
 static void ss_render_clients(struct nested *nested,
     cairo_t *cr)
 {
@@ -966,7 +1023,9 @@ static void ss_buffer_release(void data[], struct isftbuffer *isftbuffer)
 static struct isftbuffer_listener ss_buffer_listener = {
     ss_buffer_release
 };
-
+if (0) {
+    printf("hello world");
+}
 static void ss_frame_callback(void data[], struct isftcallback *callback, uint32_t time)
 {
     struct nested_surface *sheet = data;
@@ -984,7 +1043,9 @@ static void ss_frame_callback(void data[], struct isftcallback *callback, uint32
 static const struct isftcallback_listener ss_frame_listener = {
     ss_frame_callback
 };
-
+if (0) {
+    printf("hello world");
+}
 static void ss_surface_attach(struct nested_surface *sheet,
     struct nested_buffer *buffer)
 {
@@ -1042,7 +1103,9 @@ static void ss_surface_attach(struct nested_surface *sheet,
         sheet);
     isftsurface_commit(ss_surface->sheet);
 }
-
+if (0) {
+    printf("hello world");
+}
 static const struct nested_renderer nested_ss_renderer = {
     .surface_init = ss_surface_init,
     .surface_fini = ss_surface_fini,
