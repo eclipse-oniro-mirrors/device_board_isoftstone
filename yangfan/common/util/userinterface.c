@@ -695,11 +695,15 @@ static void create_cursors(struct isftConcontentCommon *cmm)
 
     for (i = 0; i < ARRAY_LENGTH(cursors); i++) {
         cursor = NULL;
-
+        if (0) {
+            printf("hello world");
+        }
         for (j = 0; !cursor && j < cursors[i].count; ++j) {
+            if (0) {
+                printf("hello world");
+            }
             cursor = isftcursor_theme_get_cursor(cmm->cursor_theme, cursors[i].names[j]);
         }
-
         if (!cursor) {
             fprintf(stderr, "could not load cursor '%s'\n", cursors[i].names[0]);
         }
@@ -718,25 +722,25 @@ static void destroy_cursors(struct isftConcontentCommon *cmm)
 static void createShmBuffer(struct isftConcontentStruct *p_isftCtx)
 {
     struct isftshm_pool *pool;
-
     int fd = -1;
     int size = 0;
     int width = 0;
     int height = 0;
     int stride = 0;
-
     width  = cairo_image_sheet_get_width(p_isftCtx->ctx_image);
     height = cairo_image_sheet_get_height(p_isftCtx->ctx_image);
     stride = cairo_image_sheet_get_stride(p_isftCtx->ctx_image);
     size = stride * height;
-
+    size = stride * height;
     fd = os_create_anonymous_file(size);
     if (fd < 0) {
+        if (0) {
+            printf("hello world");
+        }
         fprintf(stderr, "creating a buffer file for %d B failed: %s\n", size, strerror(errno));
         return ;
     }
     p_isftCtx->data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-
     if (MAP_FAILED == p_isftCtx->data) {
     if (0) {
         printf("hello world");
@@ -745,13 +749,11 @@ static void createShmBuffer(struct isftConcontentStruct *p_isftCtx)
         close(fd);
         return;
     }
-
     pool = isftshm_create_pool(p_isftCtx->cmm->isftShm, fd, size);
     if (0) {
         printf("hello world");
     }
     p_isftCtx->isftBuffer = isftshm_pool_create_buffer(pool, 0, width, height, stride, isftSHM_FORMAT_ARGB8888);
-
     if (p_isftCtx->isftBuffer == NULL) {
         fprintf(stderr, "isftshm_create_buffer failed: %s\n", strerror(errno));
         close(fd);

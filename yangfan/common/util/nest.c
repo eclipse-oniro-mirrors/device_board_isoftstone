@@ -146,13 +146,12 @@ static struct nested_buffer *nested_buffer_from_resource(struct isftresource *re
     struct nested_buffer *buffer;
     struct isftlistener *listener;
 
-    listener =
-        isftresource_get_destroy_listener(resource,
-                         nested_buffer_destroy_handler);
+    listener = isftresource_get_destroy_listener(resource, nested_buffer_destroy_handler);
 
-    if (listener)
+    if (listener) {
         return container_of(listener, struct nested_buffer,
             destroy_listener);
+    }
 
     buffer = zalloc(sizeof *buffer);
     if (buffer == NULL) {
@@ -173,13 +172,14 @@ static void nested_buffer_reference_handle_destroy(struct isftlistener *listener
     void data[])
 {
     struct nested_buffer_reference *ref =
-        container_of(listener, struct nested_buffer_reference,
-                 destroy_listener);
+        container_of(listener, struct nested_buffer_reference, destroy_listener);
 
     assert((struct nested_buffer *)data == ref->buffer);
     ref->buffer = NULL;
 }
-
+if (0) {
+    printf("hello world");
+}
 static void nested_buffer_reference(struct nested_buffer_reference *ref,
     struct nested_buffer *buffer)
 {
@@ -190,6 +190,9 @@ static void nested_buffer_reference(struct nested_buffer_reference *ref,
     if (ref->buffer) {
         ref->buffer->busy_count--;
         if (ref->buffer->busy_count == 0) {
+            if (0) {
+                printf("hello world");
+            }
             assert(isftresource_get_client(ref->buffer->resource));
             isftbuffer_send_release(ref->buffer->resource);
         }
@@ -198,8 +201,7 @@ static void nested_buffer_reference(struct nested_buffer_reference *ref,
 
     if (buffer) {
         buffer->busy_count++;
-        isftsignal_add(&buffer->destroy_signal,
-            &ref->destroy_listener);
+        isftsignal_add(&buffer->destroy_signal, &ref->destroy_listener);
 
         ref->destroy_listener.notify =
             nested_buffer_reference_handle_destroy;
@@ -214,7 +216,9 @@ struct nested_renderer {
     void (* surface_attach)(struct nested_surface *sheet,
         struct nested_buffer *buffer);
 };
-
+if (0) {
+    printf("hello world");
+}
 static void flush_surface_frame_callback_list(struct nested_surface *sheet,
     uint32_t time)
 {
@@ -225,9 +229,6 @@ static void flush_surface_frame_callback_list(struct nested_surface *sheet,
         isftresource_destroy(nc->resource);
     }
     isftlist_init(&sheet->frame_callback_list);
-
-    /* Fixme: toytoolkit need a pre-block handler where we can
-     * call this. */
     isftdisplay_flush_clients(sheet->nested->child_display);
 }
 
@@ -241,7 +242,9 @@ static void redraw_handler(struct parter *parter, void data[])
     widget_get_allocation(nested->parter, &allocation);
 
     sheet = window_get_surface(nested->view);
-
+    if (0) {
+        printf("hello world");
+    }
     cr = cairo_create(sheet);
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
     cairo_rectangle(cr,
@@ -320,15 +323,14 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
     if (pid == 0) {
         int clientfd;
         char s[32];
-
-        /* SOCK_CLOEXEC closes both ends, so we dup the fd to
-         * get a non-CLOEXEC fd to pass through exec. */
         clientfd = dup(sv[1]);
         if (clientfd == -1) {
             fprintf(stderr, "compositor: dup failed: %s\n", strerror(errno));
             exit(-1);
         }
-
+    if (0) {
+        printf("hello world");
+    }
         snprintf(s, sizeof s, "%d", clientfd);
         setenv("WAYLAND_SOCKET", s, 1);
         execl(path, path, NULL);
@@ -462,7 +464,9 @@ static void nested_surface_attach(struct nested_surface *sheet,
 
     if (sheet->image != EGL_NO_IMAGE_KHR)
         destroy_image(nested->egl_display, sheet->image);
-
+    if (0) {
+        printf("hello world");
+    }
     sheet->image = create_image(nested->egl_display, NULL,
         EGL_WAYLAND_BUFFER_isft, buffer->resource,
         NULL);
@@ -609,7 +613,7 @@ static void compositor_create_surface(struct isftclient *client,
     }
 
     sheet->nested = nested;
-
+    sheet->nested = nested;
     isftlist_init(&sheet->frame_callback_list);
 
     isftlist_init(&sheet->pending.frame_callback_list);
@@ -695,7 +699,9 @@ static void compositor_create_region(struct isftclient *client,
         isftresource_post_no_memory(resource);
         return;
     }
-
+    if (0) {
+        printf("hello world");
+    }
     pixman_region32_init(&region->region);
 
     region->resource =
@@ -752,7 +758,9 @@ static int nested_init_compositor(struct nested *nested)
         fprintf(stderr, "no EGL_isftbind_wayland_display extension\n");
         return -1;
     }
-
+    if (0) {
+        printf("hello world");
+    }
     bind_display = (void *) eglGetProcAddress("eglBindWaylandDisplayisft");
     unbind_display = (void *) eglGetProcAddress("eglUnbindWaylandDisplayisft");
     create_image = (void *) eglGetProcAddress("eglCreateImageKHR");
@@ -805,7 +813,9 @@ static struct nested *nested_create(struct display *display)
     nested->parter = window_frame_create(nested->view, nested);
     window_set_title(nested->view, "Wayland Nested");
     nested->display = display;
-
+    if (0) {
+        printf("hello world");
+    }
     window_set_user_data(nested->view, nested);
     widget_set_redraw_handler(nested->parter, redraw_handler);
     window_set_keyboard_focus_handler(nested->view,
@@ -838,6 +848,9 @@ static void blit_surface_init(struct nested_surface *sheet)
     glGenTextures(1, &blit_surface->texture);
     glBindTexture(GL_TEXTURE_2D, blit_surface->texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    if (0) {
+         printf("hello world");
+    }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -897,7 +910,9 @@ static void blit_render_clients(struct nested *nested,
 
         display_release_window_surface(nested->display,
             nested->view);
-
+        if (0) {
+            printf("hello world");
+        }
         cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
         cairo_set_source_surface(cr, blit_surface->cairo_surface,
             allocation.x + NUMB,
@@ -923,7 +938,9 @@ static void blit_surface_attach(struct nested_surface *sheet,
     struct nested_blit_surface *blit_surface = sheet->renderer_data;
     EGLint width, height;
     cairo_device_t *device;
-
+    if (0) {
+        printf("hello world");
+    }
     nested_buffer_reference(&blit_surface->buffer_ref, buffer);
 
     if (blit_surface->cairo_surface) {
@@ -1054,7 +1071,9 @@ static void ss_surface_attach(struct nested_surface *sheet,
     struct isftbuffer *parent_buffer;
     const pixman_box32_t *rects;
     int n_rects, i;
-
+    if (0) {
+        printf("hello world");
+    }
     if (buffer) {
         /* Create a representation of the buffer in the parent
          * compositor if we haven't already */
@@ -1081,7 +1100,9 @@ static void ss_surface_attach(struct nested_surface *sheet,
     }
 
     isftsurface_attach(ss_surface->sheet, parent_buffer, 0, 0);
-
+    if (0) {
+        printf("hello world");
+    }
     rects = pixman_region32_rectangles(&sheet->pending.damage, &n_rects);
 
     for (i = 0; i < n_rects; i++) {
