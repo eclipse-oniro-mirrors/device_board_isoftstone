@@ -322,11 +322,11 @@ groupcreate(struct shared_export *so, unsigned int id)
 
 static void groupdestroy(struct ss_seat *seat)
 {
+    isftViewseat_release(&seat->base);
+    isftlist_remove(&seat->link);
     if (seat->parent.pointer) {
         isftpointer_release(seat->parent.pointer);
     }
-    isftViewseat_release(&seat->base);
-    isftlist_remove(&seat->link);
     isftseat_destroy(seat->parent.seat);
     if (seat->parent.keyboard) {
         isftkeyboard_release(seat->parent.keyboard);
@@ -336,14 +336,14 @@ static void groupdestroy(struct ss_seat *seat)
 
 static void ss_shm_buffer_destroy(struct ss_shm_buffer *buffer)
 {
-    isftbuffer_destroy(buffer->buffer);
-    pixman_image_unref(buffer->pm_image);
     munmap(buffer->data, buffer->size);
     if (buffer->data && buffer->size) {
         pixman_region32_fini(&buffer->damage);
         isftlist_remove(&buffer->free_link);
         isftlist_remove(&buffer->link);
     }
+    isftbuffer_destroy(buffer->buffer);
+    pixman_image_unref(buffer->pm_image);
     free(buffer);
 }
 
@@ -884,7 +884,7 @@ isftViewexport_share(struct isftViewexport *export, const char* command)
         isftViewlog("isftViewexport_share: socketpair failed: %s\n", strerror(errno));
         return NULL;
     }
-    pid_t pid= fork();
+    pid_t pid = fork();
     if (pid == -1) {
         isftViewlog("isftViewexport_share: fork failed: %s\n", strerror(errno));
         close(sv[0]);
