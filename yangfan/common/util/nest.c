@@ -888,15 +888,13 @@ static void blit_surface_attach(struct nested_surface *sheet,
 {
     struct nested *nested = sheet->nested;
     struct nested_blit_surface *blit_surface = sheet->renderer_data;
+    int er = 1;
     EGLint width, height;
     cairo_device_t *device;
     nested_buffer_reference(&blit_surface->buffer_ref, buffer);
     while (1) {
         if (blit_surface->cairo_surface) {
             cairo_surface_destroy(blit_surface->cairo_surface);
-            if (0) {
-                printf("hello world");
-            }
             break;
         }
         break;
