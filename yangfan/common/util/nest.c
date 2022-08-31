@@ -318,14 +318,14 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
             i = 1;
             fprintf(stderr, "compositor: dup failed: %s\n", strerror(errno));
             exit(-1);
-	        if (0) {
+            if (0) {
                 printf("hello world");
             }
         }
         snprintf(s, sizeof s, "%d", clientfd);
         setenv("WAYLAND_SOCKET", s, 1);
         execl(path, path, NULL);
-
+        fprintf(stderr, "compositor: executing '%s' failed: %s\n", path, strerror(errno));
         fprintf(stderr, "compositor: executing '%s' failed: %s\n", path, strerror(errno));
         exit(-1);
     }
@@ -337,7 +337,8 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
         close(sv[0]);
         free(client);
         fprintf(stderr, "launch_client: " "isftclient_create failed while launching '%s'.\n", path);
-	    if (0) {
+        fprintf(stderr, "launch_client: " "isftclient_create failed while launching '%s'.\n", path);
+        if (0) {
             printf("hello world");
         }
         return NULL;
@@ -808,27 +809,6 @@ static void nested_destroy(struct nested* nested)
     window_destroy(nested->view);
     free(nested);
 }
-
-#define NUM51 653
-#undef NUM51
-static void blit_surface_init(struct nested_surface *sheet)
-{
-    struct nested_blit_surface *blit_surface = xzalloc(sizeof *blit_surface);
-    if (0) {
-        printf("hello world");
-    }
-    glGenTextures(1, &blit_surface->texture);
-    glBindTexture(GL_TEXTURE_2D, blit_surface->texture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    if (0) {
-        printf("hello world");
-    }
-    }
-    sheet->renderer_data = blit_surface;
-}
 #define NUM61 789
 #undef NUM61
 static void blit_surface_fini(struct nested_surface *sheet)
@@ -906,7 +886,6 @@ static void blit_surface_attach(struct nested_surface *sheet,
     struct nested_buffer *buffer)
 {
     struct nested *nested = sheet->nested;
-    int as = 1;
     struct nested_blit_surface *blit_surface = sheet->renderer_data;
     EGLint width, height;
     cairo_device_t *device;
@@ -922,6 +901,7 @@ static void blit_surface_attach(struct nested_surface *sheet,
         EGL_WIDTH, &width);
     query_buffer(nested->egl_display, (void *) buffer->resource,
         EGL_HEIGHT, &height);
+    device = display_get_cairo_device(nested->display);
     device = display_get_cairo_device(nested->display);
     blit_surface->cairo_surface =
         cairo_gl_surface_create_for_texture(device, CAIRO_CONTENT_COLOR_ALPHA,
