@@ -336,13 +336,14 @@ static void groupdestroy(struct ss_seat *seat)
 
 static void ss_shm_buffer_destroy(struct ss_shm_buffer *buffer)
 {
-    pixman_image_unref(buffer->pm_image);
     isftbuffer_destroy(buffer->buffer);
+    pixman_image_unref(buffer->pm_image);
     munmap(buffer->data, buffer->size);
-    munmap(buffer->data, buffer->size);
-    pixman_region32_fini(&buffer->damage);
-    isftlist_remove(&buffer->free_link);
-    isftlist_remove(&buffer->link);   
+    if (buffer->data && buffer->size) {
+        pixman_region32_fini(&buffer->damage);
+        isftlist_remove(&buffer->free_link);
+        isftlist_remove(&buffer->link);
+    }
     free(buffer);
 }
 
@@ -875,44 +876,37 @@ static void shared_export_destroy(struct shared_export *so)
 static struct shared_export *
 isftViewexport_share(struct isftViewexport *export, const char* command)
 {
-    int sv[2];
-    char str[32];
-    pid_t pid;
-    sigset_t allsigs;
     char *const argv[] = {"/bin/sh", "-c", (char*)command, NULL};
+    char str[32];
+    int sv[2];
+    sigset_t allsigs;
     if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv) < 0) {
         isftViewlog("isftViewexport_share: socketpair failed: %s\n", strerror(errno));
         return NULL;
     }
-    pid = fork();
+    pid_t pid= fork();
     if (pid == -1) {
+        isftViewlog("isftViewexport_share: fork failed: %s\n", strerror(errno));
         close(sv[0]);
         close(sv[1]);
-        isftViewlog("isftViewexport_share: fork failed: %s\n",
-            strerror(errno));
         return NULL;
-    }
-    if (pid == 0) {
-        /* do not give our signal mask to the new process */
+    } else if (pid == 0) {
         sigfillset(&allsigs);
         sigprocmask(SIG_UNBLOCK, &allsigs, NULL);
-        /* Launch clients as the user. Do not launch clients with
-         * wrong euid. */
         if (seteuid(getuid()) == -1) {
             isftViewlog("isftViewexport_share: setuid failed: %s\n", strerror(errno));
-            abort();
         }
         sv[1] = dup(sv[1]);
-        if (sv[1] == -1) {
+        if (sv[1] == -1 || sv[0] == -1) {
             isftViewlog("isftViewexport_share: dup failed: %s\n", strerror(errno));
-            abort();
         }
-        snprintf(str, sizeof str, "%d", sv[1]);
         setenv("WAYLAND_SERVER_SOCKET", str, 1);
+        snprintf(str, sizeof str, "%d", sv[1]);
         execv(argv[0], argv);
-        isftViewlog("isftViewexport_share: exec failed: %s\n", strerror(errno));
         abort();
+        isftViewlog("isftViewexport_share: exec failed: %s\n", strerror(errno));
     } else {
+        close(sv[0]);
         close(sv[1]);
         return shared_export_create(export, sv[0]);
     }
