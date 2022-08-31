@@ -400,7 +400,7 @@ static struct ss_shm_buffer *shared_export_get_shm_buffer(struct shared_export *
     width = so->export->width;
     height = so->export->height;
     stride = width * NUM4;
-    if(ss_shm_buffer* fullfill_sb(so, sb, bnext)) {
+    if (ss_shm_buffer* fullfill_sb(so, sb, bnext)) {
         return sb;
     }
     fd = os_create_anonymous_file(height * stride);
@@ -704,7 +704,8 @@ struct zwp_fullscreen_shell_mode_feedback_v1_listener mode_feedback_listener = {
     mode_feedback_ok,
 };
 void if_assign(struct shared_export *so, pixman_region32_t damage, struct ss_shm_buffer *sb)
-{   int width, height, stride;
+{
+    int width, height, stride;
     width = so->export->current_mode->width;
     height = so->export->current_mode->height;
     stride = width;
