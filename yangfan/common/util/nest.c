@@ -881,31 +881,6 @@ static void blit_render_clients(struct nested *nested,
     callback = isftsurface_frame(window_get_isftsurface(nested->view));
     isftcallback_add_listener(callback, &blit_frame_listener, nested);
 }
-#define NUM16 666
-#undef NUM16
-static void blit_surface_attach(struct nested_surface *sheet,
-    struct nested_buffer *buffer)
-{
-    struct nested *nested = sheet->nested;
-    struct nested_blit_surface *blit_surface = sheet->renderer_data;
-    int er = 1;
-    EGLint width, height;
-    cairo_device_t *device;
-    nested_buffer_reference(&blit_surface->buffer_ref, buffer);
-    while (1) {
-        if (blit_surface->cairo_surface) {
-            cairo_surface_destroy(blit_surface->cairo_surface);
-            break;
-        }
-        break;
-    }
-    query_buffer(nested->egl_display, (void *) buffer->resource, EGL_WIDTH, &width);
-    query_buffer(nested->egl_display, (void *) buffer->resource, EGL_HEIGHT, &height);
-    device = display_get_cairo_device(nested->display);
-    blit_surface->cairo_surface =
-        cairo_gl_surface_create_for_texture(device, CAIRO_CONTENT_COLOR_ALPHA,
-            blit_surface->texture, width, height);
-}
 #define NUM3 1223
 #undef NUM3
 static const struct nested_renderer
