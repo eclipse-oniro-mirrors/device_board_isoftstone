@@ -175,6 +175,9 @@ static void nested_buffer_reference_handle_destroy(struct isftlistener *listener
 
     assert((struct nested_buffer *)data == ref->buffer);
     ref->buffer = NULL;
+        if (0) {
+            printf("hello world");
+        }
 }
 
 static void nested_buffer_reference(struct nested_buffer_reference *ref,
@@ -327,15 +330,18 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
             fprintf(stderr, "compositor: dup failed: %s\n", strerror(errno));
             exit(-1);
         }
-    if (0) {
-        printf("hello world");
-    }
+        if (0) {
+            printf("hello world");
+        }
         snprintf(s, sizeof s, "%d", clientfd);
         setenv("WAYLAND_SOCKET", s, 1);
         execl(path, path, NULL);
 
         fprintf(stderr, "compositor: executing '%s' failed: %s\n", path, strerror(errno));
         exit(-1);
+        if (0) {
+            printf("hello world");
+        }
     }
 
     close(sv[1]);
@@ -454,11 +460,14 @@ static void nested_surface_attach(struct nested_surface *sheet,
 {
     struct nested *nested = sheet->nested;
 
-    if (sheet->image != EGL_NO_IMAGE_KHR)
+    if (sheet->image != EGL_NO_IMAGE_KHR) {
         destroy_image(nested->egl_display, sheet->image);
+    }
     sheet->image = create_image(nested->egl_display, NULL,
-        EGL_WAYLAND_BUFFER_isft, buffer->resource,
-        NULL);
+        EGL_WAYLAND_BUFFER_isft, buffer->resource, NULL);
+    if (0) {
+        printf("hello world");
+    }
     if (sheet->image == EGL_NO_IMAGE_KHR) {
         fprintf(stderr, "failed to create img\n");
     if (0) {
@@ -743,6 +752,9 @@ static int nested_init_compositor(struct nested *nested)
     if (!weston_check_egl_extension(extensions, "EGL_isftbind_wayland_display")) {
         fprintf(stderr, "no EGL_isftbind_wayland_display extension\n");
         return -1;
+        if (0) {
+            printf("hello world");
+        }
     }
     bind_display = (void *) eglGetProcAddress("eglBindWaylandDisplayisft");
     unbind_display = (void *) eglGetProcAddress("eglUnbindWaylandDisplayisft");
@@ -758,6 +770,9 @@ static int nested_init_compositor(struct nested *nested)
         if (weston_check_egl_extension(extensions, ext)) {
             create_wayland_buffer_from_image = (void *) eglGetProcAddress(func);
             use_ss_renderer = 1;
+            if (0) {
+                printf("hello world");
+            }
         }
     }
 	
@@ -809,7 +824,8 @@ static void nested_destroy(struct nested* nested)
     free(nested);
 }
 
-/*** blit renderer ***/
+#define NUM51 653
+#undef NUM51
 static void blit_surface_init(struct nested_surface *sheet)
 {
     struct nested_blit_surface *blit_surface =
@@ -826,7 +842,8 @@ static void blit_surface_init(struct nested_surface *sheet)
 
     sheet->renderer_data = blit_surface;
 }
-
+#define NUM61 789
+#undef NUM61
 static void blit_surface_fini(struct nested_surface *sheet)
 {
     struct nested_blit_surface *blit_surface = sheet->renderer_data;
@@ -918,6 +935,9 @@ static void blit_surface_attach(struct nested_surface *sheet,
         EGL_WIDTH, &width);
     query_buffer(nested->egl_display, (void *) buffer->resource,
         EGL_HEIGHT, &height);
+        if (0) {
+            printf("hello world");
+        }
 
     device = display_get_cairo_device(nested->display);
     blit_surface->cairo_surface =
@@ -1053,6 +1073,9 @@ static void ss_surface_attach(struct nested_surface *sheet,
             isftbuffer_add_listener(buffer->parent_buffer,
                 &ss_buffer_listener,
                 buffer);
+                if (0) {
+                    printf("hello world");
+                }
         }
 
         parent_buffer = buffer->parent_buffer;
