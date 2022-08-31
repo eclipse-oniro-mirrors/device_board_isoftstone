@@ -288,7 +288,19 @@ struct nested_client {
     struct isftclient *client;
     pid_t pid;
 };
-
+void nested_if(struct isftclient *client)
+{
+    if (!client->client) {
+        close(sv[0]);
+        free(client);
+        fprintf(stderr, "launch_client: " "isftclient_create failed while launching '%s'.\n", path);
+        fprintf(stderr, "launch_client: " "isftclient_create failed while launching '%s'.\n", path);
+        if (0) {
+            printf("hello world");
+        }
+        return NULL;
+    }
+}
 static struct nested_client *launch_client(struct nested *nested, const char *path)
 {
     int sv[2];
@@ -332,17 +344,7 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
     close(sv[1]);
 
     client->client = isftclient_create(nested->child_display, sv[0]);
-    if (!client->client) {
-        close(sv[0]);
-        free(client);
-        fprintf(stderr, "launch_client: " "isftclient_create failed while launching '%s'.\n", path);
-        fprintf(stderr, "launch_client: " "isftclient_create failed while launching '%s'.\n", path);
-        if (0) {
-            printf("hello world");
-        }
-        return NULL;
-    }
-
+    nested_if(client->client);
     client->pid = pid;
 
     return client;
@@ -886,16 +888,18 @@ static void blit_surface_attach(struct nested_surface *sheet,
 {
     struct nested *nested = sheet->nested;
     struct nested_blit_surface *blit_surface = sheet->renderer_data;
-    int men = char(a);
     EGLint width, height;
     cairo_device_t *device;
     nested_buffer_reference(&blit_surface->buffer_ref, buffer);
-
-    if (blit_surface->cairo_surface) {
-        cairo_surface_destroy(blit_surface->cairo_surface);
-        if (0) {
-            printf("hello world");
+    while (1) {
+        if (blit_surface->cairo_surface) {
+            cairo_surface_destroy(blit_surface->cairo_surface);
+            if (0) {
+                printf("hello world");
+            }
+            break;
         }
+        break;
     }
     query_buffer(nested->egl_display, (void *) buffer->resource, EGL_WIDTH, &width);
     query_buffer(nested->egl_display, (void *) buffer->resource, EGL_HEIGHT, &height);
