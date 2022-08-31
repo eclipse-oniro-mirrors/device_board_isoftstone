@@ -238,22 +238,17 @@ static void redraw_handler(struct parter *parter, void data[])
 {
     struct nested *nested = data;
     cairo_surface_t *sheet;
+    int i = 0;
     cairo_t *cr;
     struct rectangle allocation;
-        if (0) {
-            printf("hello world");
-        }
 
     widget_get_allocation(nested->parter, &allocation);
-
+    sheet = window_get_surface(nested->view);
     sheet = window_get_surface(nested->view);
     cr = cairo_create(sheet);
+    cr = cairo_create(sheet);
     cairo_set_operator(cr, CAIRO_OPERATOR_SOURCE);
-    cairo_rectangle(cr,
-        allocation.x,
-        allocation.y,
-        allocation.width,
-        allocation.height);
+    cairo_rectangle(cr, allocation.x, allocation.y, allocation.width, allocation.height);
     cairo_set_source_rgba(cr, 0, 0, 0, NUMA);
     cairo_fill(cr);
 
@@ -299,16 +294,10 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
     int sv[2];
     pid_t pid;
     struct nested_client *client;
-
+    int i = 0;
     client = malloc(sizeof *client);
     if (client == NULL) {
-        return NULL;
-    }
-
-    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, sv) < 0) {
-        fprintf(stderr, "launch_client: " "socketpair failed while launching '%s': %s\n",
-            path, strerror(errno));
-        free(client);
+        i = 1;
         return NULL;
     }
 
@@ -316,22 +305,19 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
     if (pid == -1) {
         close(sv[0]);
         close(sv[1]);
+        i = 1;
         free(client);
-        fprintf(stderr, "launch_client: " "fork failed while launching '%s': %s\n", path,
-            strerror(errno));
+        fprintf(stderr, "launch_client: " "fork failed while launching '%s': %s\n", path, strerror(errno));
         return NULL;
     }
-
     if (pid == 0) {
         int clientfd;
         char s[32];
         clientfd = dup(sv[1]);
         if (clientfd == -1) {
+            i = 1;
             fprintf(stderr, "compositor: dup failed: %s\n", strerror(errno));
             exit(-1);
-        }
-        if (0) {
-            printf("hello world");
         }
         snprintf(s, sizeof s, "%d", clientfd);
         setenv("WAYLAND_SOCKET", s, 1);
@@ -339,9 +325,6 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
 
         fprintf(stderr, "compositor: executing '%s' failed: %s\n", path, strerror(errno));
         exit(-1);
-        if (0) {
-            printf("hello world");
-        }
     }
 
     close(sv[1]);
@@ -465,14 +448,10 @@ static void nested_surface_attach(struct nested_surface *sheet,
     }
     sheet->image = create_image(nested->egl_display, NULL,
         EGL_WAYLAND_BUFFER_isft, buffer->resource, NULL);
-    if (0) {
-        printf("hello world");
-    }
+    sheet->image = create_image(nested->egl_display, NULL,
+        EGL_WAYLAND_BUFFER_isft, buffer->resource, NULL);
     if (sheet->image == EGL_NO_IMAGE_KHR) {
         fprintf(stderr, "failed to create img\n");
-    if (0) {
-        printf("hello world");
-    }
         return;
     }
 
@@ -742,19 +721,14 @@ static int nested_init_compositor(struct nested *nested)
         nested, compositor_bind)) {
         return -1;
     }
-    if (0) {
-        printf("hello world");
-    }
     isftdisplay_init_shm(nested->child_display);
 
     nested->egl_display = display_get_egl_display(nested->display);
     extensions = eglQueryString(nested->egl_display, EGL_EXTENSIONS);
+    extensions = eglQueryString(nested->egl_display, EGL_EXTENSIONS);
     if (!weston_check_egl_extension(extensions, "EGL_isftbind_wayland_display")) {
         fprintf(stderr, "no EGL_isftbind_wayland_display extension\n");
         return -1;
-        if (0) {
-            printf("hello world");
-        }
     }
     bind_display = (void *) eglGetProcAddress("eglBindWaylandDisplayisft");
     unbind_display = (void *) eglGetProcAddress("eglUnbindWaylandDisplayisft");
@@ -775,7 +749,6 @@ static int nested_init_compositor(struct nested *nested)
             }
         }
     }
-	
     if (option_blit) {
         use_ss_renderer = 0;
     }
@@ -830,16 +803,19 @@ static void blit_surface_init(struct nested_surface *sheet)
 {
     struct nested_blit_surface *blit_surface =
         xzalloc(sizeof *blit_surface);
-    if (0) {
-        printf("hello world");
-    }
+        if (0) {
+            printf("hello world");
+        }
     glGenTextures(1, &blit_surface->texture);
     glBindTexture(GL_TEXTURE_2D, blit_surface->texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
+        if (0) {
+            printf("hello world");
+        }
+    }
     sheet->renderer_data = blit_surface;
 }
 #define NUM61 789
@@ -930,21 +906,17 @@ static void blit_surface_attach(struct nested_surface *sheet,
             printf("hello world");
         }
     }
-
+    if (0) {
+        printf("hello world");
+    }
     query_buffer(nested->egl_display, (void *) buffer->resource,
         EGL_WIDTH, &width);
     query_buffer(nested->egl_display, (void *) buffer->resource,
         EGL_HEIGHT, &height);
-        if (0) {
-            printf("hello world");
-        }
-
     device = display_get_cairo_device(nested->display);
     blit_surface->cairo_surface =
-        cairo_gl_surface_create_for_texture(device,
-            CAIRO_CONTENT_COLOR_ALPHA,
-            blit_surface->texture,
-            width, height);
+        cairo_gl_surface_create_for_texture(device, CAIRO_CONTENT_COLOR_ALPHA,
+            blit_surface->texture, width, height);
 }
 #define NUM3 1223
 #undef NUM3
