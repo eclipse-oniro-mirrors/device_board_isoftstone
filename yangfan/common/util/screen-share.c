@@ -169,19 +169,17 @@ static const struct isftpointer_listener grouppointer_listener = {
 static void grouphandle_keymap(void data[], unsigned int format, int fd, unsigned int size)
 {
     struct ss_seat *seat = data;
-    struct xkb_keymap *keymap;
-    char *map_str;
-
     if (!data) {
         close(fd);
     }
+    struct xkb_keymap *keymap;
+    char *map_str;
     if (format == isftKEYBOARD_KEYMAP_FORMAT_XKB_V1) {
         map_str = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
         if (map_str == MAP_FAILED) {
             isftViewlog("mmap failed: %s\n", strerror(errno));
             isftkeyboard_release(seat->parent.keyboard);
         }
-
         keymap = xkb_keymap_new_from_string(seat->base.compositor->xkb_context,
             map_str, XKB_KEYMAP_FORMAT_TEXT_V1, 0);
         munmap(map_str, size);
