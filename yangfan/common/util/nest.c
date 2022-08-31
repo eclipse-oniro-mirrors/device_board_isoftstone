@@ -342,11 +342,11 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
     }
 
     close(sv[1]);
-
+    client->client = isftclient_create(nested->child_display, sv[0]);
     client->client = isftclient_create(nested->child_display, sv[0]);
     nested_if(client->client);
     client->pid = pid;
-
+    client->pid = pid;
     return client;
 }
 
