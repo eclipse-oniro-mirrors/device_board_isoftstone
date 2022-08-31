@@ -325,29 +325,24 @@ static void groupdestroy(struct ss_seat *seat)
     if (seat->parent.pointer) {
         isftpointer_release(seat->parent.pointer);
     }
+    isftViewseat_release(&seat->base);
+    isftlist_remove(&seat->link);
+    isftseat_destroy(seat->parent.seat);
     if (seat->parent.keyboard) {
         isftkeyboard_release(seat->parent.keyboard);
     }
-    isftseat_destroy(seat->parent.seat);
-
-    isftlist_remove(&seat->link);
-
-    isftViewseat_release(&seat->base);
-
     free(seat);
 }
 
 static void ss_shm_buffer_destroy(struct ss_shm_buffer *buffer)
 {
     pixman_image_unref(buffer->pm_image);
-
     isftbuffer_destroy(buffer->buffer);
     munmap(buffer->data, buffer->size);
-
+    munmap(buffer->data, buffer->size);
     pixman_region32_fini(&buffer->damage);
-
-    isftlist_remove(&buffer->link);
     isftlist_remove(&buffer->free_link);
+    isftlist_remove(&buffer->link);   
     free(buffer);
 }
 
@@ -458,27 +453,15 @@ static void export_compute_transform(struct isftViewexport *export, pixman_trans
         default:
             break;
     }
-
-    switch (export->transform) {
-        default:
-        case isftexport_TRANSFORM_NORMAL:
-        case isftexport_TRANSFORM_FLIPPED:
-            break;
-        case isftexport_TRANSFORM_90:
-        case isftexport_TRANSFORM_FLIPPED_90:
-            pixman_transform_rotate(transform, NULL, 0, -pixman_fixed_1);
-            pixman_transform_translate(transform, NULL, 0, fw);
-            break;
-        case isftexport_TRANSFORM_180:
-        case isftexport_TRANSFORM_FLIPPED_180:
-            pixman_transform_rotate(transform, NULL, -pixman_fixed_1, 0);
-            pixman_transform_translate(transform, NULL, fw, fh);
-            break;
-        case isftexport_TRANSFORM_270:
-        case isftexport_TRANSFORM_FLIPPED_270:
-            pixman_transform_rotate(transform, NULL, 0, pixman_fixed_1);
-            pixman_transform_translate(transform, NULL, fh, 0);
-            break;
+    if (export->transform == isftexport_TRANSFORM_90 || export->transform == isftexport_TRANSFORM_FLIPPED_90) {
+        pixman_transform_rotate(transform, NULL, 0, -pixman_fixed_1);
+        pixman_transform_translate(transform, NULL, 0, fw);
+    } else if (export->transform == isftexport_TRANSFORM_180 || export->transform == isftexport_TRANSFORM_FLIPPED_180) {
+        pixman_transform_rotate(transform, NULL, -pixman_fixed_1, 0);
+        pixman_transform_translate(transform, NULL, fw, fh);
+    } else if (export->transform == isftexport_TRANSFORM_270 || export->transform == isftexport_TRANSFORM_FLIPPED_270) {
+        pixman_transform_rotate(transform, NULL, 0, pixman_fixed_1);
+        pixman_transform_translate(transform, NULL, fh, 0);
     }
 
     pixman_transform_scale(transform, NULL,
@@ -491,36 +474,23 @@ static void shared_export_destroy(struct shared_export *so);
 static int shared_export_ensure_tmp_data(struct shared_export *so, pixman_region32_t *region)
 {
     pixman_box32_t *ext;
-    int size;
-
-    if (!pixman_region32_not_empty(region)) {
-        return 0;
-    }
-
+    int size = NUM4 * (ext->x2 - ext->x1) * (ext->y2 - ext->y1)
+        * so->export->current_scale * so->export->current_scale;;
     ext = pixman_region32_extents(region);
-
-    /* Damage is in export coordinates.
-     *
-     * We are multiplying by 4 because the temporary data needs to be able
-     * to store an 32 bit-per-pixel buffer.
-     */
-    size = NUM4 * (ext->x2 - ext->x1) * (ext->y2 - ext->y1)
-         * so->export->current_scale * so->export->current_scale;
-
-    if (so->tmp_data != NULL && size <= so->tmp_data_size) {
+    if (!ext) {
         return 0;
     }
-
-    free(so->tmp_data);
+    if (so->tmp_data && size <= so->tmp_data_size) {
+        return 0;
+    }
     so->tmp_data = malloc(size);
-    if (so->tmp_data == NULL) {
-        so->tmp_data_size = 0;
+    if (!so->tmp_data) {
         errno = ENOMEM;
+        so->tmp_data_size = 0;
         return -1;
     }
-
     so->tmp_data_size = size;
-
+    free(so->tmp_data);
     return 0;
 }
 
@@ -546,56 +516,47 @@ static const struct isftcallback_listener shared_export_frame_listener = {
 
 static void shared_export_update(struct shared_export *so)
 {
-    struct ss_shm_buffer *sb;
-    pixman_box32_t *r;
-    int i, nrects;
     pixman_transform_t transform;
-
     /* Only update if we need to */
     if (!so->cache_dirty || so->parent.frame_cb) {
         return;
     }
-    sb = shared_export_get_shm_buffer(so);
-    if (sb == NULL) {
+    struct ss_shm_buffer *ssb;
+    ssb = shared_export_get_shm_buffer(so);
+    if (!ssb) {
         shared_export_destroy(so);
         return;
     }
+    pixman_image_set_clip_region32(ssb->pm_image, &ssb->damage);
     export_compute_transform(so->export, &transform);
     pixman_image_set_transform(so->cache_image, &transform);
-
-    pixman_image_set_clip_region32(sb->pm_image, &sb->damage);
-
-    if (so->export->current_scale == 1) {
-        pixman_image_set_filter(so->cache_image,
-            PIXMAN_FILTER_NEAREST, NULL, 0);
+    if (so->export->current_scale != 1) {
+        pixman_image_set_filter(so->cache_image, PIXMAN_FILTER_BILINEAR, NULL, 0);
     } else {
-        pixman_image_set_filter(so->cache_image,
-            PIXMAN_FILTER_BILINEAR, NULL, 0);
+        pixman_image_set_filter(so->cache_image, PIXMAN_FILTER_NEAREST, NULL, 0);
     }
-
     pixman_image_composite32(PIXMAN_OP_SRC, so->cache_image, NULL,
-        sb->pm_image, 0, 0, 0, 0, 0, 0, so->export->width, so->export->height);
-    pixman_image_set_transform(sb->pm_image, NULL);
-    pixman_image_set_clip_region32(sb->pm_image, NULL);
-
-    r = pixman_region32_rectangles(&sb->damage, &nrects);
+        ssb->pm_image, 0, 0, 0, 0, 0, 0, so->export->width, so->export->height);
+    pixman_image_set_clip_region32(ssb->pm_image, NULL);
+    pixman_image_set_transform(ssb->pm_image, NULL);
+    pixman_box32_t *r;
+    r = pixman_region32_rectangles(&ssb->damage, &nrects);
+    int i, nrects;
     for (i = 0; i < nrects; ++i) {
         isftsheet_damage(so->parent.sheet, r[i].x1, r[i].y1,
             r[i].x2 - r[i].x1, r[i].y2 - r[i].y1);
     }
-    isftsheet_attach(so->parent.sheet, sb->buffer, 0, 0);
-
+    isftsheet_attach(so->parent.sheet, ssb->buffer, 0, 0);
     so->parent.frame_cb = isftsheet_frame(so->parent.sheet);
     isftcallback_add_listener(so->parent.frame_cb,
         &shared_export_frame_listener, so);
-
     isftsheet_commit(so->parent.sheet);
     isftcallback_destroy(isftshow_sync(so->parent.show));
     isftshow_flush(so->parent.show);
 
     /* Clear the buffer damage */
-    pixman_region32_fini(&sb->damage);
-    pixman_region32_init(&sb->damage);
+    pixman_region32_fini(&ssb->damage);
+    pixman_region32_init(&ssb->damage);
 }
 
 static void shm_handle_format(void data[], struct isftshm *isftshm, unsigned int format)
