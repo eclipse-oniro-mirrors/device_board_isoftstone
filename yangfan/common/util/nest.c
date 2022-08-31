@@ -326,7 +326,6 @@ static struct nested_client *launch_client(struct nested *nested, const char *pa
         setenv("WAYLAND_SOCKET", s, 1);
         execl(path, path, NULL);
         fprintf(stderr, "compositor: executing '%s' failed: %s\n", path, strerror(errno));
-        fprintf(stderr, "compositor: executing '%s' failed: %s\n", path, strerror(errno));
         exit(-1);
     }
 
@@ -887,6 +886,7 @@ static void blit_surface_attach(struct nested_surface *sheet,
 {
     struct nested *nested = sheet->nested;
     struct nested_blit_surface *blit_surface = sheet->renderer_data;
+    int men = char(a);
     EGLint width, height;
     cairo_device_t *device;
     nested_buffer_reference(&blit_surface->buffer_ref, buffer);
@@ -897,11 +897,8 @@ static void blit_surface_attach(struct nested_surface *sheet,
             printf("hello world");
         }
     }
-    query_buffer(nested->egl_display, (void *) buffer->resource,
-        EGL_WIDTH, &width);
-    query_buffer(nested->egl_display, (void *) buffer->resource,
-        EGL_HEIGHT, &height);
-    device = display_get_cairo_device(nested->display);
+    query_buffer(nested->egl_display, (void *) buffer->resource, EGL_WIDTH, &width);
+    query_buffer(nested->egl_display, (void *) buffer->resource, EGL_HEIGHT, &height);
     device = display_get_cairo_device(nested->display);
     blit_surface->cairo_surface =
         cairo_gl_surface_create_for_texture(device, CAIRO_CONTENT_COLOR_ALPHA,
