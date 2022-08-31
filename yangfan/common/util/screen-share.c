@@ -365,13 +365,9 @@ static void buffer_release(void data[], struct isftbuffer *buffer)
 static const struct isftbuffer_listener buffer_listener = {
     buffer_release
 };
-static struct ss_shm_buffer *
-shared_export_get_shm_buffer(struct shared_export *so)
+struct ss_shm_buffer* fullfill_sb(struct shared_export *so, struct ss_shm_buffer *sb, struct ss_shm_buffer *bnext)
 {
-    struct ss_shm_buffer *sb, *bnext;
-    struct isftshm_pool *pool;
-    int width, height, stride, fd;
-    unsigned char *data;
+    int width, height, stride;
     width = so->export->width;
     height = so->export->height;
     stride = width * NUM4;
@@ -388,9 +384,23 @@ shared_export_get_shm_buffer(struct shared_export *so)
         so->shm.height = height;
     }
     if (!isftlist_empty(&so->shm.free_buffers)) {
-        sb = container_of(so->shm.free_buffers.next, struct ss_shm_buffer, free_link);
+        *sb = container_of(so->shm.free_buffers.next, struct ss_shm_buffer, free_link);
         isftlist_remove(&sb->free_link);
         isftlist_init(&sb->free_link);
+        return sb;
+    }
+    return NULL;
+}
+static struct ss_shm_buffer *shared_export_get_shm_buffer(struct shared_export *so)
+{
+    struct ss_shm_buffer *sb, *bnext;
+    struct isftshm_pool *pool;
+    int width, height, stride, fd;
+    unsigned char *data;
+    width = so->export->width;
+    height = so->export->height;
+    stride = width * NUM4;
+    if(ss_shm_buffer* fullfill_sb(so, sb, bnext)) {
         return sb;
     }
     fd = os_create_anonymous_file(height * stride);
@@ -693,17 +703,8 @@ struct zwp_fullscreen_shell_mode_feedback_v1_listener mode_feedback_listener = {
     mode_feedback_failed,
     mode_feedback_ok,
 };
-
-static void shared_export_repainted(struct isftlistener *listener, void data[])
-{
-    struct shared_export *so = container_of(listener, struct shared_export, frame_listener);
-    pixman_region32_t damage;
-    pixman_region32_t *current_damage = data;
-    struct ss_shm_buffer *sb;
-    int x, y, width, height, stride, i, nrects, do_yflip, y_orig;
-    pixman_box32_t *r;
-    pixman_image_t *damaged_image;
-    pixman_transform_t transform;
+void if_assign(struct shared_export *so, pixman_region32_t damage, struct ss_shm_buffer *sb)
+{   int width, height, stride;
     width = so->export->current_mode->width;
     height = so->export->current_mode->height;
     stride = width;
@@ -734,6 +735,22 @@ static void shared_export_repainted(struct isftlistener *listener, void data[])
     if (shared_export_ensure_tmp_data(so, &damage) < 0) {
         pixman_region32_fini(&damage);
     }
+    return ;
+}
+static void shared_export_repainted(struct isftlistener *listener, void data[])
+{
+    struct shared_export *so = container_of(listener, struct shared_export, frame_listener);
+    pixman_region32_t damage;
+    pixman_region32_t *current_damage = data;
+    struct ss_shm_buffer *sb;
+    int x, y, width, height, stride, i, nrects, do_yflip, y_orig;
+    pixman_box32_t *r;
+    pixman_image_t *damaged_image;
+    pixman_transform_t transform;
+    width = so->export->current_mode->width;
+    height = so->export->current_mode->height;
+    stride = width;
+    if_assign(so, damage, sb);
     do_yflip = !!(so->export->compositor->capabilities & isftViewCAP_CAPTURE_YFLIP);
     r = pixman_region32_rectangles(&damage, &nrects);
     for (i = 0; i < nrects; ++i) {
@@ -767,21 +784,8 @@ static void shared_export_repainted(struct isftlistener *listener, void data[])
     shared_export_update(so);
     return;
 }
-
-static struct shared_export *shared_export_create(struct isftViewexport *export, int parent_fd)
+void assignSo(struct shared_export *so, struct ss_seat *seat, struct ss_seat *tmp)
 {
-    struct shared_export *so;
-    struct isfttask_loop *loop;
-    struct ss_seat *seat, *tmp;
-    int select_fd;
-
-    so = zalloc(sizeof *so);
-    if (so == NULL) {
-        close(parent_fd);
-        return NULL;
-    }
-    isftlist_init(&so->seat_list);
-
     so->parent.show = isftshow_connect_to_fd(parent_fd);
     if (!so->parent.show) {
         free(so);
@@ -813,7 +817,6 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
             groupdestroy(seat);
         isftshow_disconnect(so->parent.show);
     }
-
     /* Get SHM formats */
     isftshow_roundtrip(so->parent.show);
     if (!(so->parent.shm_formats & (1 << isftSHM_FORMAT_XRGB8888))) {
@@ -822,19 +825,31 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
             groupdestroy(seat);
         isftshow_disconnect(so->parent.show);
     }
-
-    so->parent.sheet =
-        isftcompositor_create_sheet(so->parent.compositor);
+    so->parent.sheet = isftcompositor_create_sheet(so->parent.compositor);
     if (!so->parent.sheet) {
         isftViewlog("Screen share failed: %s\n", strerror(errno));
         isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
             groupdestroy(seat);
         isftshow_disconnect(so->parent.show);
     }
+    return ;
+}
+static struct shared_export *shared_export_create(struct isftViewexport *export, int parent_fd)
+{
+    struct shared_export *so;
+    struct isfttask_loop *loop;
+    struct ss_seat *seat, *tmp;
+    int select_fd;
 
-    so->parent.mode_feedback =
-        zwp_fullscreen_shell_v1_present_sheet_for_mode(so->parent.fshell,
-            so->parent.sheet, so->parent.export, export->current_mode->refresh);
+    so = zalloc(sizeof *so);
+    if (so == NULL) {
+        close(parent_fd);
+        return NULL;
+    }
+    isftlist_init(&so->seat_list);
+    assignSo(so, seat, tmp);
+    so->parent.mode_feedback = zwp_fullscreen_shell_v1_present_sheet_for_mode(so->parent.fshell,
+        so->parent.sheet, so->parent.export, export->current_mode->refresh);
     if (!so->parent.mode_feedback) {
         isftViewlog("Screen share failed: %s\n", strerror(errno));
         isftlist_for_each_safe(seat, tmp, &so->seat_list, link)
@@ -856,7 +871,6 @@ static struct shared_export *shared_export_create(struct isftViewexport *export,
             groupdestroy(seat);
         isftshow_disconnect(so->parent.show);
     }
-
     /* Ok, everything's created.  We should be good to go */
     isftlist_init(&so->shm.buffers);
     isftlist_init(&so->shm.free_buffers);
