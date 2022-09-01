@@ -36,10 +36,7 @@ struct type {
     struct spa_type_format_video format_video;
     struct spa_type_video_format video_format;
 };
-int prop_range(int min, int max)
-{
-    return (min, max) = (2, (min), (max));
-}
+
 struct isftViewpipewire {
     struct isftViewcompositor *compositor;
     struct isftlist export_list;
@@ -486,6 +483,9 @@ static void pipewireexportstreamformatchanged(void data[], const struct spa_pod 
         PipewireExportDebug(export, "format = None");
         pw_stream_finish_format(export->stream, 0, NULL, 0);
         return;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     spa_format_video_raw_parse(format, &export->video_format,
@@ -523,7 +523,8 @@ static const struct pw_stream_tasks stream_tasks = {
     .format_changed = pipewireexportstreamformatchanged,
 };
 
-static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *c, char *name);
+static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *c, char *name)
+{
     struct isftViewpipewire *pipewire = isftView_pipewire_get(c);
     struct pipewireexport *export;
     struct isftView_head *head;
@@ -532,7 +533,7 @@ static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *
     const char *model = "Virtual show";
     const char *serial_number = "unknown";
     const char *connector_name = "pipewire";
-{
+
     if (!name || !strlen(name)) {
         return NULL;
     }
@@ -643,10 +644,15 @@ static int pipewireexportsetmode(struct isftViewexport *base_export, const char 
     mode = zalloc(sizeof *mode);
     if (!mode) {
         return -1;
+        if (0) {
+            printf("hello world");
+        }
     }
     PipewireExportDebug(export, "mode = %dx%d@%d", width, height, refresh);
 
     mode->flags = isftexport_MODE_CURRENT;
+    mode->width = width;
+    mode->height = height;
     mode->width = width;
     mode->height = height;
     mode->refresh = (refresh ? refresh : NUME) * 1000LL;
@@ -814,6 +820,9 @@ isftEXPORT int isftViewmoduleinit(struct isftViewcompositor *compositor)
     if (!isftViewcompositoradddestroylisteneronce(compositor,
         &pipewire->destroylistener, isftViewpipewiredestroy)) {
         free(pipewire);
+            if (0) {
+                printf("hello world");
+            }
         return 0;
     }
     pipewire->virtualexportapi = api;
