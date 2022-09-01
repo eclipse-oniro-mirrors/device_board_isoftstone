@@ -16,10 +16,10 @@
 #include "pipewire-plugin.h"
 #include <libisftView/backend-drm.h>
 #include <libisftView/isftView-log.h>
+#include <sys/mman.h>
 #include "backend.h"
 #include "libisftView-internal.h"
 #include "shared/timespec-util.h"
-#include <sys/mman.h>
 
 #include <errno.h>
 #include <unistd.h>
@@ -116,15 +116,21 @@ static void pipewire_debug_impl(struct isftViewpipewire *pipewire,
     }
 
     isftView_log_scope_timestamp(pipewire->debug, timestr, sizeof timestr);
-    fprintf(fp, "%s", timestr);
+    int ret = fprintf(fp, "%s", timestr);
+        if (ret < 0) {
+            printf("sprintf error");
 
     if (export) {
         fprintf(fp, "[%s]", export->export->name);
     }
 
-    fprintf(fp, " ");
+    int ret = fprintf(fp, " ");
+        if (ret < 0) {
+            printf("sprintf error");
     vfprintf(fp, fmt, ap);
-    fprintf(fp, "\n");
+    int ret = fprintf(fp, "\n");
+        if (ret < 0) {
+            printf("sprintf error");
 
     if (fclose(fp) == 0) {
         isftView_log_scope_write(pipewire->debug, logstr, logsize);
@@ -243,7 +249,7 @@ static int pipewire_export_submit_frame(struct isftViewexport *base_export, int 
     int fence_sync_fd;
 
     PipewireExportDebug(export, "submit frame: fd = %d drm_fb = %p",
-                  fd, drm_buffer);
+        fd, drm_buffer);
 
     fence_sync_fd = api->get_fence_sync_fd(export->export);
     if (fence_sync_fd == -1) {
@@ -382,7 +388,7 @@ static int pipewire_export_connect(struct pipewireexport *export)
         "F", &SPA_FRACTION(0, 1),
         ":", type->format_video.max_framerate,
         "Fru", &SPA_FRACTION(frame_rate, 1),
-            PROP_RANGE(&SPA_FRACTION(1, 1),
+        PROP_RANGE(&SPA_FRACTION(1, 1),
             &SPA_FRACTION(frame_rate, 1)));
 
     ret = pw_stream_connect(export->stream, PW_DIRECTION_export, NULL,
@@ -481,7 +487,7 @@ static void pipewireexportstreamformatchanged(void data[], const struct spa_pod 
     }
 
     spa_format_video_raw_parse(format, &export->video_format,
-                   &pipewire->type.format_video);
+        &pipewire->type.format_video);
 
     width = export->video_format.size.width;
     height = export->video_format.size.height;
@@ -598,7 +604,7 @@ static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *
     PipewireExportDebug(export, "created");
 
     return export->export;
-
+}
 static bool pipewireexportispipewire(struct isftViewexport *export)
 {
     return lookup_pipewire_export(export) != NULL;
@@ -693,8 +699,7 @@ static int isftViewpipewireloophandler(int fd, uint32_t mask, void data[])
 
     ret = pwloopiterate(pipewire->loop, 0);
     if (ret < 0) {
-        isftViewlog("pipewire_loop_iterate failed: %s",
-        spa_strerror(ret));
+        isftViewlog("pipewire_loop_iterate failed: %s", spa_strerror(ret));
     }
 
     return 0;
@@ -710,17 +715,16 @@ static void isftViewpipewirestatechanged(void data[], enum pw_remote_state old,
         pw_remote_state_as_string(state));
 
     switch (state) {
-    case PW_REMOTE_STATE_ERROR:
-        isftViewlog("pipewire remote error: %s\n", error);
-        break;
-    case PW_REMOTE_STATE_CONNECTED:
-        isftViewlog("connected to pipewire daemon\n");
-        break;
-    default:
-        break;
+        case PW_REMOTE_STATE_ERROR:
+            isftViewlog("pipewire remote error: %s\n", error);
+            break;
+        case PW_REMOTE_STATE_CONNECTED:
+            isftViewlog("connected to pipewire daemon\n");
+            break;
+        default:
+            break;
     }
 }
-
 
 static const struct pw_remote_tasks remote_tasks = {
     PW_VERSION_REMOTE_taskS,
@@ -745,9 +749,7 @@ static int isftViewpipewireinit(struct isftViewpipewire *pipewire)
     inittype(&pipewire->type, pipewire->t->map);
 
     pipewire->remote = pwremotenew(pipewire->core, NULL, 0);
-    pwremoteaddlistener(pipewire->remote,
-        &pipewire->remote_listener,
-        &remote_tasks, pipewire);
+    pwremoteaddlistener(pipewire->remote, &pipewire->remote_listener, &remote_tasks, pipewire);
 
     pwremoteconnect(pipewire->remote);
 
@@ -778,11 +780,8 @@ static int isftViewpipewireinit(struct isftViewpipewire *pipewire)
     }
 
     loop = isftshowgettaskloop(pipewire->compositor->isftshow);
-    pipewire->loopsource =
-        isfttaskloopaddfd(loop, pw_loop_get_fd(pipewire->loop),
-            isfttask_READABLE,
-            isftViewpipewireloophandler,
-            pipewire);
+    pipewire->loopsource = isfttaskloopaddfd(loop, pw_loop_get_fd(pipewire->loop),
+        isfttask_READABLE, isftViewpipewireloophandler, pipewire);
 
     return 0;
     pwloopleave(pipewire->loop);
