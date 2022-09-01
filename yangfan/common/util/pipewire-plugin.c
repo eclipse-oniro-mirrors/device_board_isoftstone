@@ -1,17 +1,17 @@
 /*
-* Copyright (c) 2021-2022 isoftstone Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * (C) Copyright 2008-2015 Fuzhou Rockchip Electronics Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "pipewire-plugin.h"
 #include <libisftView/backend-drm.h>
@@ -116,21 +116,24 @@ static void pipewire_debug_impl(struct isftViewpipewire *pipewire,
     }
 
     isftView_log_scope_timestamp(pipewire->debug, timestr, sizeof timestr);
-    int ret = fprintf(fp, "%s", timestr);
-        if (ret < 0) {
+    int rett = fprintf(fp, "%s", timestr);
+        if (rett < 0) {
             printf("sprintf error");
+        }
 
     if (export) {
         fprintf(fp, "[%s]", export->export->name);
     }
 
-    int ret = fprintf(fp, " ");
-        if (ret < 0) {
+    int rett = fprintf(fp, " ");
+        if (rett < 0) {
             printf("sprintf error");
+        }
     vfprintf(fp, fmt, ap);
-    int ret = fprintf(fp, "\n");
-        if (ret < 0) {
+    int rett = fprintf(fp, "\n");
+        if (rett < 0) {
             printf("sprintf error");
+        }
 
     if (fclose(fp) == 0) {
         isftView_log_scope_write(pipewire->debug, logstr, logsize);
@@ -195,7 +198,6 @@ static void pipewire_export_handle_frame(struct pipewireexport *export, int fd,
     buffer = pw_stream_dequeue_buffer(export->stream);
     if (!buffer) {
         isftViewlog("Failed to dequeue a pipewire buffer\n");
-    }
         close(fd);
         export->submitted_frame = true;
         api->buffer_released(drm_buffer);
@@ -460,11 +462,11 @@ static void pipewire_export_stream_state_changed(void data[], enum pw_stream_sta
         pw_stream_state_as_string(state));
 
     switch (state) {
-    case PW_STREAM_STATE_STREAMING:
-        isftView_export_schedule_repaint(export->export);
-        break;
-    default:
-        break;
+        case PW_STREAM_STATE_STREAMING:
+            isftView_export_schedule_repaint(export->export);
+            break;
+        default:
+            break;
     }
 }
 
