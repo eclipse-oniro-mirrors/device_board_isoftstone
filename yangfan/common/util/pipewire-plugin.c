@@ -522,7 +522,37 @@ static const struct pw_stream_tasks stream_tasks = {
     .state_changed = pipewire_export_stream_state_changed,
     .format_changed = pipewireexportstreamformatchanged,
 };
+struct int exportkk (stream, export, head)
+{
+    export->stream = pw_stream_new(pipewire->remote, name, NULL);
+    if (!export->stream) {
+        isftViewlog("Cannot initialize pipewire stream\n");
+        if (export->stream) {
+            pw_stream_destroy(export->stream);
+        }
+        if (head) {
+            free(head);
+        }
+        free(export);
+        return NULL;
+    }
 
+    pw_stream_add_listener(export->stream, &export->stream_listener,
+        &stream_tasks, export);
+
+    export->export = api->create_export(c, name);
+    if (!export->export) {
+        isftViewlog("Cannot create virtual export\n");
+        if (export->stream) {
+            pw_stream_destroy(export->stream);
+        }
+        if (head) {
+            free(head);
+        }
+        free(export);
+        return NULL;
+    }
+}
 static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *c, char *name)
 {
     struct isftViewpipewire *pipewire = isftView_pipewire_get(c);
@@ -556,36 +586,7 @@ static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *
         free(export);
         return NULL;
     }
-
-    export->stream = pw_stream_new(pipewire->remote, name, NULL);
-    if (!export->stream) {
-        isftViewlog("Cannot initialize pipewire stream\n");
-        if (export->stream) {
-            pw_stream_destroy(export->stream);
-        }
-        if (head) {
-            free(head);
-        }
-        free(export);
-        return NULL;
-    }
-
-    pw_stream_add_listener(export->stream, &export->stream_listener,
-        &stream_tasks, export);
-
-    export->export = api->create_export(c, name);
-    if (!export->export) {
-        isftViewlog("Cannot create virtual export\n");
-        if (export->stream) {
-            pw_stream_destroy(export->stream);
-        }
-        if (head) {
-            free(head);
-        }
-        free(export);
-        return NULL;
-    }
-
+    exportkk (stream, export, head);
     export->saved_destroy = export->export->destroy;
     export->export->destroy = pipewire_export_destroy;
     export->saved_enable = export->export->enable;
@@ -651,8 +652,6 @@ static int pipewireexportsetmode(struct isftViewexport *base_export, const char 
     PipewireExportDebug(export, "mode = %dx%d@%d", width, height, refresh);
 
     mode->flags = isftexport_MODE_CURRENT;
-    mode->width = width;
-    mode->height = height;
     mode->width = width;
     mode->height = height;
     mode->refresh = (refresh ? refresh : NUME) * 1000LL;
@@ -811,6 +810,9 @@ isftEXPORT int isftViewmoduleinit(struct isftViewcompositor *compositor)
 
     if (!api) {
         return -1;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     pipewire = zalloc(sizeof *pipewire);
@@ -820,9 +822,9 @@ isftEXPORT int isftViewmoduleinit(struct isftViewcompositor *compositor)
     if (!isftViewcompositoradddestroylisteneronce(compositor,
         &pipewire->destroylistener, isftViewpipewiredestroy)) {
         free(pipewire);
-            if (0) {
-                printf("hello world");
-            }
+        if (0) {
+            printf("hello world");
+        }
         return 0;
     }
     pipewire->virtualexportapi = api;
