@@ -115,8 +115,7 @@ IsftViewlogClockstamp(char *buf, size_t len)
     return buf;
 }
 
-static void
-CustomHandler(const char *fmt, valist arg)
+static void CustomHandler(const char *fmt, valist arg)
 {
     char clockStr[512];
 
@@ -126,8 +125,7 @@ CustomHandler(const char *fmt, valist arg)
     IsftViewlogScopevprintf(logScope, fmt, arg);
 }
 
-static bool
-IsftViewLogfileopen(const char *filename)
+static bool IsftViewLogfileopen(const char *filename)
 {
     Isfttlog_set_handler_server(CustomHandler);
 
@@ -149,8 +147,7 @@ IsftViewLogfileopen(const char *filename)
     return true;
 }
 
-static void
-IsftViewLogfileclose(void)
+static void IsftViewLogfileclose(void)
 {
     if ((IsftViewLogfile != stderr) && (IsftViewLogfile != NULL)) {
         fclose(IsftViewLogfile);
@@ -158,8 +155,7 @@ IsftViewLogfileclose(void)
     IsftViewLogfile = stderr;
 }
 
-static int
-vlog(const char *fmt, valist ap)
+static int vlog(const char *fmt, valist ap)
 {
     const char *oom = "Out of memory";
     char clockStr[128];
@@ -184,8 +180,7 @@ vlog(const char *fmt, valist ap)
     return len;
 }
 
-static int
-VlogContinue(const char *fmt, valist argp)
+static int VlogContinue(const char *fmt, valist argp)
 {
     return IsftViewlogScopevprintf(logScope, fmt, argp);
 }
@@ -193,8 +188,8 @@ VlogContinue(const char *fmt, valist argp)
 static const char *
 GetnextArgument(const char *signature, char* type)
 {
-    for(; *signature; ++signature) {
-        switch(*signature) {
+    for (; *signature; ++signature) {
+        switch (*signature) {
             case 'i':
             case 'u':
             case 'f':
@@ -211,8 +206,7 @@ GetnextArgument(const char *signature, char* type)
     return signature;
 }
 
-static void
-ProtoCollogfn(void *user_data,
+static void ProtoCollogfn(void *user_data,
               enum IsfttProtoColloggerType direction,
               const struct IsfttProtoColloggerMessage *message)
 {
@@ -307,8 +301,7 @@ ProtoCollogfn(void *user_data,
 static struct IsftList chilDprocesslist;
 static struct IsftViewCompositor *segvCompositor;
 
-static int
-SigchldHandler(int signalNumber, void *data)
+static int SigchldHandler(int signalNumber, void *data)
 {
     struct IsftViewprocess *p;
     int status;
@@ -318,7 +311,7 @@ SigchldHandler(int signalNumber, void *data)
         IsftList_for_each(p, &chilDprocesslist, link) {
             if (p->pid == pid) {
                 break;
-			}
+            }
         }
 
         if (&p->link == &chilDprocesslist) {
@@ -332,13 +325,12 @@ SigchldHandler(int signalNumber, void *data)
 
     if (pid < 0 && errno != ECHILD) {
         IsftViewlog("waitpid error %s\n", strerror(errno));
-	}
+    }
 
     return 1;
 }
 
-static void
-ChildClientexec(int sockfd, const char *path)
+static void ChildClientexec(int sockfd, const char *path)
 {
     int clientFd;
     char s[32];
@@ -362,7 +354,7 @@ ChildClientexec(int sockfd, const char *path)
     if (execl(path, path, NULL) < 0) {
         IsftViewlog("compositor: executing '%s' failed: %s\n",
                     path, strerror(errno));
-	}
+    }
 }
 
 IsftTEXPORT struct IsfttcClient *
@@ -428,8 +420,7 @@ struct ProcessInfo {
     char *path;
 };
 
-static void
-ProcessHandleSigchld(struct IsftViewprocess *process, int status)
+static void ProcessHandleSigchld(struct IsftViewprocess *process, int status)
 {
     struct ProcessInfo *pinfo =
         container_of(process, struct ProcessInfo, proc);
@@ -457,18 +448,18 @@ IsftViewClientStart(struct IsftViewCompositor *compositor, const char *path)
     pinfo = zalloc(sizeof *pinfo);
     if (!pinfo) {
         return NULL;
-	}
+    }
 
     pinfo->path = strdup(path);
     if (!pinfo->path) {
         goto out_free;
-	}
+    }
 
     client = IsftViewclientLaunch(compositor, &pinfo->proc, path,
                                    ProcessHandleSigchld);
     if (!client) {
         goto out_str;
-	}
+    }
 
     return client;
 
@@ -481,8 +472,7 @@ out_free:
     return NULL;
 }
 
-static void
-LogUname(void)
+static void LogUname(void)
 {
     struct utsname usys;
 
@@ -546,8 +536,7 @@ static const char xdgdetailmessage[] =
     "http://www.freedesktop.org/wiki/Specifications/basedir-spec\n"
     "on how to implement it.\n";
 
-static void
-VerifyXdgrunClockdir(void)
+static void VerifyXdgrunClockdir(void)
 {
     char *dir = getenv("XDG_RUNTIME_DIR");
     struct stat s;
@@ -571,8 +560,7 @@ VerifyXdgrunClockdir(void)
     }
 }
 
-static int
-Usage(int errorcode)
+static int Usage(int errorcode)
 {
     FILE *out = errorcode == EXIT_SUCCESS ? stdout : stderr;
 
@@ -725,7 +713,7 @@ ClockName(clockid_t clk_id)
 
     if (clk_id < 0 || (unsigned)clk_id >= ARRAY_LENGTH(names)) {
         return "unknown";
-	}
+    }
 
     return names[clk_id];
 }
@@ -738,8 +726,7 @@ static const struct {
     { WESTON_CAP_CAPTURE_YFLIP, "screen capture uses y-flip:" },
 };
 
-static void
-IsftViewCompositorlogcapabilities(struct IsftViewCompositor *compositor)
+static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *compositor)
 {
     unsigned i;
     int yes;
@@ -764,11 +751,10 @@ IsftViewCompositorlogcapabilities(struct IsftViewCompositor *compositor)
     } else {
         IsftViewlogcontinue(STAMP_SPACE
             "presentation clock resolution: N/A\n");
-	}
+    }
 }
 
-static void
-HandleprimaryClientdestroyed(struct IsftAudience *listener, void *data)
+static void HandleprimaryClientdestroyed(struct IsftAudience *listener, void *data)
 {
     struct IsfttcClient *client = data;
 
@@ -777,8 +763,7 @@ HandleprimaryClientdestroyed(struct IsftAudience *listener, void *data)
     Isfttshowterminate(IsfttcClient_get_show(client));
 }
 
-static int
-IsftViewcreatelisteningsocket(struct Isfttshow *show, const char *socketname)
+static int IsftViewcreatelisteningsocket(struct Isfttshow *show, const char *socketname)
 {
     if (socketname) {
         if (Isfttshow_add_socket(show, socketname)) {
@@ -809,7 +794,7 @@ IsftLLoadmoduleentrypoint(const char *name, const char *entrypoint)
 
     if (name == NULL) {
         return NULL;
-	}
+    }
 
     if (name[0] != '/') {
         len = IsftViewmodule_path_from_env(name, path, sizeof path);
@@ -821,7 +806,7 @@ IsftLLoadmoduleentrypoint(const char *name, const char *entrypoint)
     }
     if (len >= sizeof path) {
         return NULL;
-	}
+    }
 
     module = dlopen(path, RTLD_NOW | RTLD_NOLOAD);
     if (module) {
@@ -845,8 +830,7 @@ IsftLLoadmoduleentrypoint(const char *name, const char *entrypoint)
     return init;
 }
 
-IsftTEXPORT int
-IsftLoadmodule(struct IsftViewCompositor *compositor,
+IsftTEXPORT int IsftLoadmodule(struct IsftViewCompositor *compositor,
             const char *name, int *argc, char *argv[])
 {
     int (*module_init)(struct IsftViewCompositor *ec,
@@ -855,15 +839,14 @@ IsftLoadmodule(struct IsftViewCompositor *compositor,
     module_init = IsftLLoadmoduleentrypoint(name, "Isftmodule_init");
     if (!module_init) {
         return -1;
-	}
+    }
     if (module_init(compositor, argc, argv) < 0) {
         return -1;
-	}
+    }
     return 0;
 }
 
-static int
-IsftLoadshell(struct IsftViewCompositor *compositor,
+static int IsftLoadshell(struct IsftViewCompositor *compositor,
            const char *name, int *argc, char *argv[])
 {
     int (*shell_init)(struct IsftViewCompositor *ec,
@@ -872,10 +855,10 @@ IsftLoadshell(struct IsftViewCompositor *compositor,
     shell_init = IsftLLoadmoduleentrypoint(name, "Isftshell_init");
     if (!shell_init) {
         return -1;
-	}
+    }
     if (shell_init(compositor, argc, argv) < 0) {
         return -1;
-	}
+    }
     return 0;
 }
 
@@ -888,12 +871,12 @@ IsftGetbinarypath(const char *name, const char *dir)
     len = IsftViewmodule_path_from_env(name, path, sizeof path);
     if (len > 0) {
         return strdup(path);
-	}
+    }
 
     len = snprintf(path, sizeof path, "%s/%s", dir, name);
     if (len >= sizeof path) {
         return NULL;
-	}
+    }
 
     return strdup(path);
 }
@@ -910,8 +893,7 @@ IsftGetbindir_path(const char *name)
     return IsftGetbinarypath(name, BINDIR);
 }
 
-static int
-LoadModules(struct IsftViewCompositor *ec, const char *modules,
+static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
          int *argc, char *argv[], bool *x)
 {
     const char *p, *end;
@@ -919,7 +901,7 @@ LoadModules(struct IsftViewCompositor *ec, const char *modules,
 
     if (modules == NULL) {
         return 0;
-	}
+    }
 
     p = modules;
     while (*p) {
@@ -935,20 +917,19 @@ LoadModules(struct IsftViewCompositor *ec, const char *modules,
         } else {
             if (IsftLoadmodule(ec, buffer, argc, argv) < 0) {
                 return -1;
-			}
+            }
         }
 
         p = end;
         while (*p == ',') {
             p++;
-		}
+        }
     }
 
     return 0;
 }
 
-static int
-SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
+static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
                   struct IsftViewtouch_device *device,
                   const struct IsftViewtouch_device_matrix *calibration)
 {
@@ -1005,8 +986,7 @@ out:
     return ret;
 }
 
-static int
-IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
+static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
                   struct IsftViewConfig *layout)
 {
     struct XkbRuleNames xkb_names;
@@ -1028,7 +1008,7 @@ IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
 
     if (IsftViewCompositor_set_XkbRuleNames(ec, &xkb_names) < 0) {
         return -1;
-	}
+    }
 
     IsftViewConfigSection_get_int(s, "repeat-rate",
                       &ec->kb_repeat_rate, 40);
@@ -1055,7 +1035,7 @@ IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     if (cal) {
         IsftViewCompositor_enable_touch_calibrator(ec,
                                                    SaveTouchdevicealibration);
-	}
+    }
 
     return 0;
 }
@@ -1087,8 +1067,7 @@ static const struct { const char *name; unsigned int token; } transforms[] = {
     { "flipped-rotate-270", IsftTOUTPUT_TRANSFORM_FLIPPED_270 },
 };
 
-IsftTEXPORT int
-IsftViewparsetransform(const char *transform, unsigned int *out)
+IsftTEXPORT int IsftViewparsetransform(const char *transform, unsigned int *out)
 {
     unsigned int i;
 
@@ -1115,8 +1094,7 @@ IsftViewtransformtostring(unsigned int export_transform)
     return "<illegal value>";
 }
 
-static int
-LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
+static int LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
            const char *config_file)
 {
     const char *file = "weston.ini";
@@ -1154,14 +1132,12 @@ LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
     return 0;
 }
 
-static void
-handleexit(struct IsftViewCompositor *c)
+static void handleexit(struct IsftViewCompositor *c)
 {
     Isfttshowterminate(c->Isfttshow);
 }
 
-static void
-IsftExport_set_scale(struct IsftViewExport *export,
+static void IsftExport_set_scale(struct IsftViewExport *export,
              struct IsftViewConfigSection *section,
              int default_scale,
              int parsed_scale)
@@ -1179,8 +1155,7 @@ IsftExport_set_scale(struct IsftViewExport *export,
 }
 
 
-static int
-IsftExportsettransform(struct IsftViewExport *export,
+static int IsftExportsettransform(struct IsftViewExport *export,
              struct IsftViewConfigSection *section,
              unsigned int default_transform,
              unsigned int parsed_transform)
@@ -1211,8 +1186,7 @@ IsftExportsettransform(struct IsftViewExport *export,
     return 0;
 }
 
-static void
-Allowcontentprotection(struct IsftViewExport *export,
+static void Allowcontentprotection(struct IsftViewExport *export,
             struct IsftViewConfigSection *section)
 {
     bool allowhdcp = true;
@@ -1220,13 +1194,12 @@ Allowcontentprotection(struct IsftViewExport *export,
     if (section) {
         IsftViewConfigSectiongetbool(section, "allowhdcp",
                            &allowhdcp, true);
-	}
+    }
 
     IsftViewExport_allow_protection(export, allowhdcp);
 }
 
-static int
-Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
+static int Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
                       struct IsftExportConfig *defaults)
 {
     const struct IsftViewwindowedexportapi *api =
@@ -1273,8 +1246,7 @@ Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
     }
 
     IsftExport_set_scale(export, section, defaults->scale, parsedoptions->scale);
-    if (IsftExportsettransform(export, section, defaults->transform,
-                     parsedoptions->transform) < 0) {
+    if (IsftExportsettransform(export, section, defaults->transform, parsedoptions->transform) < 0) {
         return -1;
     }
 
@@ -1287,8 +1259,7 @@ Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
     return 0;
 }
 
-static int
-countremainingheads(struct IsftViewExport *export, struct IsftViewHead *to_go)
+static int countremainingheads(struct IsftViewExport *export, struct IsftViewHead *to_go)
 {
     struct IsftViewHead *iter = NULL;
     int n = 0;
@@ -1296,21 +1267,19 @@ countremainingheads(struct IsftViewExport *export, struct IsftViewHead *to_go)
     while ((iter = IsftViewExport_iterate_heads(export, iter))) {
         if (iter != to_go) {
             n++;
-		}
+        }
     }
 
     return n;
 }
 
-static void
-IsftHeadTrackerdestroy(struct IsftHeadTracker *track)
+static void IsftHeadTrackerdestroy(struct IsftHeadTracker *track)
 {
     IsftListremove(&track->headdestroylistener.link);
     free(track);
 }
 
-static void
-handleheaddestroy(struct IsftAudience *listener, void *data)
+static void handleheaddestroy(struct IsftAudience *listener, void *data)
 {
     struct IsftViewHead *head = data;
     struct IsftViewExport *export;
@@ -1324,11 +1293,11 @@ handleheaddestroy(struct IsftAudience *listener, void *data)
 
     if (!export) {
         return;
-	}
+    }
 
     if (countremainingheads(export, head) > 0) {
         return;
-	}
+    }
 
     IsftViewExport_destroy(export);
 }
@@ -1341,29 +1310,27 @@ IsftHeadTrackerFromhead(struct IsftViewHead *head)
     lis = IsftViewHead_get_destroy_listener(head, handleheaddestroy);
     if (!lis) {
         return NULL;
-	}
+    }
 
     return container_of(lis, struct IsftHeadTracker,
                 headdestroylistener);
 }
 
-static void
-IsftHeadTrackercreate(struct IsftCompositor *compositor,
+static void IsftHeadTrackercreate(struct IsftCompositor *compositor,
             struct IsftViewHead *head)
 {
     struct IsftHeadTracker *track;
 
     track = zalloc(sizeof *track);
     if (!track) {
-        return;
-	}
+        return ;
+    }
 
     track->headdestroylistener.notify = handleheaddestroy;
     IsftViewHead_add_destroy_listener(head, &track->headdestroylistener);
 }
 
-static void
-SimpleHeadenable(struct IsftCompositor *wet, struct IsftViewHead *head)
+static void SimpleHeadenable(struct IsftCompositor *wet, struct IsftViewHead *head)
 {
     struct IsftViewExport *export;
     int ret = 0;
@@ -1380,7 +1347,7 @@ SimpleHeadenable(struct IsftCompositor *wet, struct IsftViewHead *head)
 
     if (wet->simpleexportconfigure) {
         ret = wet->simpleexportconfigure(export);
-	}
+    }
     if (ret < 0) {
         IsftViewlog("Cannot configure export \"%s\".\n",
                     IsftViewHeadgetname(head));
@@ -1402,8 +1369,7 @@ SimpleHeadenable(struct IsftCompositor *wet, struct IsftViewHead *head)
     IsftHeadTrackercreate(wet, head);
 }
 
-static void
-SimpleHeaddisable(struct IsftViewHead *head)
+static void SimpleHeaddisable(struct IsftViewHead *head)
 {
     struct IsftViewExport *export;
     struct IsftHeadTracker *track;
@@ -1411,15 +1377,14 @@ SimpleHeaddisable(struct IsftViewHead *head)
     track = IsftHeadTrackerFromhead(head);
     if (track) {
         IsftHeadTrackerdestroy(track);
-	}
+    }
 
     export = IsftViewHead_get_export(head);
     assert(export);
     IsftViewExport_destroy(export);
 }
 
-static void
-SimpleHeadschanged(struct IsftAudience *listener, void *arg)
+static void SimpleHeadschanged(struct IsftAudience *listener, void *arg)
 {
     struct IsftViewCompositor *compositor = arg;
     struct IsftCompositor *wet = ToIsftCompositor(compositor);
@@ -1448,8 +1413,7 @@ SimpleHeadschanged(struct IsftAudience *listener, void *arg)
     }
 }
 
-static void
-IsftsetSimpleheadconfigurator(struct IsftViewCompositor *compositor,
+static void IsftsetSimpleheadconfigurator(struct IsftViewCompositor *compositor,
                  int (*fn)(struct IsftViewExport *))
 {
     struct IsftCompositor *wet = ToIsftCompositor(compositor);
@@ -1461,8 +1425,7 @@ IsftsetSimpleheadconfigurator(struct IsftViewCompositor *compositor,
                         &wet->headschangedlistener);
 }
 
-static void
-ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
+static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
         struct libimport_device *device)
 {
     char *profile_string = NULL;
@@ -1502,20 +1465,18 @@ ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
     free(profile_string);
 }
 
-static void
-ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
+static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
         struct libimport_device *device)
 {
     bool natural;
-    char *method_string = NULL;
+    char *methodString = NULL;
     unsigned int methods;
     enum libimport_config_scroll_method method;
-    char *button_string = NULL;
+    char *buttonString = NULL;
     int button;
 
     if (libimport_device_config_scroll_has_natural_scroll(device) &&
-        IsftViewConfigSectiongetbool(s, "natural-scroll",
-                       &natural, false) == 0) {
+        IsftViewConfigSectiongetbool(s, "natural-scroll", &natural, false) == 0) {
         IsftViewlog("          natural-scroll=%s\n",
                     natural ? "true" : "false");
         libimport_device_config_scroll_set_natural_scroll_enabled(
@@ -1523,19 +1484,19 @@ ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
     }
 
     if (IsftViewConfigSection_get_string(s, "scroll-method",
-                         &method_string, NULL) != 0)
+                         &methodString, NULL) != 0)
         goto done;
-    if (strcmp(method_string, "two-finger") == 0)
+    if (strcmp(methodString, "two-finger") == 0)
         method = LIBINPUT_CONFIG_SCROLL_2FG;
-    else if (strcmp(method_string, "edge") == 0)
+    else if (strcmp(methodString, "edge") == 0)
         method = LIBINPUT_CONFIG_SCROLL_EDGE;
-    else if (strcmp(method_string, "button") == 0)
+    else if (strcmp(methodString, "button") == 0)
         method = LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
-    else if (strcmp(method_string, "none") == 0)
+    else if (strcmp(methodString, "none") == 0)
         method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
     else {
         IsftViewlog("warning: no such scroll-method: %s\n",
-                    method_string);
+                    methodString);
         goto done;
     }
 
@@ -1543,36 +1504,35 @@ ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
     if (method != LIBINPUT_CONFIG_SCROLL_NO_SCROLL &&
         (method & methods) == 0) {
         goto done;
-	}
+    }
 
-    IsftViewlog("          scroll-method=%s\n", method_string);
+    IsftViewlog("          scroll-method=%s\n", methodString);
     libimport_device_config_scroll_set_method(device, method);
 
     if (method == LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN) {
         if (IsftViewConfigSection_get_string(s, "scroll-button",
-                                             &button_string,
+                                             &buttonString,
                                              NULL) != 0) {
-            goto done;
-		}
-
-        button = libevdev_event_code_from_name(EV_KEY, button_string);
-        if (button == -1) {
-            IsftViewlog("          Bad scroll-button: %s\n",
-                        button_string);
             goto done;
         }
 
-        IsftViewlog("          scroll-button=%s\n", button_string);
+        button = libevdev_event_code_from_name(EV_KEY, buttonString);
+        if (button == -1) {
+            IsftViewlog("          Bad scroll-button: %s\n",
+                        buttonString);
+            goto done;
+        }
+
+        IsftViewlog("          scroll-button=%s\n", buttonString);
         libimport_device_config_scroll_set_button(device, button);
     }
 
 done:
-    free(method_string);
-    free(button_string);
+    free(methodString);
+    free(buttonString);
 }
 
-static void
-Configureimportdevice(struct IsftViewCompositor *compositor,
+static void Configureimportdevice(struct IsftViewCompositor *compositor,
                struct libimport_device *device)
 {
     struct IsftViewConfigSection *s;
@@ -1604,7 +1564,7 @@ Configureimportdevice(struct IsftViewCompositor *compositor,
         if (IsftViewConfigSectiongetbool(s, "enable-tap",
                            &enable_tap, false) == 0) {
             has_enable_tap = true;
-	    }
+        }
         if (has_enable_tap) {
             IsftViewlog("          enable-tap=%s.\n",
                         enable_tap ? "true" : "false");
@@ -1662,13 +1622,12 @@ Configureimportdevice(struct IsftViewCompositor *compositor,
 
     if (libimport_device_config_accel_is_available(device)) {
         ConfigureimportDeviceaccel(s, device);
-	}
+    }
 
     ConfigureimportDevicescroll(s, device);
 }
 
-static int
-DrmBackendExportconfigure(struct IsftViewExport *export,
+static int DrmBackendExportconfigure(struct IsftViewExport *export,
                  struct IsftViewConfigSection *section)
 {
     struct IsftCompositor *wet = ToIsftCompositor(export->compositor);
@@ -1755,7 +1714,7 @@ DrmconfigfindControllingexportsection(struct IsftViewConfig *layout,
 
         if (!section) {
             return NULL;
-		}
+        }
 
         if (++depth > 10) {
             IsftViewlog("Configuration error: "
@@ -1781,7 +1740,7 @@ IsftCompositorCreatelayExport(struct IsftCompositor *compositor,
     lo = zalloc(sizeof *lo);
     if (!lo) {
         return NULL;
-	}
+    }
 
     lo->compositor = compositor;
     IsftList_insert(compositor->layexportList.prev, &lo->compositorLink);
@@ -1792,8 +1751,7 @@ IsftCompositorCreatelayExport(struct IsftCompositor *compositor,
     return lo;
 }
 
-static void
-IsftlayExportDestroy(struct IsftlayExport *lo)
+static void IsftlayExportDestroy(struct IsftlayExport *lo)
 {
     IsftListremove(&lo->compositorLink);
     assert(IsftList_empty(&lo->exportList));
@@ -1801,8 +1759,7 @@ IsftlayExportDestroy(struct IsftlayExport *lo)
     free(lo);
 }
 
-static void
-IsftExportHandledestroy(struct IsftAudience *listener, void *data)
+static void IsftExportHandledestroy(struct IsftAudience *listener, void *data)
 {
     struct IsftExport *export;
 
@@ -1821,7 +1778,7 @@ IsftlayExportCreateexport(struct IsftlayExport *lo, const char *name)
     export = zalloc(sizeof *export);
     if (!export) {
         return NULL;
-	}
+    }
 
     export->export =
         IsftViewCompositor_create_export(lo->compositor->compositor,
@@ -1849,13 +1806,12 @@ IsftExportFromIsftViewExport(struct IsftViewExport *base)
                                               IsftExportHandledestroy);
     if (!lis) {
         return NULL;
-	}
+    }
 
     return container_of(lis, struct IsftExport, exportDestroyListener);
 }
 
-static void
-IsftExportDestroy(struct IsftExport *export)
+static void IsftExportDestroy(struct IsftExport *export)
 {
     if (export->export) {
         struct IsftViewExport *save = export->export;
@@ -1875,13 +1831,12 @@ IsftCompositorfindlayExport(struct IsftCompositor *wet, const char *name)
     IsftList_for_each(lo, &wet->layexportList, compositorLink)
         if (strcmp(lo->name, name) == 0) {
             return lo;
-		}
+        }
 
     return NULL;
 }
 
-static void
-IsftCompositorlayExportaddhead(struct IsftCompositor *wet,
+static void IsftCompositorlayExportaddhead(struct IsftCompositor *wet,
                   const char *export_name,
                   struct IsftViewConfigSection *section,
                   struct IsftViewHead *head)
@@ -1897,13 +1852,12 @@ IsftCompositorlayExportaddhead(struct IsftCompositor *wet,
 
     if (lo->add.n + 1 >= ARRAY_LENGTH(lo->add.heads)) {
         return;
-	}
+    }
 
     lo->add.heads[lo->add.n++] = head;
 }
 
-static void
-IsftCompositordestroylayout(struct IsftCompositor *wet)
+static void IsftCompositordestroylayout(struct IsftCompositor *wet)
 {
     struct IsftlayExport *lo, *lo_tmp;
     struct IsftExport *export, *export_tmp;
@@ -1918,8 +1872,7 @@ IsftCompositordestroylayout(struct IsftCompositor *wet)
     }
 }
 
-static void
-DrmheadPrepareenable(struct IsftCompositor *wet,
+static void DrmheadPrepareenable(struct IsftCompositor *wet,
             struct IsftViewHead *head)
 {
     const char *name = IsftViewHeadgetname(head);
@@ -1950,8 +1903,7 @@ DrmheadPrepareenable(struct IsftCompositor *wet,
     }
 }
 
-static bool
-DrmheadShouldforceenable(struct IsftCompositor *wet,
+static bool DrmheadShouldforceenable(struct IsftCompositor *wet,
                  struct IsftViewHead *head)
 {
     const char *name = IsftViewHeadgetname(head);
@@ -1961,14 +1913,13 @@ DrmheadShouldforceenable(struct IsftCompositor *wet,
     section = DrmconfigfindControllingexportsection(wet->layout, name);
     if (!section) {
         return false;
-	}
+    }
 
     IsftViewConfigSectiongetbool(section, "force-on", &force, false);
     return force;
 }
 
-static void
-DrmTryattach(struct IsftViewExport *export,
+static void DrmTryattach(struct IsftViewExport *export,
            struct IsftHeadArray *add,
            struct IsftHeadArray *failed)
 {
@@ -1977,7 +1928,7 @@ DrmTryattach(struct IsftViewExport *export,
     for (i = 0; i < add->n; i++) {
         if (!add->heads[i]) {
             continue;
-		}
+        }
 
         if (IsftViewExport_attach_head(export, add->heads[i]) < 0) {
             assert(failed->n < ARRAY_LENGTH(failed->heads));
@@ -1988,21 +1939,20 @@ DrmTryattach(struct IsftViewExport *export,
     }
 }
 
-static int
-DrmTryenable(struct IsftViewExport *export,
+static int DrmTryenable(struct IsftViewExport *export,
            struct IsftHeadArray *undo,
            struct IsftHeadArray *failed)
 {
     while (!export->enabled) {
         if (IsftViewExport_enable(export) == 0) {
             return 0;
-		}
+        }
 
         while (undo->n > 0 && undo->heads[--undo->n] == NULL);
 
         if (undo->heads[undo->n] == NULL) {
             return -1;
-		}
+        }
 
         assert(failed->n < ARRAY_LENGTH(failed->heads));
 
@@ -2014,8 +1964,7 @@ DrmTryenable(struct IsftViewExport *export,
     return 0;
 }
 
-static int
-DrmTryattachenable(struct IsftViewExport *export, struct IsftlayExport *lo)
+static int DrmTryattachenable(struct IsftViewExport *export, struct IsftlayExport *lo)
 {
     struct IsftHeadArray failed = {};
     unsigned i;
@@ -2025,25 +1974,24 @@ DrmTryattachenable(struct IsftViewExport *export, struct IsftlayExport *lo)
     DrmTryattach(export, &lo->add, &failed);
     if (DrmBackendExportconfigure(export, lo->section) < 0) {
         return -1;
-	}
+    }
 
     if (DrmTryenable(export, &lo->add, &failed) < 0) {
         return -1;
-	}
+    }
 
     for (i = 0; i < lo->add.n; i++) {
         if (lo->add.heads[i]) {
             IsftHeadTrackercreate(lo->compositor,
                                   lo->add.heads[i]);
-		}
-	}
+        }
+    }
     lo->add = failed;
 
     return 0;
 }
 
-static int
-DrmProcesslayExport(struct IsftCompositor *wet, struct IsftlayExport *lo)
+static int DrmProcesslayExport(struct IsftCompositor *wet, struct IsftlayExport *lo)
 {
     struct IsftExport *export, *tmp;
     char *name = NULL;
@@ -2063,12 +2011,12 @@ DrmProcesslayExport(struct IsftCompositor *wet, struct IsftlayExport *lo)
         lo->add = failed;
         if (lo->add.n == 0) {
             return 0;
-		}
+        }
     }
 
     if (!IsftViewCompositor_find_export_by_name(wet->compositor, lo->name)) {
         name = strdup(lo->name);
-	}
+    }
 
     while (lo->add.n > 0) {
         if (!IsftList_empty(&lo->exportList)) {
@@ -2081,7 +2029,7 @@ DrmProcesslayExport(struct IsftCompositor *wet, struct IsftlayExport *lo)
                            IsftViewHeadgetname(lo->add.heads[0]));
             if (ret < 0) {
                 return -1;
-			}
+            }
         }
         export = IsftlayExportCreateexport(lo, name);
         free(name);
@@ -2089,7 +2037,7 @@ DrmProcesslayExport(struct IsftCompositor *wet, struct IsftlayExport *lo)
 
         if (!export) {
             return -1;
-		}
+        }
 
         if (DrmTryattachenable(export->export, lo) < 0) {
             IsftExportDestroy(export);
@@ -2100,8 +2048,7 @@ DrmProcesslayExport(struct IsftCompositor *wet, struct IsftlayExport *lo)
     return 0;
 }
 
-static int
-DrmProcesslayExports(struct IsftCompositor *wet)
+static int DrmProcesslayExports(struct IsftCompositor *wet)
 {
     struct IsftlayExport *lo;
     int ret = 0;
@@ -2109,7 +2056,7 @@ DrmProcesslayExports(struct IsftCompositor *wet)
     IsftList_for_each(lo, &wet->layexportList, compositorLink) {
         if (lo->add.n == 0) {
             continue;
-		}
+        }
 
         if (DrmProcesslayExport(wet, lo) < 0) {
             lo->add = (struct IsftHeadArray){};
@@ -2120,8 +2067,7 @@ DrmProcesslayExports(struct IsftCompositor *wet)
     return ret;
 }
 
-static void
-DrmHeaddisable(struct IsftViewHead *head)
+static void DrmHeaddisable(struct IsftViewHead *head)
 {
     struct IsftViewExport *export_base;
     struct IsftExport *export;
@@ -2130,7 +2076,7 @@ DrmHeaddisable(struct IsftViewHead *head)
     track = IsftHeadTrackerFromhead(head);
     if (track) {
         IsftHeadTrackerdestroy(track);
-	}
+    }
 
     export_base = IsftViewHead_get_export(head);
     assert(export_base);
@@ -2140,11 +2086,10 @@ DrmHeaddisable(struct IsftViewHead *head)
     IsftViewHead_detach(head);
     if (countremainingheads(export->export, NULL) == 0) {
         IsftExportDestroy(export);
-	}
+    }
 }
 
-static void
-DrmHeadschanged(struct IsftAudience *listener, void *arg)
+static void DrmHeadschanged(struct IsftAudience *listener, void *arg)
 {
     struct IsftViewCompositor *compositor = arg;
     struct IsftCompositor *wet = ToIsftCompositor(compositor);
@@ -2174,11 +2119,10 @@ DrmHeadschanged(struct IsftAudience *listener, void *arg)
 
     if (DrmProcesslayExports(wet) < 0) {
         wet->initFailed = true;
-	}
+    }
 }
 
-static int
-DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
+static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
                      struct IsftViewConfigSection *section,
                      char *modeline,
                      const struct IsftViewremoting_api *api)
@@ -2236,8 +2180,7 @@ DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
     return 0;
 }
 
-static void
-RemotedExportinit(struct IsftViewCompositor *c,
+static void RemotedExportinit(struct IsftViewCompositor *c,
             struct IsftViewConfigSection *section,
             const struct IsftViewremoting_api *api)
 {
@@ -2249,12 +2192,12 @@ RemotedExportinit(struct IsftViewCompositor *c,
                      NULL);
     if (!export_name) {
         return;
-	}
+    }
 
     IsftViewConfigSection_get_string(section, "mode", &modeline, "off");
     if (strcmp(modeline, "off") == 0) {
         goto err;
-	}
+    }
 
     export = api->create_export(c, export_name);
     if (!export) {
@@ -2290,8 +2233,7 @@ err:
     }
 }
 
-static void
-LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
+static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
 {
     const struct IsftViewremoting_api *api = NULL;
     int (*module_init)(struct IsftViewCompositor *ec);
@@ -2335,8 +2277,7 @@ LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
     }
 }
 
-static int
-DrmbackendPipeWireExportconfigure(struct IsftViewExport *export,
+static int DrmbackendPipeWireExportconfigure(struct IsftViewExport *export,
                      struct IsftViewConfigSection *section,
                      char *modeline,
                      const struct IsftViewpipewire_api *api)
@@ -2367,8 +2308,7 @@ DrmbackendPipeWireExportconfigure(struct IsftViewExport *export,
     return 0;
 }
 
-static void
-PipeWireExportinit(struct IsftViewCompositor *c,
+static void PipeWireExportinit(struct IsftViewCompositor *c,
             struct IsftViewConfigSection *section,
             const struct IsftViewpipewire_api *api)
 {
@@ -2421,8 +2361,7 @@ err:
     }
 }
 
-static void
-LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
+static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
 {
     const struct IsftViewpipewire_api *api = NULL;
     int (*module_init)(struct IsftViewCompositor *ec);
@@ -2466,8 +2405,7 @@ LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
     }
 }
 
-static int
-LoadDrmbackend(struct IsftViewCompositor *c,
+static int LoadDrmbackend(struct IsftViewCompositor *c,
          int *argc, char **argv, struct IsftViewConfig *wc)
 {
     struct IsftViewDrm_backend_config layout = {{ 0, }};
@@ -2524,8 +2462,7 @@ LoadDrmbackend(struct IsftViewCompositor *c,
     return ret;
 }
 
-static int
-HeadlessBackendExportconfigure(struct IsftViewExport *export)
+static int HeadlessBackendExportconfigure(struct IsftViewExport *export)
 {
     struct IsftExportConfig defaults = {
         .width = 1024,
@@ -2537,8 +2474,7 @@ HeadlessBackendExportconfigure(struct IsftViewExport *export)
     return Isftconfigurewindowedexportfromconfig(export, &defaults);
 }
 
-static int
-LoadHeadlessbackend(struct IsftViewCompositor *c,
+static int LoadHeadlessbackend(struct IsftViewCompositor *c,
               int *argc, char **argv, struct IsftViewConfig *wc)
 {
     const struct IsftViewwindowedexportapi *api;
@@ -2589,7 +2525,7 @@ LoadHeadlessbackend(struct IsftViewCompositor *c,
 
     if (ret < 0) {
         return ret;
-	}
+    }
 
     if (!no_exports) {
         api = IsftViewwindowed_export_get_api(c);
@@ -2601,14 +2537,13 @@ LoadHeadlessbackend(struct IsftViewCompositor *c,
 
         if (api->create_head(c, "headless") < 0) {
             return -1;
-		}
+        }
     }
 
     return 0;
 }
 
-static int
-RdpBackendExportconfigure(struct IsftViewExport *export)
+static int RdpBackendExportconfigure(struct IsftViewExport *export)
 {
     struct IsftCompositor *compositor = ToIsftCompositor(export->compositor);
     struct IsftExportConfig *parsedoptions = compositor->parsedoptions;
@@ -2625,11 +2560,11 @@ RdpBackendExportconfigure(struct IsftViewExport *export)
 
     if (parsedoptions->width) {
         width = parsedoptions->width;
-	}
+    }
 
     if (parsedoptions->height) {
         height = parsedoptions->height;
-	}
+    }
 
     IsftViewExport_set_scale(export, 1);
     IsftViewExport_set_transform(export, IsftTOUTPUT_TRANSFORM_NORMAL);
@@ -2643,8 +2578,7 @@ RdpBackendExportconfigure(struct IsftViewExport *export)
     return 0;
 }
 
-static void
-IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *layout)
+static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *layout)
 {
     layout->base.struct_version = WESTON_RDP_BACKEND_CONFIG_VERSION;
     layout->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
@@ -2659,8 +2593,7 @@ IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *layout)
     layout->force_no_compression = 0;
 }
 
-static int
-LoadRdpbackend(struct IsftViewCompositor *c,
+static int LoadRdpbackend(struct IsftViewCompositor *c,
         int *argc, char *argv[], struct IsftViewConfig *wc)
 {
     struct IsftViewrdpbackendconfig layout  = {{ 0, }};
@@ -2669,7 +2602,7 @@ LoadRdpbackend(struct IsftViewCompositor *c,
     struct IsftExportConfig *parsedoptions = IsftinitParsedoptions(c);
     if (!parsedoptions) {
         return -1;
-	}
+    }
 
     IsftViewrdpackendconfiginit(&layout);
 
@@ -2701,8 +2634,7 @@ LoadRdpbackend(struct IsftViewCompositor *c,
     return ret;
 }
 
-static int
-fbdevBackendExportconfigure(struct IsftViewExport *export)
+static int FbdevBackendExportconfigure(struct IsftViewExport *export)
 {
     struct IsftViewConfig *wc = IsftGetconfig(export->compositor);
     struct IsftViewConfigSection *section;
@@ -2720,8 +2652,7 @@ fbdevBackendExportconfigure(struct IsftViewExport *export)
     return 0;
 }
 
-static int
-LoadFbdevbackend(struct IsftViewCompositor *c,
+static int LoadFbdevbackend(struct IsftViewCompositor *c,
               int *argc, char **argv, struct IsftViewConfig *wc)
 {
     struct IsftViewfbdevbackendconfig layout = {{ 0, }};
@@ -2739,7 +2670,7 @@ LoadFbdevbackend(struct IsftViewCompositor *c,
     layout.base.struct_size = sizeof(struct IsftViewfbdevbackendconfig);
     layout.configure_device = Configureimportdevice;
 
-    IsftsetSimpleheadconfigurator(c, fbdevBackendExportconfigure);
+    IsftsetSimpleheadconfigurator(c, FbdevBackendExportconfigure);
 
     ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_FBDEV,
                          &layout.base);
@@ -2748,8 +2679,7 @@ LoadFbdevbackend(struct IsftViewCompositor *c,
     return ret;
 }
 
-static int
-BackendExportconfigure(struct IsftViewExport *export)
+static int BackendExportconfigure(struct IsftViewExport *export)
 {
     struct IsftExportConfig defaults = {
         .width = 1024,
@@ -2761,8 +2691,7 @@ BackendExportconfigure(struct IsftViewExport *export)
     return Isftconfigurewindowedexportfromconfig(export, &defaults);
 }
 
-static int
-Loadbackend(struct IsftViewCompositor *c,
+static int Loadbackend(struct IsftViewCompositor *c,
          int *argc, char **argv, struct IsftViewConfig *wc)
 {
     char *defaultexport;
@@ -2805,7 +2734,7 @@ Loadbackend(struct IsftViewCompositor *c,
 
     if (ret < 0) {
         return ret;
-	}
+    }
 
     api = IsftViewwindowed_export_get_api(c);
 
@@ -2820,7 +2749,7 @@ Loadbackend(struct IsftViewCompositor *c,
 
         if (exportcount >= optioncount) {
             break;
-		}
+        }
 
         if (strcmp(sectionname, "export") != 0) {
             continue;
@@ -2858,8 +2787,7 @@ Loadbackend(struct IsftViewCompositor *c,
     return 0;
 }
 
-static int
-BackendExportconfigure(struct IsftViewExport *export)
+static int BackendExportconfigure(struct IsftViewExport *export)
 {
     struct IsftExportConfig defaults = {
         .width = 1024,
@@ -2871,8 +2799,7 @@ BackendExportconfigure(struct IsftViewExport *export)
     return Isftconfigurewindowedexportfromconfig(export, &defaults);
 }
 
-static int
-Loadbackend(struct IsftViewCompositor *c,
+static int Loadbackend(struct IsftViewCompositor *c,
              int *argc, char **argv, struct IsftViewConfig *wc)
 {
     struct IsftViewbackend_config layout = {{ 0, }};
@@ -2887,7 +2814,7 @@ Loadbackend(struct IsftViewCompositor *c,
     struct IsftExportConfig *parsedoptions = IsftinitParsedoptions(c);
     if (!parsedoptions) {
         return -1;
-	}
+    }
 
     layout.cursor_size = 32;
     layout.cursor_theme = NULL;
@@ -2927,7 +2854,7 @@ Loadbackend(struct IsftViewCompositor *c,
 
     if (ret < 0) {
         return ret;
-	}
+    }
 
     api = IsftViewwindowed_export_get_api(c);
 
@@ -2943,7 +2870,7 @@ Loadbackend(struct IsftViewCompositor *c,
     while (IsftViewConfig_next_section(wc, &section, &sectionname)) {
         if (count == 0) {
             break;
-		}
+        }
 
         if (strcmp(sectionname, "export") != 0) {
             continue;
@@ -2953,7 +2880,7 @@ Loadbackend(struct IsftViewCompositor *c,
 
         if (export_name == NULL) {
             continue;
-		}
+        }
 
         if (export_name[0] != 'W' || export_name[1] != 'L') {
             free(export_name);
@@ -2972,7 +2899,7 @@ Loadbackend(struct IsftViewCompositor *c,
     for (i = 0; i < count; i++) {
         if (asprintf(&export_name, "%d", i) < 0) {
             return -1;
-		}
+        }
 
         if (api->create_head(c, export_name) < 0) {
             free(export_name);
@@ -2985,8 +2912,7 @@ Loadbackend(struct IsftViewCompositor *c,
 }
 
 
-static int
-LoadBackend(struct IsftViewCompositor *compositor, const char *backend,
+static int LoadBackend(struct IsftViewCompositor *compositor, const char *backend,
          int *argc, char **argv, struct IsftViewConfig *layout)
 {
     if (strstr(backend, "headless-backend.so")) {
@@ -3001,7 +2927,7 @@ LoadBackend(struct IsftViewCompositor *compositor, const char *backend,
         return Loadbackend(compositor, argc, argv, layout);
     } else if (strstr(backend, "backend.so")) {
         return Loadbackend(compositor, argc, argv, layout);
-	}
+    }
 
     IsftViewlog("Error: unknown backend \"%s\"\n", backend);
     return -1;
@@ -3018,27 +2944,25 @@ copyCommandline(int argc, char * const argv[])
     fp = openmemstream(&str, &size);
     if (!fp) {
         return NULL;
-	}
+    }
 
     fprintf(fp, "%s", argv[0]);
     for (i = 1; i < argc; i++) {
         fprintf(fp, " %s", argv[i]);
-	}
+    }
     fclose(fp);
 
     return str;
 }
 
 #if !defined(BUILD_XWAYLAND)
-int
-IsftLoadx(struct IsftViewCompositor *comp)
+int IsftLoadx(struct IsftViewCompositor *comp)
 {
     return -1;
 }
 #endif
 
-static void
-IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
+static void IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
             struct IsftViewlog_subscriber *subscriber,
             const char *names)
 {
@@ -3054,8 +2978,7 @@ IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
     free(tokenize);
 }
 
-static void
-flightreckeybindinghandler(struct IsftViewkeyboard *keyboard,
+static void flightreckeybindinghandler(struct IsftViewkeyboard *keyboard,
                    const struct clockspec *clock, unsigned int key,
                    void *data)
 {
@@ -3063,8 +2986,7 @@ flightreckeybindinghandler(struct IsftViewkeyboard *keyboard,
     IsftViewlog_subscriber_show_flight_rec(flight_rec);
 }
 
-static void
-IsftViewlogsubscribetoscopes(struct IsftViewlog_context *log_ctx,
+static void IsftViewlogsubscribetoscopes(struct IsftViewlog_context *log_ctx,
                    struct IsftViewlog_subscriber *logger,
                    struct IsftViewlog_subscriber *flight_rec,
                    const char *logScopes,
@@ -3074,7 +2996,7 @@ IsftViewlogsubscribetoscopes(struct IsftViewlog_context *log_ctx,
         IsftViewlogsetupscopes(log_ctx, logger, logScopes);
     } else {
         IsftViewlog_subscribe(log_ctx, logger, "log");
-	}
+    }
 
     if (flight_rec_scopes) {
         IsftViewlogsetupscopes(log_ctx, flight_rec, flight_rec_scopes);
@@ -3084,8 +3006,7 @@ IsftViewlogsubscribetoscopes(struct IsftViewlog_context *log_ctx,
     }
 }
 
-IsftTEXPORT int
-Isftmain(int argc, char *argv[])
+IsftTEXPORT int Isftmain(int argc, char *argv[])
 {
     int ret = EXIT_FAILURE;
     char *cmdline;
@@ -3346,10 +3267,11 @@ Isftmain(int argc, char *argv[])
             struct IsftViewkeyboard *keyboard =
                 IsftViewseat_get_keyboard(seat);
 
-            if (keyboard)
+            if (keyboard) {
                 IsftViewkeyboard_set_locks(keyboard,
                               WESTON_NUM_LOCK,
                               WESTON_NUM_LOCK);
+            }
         }
     }
 
