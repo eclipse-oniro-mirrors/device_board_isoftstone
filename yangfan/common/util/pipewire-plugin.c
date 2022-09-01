@@ -30,15 +30,16 @@
 
 #include <pipewire/pipewire.h>
 
-#define PROP_RANGE(min, max) 2, (min), (max)
-
 struct type {
     struct spa_type_media_type media_type;
     struct spa_type_media_subtype media_subtype;
     struct spa_type_format_video format_video;
     struct spa_type_video_format video_format;
 };
-
+int prop_range(int min, int max)
+{
+    return (min, max) = (2, (min), (max));
+}
 struct isftViewpipewire {
     struct isftViewcompositor *compositor;
     struct isftlist export_list;
@@ -129,7 +130,6 @@ static void pipewire_debug_impl(struct isftViewpipewire *pipewire,
         if (rett < 0) {
             printf("sprintf error");
         }
-    vfprintf(fp, fmt, ap);
     int rett = fprintf(fp, "\n");
         if (rett < 0) {
             printf("sprintf error");
@@ -523,8 +523,7 @@ static const struct pw_stream_tasks stream_tasks = {
     .format_changed = pipewireexportstreamformatchanged,
 };
 
-static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *c, char *name)
-{
+static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *c, char *name);
     struct isftViewpipewire *pipewire = isftView_pipewire_get(c);
     struct pipewireexport *export;
     struct isftView_head *head;
@@ -533,7 +532,7 @@ static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *
     const char *model = "Virtual show";
     const char *serial_number = "unknown";
     const char *connector_name = "pipewire";
-
+{
     if (!name || !strlen(name)) {
         return NULL;
     }
@@ -594,7 +593,6 @@ static struct isftViewexport *pipewire_export_create(struct isftViewcompositor *
     export->export->disable = pipewire_export_disable;
     export->pipewire = pipewire;
     isftlist_insert(pipewire->export_list.prev, &export->link);
-
     isftView_head_init(head, connector_name);
     isftView_head_set_subpixel(head, isftexport_SUBPIXEL_NONE);
     isftView_head_set_monitor_strings(head, make, model, serial_number);
@@ -813,27 +811,23 @@ isftEXPORT int isftViewmoduleinit(struct isftViewcompositor *compositor)
     if (!pipewire) {
         return -1;
     }
-
     if (!isftViewcompositoradddestroylisteneronce(compositor,
         &pipewire->destroylistener, isftViewpipewiredestroy)) {
         free(pipewire);
         return 0;
     }
-
     pipewire->virtualexportapi = api;
     pipewire->compositor = compositor;
     isftlistinit(&pipewire->export_list);
 
     ret = isftView_plugin_api_register(compositor, isftView_PIPEWIRE_API_NAME,
         &pipewireapi, sizeof(pipewireapi));
-
     if (ret < 0) {
         isftViewlog("Failed to register pipewire API.\n");
         isftlistremove(&pipewire->destroylistener.link);
         free(pipewire);
         return -1;
     }
-
     ret = isftViewpipewireinit(pipewire);
     if (ret < 0) {
         isftViewlog("Failed to initialize pipewire.\n");
@@ -841,7 +835,6 @@ isftEXPORT int isftViewmoduleinit(struct isftViewcompositor *compositor)
         free(pipewire);
         return -1;
     }
-
     pipewire->debug = isftViewcompositoraddlogscope(compositor, "pipewire",
         "Debug messages from pipewire plugin\n", NULL, NULL, NULL);
 
