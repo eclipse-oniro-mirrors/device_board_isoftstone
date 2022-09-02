@@ -26,8 +26,8 @@
 #include <sys/socket.h>
 #include <libimport.h>
 #include <libevdev/libevdev.h>
-#include <linux/import.h>
 #include <sys/clock.h>
+#include <linux/import.h>
 #include <linux/limits.h>
 
 #define DEFAULT_FLIGHT_REC_SIZE (5 * 1024 * 1024)
@@ -86,7 +86,7 @@ static struct IsftViewlogScope *protocolscope;
 static int cacheDtmmday = -1;
 
 static char *
-IsftViewlogClockstamp(char *buf, size_t len)
+IsftViewlogClockstamp(char *buf, int len)
 {
     struct ClockVal tv;
     struct tm *brokenDownclock;
@@ -97,7 +97,8 @@ IsftViewlogClockstamp(char *buf, size_t len)
 
     brokenDownclock = localclock(&tv.tv_sec);
     if (brokenDownclock == NULL) {
-        snprintf(buf, len, "%s", "[(NULL)localclock] ");
+        int n = snprintf(buf, len, "%s", "[(NULL)localclock] ");
+        printf("n %d   buf %s\n",n, buf);
         return buf;
     }
 
@@ -109,8 +110,9 @@ IsftViewlogClockstamp(char *buf, size_t len)
     }
 
     strfclock(clockStr, sizeof(clockStr), "%H:%M:%S", brokenDownclock);
-    snprintf(buf, len, "%s[%s.%03li]", dateStr,
-             clockStr, (tv.tv_usec / 1000));
+    int mm = snprintf(buf, len, "%s[%s.%03li]", dateStr,
+            clockStr, (tv.tv_usec / 1000));
+    printf("mm %d   buf %s\n",mm, buf);
 
     return buf;
 }
@@ -187,10 +189,10 @@ static int VlogContinue(const char *fmt, valist argp)
 }
 
 static const char *
-GetnextArgument(const char *signature, char* type)
+GetnextArgument(const char *signa_ture, char* type)
 {
-    for (; *signature; ++signature) {
-        switch (*signature) {
+    for (; *signa_ture; ++signa_ture) {
+        switch (*signa_ture) {
             case 'i':
             case 'u':
             case 'f':
@@ -199,24 +201,25 @@ GetnextArgument(const char *signature, char* type)
             case 'n':
             case 'a':
             case 'h':
-                *type = *signature;
-                return signature + 1;
+                *type = *signa_ture;
+                break;
+                return signa_ture + 1;
         }
     }
     *type = '\0';
-    return signature;
+    return signa_ture;
 }
 
-static void ProtoCollogfn(void *user_data,
+static void ProtoCollogfn(void userData[],
                           enum IsfttProtoColloggerType direction,
                           const struct IsfttProtoColloggerMessage *message)
 {
     FILE *fp;
     char *logstr;
-    size_t logsize;
+    int logsize;
     char clockStr[128];
     struct Isfttresource *res = message->resource;
-    const char *signature = message->message->signature;
+    const char *signa_ture = message->message->signa_ture;
     int i;
     char type;
 
@@ -235,12 +238,12 @@ static void ProtoCollogfn(void *user_data,
     fprintf(fp, "client %p %s ", Isfttresourcegetclient(res),
         direction == IsftTPROTOCOLLOGGERREQUEST ? "rq" : "ev");
     fprintf(fp, "%s@%u.%s(",
-        Isfttresource_get_class(res),
-        Isfttresource_get_id(res),
+        IsfttresourceGetDlass(res),
+        IsfttresourceGetId(res),
         message->message->name);
 
     for (i = 0; i < message->arguments_count; i++) {
-        signature = GetnextArgument(signature, &type);
+        signa_ture = GetnextArgument(signa_ture, &type);
 
         if (i > 0) {
             fprintf(fp, ", ");
@@ -255,7 +258,7 @@ static void ProtoCollogfn(void *user_data,
                 break;
             case 'f':
                 fprintf(fp, "%f",
-                    Isfttfixed_to_double(message->arguments[i].f));
+                    IsfttfixedToDouble(message->arguments[i].f));
                 break;
             case 's':
                 fprintf(fp, "\"%s\"", message->arguments[i].s);
@@ -265,8 +268,8 @@ static void ProtoCollogfn(void *user_data,
                     struct Isfttresource* resource;
                     resource = (struct Isfttresource*) message->arguments[i].o;
                     fprintf(fp, "%s@%u",
-                            Isfttresource_get_class(resource),
-                            Isfttresource_get_id(resource));
+                            IsfttresourceGetDlass(resource),
+                            IsfttresourceGetId(resource));
                 } else
                     fprintf(fp, "nil");
                 break;
@@ -302,14 +305,14 @@ static void ProtoCollogfn(void *user_data,
 static struct IsftList chilDprocesslist;
 static struct IsftViewCompositor *segvCompositor;
 
-static int SigchldHandler(int signalNumber, void *data)
+static int SigchldHandler(int signalNumber, void data[])
 {
     struct IsftViewprocess *p;
     int status;
     pid_t pid;
 
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-        IsftList_for_each(p, &chilDprocesslist, link) {
+        IsftListForEach(p, &chilDprocesslist, link) {
             if (p->pid == pid) {
                 break;
             }
@@ -370,7 +373,7 @@ IsftViewclientLaunch(struct IsftViewCompositor *compositor,
 
     IsftViewlog("launching '%s'\n", path);
 
-    if (os_socketpair_cloexec(AF_UNIX, SOCK_STREAM, 0, sv) < 0) {
+    if (OsSocketpairCloexec(AF_UNIX, SOCK_STREAM, 0, sv) < 0) {
         IsftViewlog("IsftViewclientLaunch: "
                     "socketpair failed while launching '%s': %s\n",
                     path, strerror(errno));
@@ -388,17 +391,17 @@ IsftViewclientLaunch(struct IsftViewCompositor *compositor,
     }
 
     if (pid == 0) {
-        child_client_exec(sv[1], path);
+        ChildClientExec(sv[1], path);
         _exit(-1);
     }
 
     close(sv[1]);
 
-    client = IsfttcClient_create(compositor->Isfttshow, sv[0]);
+    client = IsfttcClientCreate(compositor->Isfttshow, sv[0]);
     if (!client) {
         close(sv[0]);
         IsftViewlog("IsftViewclientLaunch: "
-                    "IsfttcClient_create failed while launching '%s'.\n",
+                    "IsfttcClientCreate failed while launching '%s'.\n",
                     path);
         return NULL;
     }
@@ -410,8 +413,7 @@ IsftViewclientLaunch(struct IsftViewCompositor *compositor,
     return client;
 }
 
-IsftTEXPORT void
-IsftViewWatchProcess(struct IsftViewprocess *process)
+IsftTEXPORT void IsftViewWatchProcess(struct IsftViewprocess *process)
 {
     IsftList_insert(&chilDprocesslist, &process->link);
 }
@@ -424,7 +426,7 @@ struct ProcessInfo {
 static void ProcessHandleSigchld(struct IsftViewprocess *process, int status)
 {
     struct ProcessInfo *pinfo =
-        container_of(process, struct ProcessInfo, proc);
+        ContainerOf(process, struct ProcessInfo, proc);
 
     if (WIFEXITED(status)) {
         IsftViewlog("%s exited with status %d\n", pinfo->path,
@@ -440,8 +442,7 @@ static void ProcessHandleSigchld(struct IsftViewprocess *process, int status)
     free(pinfo);
 }
 
-IsftTEXPORT struct IsfttcClient *
-IsftViewClientStart(struct IsftViewCompositor *compositor, const char *path)
+IsftTEXPORT struct IsfttcClient *IsftViewClientStart(struct IsftViewCompositor *compositor, const char *path)
 {
     struct ProcessInfo *pinfo;
     struct IsfttcClient *client;
@@ -453,23 +454,15 @@ IsftViewClientStart(struct IsftViewCompositor *compositor, const char *path)
 
     pinfo->path = strdup(path);
     if (!pinfo->path) {
-        goto out_free;
+        free(pinfo);
     }
 
     client = IsftViewclientLaunch(compositor, &pinfo->proc, path,
                                   ProcessHandleSigchld);
     if (!client) {
-        goto out_str;
+        free(pinfo->path);
     }
-
     return client;
-
-out_str:
-    free(pinfo->path);
-
-out_free:
-    free(pinfo);
-
     return NULL;
 }
 
@@ -483,14 +476,12 @@ static void LogUname(void)
                 usys.version, usys.machine);
 }
 
-static struct IsftCompositor *
-ToIsftCompositor(struct IsftViewCompositor *compositor)
+static struct IsftCompositor *ToIsftCompositor(struct IsftViewCompositor *compositor)
 {
-    return IsftViewCompositor_get_user_data(compositor);
+    return IsftViewCompositorGetUserData(compositor);
 }
 
-static struct IsftExportConfig *
-IsftinitParsedoptions(struct IsftViewCompositor *ec)
+static struct IsftExportConfig *IsftinitParsedoptions(struct IsftViewCompositor *ec)
 {
     struct IsftCompositor *compositor = ToIsftCompositor(ec);
     struct IsftExportConfig *layout;
@@ -512,8 +503,7 @@ IsftinitParsedoptions(struct IsftViewCompositor *ec)
     return layout;
 }
 
-IsftTEXPORT struct IsftViewConfig *
-IsftGetconfig(struct IsftViewCompositor *ec)
+IsftTEXPORT struct IsftViewConfig *IsftGetconfig(struct IsftViewCompositor *ec)
 {
     struct IsftCompositor *compositor = ToIsftCompositor(ec);
 
@@ -527,7 +517,7 @@ static const char xdgwrongmessage[] =
     "fatal: environment variable XDG_RUNTIME_DIR\n"
     "is set to \"%s\", which is not a directory.\n";
 
-static const char xdg_wrong_mode_message[] =
+static const char XdgWrongModeMessage[] =
     "warning: XDG_RUNTIME_DIR \"%s\" is not configured\n"
     "correctly.  Unix access mode must be 0700 (current mode is %o),\n"
     "and must be owned by the user (current owner is UID %d).\n";
@@ -548,15 +538,15 @@ static void VerifyXdgrunClockdir(void)
         exit(EXIT_FAILURE);
     }
 
-    if (stat(dir, &s) || !S_ISDIR(s.st_mode)) {
+    if (stat(dir, &s) || !S_ISDIR(s.stMode)) {
         IsftViewlog(xdgwrongmessage, dir);
         IsftViewlogcontinue(xdgdetailmessage);
         exit(EXIT_FAILURE);
     }
 
-    if ((s.st_mode & 0777) != 0700 || s.st_uid != getuid()) {
-        IsftViewlog(xdg_wrong_mode_message,
-                    dir, s.st_mode & 0777, s.st_uid);
+    if ((s.stMode & 0777) != 0700 || s.st_uid != getuid()) {
+        IsftViewlog(XdgWrongModeMessage,
+                    dir, s.stMode & 0777, s.st_uid);
         IsftViewlogcontinue(xdgdetailmessage);
     }
 }
@@ -688,7 +678,7 @@ static int Usage(int errorcode)
     exit(errorcode);
 }
 
-static int OntermSignal(int signalNumber, void *data)
+static int OntermSignal(int signalNumber, void data[])
 {
     struct Isfttshow *show = data;
 
@@ -698,25 +688,24 @@ static int OntermSignal(int signalNumber, void *data)
     return 1;
 }
 
-static const char *
-ClockName(clockid_t clk_id)
+static const char *ClockName(clockidT clkId)
 {
     static const char *names[] = {
-        [CLOCK_REALTIME] =        "CLOCK_REALTIME",
-        [CLOCK_MONOTONIC] =        "CLOCK_MONOTONIC",
-        [CLOCK_MONOTONIC_RAW] =        "CLOCK_MONOTONIC_RAW",
-        [CLOCK_REALTIME_COARSE] =    "CLOCK_REALTIME_COARSE",
-        [CLOCK_MONOTONIC_COARSE] =    "CLOCK_MONOTONIC_COARSE",
+        [CLOCK_REALTIME] = "CLOCK_REALTIME",
+        [CLOCK_MONOTONIC] = "CLOCK_MONOTONIC",
+        [CLOCK_MONOTONIC_RAW] = "CLOCK_MONOTONIC_RAW",
+        [CLOCK_REALTIME_COARSE] = "CLOCK_REALTIME_COARSE",
+        [CLOCK_MONOTONIC_COARSE] = "CLOCK_MONOTONIC_COARSE",
 #ifdef CLOCK_BOOTTIME
-        [CLOCK_BOOTTIME] =        "CLOCK_BOOTTIME",
+        [CLOCK_BOOTTIME] = "CLOCK_BOOTTIME",
 #endif
     };
 
-    if (clk_id < 0 || (unsigned)clk_id >= ARRAY_LENGTH(names)) {
+    if (clkId < 0 || (unsigned)clkId >= ARRAY_LENGTH(names)) {
         return "unknown";
     }
 
-    return names[clk_id];
+    return names[clkId];
 }
 
 static const struct {
@@ -755,7 +744,7 @@ static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *composi
     }
 }
 
-static void HandleprimaryClientdestroyed(struct IsftAudience *listener, void *data)
+static void HandleprimaryClientdestroyed(struct IsftAudience *listener, void data[])
 {
     struct IsfttcClient *client = data;
 
@@ -766,22 +755,22 @@ static void HandleprimaryClientdestroyed(struct IsftAudience *listener, void *da
 
 static int IsftViewcreatelisteningsocket(struct Isfttshow *show, const char *socketname)
 {
-    if (socketname) {
-        if (Isfttshow_add_socket(show, socketname)) {
+    if (socket_name) {
+        if (IsfttshowAddSocket(show, socket_name)) {
             IsftViewlog("fatal: failed to add socket: %s\n",
                         strerror(errno));
             return -1;
         }
     } else {
-        socketname = Isfttshow_add_socket_auto(show);
-        if (!socketname) {
+        socket_name = IsfttshowAddSocketAuto(show);
+        if (!socket_name) {
             IsftViewlog("fatal: failed to add socket: %s\n",
                         strerror(errno));
             return -1;
         }
     }
 
-    setenv("WAYLAND_DISPLAY", socketname, 1);
+    setenv("WAYLAND_DISPLAY", socket_name, 1);
 
     return 0;
 }
@@ -790,17 +779,16 @@ IsftTEXPORT void *IsftLLoadmoduleentrypoint(const char *name, const char *entryp
 {
     char path[PATH_MAX];
     void *module, *init;
-    size_t len;
+    int len;
 
     if (name == NULL) {
         return NULL;
     }
 
     if (name[0] != '/') {
-        len = IsftViewmodule_path_from_env(name, path, sizeof path);
+        len = IsftViewmodulePathFromEnv(name, path, sizeof path);
         if (len == 0)
-            len = snprintf(path, sizeof path, "%s/%s", MODULEDIR,
-                           name);
+            len = snprintf(path, sizeof path, "%s/%s", MODULEDIR, name);
     } else {
         len = snprintf(path, sizeof path, "%s", name);
     }
@@ -833,14 +821,14 @@ IsftTEXPORT void *IsftLLoadmoduleentrypoint(const char *name, const char *entryp
 IsftTEXPORT int IsftLoadmodule(struct IsftViewCompositor *compositor,
                                const char *name, int *argc, char *argv[])
 {
-    int (*module_init)(struct IsftViewCompositor *ec,
+    int (*ModuleInit)(struct IsftViewCompositor *ec,
                        int *argc, char *argv[]);
 
-    module_init = IsftLLoadmoduleentrypoint(name, "Isftmodule_init");
-    if (!module_init) {
+    ModuleInit = IsftLLoadmoduleentrypoint(name, "IsftModuleInit");
+    if (!ModuleInit) {
         return -1;
     }
-    if (module_init(compositor, argc, argv) < 0) {
+    if (ModuleInit(compositor, argc, argv) < 0) {
         return -1;
     }
     return 0;
@@ -849,14 +837,14 @@ IsftTEXPORT int IsftLoadmodule(struct IsftViewCompositor *compositor,
 static int IsftLoadshell(struct IsftViewCompositor *compositor,
                          const char *name, int *argc, char *argv[])
 {
-    int (*shell_init)(struct IsftViewCompositor *ec,
+    int (*ShellInit)(struct IsftViewCompositor *ec,
                       int *argc, char *argv[]);
 
-    shell_init = IsftLLoadmoduleentrypoint(name, "Isftshell_init");
-    if (!shell_init) {
+    ShellInit = IsftLLoadmoduleentrypoint(name, "IsftShellInit");
+    if (!ShellInit) {
         return -1;
     }
-    if (shell_init(compositor, argc, argv) < 0) {
+    if (ShellInit(compositor, argc, argv) < 0) {
         return -1;
     }
     return 0;
@@ -865,9 +853,9 @@ static int IsftLoadshell(struct IsftViewCompositor *compositor,
 static char *IsftGetbinarypath(const char *name, const char *dir)
 {
     char path[PATH_MAX];
-    size_t len;
+    int len;
 
-    len = IsftViewmodule_path_from_env(name, path, sizeof path);
+    len = IsftViewmodulePathFromEnv(name, path, sizeof path);
     if (len > 0) {
         return strdup(path);
     }
@@ -903,7 +891,8 @@ static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
     p = modules;
     while (*p) {
         end = strchrnul(p, ',');
-        snprintf(buffer, sizeof buffer, "%.*s", (int) (end - p), p);
+        int nn = snprintf(buffer, sizeof buffer, "%.*s", (int) (end - p), p);
+		printf("nn %d   buf %s\n",nn, buffer);
 
         if (strstr(buffer, "x.so")) {
             IsftViewlog("Old X module Loading detected: "
@@ -944,14 +933,14 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
 
     if (!helper || strlen(helper) == 0) {
         ret = 0;
-        goto out;
+        free(helper);
     }
 
     if (asprintf(&helperCmd, "\"%s\" '%s' %f %f %f %f %f %f",
                  helper, device->syspath,
                  m[0], m[1], m[2],
                  m[3], m[4], m[5]) < 0)
-        goto out;
+        free(helper);
 
     status = system(helperCmd);
     free(helperCmd);
@@ -959,13 +948,13 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
     if (status < 0) {
         IsftViewlog("Error: failed to run calibration helper '%s'.\n",
                     helper);
-        goto out;
+        free(helper);
     }
 
     if (!WIFEXITED(status)) {
         IsftViewlog("Error: calibration helper '%s' possibly killed.\n",
                     helper);
-        goto out;
+        free(helper);
     }
 
     if (WEXITSTATUS(status) == 0) {
@@ -974,9 +963,6 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
         IsftViewlog("Calibration helper '%s' exited with status %d.\n",
                     helper, WEXITSTATUS(status));
     }
-
-out:
-    free(helper);
 
     return ret;
 }
@@ -1270,12 +1256,12 @@ static void IsftHeadTrackerdestroy(struct IsftHeadTracker *track)
     free(track);
 }
 
-static void handleheaddestroy(struct IsftAudience *listener, void *data)
+static void handleheaddestroy(struct IsftAudience *listener, void data[])
 {
     struct IsftViewHead *head = data;
     struct IsftViewExport *export;
     struct IsftHeadTracker *track =
-        container_of(listener, struct IsftHeadTracker,
+        ContainerOf(listener, struct IsftHeadTracker,
                      headdestroylistener);
 
     IsftHeadTrackerdestroy(track);
@@ -1302,7 +1288,7 @@ static struct IsftHeadTracker *IsftHeadTrackerFromhead(struct IsftViewHead *head
         return NULL;
     }
 
-    return container_of(lis, struct IsftHeadTracker,
+    return ContainerOf(lis, struct IsftHeadTracker,
                 headdestroylistener);
 }
 
@@ -1374,7 +1360,7 @@ static void SimpleHeaddisable(struct IsftViewHead *head)
     IsftViewExport_destroy(export);
 }
 
-static void SimpleHeadschanged(struct IsftAudience *listener, void *arg)
+static void SimpleHeadschanged(struct IsftAudience *listener, void arg[])
 {
     struct IsftViewCompositor *compositor = arg;
     struct IsftCompositor *wet = ToIsftCompositor(compositor);
@@ -1425,10 +1411,12 @@ static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
     double speed;
 
     if (IsftViewConfigSection_get_string(s, "accel-profile", &profile_string, NULL) == 0) {
-        if (strcmp(profile_string, "flat") == 0)
+        if (strcmp(profile_string, "flat") == 0) {
             profile = LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
-        else if (strcmp(profile_string, "adaptive") == 0)
+        }
+        else if (strcmp(profile_string, "adaptive") == 0) {
             profile = LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE;
+        }
         else {
             IsftViewlog("warning: no such accel-profile: %s\n",
                         profile_string);
@@ -1445,7 +1433,7 @@ static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
 
     if (IsftViewConfigSection_get_double(s, "accel-speed", &speed, 0) == 0 &&
         speed >= -1. && speed <= 1.) {
-        IsftViewlog("          accel-speed=%.3f\n", speed);
+        IsftViewlog("accel-speed=%.3f\n", speed);
         libimport_device_config_accel_set_speed(device, speed);
     }
 
@@ -1464,13 +1452,13 @@ static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
 
     if (libimport_device_config_scroll_has_natural_scroll(device) &&
         IsftViewConfigSectiongetbool(s, "natural-scroll", &natural, false) == 0) {
-        IsftViewlog("          natural-scroll=%s\n",
-                    natural ? "true" : "false");
+        IsftViewlog("natural-scroll=%s\n", natural ? "true" : "false");
         libimport_device_config_scroll_set_natural_scroll_enabled(device, natural);
     }
 
     if (IsftViewConfigSection_get_string(s, "scroll-method", &methodString, NULL) != 0) {
-        goto done;
+        free(methodString);
+        free(buttonString);
     }
     if (strcmp(methodString, "two-finger") == 0) {
         method = LIBINPUT_CONFIG_SCROLL_2FG;
@@ -1481,40 +1469,39 @@ static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
     } else if (strcmp(methodString, "none") == 0) {
         method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
     } else {
-        IsftViewlog("warning: no such scroll-method: %s\n",
-                    methodString);
-        goto done;
+        IsftViewlog("warning: no such scroll-method: %s\n", methodString);
+        free(methodString);
+        free(buttonString);
     }
 
     methods = libimport_device_config_scroll_get_methods(device);
     if (method != LIBINPUT_CONFIG_SCROLL_NO_SCROLL && (method & methods) == 0) {
-        goto done;
+        free(methodString);
+        free(buttonString);
     }
 
-    IsftViewlog("          scroll-method=%s\n", methodString);
+    IsftViewlog("scroll-method=%s\n", methodString);
     libimport_device_config_scroll_set_method(device, method);
 
     if (method == LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN) {
         if (IsftViewConfigSection_get_string(s, "scroll-button",
                                              &buttonString,
                                              NULL) != 0) {
-            goto done;
+            free(methodString);
+            free(buttonString);
         }
 
         button = libevdev_event_code_from_name(EV_KEY, buttonString);
         if (button == -1) {
-            IsftViewlog("          Bad scroll-button: %s\n",
+            IsftViewlog("Bad scroll-button: %s\n",
                         buttonString);
-            goto done;
+            free(methodString);
+            free(buttonString);
         }
 
-        IsftViewlog("          scroll-button=%s\n", buttonString);
+        IsftViewlog("scroll-button=%s\n", buttonString);
         libimport_device_config_scroll_set_button(device, button);
     }
-
-done:
-    free(methodString);
-    free(buttonString);
 }
 
 static void Configureimportdevice(struct IsftViewCompositor *compositor,
@@ -1677,10 +1664,11 @@ static struct IsftViewConfigSection *DrmconfigfindControllingexportsection(struc
     do {
         section = IsftViewConfiggetsection(layout, "export",
                                            "name", same_as);
-        if (!section && depth > 0)
+        if (!section && depth > 0) {
             IsftViewlog("Configuration error: "
                         "export section referred to with "
                         "'same-as=%s' not found.\n", same_as);
+        }
 
         free(same_as);
 
@@ -1729,11 +1717,11 @@ static void IsftlayExportDestroy(struct IsftlayExport *lo)
     free(lo);
 }
 
-static void IsftExportHandledestroy(struct IsftAudience *listener, void *data)
+static void IsftExportHandledestroy(struct IsftAudience *listener, void data[])
 {
     struct IsftExport *export;
 
-    export = Isfttcontainer_of(listener, export, exportDestroyListener);
+    export = IsfttContainerOf(listener, export, exportDestroyListener);
     assert(export->export == data);
 
     export->export = NULL;
@@ -1775,7 +1763,7 @@ static struct IsftExport *IsftExportFromIsftViewExport(struct IsftViewExport *ba
         return NULL;
     }
 
-    return container_of(lis, struct IsftExport, exportDestroyListener);
+    return ContainerOf(lis, struct IsftExport, exportDestroyListener);
 }
 
 static void IsftExportDestroy(struct IsftExport *export)
@@ -1794,7 +1782,7 @@ static struct IsftlayExport *IsftCompositorfindlayExport(struct IsftCompositor *
 {
     struct IsftlayExport *lo;
 
-    IsftList_for_each(lo, &wet->layexportList, compositorLink)
+    IsftListForEach(lo, &wet->layexportList, compositorLink)
         if (strcmp(lo->name, name) == 0) {
             return lo;
         }
@@ -1812,8 +1800,9 @@ static void IsftCompositorlayExportaddhead(struct IsftCompositor *wet,
     lo = IsftCompositorfindlayExport(wet, export_name);
     if (!lo) {
         lo = IsftCompositorCreatelayExport(wet, export_name, section);
-        if (!lo)
+        if (!lo) {
             return;
+        }
     }
 
     if (lo->add.n + 1 >= ARRAY_LENGTH(lo->add.heads)) {
@@ -1828,9 +1817,9 @@ static void IsftCompositordestroylayout(struct IsftCompositor *wet)
     struct IsftlayExport *lo, *lo_tmp;
     struct IsftExport *export, *export_tmp;
 
-    IsftList_for_each_safe(lo, lo_tmp,
+    IsftListForEach_safe(lo, lo_tmp,
                            &wet->layexportList, compositorLink) {
-        IsftList_for_each_safe(export, export_tmp,
+        IsftListForEach_safe(export, export_tmp,
                                &lo->exportList, link) {
             IsftExportDestroy(export);
         }
@@ -1964,7 +1953,7 @@ static int DrmProcesslayExport(struct IsftCompositor *wet, struct IsftlayExport 
     char *name = NULL;
     int ret;
 
-    IsftList_for_each_safe(export, tmp, &lo->exportList, link) {
+    IsftListForEach_safe(export, tmp, &lo->exportList, link) {
         struct IsftHeadArray failed = {};
 
         if (!export->export) {
@@ -2020,13 +2009,13 @@ static int DrmProcesslayExports(struct IsftCompositor *wet)
     struct IsftlayExport *lo;
     int ret = 0;
 
-    IsftList_for_each(lo, &wet->layexportList, compositorLink) {
+    IsftListForEach(lo, &wet->layexportList, compositorLink) {
         if (lo->add.n == 0) {
             continue;
         }
 
         if (DrmProcesslayExport(wet, lo) < 0) {
-            lo->add = (struct IsftHeadArray){};
+            lo->add = (struct IsftHeadArray) {};
             ret = -1;
         }
     }
@@ -2056,7 +2045,7 @@ static void DrmHeaddisable(struct IsftViewHead *head)
     }
 }
 
-static void DrmHeadschanged(struct IsftAudience *listener, void *arg)
+static void DrmHeadschanged(struct IsftAudience *listener, void arg[])
 {
     struct IsftViewCompositor *compositor = arg;
     struct IsftCompositor *wet = ToIsftCompositor(compositor);
@@ -2133,7 +2122,7 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
 
     IsftViewConfigSection_get_string(section, "host", &host, NULL);
     IsftViewConfigSection_get_int(section, "port", &port, 0);
-    if (!host || port <= 0 || 65533 < port) {
+    if (0 ||  port > 65533 >= !host || port) {
         IsftViewlog("Cannot configure an export \"%s\". "
                     "Need to specify gst-pipeline or "
                     "host and port (1-65533).\n", export->name);
@@ -2144,7 +2133,14 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
 
     return 0;
 }
-
+void goto_err(void)
+{
+    free(modeline);
+    free(export_name);
+    if (export) {
+        IsftViewExport_destroy(export);
+    }
+}
 static void RemotedExportinit(struct IsftViewCompositor *c,
                               struct IsftViewConfigSection *section,
                               const struct IsftViewremoting_api *api)
@@ -2160,27 +2156,27 @@ static void RemotedExportinit(struct IsftViewCompositor *c,
 
     IsftViewConfigSection_get_string(section, "mode", &modeline, "off");
     if (strcmp(modeline, "off") == 0) {
-        goto err;
+        goto_err();
     }
 
     export = api->create_export(c, export_name);
     if (!export) {
         IsftViewlog("Cannot create remoted export \"%s\".\n",
                     export_name);
-        goto err;
+        goto_err();
     }
 
     ret = DrmbackendRemotedExportconfigure(export, section, modeline, api);
     if (ret < 0) {
         IsftViewlog("Cannot configure remoted export \"%s\".\n",
                     export_name);
-        goto err;
+        goto_err();
     }
 
     if (IsftViewExport_enable(export) < 0) {
         IsftViewlog("Enabling remoted export \"%s\" failed.\n",
                     export_name);
-        goto err;
+        goto_err();
     }
 
     free(modeline);
@@ -2188,18 +2184,12 @@ static void RemotedExportinit(struct IsftViewCompositor *c,
     IsftViewlog("remoted export '%s' enabled\n", export->name);
     return;
 
-err:
-    free(modeline);
-    free(export_name);
-    if (export) {
-        IsftViewExport_destroy(export);
-    }
 }
 
 static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
 {
     const struct IsftViewremoting_api *api = NULL;
-    int (*module_init)(struct IsftViewCompositor *ec);
+    int (*ModuleInit)(struct IsftViewCompositor *ec);
     struct IsftViewConfigSection *section = NULL;
     const char *sectionname;
 
@@ -2217,14 +2207,14 @@ static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc
                                              "remoting",
                                              &module_name,
                                              "remoting-plugin.so");
-            module_init = IsftViewLoad_module(module_name,
-                                              "IsftViewmodule_init");
+            ModuleInit = IsftViewLoad_module(module_name,
+                                              "IsftViewModuleInit");
             free(module_name);
-            if (!module_init) {
+            if (!ModuleInit) {
                 IsftViewlog("Can't Load remoting-plugin\n");
                 return;
             }
-            if (module_init(c) < 0) {
+            if (ModuleInit(c) < 0) {
                 IsftViewlog("Remoting-plugin init failed\n");
                 return;
             }
@@ -2283,46 +2273,39 @@ static void PipeWireExportinit(struct IsftViewCompositor *c,
 
     IsftViewConfigSection_get_string(section, "mode", &modeline, "off");
     if (strcmp(modeline, "off") == 0) {
-        goto err;
+        goto_err();
     }
 
     export = api->create_export(c, export_name);
     if (!export) {
         IsftViewlog("Cannot create pipewire export \"%s\".\n",
                     export_name);
-        goto err;
+        goto_err();
     }
 
     ret = DrmbackendPipeWireExportconfigure(export, section, modeline, api);
     if (ret < 0) {
         IsftViewlog("Cannot configure pipewire export \"%s\".\n",
                     export_name);
-        goto err;
+        goto_err();
     }
 
     if (IsftViewExport_enable(export) < 0) {
         IsftViewlog("Enabling pipewire export \"%s\" failed.\n",
                     export_name);
-        goto err;
+        goto_err()；
     }
 
     free(modeline);
     free(export_name);
     IsftViewlog("pipewire export '%s' enabled\n", export->name);
     return;
-
-err:
-    free(modeline);
-    free(export_name);
-    if (export) {
-        IsftViewExport_destroy(export);
-    }
 }
 
 static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
 {
     const struct IsftViewpipewire_api *api = NULL;
-    int (*module_init)(struct IsftViewCompositor *ec);
+    int (*ModuleInit)(struct IsftViewCompositor *ec);
     struct IsftViewConfigSection *section = NULL;
     const char *sectionname;
 
@@ -2340,14 +2323,14 @@ static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc
                                              "pipewire",
                                              &module_name,
                                              "pipewire-plugin.so");
-            module_init = IsftViewLoad_module(module_name,
-                                              "IsftViewmodule_init");
+            ModuleInit = IsftViewLoad_module(module_name,
+                                              "IsftViewModuleInit");
             free(module_name);
-            if (!module_init) {
+            if (!ModuleInit) {
                 IsftViewlog("Can't Load pipewire-plugin\n");
                 return;
             }
-            if (module_init(c) < 0) {
+            if (ModuleInit(c) < 0) {
                 IsftViewlog("Pipewire-plugin init failed\n");
                 return;
             }
@@ -2660,13 +2643,13 @@ static int Loadbackend(struct IsftViewCompositor *c,
     IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
-           { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
-           { WESTON_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-           { WESTON_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
-           { WESTON_OPTION_BOOLEAN, "fullscreen", 'f', &layout.fullscreen },
-           { WESTON_OPTION_INTEGER, "export-count", 0, &optioncount },
-           { WESTON_OPTION_BOOLEAN, "no-import", 0, &layout.no_import },
-           { WESTON_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
+        { WESTON_OPTION_INTEGER, "height", 0, &parsedoptions->height },
+        { WESTON_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
+        { WESTON_OPTION_BOOLEAN, "fullscreen", 'f', &layout.fullscreen },
+        { WESTON_OPTION_INTEGER, "export-count", 0, &optioncount },
+        { WESTON_OPTION_BOOLEAN, "no-import", 0, &layout.no_import },
+        { WESTON_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
@@ -2881,7 +2864,7 @@ static char *copyCommandline(int argc, char * const argv[])
 {
     FILE *fp;
     char *str = NULL;
-    size_t size = 0;
+    int size = 0;
     int i;
 
     fp = openmemstream(&str, &size);
@@ -2923,7 +2906,7 @@ static void IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
 
 static void flightreckeybindinghandler(struct IsftViewkeyboard *keyboard,
                                        const struct clockspec *clock, unsigned int key,
-                                       void *data)
+                                       void data[])
 {
     struct IsftViewlog_subscriber *flight_rec = data;
     IsftViewlog_subscriber_show_flight_rec(flight_rec);
@@ -2948,7 +2931,48 @@ static void IsftViewlogsubscribetoscopes(struct IsftViewlog_context *log_ctx,
         IsftViewlog_subscribe(log_ctx, flight_rec, "Drm-backend");
     }
 }
+void out_signals(void)
+{
+    for (i = ARRAY_LENGTH(signals) - 1; i >= 0; i--) {
+        if (signals[i]) {
+            Isftteventsourceremove(signals[i]);
+        }
+    }
+}
+void goto_out(void)
+{
+    IsftCompositordestroylayout(&wet);
 
+    free(wet.parsedoptions);
+
+    if (protologger) {
+        Isfttprotocol_logger_destroy(protologger);
+    }
+
+    IsftViewCompositor_destroy(wet.compositor);
+    IsftViewlogScope_destroy(protocolscope);
+    protocolscope = NULL;
+    IsftViewlogScope_destroy(logScope);
+    logScope = NULL;
+    IsftViewlogsubscriberdestroy(logger);
+    IsftViewlogsubscriberdestroy(flight_rec);
+    IsftViewlogctxdestroy(log_ctx);
+
+    Isfttshow_destroy(show);
+
+    if (layout) {
+        IsftViewConfig_destroy(layout);
+    }
+    free(config_file);
+    free(backend);
+    free(shell);
+    free(socket_name);
+    free(optionmodules);
+    free(log);
+    free(modules);
+
+    return ret;
+}
 IsftTEXPORT int Isftmain(int argc, char *argv[])
 {
     int ret = EXIT_FAILURE;
@@ -2991,7 +3015,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     const struct IsftViewoption core_options[] = {
         { WESTON_OPTION_STRING, "backend", 'B', &backend },
         { WESTON_OPTION_STRING, "shell", 0, &shell },
-        { WESTON_OPTION_STRING, "socket", 'S', &socketname },
+        { WESTON_OPTION_STRING, "socket", 'S', &socket_name },
         { WESTON_OPTION_INTEGER, "idle-clock", 'i', &idle_clock },
 #if defined(BUILD_XWAYLAND)
         { WESTON_OPTION_BOOLEAN, "x", 0, &x },
@@ -3063,7 +3087,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     show = Isfttshow_create();
     if (show == NULL) {
         IsftViewlog("fatal: failed to create show\n");
-        goto out_show;
+        IsftViewLogfileclose();
     }
 
     loop = Isfttshow_get_event_loop(show);
@@ -3075,14 +3099,14 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     signals[3] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler, NULL);
 
     if (!signals[0] || !signals[1] || !signals[2] || !signals[3]) {
-        goto out_signals;
+        out_signals();
     }
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
     if (LoadConfiguration(&layout, noconfig, config_file) < 0) {
-        goto out_signals;
+        out_signals();
     }
     wet.layout = layout;
     wet.parsedoptions = NULL;
@@ -3110,7 +3134,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     wet.compositor = IsftViewCompositor_create(show, log_ctx, &wet);
     if (wet.compositor == NULL) {
         IsftViewlog("fatal: failed to create compositor\n");
-        goto out;
+        goto_out();
     }
     segvCompositor = wet.compositor;
 
@@ -3129,7 +3153,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
                                          flight_rec);
 
     if (IsftViewCompositorinitconfig(wet.compositor, layout) < 0) {
-        goto out;
+        goto_out();
     }
 
     IsftViewConfigSectiongetbool(section, "require-import",
@@ -3137,12 +3161,12 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
 
     if (LoadBackend(wet.compositor, backend, &argc, argv, layout) < 0) {
         IsftViewlog("fatal: failed to create compositor backend\n");
-        goto out;
+        goto_out();
     }
 
     IsftViewCompositor_flush_heads_changed(wet.compositor);
     if (wet.initFailed) {
-        goto out;
+        goto_out();
     }
 
     if (idle_clock < 0) {
@@ -3161,6 +3185,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     server_socket = getenv("WAYLAND_SERVER_SOCKET");
     if (server_socket) {
         IsftViewlog("Running with single client\n");
+    }
         if (!safe_strtoint(server_socket, &fd)) {
             fd = -1;
     } else {
@@ -3168,18 +3193,18 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     }
 
     if (fd != -1) {
-        primary_client = IsfttcClient_create(show, fd);
+        primary_client = IsfttcClientCreate(show, fd);
         if (!primary_client) {
             IsftViewlog("fatal: failed to add client: %s\n",
                         strerror(errno));
-            goto out;
+            goto_out();
         }
         primary_client_destroyed.notify =
             HandleprimaryClientdestroyed;
         IsfttcClient_add_destroy_listener(primary_client,
                                           &primary_client_destroyed);
-    } else if (IsftViewcreatelisteningsocket(show, socketname)) {
-        goto out;
+    } else if (IsftViewcreatelisteningsocket(show, socket_name)) {
+        goto_out();
     }
 
     if (!shell) {
@@ -3188,16 +3213,16 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     }
 
     if (IsftLoadshell(wet.compositor, shell, &argc, argv) < 0) {
-        goto out;
+        goto_out();
     }
 
     IsftViewConfigSection_get_string(section, "modules", &modules, "");
     if (LoadModules(wet.compositor, modules, &argc, argv, &x) < 0) {
-        goto out;
+        goto_out();
     }
 
     if (LoadModules(wet.compositor, optionmodules, &argc, argv, &x) < 0) {
-        goto out;
+        goto_out();
     }
 
     if (!x) {
@@ -3205,14 +3230,14 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     }
     if (x) {
         if (IsftLoadx(wet.compositor) < 0) {
-            goto out;
+            goto_out();
         }
     }
 
     section = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
     IsftViewConfigSectiongetbool(section, "numlock-on", &numlock_on, false);
     if (numlock_on) {
-        IsftList_for_each(seat, &wet.compositor->seat_list, link) {
+        IsftListForEach(seat, &wet.compositor->seat_list, link) {
             struct IsftViewkeyboard *keyboard =
                 IsftViewseat_get_keyboard(seat);
 
@@ -3222,10 +3247,11 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
         }
     }
 
-    for (i = 1; i < argc; i++)
+    for (i = 1; i < argc; i++) {
         IsftViewlog("fatal: unhandled option: %s\n", argv[i]);
+    }
     if (argc > 1) {
-        goto out;
+        goto_out();
     }
 
     IsftViewCompositorwake(wet.compositor);
@@ -3251,16 +3277,7 @@ out:
     IsftViewlogsubscriberdestroy(flight_rec);
     IsftViewlogctxdestroy(log_ctx);
 
-out_signals:
-    for (i = ARRAY_LENGTH(signals) - 1; i >= 0; i--)
-        if (signals[i]) {
-            Isftteventsourceremove(signals[i]);
-        }
-
     Isfttshow_destroy(show);
-
-out_show:
-    IsftViewLogfileclose();
 
     if (layout) {
         IsftViewConfig_destroy(layout);
@@ -3268,7 +3285,7 @@ out_show:
     free(config_file);
     free(backend);
     free(shell);
-    free(socketname);
+    free(socket_name);
     free(optionmodules);
     free(log);
     free(modules);
