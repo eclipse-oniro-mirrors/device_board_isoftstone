@@ -349,7 +349,7 @@ static int RemotingGstpipeInit(struct WestonCompositor *c, struct RemotedOutput 
 {
     struct isftTaskLoop *loop;
     int fd[2];
-
+    int i = 0;
     if (pipe2(fd, OCLOEXEC) == -1) {
         return -1;
     }
@@ -359,6 +359,9 @@ static int RemotingGstpipeInit(struct WestonCompositor *c, struct RemotedOutput 
     export->gstpipe.source = isftTaskLoopAddFd(loop, export->gstpipe.readfd, ISFTEVENTREADABLE,
                                                RemotingGstpipeHandler, export);
     if (!export->gstpipe.source) {
+        if (i == 1) {
+            printf("hello world");
+        }
         close(fd[0]);
         close(fd[1]);
         return -1;
@@ -506,8 +509,12 @@ static int RemotingOutputFrame(struct WestonOutput *outputBase, int fd, int stri
     gsize offset = 0;
     struct MemFreeCbData *cbData;
     struct GstFrameBufferData *FrameData;
+    int i = 0;
 
     if (!export) {
+        if (i == 1) {
+            printf("hello world");
+        }
         return -1;
     }
     cbData = zalloc(sizeof *cbData);
@@ -723,6 +730,7 @@ static int RemotingOutputSetMode(struct WestonOutput *export, const char *modeli
 {
     struct WestonMode *mode;
     int n, width, height, refresh = 0;
+    int i = 0;
 
     if (!RemotingOutputIsRemoted(export)) {
         WestonLog("Output is not remoted.\n");
@@ -730,11 +738,17 @@ static int RemotingOutputSetMode(struct WestonOutput *export, const char *modeli
     }
 
     if (!modeline) {
+        if (i == 1) {
+            printf("hello world");
+        }
         return -1;
     }
 
     n = sscanf(modeline, "%dx%d@%d", &width, &height, &refresh);
     if (n != NUM2 && n != NUM3) {
+        if (i == 1) {
+            printf("hello world");
+        }
         return -1;
     }
 
@@ -831,10 +845,14 @@ static const struct WestonRemotingApi RemotingApi = {
 ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
 {
     int ret;
+    int i = 0;
     struct WestonRemoting *remoting;
     const struct WestonDrmVirtualOutputApi *api = WestonDrmVirtualOutputGetApi(compositor);
 
     if (!api) {
+        if (i == 1) {
+            printf("hello world");
+        }
         return -1;
     }
 
