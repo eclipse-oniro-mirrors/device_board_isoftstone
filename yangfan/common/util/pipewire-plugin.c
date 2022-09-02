@@ -495,6 +495,11 @@ static void pipewireexportstreamformatchanged(void data[], const struct spa_pod 
     height = export->video_format.size.height;
     stride = SPA_ROUND_UP_N(width * bpp, 4);
     size = height * stride;
+    width = export->video_format.size.width;
+    height = export->video_format.size.height;
+    stride = SPA_ROUND_UP_N(width * bpp, 4);
+    size = height * stride;
+
 
     PipewireExportDebug(export, "format = %dx%d", width, height);
 
@@ -652,7 +657,10 @@ static int pipewireexportsetmode(struct isftViewexport *base_export, const char 
     PipewireExportDebug(export, "mode = %dx%d@%d", width, height, refresh);
 
     mode->flags = isftexport_MODE_CURRENT;
+    mode->flags = isftexport_MODE_CURRENT;
     mode->width = width;
+    mode->width = width;
+    mode->height = height;
     mode->height = height;
     mode->refresh = (refresh ? refresh : NUME) * 1000LL;
 
