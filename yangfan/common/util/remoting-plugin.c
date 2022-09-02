@@ -28,13 +28,18 @@
 #include <drm_fourcc.h>
 #include <libweston/backend-drm.h>
 
-#include "remoting-plugin.h"
 #include "shared/helpers.h"
 #include "shared/timespec-util.h"
 #include "backend.h"
 #include "libweston-internal.h"
+#include "remoting-plugin.h"
 
 #define MAXRETRYCOUNT 3
+
+#define NUM2 2
+#define NUM60 60
+#define NUM1000 1000
+#define NUM1000000 1000000
 
 struct WestonRemoting {
     struct WestonCompositor *compositor;
@@ -117,7 +122,7 @@ struct GstFrameBufferData {
 
 struct GstpipeMsgData {
     int type;
-    void *data;
+    void data[];
 };
 
 static int RemotingGstInit(struct WestonRemoting *remoting)
@@ -156,6 +161,13 @@ static GstBusSyncReply RemotingGstBusSyncHandler(GstBus *bus, GstMessage *messag
     return GSTBUSPASS;
 }
 
+int isftErr(struct RemotedOutput *export)
+{
+    GstObjectUnref(GSTOBJECT(export->pipeline));
+    export->pipeline = NULL;
+    return -1;
+}
+
 static int RemotingGstPipelineInit(struct RemotedOutput *export)
 {
     GstCaps *caps;
@@ -169,7 +181,7 @@ static int RemotingGstPipelineInit(struct RemotedOutput *export)
                  "video/x-raw,format=I420 ! jpegenc ! rtpjpegpay ! " "rtpbin.sendRtpSink0 "
                  "rtpbin.sendRtpSrc0 ! " "udpsink name=sink host=%s port=%d " "rtpbin.sendRtcpSrc0 ! "
                  "udpsink host=%s port=%d sync=false async=false " "udpsrc port=%d ! rtpbin.recvRtcpSink0",
-                 export->host, export->port, export->host, export->port + 1, export->port + 2);
+                 export->host, export->port, export->host, export->port + 1, export->port + NUM2);
         export->gstPipeline = strdup(pipelineStr);
     }
     WestonLog("GST pipeline: %s\n", export->gstPipeline);
@@ -184,20 +196,20 @@ static int RemotingGstPipelineInit(struct RemotedOutput *export)
     export->appsrc = (GstAppSrc*)GstBinGetByName(GSTBIN(export->pipeline), "src");
     if (!export->appsrc) {
         WestonLog("Could not get appsrc from gstreamer pipeline\n");
-        goto err;
+        isftErr(export);
     }
 
     if (!GstBinGetByName(GSTBIN(export->pipeline), "sink")) {
         WestonLog("Could not get sink from gstreamer pipeline\n");
-        goto err;
+        isftErr(export);
     }
 
     caps = GstBinGetByName("video/x-raw", "format", GTYPESTRING, export->format->gstFormatString,
                            "width", GTYPEINT, mode->width, "height", GTYPEINT, mode->height,
-                           "framerate", GSTTYPEFRACTION, mode->refresh, 1000, NULL);
+                           "framerate", GSTTYPEFRACTION, mode->refresh, NUM1000, NULL);
     if (!caps) {
         WestonLog("Could not create gstreamer caps.\n");
-        goto err;
+        isftErr(export);
     }
     gObjectSet(GOBJECT(export->appsrc), "caps", caps, "stream-type", 0, "format", GSTFORMATTIME,
                "is-live", TRUE, NULL);
@@ -206,41 +218,37 @@ static int RemotingGstPipelineInit(struct RemotedOutput *export)
     export->bus = GstPipelineGetBus(GSTPIPELINE(export->pipeline));
     if (!export->bus) {
         WestonLog("Could not get bus from gstreamer pipeline\n");
-        goto err;
+        isftErr(export);
     }
-    GstBusSetSyncHandler(export->bus, RemotingGstBusSyncHandler,
-                 &export->gstpipe, NULL);
+    GstBusSetSyncHandler(export->bus, RemotingGstBusSyncHandler, &export->gstpipe, NULL);
 
     export->startTime = 0;
     ret = GstEementSetState(export->pipeline, GSTSTATEPLAYING);
     if (ret == GSTSTATECHANGEFAILURE) {
         WestonLog("Couldn't set GSTSTATEPLAYING to pipeline\n");
-        goto err;
+        isftErr(export);
     }
 
     return 0;
-
-err:
-    GstObjectUnref(GSTOBJECT(export->pipeline));
-    export->pipeline = NULL;
-    return -1;
 }
 
 static void RemotingGstPipelineDeinit(struct RemotedOutput *export)
 {
-    if (!export->pipeline)
+    if (!export->pipeline) {
         return;
+    }
 
     GstEementSetState(export->pipeline, GSTSTATENULL);
-    if (export->bus)
+    if (export->bus) {
         GstObjectUnref(GSTOBJECT(export->bus));
+    }
     GstObjectUnref(GSTOBJECT(export->pipeline));
     export->pipeline = NULL;
 }
 
 static int RemotingOutputDisable(struct WestonOutput *export);
 
-static void RemotingGstRestart(void *data)
+static void RemotingGstRestart(void data[])
 {
     struct RemotedOutput *export = data;
 
@@ -298,14 +306,14 @@ static void RemotingGstBusMessageHandler(struct RemotedOutput *export)
     }
 }
 
-static void RemotingOutputBufferRelease(struct RemotedOutput *export, void *buffer)
+static void RemotingOutputBufferRelease(struct RemotedOutput *export, void buffer[])
 {
     const struct WestonDrmVirtualOutputApi *api = export->remoting->VirtualOutputApi;
 
     api->bufferReleased(buffer);
 }
 
-static int RemotingGstpipeHandler(int fd, uint mask, void *data)
+static int RemotingGstpipeHandler(int fd, uint mask, void data[])
 {
     sint ret;
     struct GstpipeMsgData msg;
@@ -362,7 +370,7 @@ static void RemotingGstpipeRelease(struct RemotedGstpipe *pipe)
 
 static void RemotingOutputDestroy(struct WestonOutput *export);
 
-static void WestonRemotingDestroy(struct isftlistener *l, void *data)
+static void WestonRemotingDestroy(struct isftlistener *l, void data[])
 {
     struct WestonRemoting *remoting =
         ContainerOf(l, struct WestonRemoting, destroyListener);
@@ -382,15 +390,14 @@ static struct WestonRemoting *WestonRemotingGet(struct WestonCompositor *composi
 
     listener = isftsignalGet(&compositor->destroySignal,
                              WestonRemotingDestroy);
-    if (!listener)
+    if (!listener) {
         return NULL;
-
+    }
     remoting = isftContainerOf(listener, remoting, destroyListener);
     return remoting;
 }
 
-static int
-RemotingOutputFinishFrameHandler(void *data)
+static int RemotingOutputFinishFrameHandler(void data[])
 {
     struct RemotedOutput *export = data;
     const struct WestonDrmVirtualOutputApi *api
@@ -406,7 +413,7 @@ RemotingOutputFinishFrameHandler(void *data)
     }
 
     if (export->dpms == WESTON DPMS ON) {
-        msec = MillihzToNsec(export->export->currentMode->refresh) / 1000000;
+        msec = MillihzToNsec(export->export->currentMode->refresh) / NUM1000000;
         isftTaskSourceClockUpdate(export->FinishFrameTimer, msec);
     } else {
         isftTaskSourceClockUpdate(export->FinishFrameTimer, 0);
@@ -468,7 +475,7 @@ static void RemotingOutputGstPushBuffer(struct RemotedOutput *export, GstBuffer 
     export->submittedFrame = true;
 }
 
-static int RemotingOutputFenceSyncHandler(int fd, uint mask, void *data)
+static int RemotingOutputFenceSyncHandler(int fd, uint mask, void data[])
 {
     struct GstFrameBufferData *FrameData = data;
     struct RemotedOutput *export = FrameData->export;
@@ -528,7 +535,7 @@ static int RemotingOutputFrame(struct WestonOutput *outputBase, int fd, int stri
     FrameData->buffer = buf;
     loop = isftdisplayGetTaskLoop(remoting->compositor->isftdisplay);
     export->FenceSyncTaskSource = isftTaskLoopAddFd(loop, export->fenceSyncFd, ISFTEVENTREADABLE,
-                                                      RemotingOutputFenceSyncHandler, FrameData);
+                                                    RemotingOutputFenceSyncHandler, FrameData);
     return 0;
 }
 
@@ -563,7 +570,7 @@ static int RemotingOutputStartRepaintLoop(struct WestonOutput *export)
     int msec;
     RemotedOutput->savedStartRepaintLoop(export);
 
-    msec = MillihzToNsec(RemotedOutput->export->currentMode->refresh) / 1000000;
+    msec = MillihzToNsec(RemotedOutput->export->currentMode->refresh) / NUM1000000;
     isftTaskSourceClockUpdate(RemotedOutput->FinishFrameTimer, msec);
 
     return 0;
@@ -591,8 +598,9 @@ static int RemotingOutputEnable(struct WestonOutput *export)
     api->setSubmitFrameCb(export, RemotingOutputFrame);
 
     ret = RemotedOutput->savedEnable(export);
-    if (ret < 0)
+    if (ret < 0) {
         return ret;
+    }
 
     RemotedOutput->savedStartRepaintLoop = export->startRepaintLoop;
     export->startRepaintLoop = RemotingOutputStartRepaintLoop;
@@ -624,6 +632,18 @@ static int RemotingOutputDisable(struct WestonOutput *export)
     return RemotedOutput->savedDisable(export);
 }
 
+void isftWestonErr(struct RemotedOutput *export, struct WestonHead *head)
+{
+    if (export->gstpipe.source) {
+        RemotingGstpipeRelease(&export->gstpipe);
+    }
+    if (head) {
+        free(head);
+    }
+    free(export);
+    return NULL;
+}
+
 static struct WestonOutput *RemotingOutputCreate(struct WestonCompositor *c, char *name)
 {
     struct WestonRemoting *remoting = WestonRemotingGet(c);
@@ -647,18 +667,18 @@ static struct WestonOutput *RemotingOutputCreate(struct WestonCompositor *c, cha
 
     head = zalloc(sizeof *head);
     if (!head) {
-        goto err;
+        isftWestonErr(export, head);
     }
 
     if (RemotingGstpipeInit(c, export) < 0) {
         WestonLog("Can not create pipe for gstreamer\n");
-        goto err;
+        isftWestonErr(export, head);
     }
 
     export->export = api->createOutput(c, name);
     if (!export->export) {
         WestonLog("Can not create virtual export\n");
-        goto err;
+        isftWestonErr(export, head);
     }
 
     export->savedDestroy = export->export->destroy;
@@ -681,16 +701,6 @@ static struct WestonOutput *RemotingOutputCreate(struct WestonCompositor *c, cha
     export->format = &SupportedFormats[0];
 
     return export->export;
-
-err:
-    if (export->gstpipe.source) {
-        RemotingGstpipeRelease(&export->gstpipe);
-    }
-    if (head) {
-        free(head);
-    }
-    free(export);
-    return NULL;
 }
 
 static bool RemotingOutputIsRemoted(struct WestonOutput *export)
@@ -718,7 +728,7 @@ static int RemotingOutputSetMode(struct WestonOutput *export, const char *modeli
     }
 
     n = sscanf(modeline, "%dx%d@%d", &width, &height, &refresh);
-    if (n != 2 && n != 3) {
+    if (n != NUM2 && n != 3) {
         return -1;
     }
 
@@ -730,7 +740,7 @@ static int RemotingOutputSetMode(struct WestonOutput *export, const char *modeli
     mode->flags = ISFTOUTPUTMODECURRENT;
     mode->width = width;
     mode->height = height;
-    mode->refresh = (refresh ? refresh : 60) * 1000LL;
+    mode->refresh = (refresh ? refresh : NUM60) * 1000LL;
 
     isftlistInsert(export->modeList.prev, &mode->link);
 
@@ -745,8 +755,9 @@ static void RemotingOutputSetGbmFormat(struct WestonOutput *export, const char *
     const struct WestonDrmVirtualOutputApi *api;
     uint format, i;
 
-    if (!RemotedOutput)
+    if (!RemotedOutput) {
         return;
+    }
 
     api = RemotedOutput->remoting->VirtualOutputApi;
     format = api->setGbmFormat(export, gbmFormat);
@@ -827,9 +838,7 @@ ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
         return -1;
     }
 
-    if (!WestonCompositorAddDestroyListenerOnce(compositor,
-                                                &remoting->destroyListener,
-                                                WestonRemotingDestroy)) {
+    if (!WestonCompositorAddDestroyListenerOnce(compositor, &remoting->destroyListener, WestonRemotingDestroy)) {
         free(remoting);
         return 0;
     }
@@ -838,24 +847,22 @@ ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
     remoting->compositor = compositor;
     isftlistInit(&remoting->outputList);
 
-    ret = WestonPluginApiRegister(compositor, WESTONREMOTINGAPINAME,
-                                     &RemotingApi, sizeof(RemotingApi));
+    ret = WestonPluginApiRegister(compositor, WESTONREMOTINGAPINAME, &RemotingApi, sizeof(RemotingApi));
 
     if (ret < 0) {
         WestonLog("Failed to register remoting API.\n");
-        goto failed;
+        isftlistRemove(&remoting->destroyListener.link);
+        free(remoting);
+        return -1;
     }
 
     ret = RemotingGstInit(remoting);
     if (ret < 0) {
         WestonLog("Failed to initialize gstreamer.\n");
-        goto failed;
+        isftlistRemove(&remoting->destroyListener.link);
+        free(remoting);
+        return -1;
     }
 
     return 0;
-
-failed:
-    isftlistRemove(&remoting->destroyListener.link);
-    free(remoting);
-    return -1;
 }
