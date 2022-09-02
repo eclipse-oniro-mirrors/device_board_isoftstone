@@ -754,6 +754,9 @@ static int RemotingOutputSetMode(struct WestonOutput *export, const char *modeli
 
     mode = zalloc(sizeof *mode);
     if (!mode) {
+        if (i == 1) {
+            printf("hello world");
+        }
         return -1;
     }
 
