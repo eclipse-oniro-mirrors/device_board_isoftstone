@@ -499,8 +499,6 @@ static void pipewireexportstreamformatchanged(void data[], const struct spa_pod 
     height = export->video_format.size.height;
     stride = SPA_ROUND_UP_N(width * bpp, 4);
     size = height * stride;
-
-
     PipewireExportDebug(export, "format = %dx%d", width, height);
 
     params[0] = spa_pod_builder_object(&builder,
@@ -513,6 +511,11 @@ static void pipewireexportstreamformatchanged(void data[], const struct spa_pod 
         "iru", 4, PROP_RANGE(2, 8),
         ":", t->param_buffers.align,
         "i", 16);
+
+    params[1] = spa_pod_builder_object(&builder,
+        t->param.idMeta, t->param_meta.Meta,
+        ":", t->param_meta.type, "I", t->meta.Header,
+        ":", t->param_meta.size, "i", sizeof(struct spa_meta_header));
 
     params[1] = spa_pod_builder_object(&builder,
         t->param.idMeta, t->param_meta.Meta,
