@@ -104,7 +104,7 @@ IsftViewlogClockstamp(char *buf, size_t len)
     memset(dateStr, 0, sizeof(dateStr));
     if (brokenDownclock->tm_mday != cacheDtmmday) {
         strfclock(dateStr, sizeof(dateStr), "Date: %Y-%m-%d %Z\n",
-             brokenDownclock);
+                  brokenDownclock);
         cacheDtmmday = brokenDownclock->tm_mday;
     }
 
@@ -139,10 +139,11 @@ static bool IsftViewLogfileopen(const char *filename)
         }
     }
 
-    if (IsftViewLogfile == NULL)
+    if (IsftViewLogfile == NULL) {
         IsftViewLogfile = stderr;
-    else
+    } else {
         setvbuf(IsftViewLogfile, NULL, _IOLBF, 256);
+    }
 
     return true;
 }
@@ -169,11 +170,11 @@ static int vlog(const char *fmt, valist ap)
         len_va = vasprintf(&str, fmt, ap);
         if (len_va >= 0) {
             len = IsftViewlogScopeprintf(logScope, "%s %s",
-                              logclockstamp, str);
+                                         logclockstamp, str);
             free(str);
         } else {
             len = IsftViewlogScopeprintf(logScope, "%s %s",
-                              logclockstamp, oom);
+                                         logclockstamp, oom);
         }
     }
 
@@ -207,8 +208,8 @@ GetnextArgument(const char *signature, char* type)
 }
 
 static void ProtoCollogfn(void *user_data,
-              enum IsfttProtoColloggerType direction,
-              const struct IsfttProtoColloggerMessage *message)
+                          enum IsfttProtoColloggerType direction,
+                          const struct IsfttProtoColloggerMessage *message)
 {
     FILE *fp;
     char *logstr;
@@ -359,9 +360,9 @@ static void ChildClientexec(int sockfd, const char *path)
 
 IsftTEXPORT struct IsfttcClient *
 IsftViewclientLaunch(struct IsftViewCompositor *compositor,
-             struct IsftViewprocess *proc,
-             const char *path,
-             IsftViewprocesscleanupfunct cleanup)
+                     struct IsftViewprocess *proc,
+                     const char *path,
+                     IsftViewprocesscleanupfunct cleanup)
 {
     int sv[2];
     pid_t pid;
@@ -397,8 +398,8 @@ IsftViewclientLaunch(struct IsftViewCompositor *compositor,
     if (!client) {
         close(sv[0]);
         IsftViewlog("IsftViewclientLaunch: "
-            "IsfttcClient_create failed while launching '%s'.\n",
-            path);
+                    "IsfttcClient_create failed while launching '%s'.\n",
+                    path);
         return NULL;
     }
 
@@ -456,7 +457,7 @@ IsftViewClientStart(struct IsftViewCompositor *compositor, const char *path)
     }
 
     client = IsftViewclientLaunch(compositor, &pinfo->proc, path,
-                                   ProcessHandleSigchld);
+                                  ProcessHandleSigchld);
     if (!client) {
         goto out_str;
     }
@@ -736,21 +737,21 @@ static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *composi
     for (i = 0; i < ARRAY_LENGTH(capabilitystrings); i++) {
         yes = compositor->capabilities & capabilitystrings[i].bit;
         IsftViewlogcontinue(STAMP_SPACE "%s %s\n",
-                    capabilitystrings[i].desc,
-                    yes ? "yes" : "no");
+                            capabilitystrings[i].desc,
+                            yes ? "yes" : "no");
     }
 
     IsftViewlogcontinue(STAMP_SPACE "presentation clock: %s, id %d\n",
-                ClockName(compositor->presentation_clock),
-                compositor->presentation_clock);
+                        ClockName(compositor->presentation_clock),
+                        compositor->presentation_clock);
 
     if (clock_getres(compositor->presentation_clock, &res) == 0) {
         IsftViewlogcontinue(STAMP_SPACE
-                "presentation clock resolution: %d.%09ld s\n",
-                (int)res.tv_sec, res.tv_nsec);
+                            "presentation clock resolution: %d.%09ld s\n",
+                            (int)res.tv_sec, res.tv_nsec);
     } else {
         IsftViewlogcontinue(STAMP_SPACE
-            "presentation clock resolution: N/A\n");
+                            "presentation clock resolution: N/A\n");
     }
 }
 
@@ -785,8 +786,7 @@ static int IsftViewcreatelisteningsocket(struct Isfttshow *show, const char *soc
     return 0;
 }
 
-IsftTEXPORT void *
-IsftLLoadmoduleentrypoint(const char *name, const char *entrypoint)
+IsftTEXPORT void *IsftLLoadmoduleentrypoint(const char *name, const char *entrypoint)
 {
     char path[PATH_MAX];
     void *module, *init;
@@ -800,7 +800,7 @@ IsftLLoadmoduleentrypoint(const char *name, const char *entrypoint)
         len = IsftViewmodule_path_from_env(name, path, sizeof path);
         if (len == 0)
             len = snprintf(path, sizeof path, "%s/%s", MODULEDIR,
-                       name);
+                           name);
     } else {
         len = snprintf(path, sizeof path, "%s", name);
     }
@@ -831,10 +831,10 @@ IsftLLoadmoduleentrypoint(const char *name, const char *entrypoint)
 }
 
 IsftTEXPORT int IsftLoadmodule(struct IsftViewCompositor *compositor,
-            const char *name, int *argc, char *argv[])
+                               const char *name, int *argc, char *argv[])
 {
     int (*module_init)(struct IsftViewCompositor *ec,
-               int *argc, char *argv[]);
+                       int *argc, char *argv[]);
 
     module_init = IsftLLoadmoduleentrypoint(name, "Isftmodule_init");
     if (!module_init) {
@@ -847,10 +847,10 @@ IsftTEXPORT int IsftLoadmodule(struct IsftViewCompositor *compositor,
 }
 
 static int IsftLoadshell(struct IsftViewCompositor *compositor,
-           const char *name, int *argc, char *argv[])
+                         const char *name, int *argc, char *argv[])
 {
     int (*shell_init)(struct IsftViewCompositor *ec,
-              int *argc, char *argv[]);
+                      int *argc, char *argv[]);
 
     shell_init = IsftLLoadmoduleentrypoint(name, "Isftshell_init");
     if (!shell_init) {
@@ -862,8 +862,7 @@ static int IsftLoadshell(struct IsftViewCompositor *compositor,
     return 0;
 }
 
-static char *
-IsftGetbinarypath(const char *name, const char *dir)
+static char *IsftGetbinarypath(const char *name, const char *dir)
 {
     char path[PATH_MAX];
     size_t len;
@@ -881,20 +880,18 @@ IsftGetbinarypath(const char *name, const char *dir)
     return strdup(path);
 }
 
-IsftTEXPORT char *
-IsftGetlibexecpath(const char *name)
+IsftTEXPORT char *IsftGetlibexecpath(const char *name)
 {
     return IsftGetbinarypath(name, LIBEXECDIR);
 }
 
-IsftTEXPORT char *
-IsftGetbindir_path(const char *name)
+IsftTEXPORT char *IsftGetbindir_path(const char *name)
 {
     return IsftGetbinarypath(name, BINDIR);
 }
 
 static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
-         int *argc, char *argv[], bool *x)
+                       int *argc, char *argv[], bool *x)
 {
     const char *p, *end;
     char buffer[256];
@@ -910,9 +907,9 @@ static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
 
         if (strstr(buffer, "x.so")) {
             IsftViewlog("Old X module Loading detected: "
-                   "Please use --x command line option "
-                   "or set x=true in the [core] section "
-                   "in weston.ini\n");
+                        "Please use --x command line option "
+                        "or set x=true in the [core] section "
+                        "in weston.ini\n");
             *x = true;
         } else {
             if (IsftLoadmodule(ec, buffer, argc, argv) < 0) {
@@ -930,8 +927,8 @@ static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
 }
 
 static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
-                  struct IsftViewtouch_device *device,
-                  const struct IsftViewtouch_device_matrix *calibration)
+                                     struct IsftViewtouch_device *device,
+                                     const struct IsftViewtouch_device_matrix *calibration)
 {
     struct IsftViewConfigSection *s;
     struct IsftViewConfig *layout = IsftGetconfig(compositor);
@@ -941,11 +938,9 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
     int status;
     const float *m = calibration->m;
 
-    s = IsftViewConfiggetsection(layout,
-                                   "libimport", NULL, NULL);
+    s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
 
-    IsftViewConfigSection_get_string(s, "calibration_helper",
-                     &helper, NULL);
+    IsftViewConfigSection_get_string(s, "calibration_helper", &helper, NULL);
 
     if (!helper || strlen(helper) == 0) {
         ret = 0;
@@ -987,7 +982,7 @@ out:
 }
 
 static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
-                  struct IsftViewConfig *layout)
+                                        struct IsftViewConfig *layout)
 {
     struct XkbRuleNames xkb_names;
     struct IsftViewConfigSection *s;
@@ -996,31 +991,31 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
 
     s = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
     IsftViewConfigSection_get_string(s, "keymap_rules",
-                     (char **) &xkb_names.rules, NULL);
+                                     (char **) &xkb_names.rules, NULL);
     IsftViewConfigSection_get_string(s, "keymap_model",
-                     (char **) &xkb_names.model, NULL);
+                                     (char **) &xkb_names.model, NULL);
     IsftViewConfigSection_get_string(s, "keymap_layout",
-                     (char **) &xkb_names.layout, NULL);
+                                     (char **) &xkb_names.layout, NULL);
     IsftViewConfigSection_get_string(s, "keymap_variant",
-                     (char **) &xkb_names.variant, NULL);
+                                     (char **) &xkb_names.variant, NULL);
     IsftViewConfigSection_get_string(s, "keymap_options",
-                     (char **) &xkb_names.options, NULL);
+                                     (char **) &xkb_names.options, NULL);
 
     if (IsftViewCompositor_set_XkbRuleNames(ec, &xkb_names) < 0) {
         return -1;
     }
 
     IsftViewConfigSection_get_int(s, "repeat-rate",
-                      &ec->kb_repeat_rate, 40);
+                                  &ec->kb_repeat_rate, 40);
     IsftViewConfigSection_get_int(s, "repeat-delay",
-                      &ec->kb_repeat_delay, 400);
+                                  &ec->kb_repeat_delay, 400);
 
     IsftViewConfigSectiongetbool(s, "vt-switching",
-                       &ec->vt_switching, true);
+                                 &ec->vt_switching, true);
 
     s = IsftViewConfiggetsection(layout, "core", NULL, NULL);
     IsftViewConfigSection_get_int(s, "repaint-window", &RepaintMsec,
-                      ec->RepaintMsec);
+                                  ec->RepaintMsec);
     if (RepaintMsec < -10 || RepaintMsec > 1000) {
         IsftViewlog("Invalid repaint_window value in layout: %d\n",
                     RepaintMsec);
@@ -1040,8 +1035,7 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     return 0;
 }
 
-static char *
-IsftViewchoosedefaultbackend(void)
+static char *IsftViewchoosedefaultbackend(void)
 {
     char *backend = NULL;
 
@@ -1081,8 +1075,7 @@ IsftTEXPORT int IsftViewparsetransform(const char *transform, unsigned int *out)
     return -1;
 }
 
-IsftTEXPORT const char *
-IsftViewtransformtostring(unsigned int export_transform)
+IsftTEXPORT const char *IsftViewtransformtostring(unsigned int export_transform)
 {
     unsigned int i;
 
@@ -1095,7 +1088,7 @@ IsftViewtransformtostring(unsigned int export_transform)
 }
 
 static int LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
-           const char *config_file)
+                             const char *config_file)
 {
     const char *file = "weston.ini";
     const char *full_path;
@@ -1138,9 +1131,9 @@ static void handleexit(struct IsftViewCompositor *c)
 }
 
 static void IsftExport_set_scale(struct IsftViewExport *export,
-             struct IsftViewConfigSection *section,
-             int default_scale,
-             int parsed_scale)
+                                 struct IsftViewConfigSection *section,
+                                 int default_scale,
+                                 int parsed_scale)
 {
     int scale = default_scale;
 
@@ -1154,18 +1147,17 @@ static void IsftExport_set_scale(struct IsftViewExport *export,
     IsftViewExport_set_scale(export, scale);
 }
 
-
 static int IsftExportsettransform(struct IsftViewExport *export,
-             struct IsftViewConfigSection *section,
-             unsigned int default_transform,
-             unsigned int parsed_transform)
+                                  struct IsftViewConfigSection *section,
+                                  unsigned int default_transform,
+                                  unsigned int parsed_transform)
 {
     char *t = NULL;
     unsigned int transform = default_transform;
 
     if (section) {
         IsftViewConfigSection_get_string(section,
-                         "transform", &t, NULL);
+                                         "transform", &t, NULL);
     }
 
     if (t) {
@@ -1187,20 +1179,20 @@ static int IsftExportsettransform(struct IsftViewExport *export,
 }
 
 static void Allowcontentprotection(struct IsftViewExport *export,
-            struct IsftViewConfigSection *section)
+                                   struct IsftViewConfigSection *section)
 {
     bool allowhdcp = true;
 
     if (section) {
         IsftViewConfigSectiongetbool(section, "allowhdcp",
-                           &allowhdcp, true);
+                                     &allowhdcp, true);
     }
 
     IsftViewExport_allow_protection(export, allowhdcp);
 }
 
 static int Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
-                      struct IsftExportConfig *defaults)
+                                                 struct IsftExportConfig *defaults)
 {
     const struct IsftViewwindowedexportapi *api =
         IsftViewwindowed_export_get_api(export->compositor);
@@ -1225,8 +1217,7 @@ static int Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
         char *mode;
 
         IsftViewConfigSection_get_string(section, "mode", &mode, NULL);
-        if (!mode || sscanf(mode, "%dx%d", &width,
-                    &height) != 2) {
+        if (!mode || sscanf(mode, "%dx%d", &width, &height) != 2) {
             IsftViewlog("Invalid mode for export %s. Using defaults.\n",
                         export->name);
             width = defaults->width;
@@ -1285,7 +1276,7 @@ static void handleheaddestroy(struct IsftAudience *listener, void *data)
     struct IsftViewExport *export;
     struct IsftHeadTracker *track =
         container_of(listener, struct IsftHeadTracker,
-                 headdestroylistener);
+                     headdestroylistener);
 
     IsftHeadTrackerdestroy(track);
 
@@ -1302,8 +1293,7 @@ static void handleheaddestroy(struct IsftAudience *listener, void *data)
     IsftViewExport_destroy(export);
 }
 
-static struct IsftHeadTracker *
-IsftHeadTrackerFromhead(struct IsftViewHead *head)
+static struct IsftHeadTracker *IsftHeadTrackerFromhead(struct IsftViewHead *head)
 {
     struct IsftAudience *lis;
 
@@ -1317,7 +1307,7 @@ IsftHeadTrackerFromhead(struct IsftViewHead *head)
 }
 
 static void IsftHeadTrackercreate(struct IsftCompositor *compositor,
-            struct IsftViewHead *head)
+                                  struct IsftViewHead *head)
 {
     struct IsftHeadTracker *track;
 
@@ -1414,7 +1404,7 @@ static void SimpleHeadschanged(struct IsftAudience *listener, void *arg)
 }
 
 static void IsftsetSimpleheadconfigurator(struct IsftViewCompositor *compositor,
-                 int (*fn)(struct IsftViewExport *))
+                                          int (*fn)(struct IsftViewExport *))
 {
     struct IsftCompositor *wet = ToIsftCompositor(compositor);
 
@@ -1422,11 +1412,11 @@ static void IsftsetSimpleheadconfigurator(struct IsftViewCompositor *compositor,
 
     wet->headschangedlistener.notify = SimpleHeadschanged;
     IsftViewCompositor_add_headschangedlistener(compositor,
-                        &wet->headschangedlistener);
+                                                &wet->headschangedlistener);
 }
 
 static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
-        struct libimport_device *device)
+                                       struct libimport_device *device)
 {
     char *profile_string = NULL;
     int is_a_profile = 1;
@@ -1434,8 +1424,7 @@ static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
     enum libimport_config_accel_profile profile;
     double speed;
 
-    if (IsftViewConfigSection_get_string(s, "accel-profile",
-                         &profile_string, NULL) == 0) {
+    if (IsftViewConfigSection_get_string(s, "accel-profile", &profile_string, NULL) == 0) {
         if (strcmp(profile_string, "flat") == 0)
             profile = LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
         else if (strcmp(profile_string, "adaptive") == 0)
@@ -1450,13 +1439,11 @@ static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
         if (is_a_profile && (profile & profiles) != 0) {
             IsftViewlog("          accel-profile=%s\n",
                         profile_string);
-            libimport_device_config_accel_set_profile(device,
-                    profile);
+            libimport_device_config_accel_set_profile(device, profile);
         }
     }
 
-    if (IsftViewConfigSection_get_double(s, "accel-speed",
-                         &speed, 0) == 0 &&
+    if (IsftViewConfigSection_get_double(s, "accel-speed", &speed, 0) == 0 &&
         speed >= -1. && speed <= 1.) {
         IsftViewlog("          accel-speed=%.3f\n", speed);
         libimport_device_config_accel_set_speed(device, speed);
@@ -1466,7 +1453,7 @@ static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
 }
 
 static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
-        struct libimport_device *device)
+                                        struct libimport_device *device)
 {
     bool natural;
     char *methodString = NULL;
@@ -1479,30 +1466,28 @@ static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
         IsftViewConfigSectiongetbool(s, "natural-scroll", &natural, false) == 0) {
         IsftViewlog("          natural-scroll=%s\n",
                     natural ? "true" : "false");
-        libimport_device_config_scroll_set_natural_scroll_enabled(
-            device, natural);
+        libimport_device_config_scroll_set_natural_scroll_enabled(device, natural);
     }
 
-    if (IsftViewConfigSection_get_string(s, "scroll-method",
-                         &methodString, NULL) != 0)
+    if (IsftViewConfigSection_get_string(s, "scroll-method", &methodString, NULL) != 0) {
         goto done;
-    if (strcmp(methodString, "two-finger") == 0)
+    }
+    if (strcmp(methodString, "two-finger") == 0) {
         method = LIBINPUT_CONFIG_SCROLL_2FG;
-    else if (strcmp(methodString, "edge") == 0)
+    } else if (strcmp(methodString, "edge") == 0) {
         method = LIBINPUT_CONFIG_SCROLL_EDGE;
-    else if (strcmp(methodString, "button") == 0)
+    } else if (strcmp(methodString, "button") == 0) {
         method = LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
-    else if (strcmp(methodString, "none") == 0)
+    } else if (strcmp(methodString, "none") == 0) {
         method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
-    else {
+    } else {
         IsftViewlog("warning: no such scroll-method: %s\n",
                     methodString);
         goto done;
     }
 
     methods = libimport_device_config_scroll_get_methods(device);
-    if (method != LIBINPUT_CONFIG_SCROLL_NO_SCROLL &&
-        (method & methods) == 0) {
+    if (method != LIBINPUT_CONFIG_SCROLL_NO_SCROLL && (method & methods) == 0) {
         goto done;
     }
 
@@ -1533,7 +1518,7 @@ done:
 }
 
 static void Configureimportdevice(struct IsftViewCompositor *compositor,
-               struct libimport_device *device)
+                                  struct libimport_device *device)
 {
     struct IsftViewConfigSection *s;
     struct IsftViewConfig *layout = IsftGetconfig(compositor);
@@ -1549,73 +1534,62 @@ static void Configureimportdevice(struct IsftViewCompositor *compositor,
     IsftViewlog("libimport: configuring device \"%s\".\n",
                 libimport_device_get_name(device));
 
-    s = IsftViewConfiggetsection(layout,
-                                   "libimport", NULL, NULL);
+    s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
 
     if (libimport_device_config_tap_get_finger_count(device) > 0) {
-        if (IsftViewConfigSectiongetbool(s, "enable_tap",
-                           &enable_tap, false) == 0) {
+        if (IsftViewConfigSectiongetbool(s, "enable_tap", &enable_tap, false) == 0) {
             IsftViewlog("!!DEPRECATION WARNING!!: In weston.ini, "
-                   "enable_tap is deprecated in favour of "
-                   "enable-tap. Support for it may be removed "
-                   "at any clock!");
+                        "enable_tap is deprecated in favour of "
+                        "enable-tap. Support for it may be removed "
+                         "at any clock!");
             has_enable_tap = true;
         }
-        if (IsftViewConfigSectiongetbool(s, "enable-tap",
-                           &enable_tap, false) == 0) {
+        if (IsftViewConfigSectiongetbool(s, "enable-tap", &enable_tap, false) == 0) {
             has_enable_tap = true;
         }
         if (has_enable_tap) {
             IsftViewlog("          enable-tap=%s.\n",
                         enable_tap ? "true" : "false");
-            libimport_device_config_tap_set_enabled(device,
-                                   enable_tap);
+            libimport_device_config_tap_set_enabled(device, enable_tap);
         }
-        if (IsftViewConfigSectiongetbool(s, "tap-and-drag",
-                           &tap_and_drag, false) == 0) {
+        if (IsftViewConfigSectiongetbool(s, "tap-and-drag", &tap_and_drag, false) == 0) {
             IsftViewlog("          tap-and-drag=%s.\n",
                         tap_and_drag ? "true" : "false");
-            libimport_device_config_tap_set_drag_enabled(device,
-                    tap_and_drag);
+            libimport_device_config_tap_set_drag_enabled(device, tap_and_drag);
         }
-        if (IsftViewConfigSectiongetbool(s, "tap-and-drag-lock",
-                           &tap_and_drag_lock, false) == 0) {
+        if (IsftViewConfigSectiongetbool(s, "tap-and-drag-lock", &tap_and_drag_lock, false) == 0) {
             IsftViewlog("          tap-and-drag-lock=%s.\n",
                         tap_and_drag_lock ? "true" : "false");
-            libimport_device_config_tap_set_drag_lock_enabled(
-                 device, tap_and_drag_lock);
+            libimport_device_config_tap_set_drag_lock_enabled(device, tap_and_drag_lock);
         }
     }
 
     if (libimport_device_config_dwt_is_available(device) &&
         IsftViewConfigSectiongetbool(s, "disable-while-typing",
-                       &disable_while_typing, false) == 0) {
+                                     &disable_while_typing, false) == 0) {
         IsftViewlog("          disable-while-typing=%s.\n",
                     disable_while_typing ? "true" : "false");
-        libimport_device_config_dwt_set_enabled(device,
-                               disable_while_typing);
+        libimport_device_config_dwt_set_enabled(device, disable_while_typing);
     }
 
     if (libimport_device_config_middle_emulation_is_available(device) &&
         IsftViewConfigSectiongetbool(s, "middle-button-emulation",
-                       &middle_emulation, false) == 0) {
+                                     &middle_emulation, false) == 0) {
         IsftViewlog("          middle-button-emulation=%s\n",
                     middle_emulation ? "true" : "false");
-        libimport_device_config_middle_emulation_set_enabled(
-            device, middle_emulation);
+        libimport_device_config_middle_emulation_set_enabled(device, middle_emulation);
     }
 
     if (libimport_device_config_left_handed_is_available(device) &&
         IsftViewConfigSectiongetbool(s, "left-handed",
-                           &left_handed, false) == 0) {
+                                     &left_handed, false) == 0) {
         IsftViewlog("          left-handed=%s\n",
                     left_handed ? "true" : "false");
         libimport_device_config_left_handed_set(device, left_handed);
     }
 
     if (libimport_device_config_rotation_is_available(device) &&
-        IsftViewConfigSection_get_uint(s, "rotation",
-                           &rotation, false) == 0) {
+        IsftViewConfigSection_get_uint(s, "rotation", &rotation, false) == 0) {
         IsftViewlog("          rotation=%u\n", rotation);
         libimport_device_config_rotation_set_angle(device, rotation);
     }
@@ -1628,7 +1602,7 @@ static void Configureimportdevice(struct IsftViewCompositor *compositor,
 }
 
 static int DrmBackendExportconfigure(struct IsftViewExport *export,
-                 struct IsftViewConfigSection *section)
+                                     struct IsftViewConfigSection *section)
 {
     struct IsftCompositor *wet = ToIsftCompositor(export->compositor);
     const struct IsftViewDrm_export_api *api;
@@ -1673,12 +1647,11 @@ static int DrmBackendExportconfigure(struct IsftViewExport *export,
 
     IsftExport_set_scale(export, section, 1, 0);
     if (IsftExportsettransform(export, section, transform,
-                     UINT32_MAX) < 0) {
+                               UINT32_MAX) < 0) {
         return -1;
     }
 
-    IsftViewConfigSection_get_string(section,
-                     "gbm-format", &gbm_format, NULL);
+    IsftViewConfigSection_get_string(section, "gbm-format", &gbm_format, NULL);
 
     api->set_gbm_format(export, gbm_format);
     free(gbm_format);
@@ -1693,9 +1666,8 @@ static int DrmBackendExportconfigure(struct IsftViewExport *export,
     return 0;
 }
 
-static struct IsftViewConfigSection *
-DrmconfigfindControllingexportsection(struct IsftViewConfig *layout,
-                       const char *head_name)
+static struct IsftViewConfigSection *DrmconfigfindControllingexportsection(struct IsftViewConfig *layout,
+                                                                           const char *head_name)
 {
     struct IsftViewConfigSection *section;
     char *same_as;
@@ -1704,7 +1676,7 @@ DrmconfigfindControllingexportsection(struct IsftViewConfig *layout,
     same_as = strdup(head_name);
     do {
         section = IsftViewConfiggetsection(layout, "export",
-                                             "name", same_as);
+                                           "name", same_as);
         if (!section && depth > 0)
             IsftViewlog("Configuration error: "
                         "export section referred to with "
@@ -1724,16 +1696,14 @@ DrmconfigfindControllingexportsection(struct IsftViewConfig *layout,
         }
 
         IsftViewConfigSection_get_string(section, "same-as",
-                         &same_as, NULL);
+                                         &same_as, NULL);
     } while (same_as);
 
     return section;
 }
 
-static struct IsftlayExport *
-IsftCompositorCreatelayExport(struct IsftCompositor *compositor,
-                const char *name,
-                struct IsftViewConfigSection *section)
+static struct IsftlayExport *IsftCompositorCreatelayExport(struct IsftCompositor *compositor,
+                                                           const char *name, struct IsftViewConfigSection *section)
 {
     struct IsftlayExport *lo;
 
@@ -1770,8 +1740,7 @@ static void IsftExportHandledestroy(struct IsftAudience *listener, void *data)
     IsftListremove(&export->exportDestroyListener.link);
 }
 
-static struct IsftExport *
-IsftlayExportCreateexport(struct IsftlayExport *lo, const char *name)
+static struct IsftExport *IsftlayExportCreateexport(struct IsftlayExport *lo, const char *name)
 {
     struct IsftExport *export;
 
@@ -1781,8 +1750,7 @@ IsftlayExportCreateexport(struct IsftlayExport *lo, const char *name)
     }
 
     export->export =
-        IsftViewCompositor_create_export(lo->compositor->compositor,
-                                         name);
+        IsftViewCompositor_create_export(lo->compositor->compositor, name);
     if (!export->export) {
         free(export);
         return NULL;
@@ -1797,8 +1765,7 @@ IsftlayExportCreateexport(struct IsftlayExport *lo, const char *name)
     return export;
 }
 
-static struct IsftExport *
-IsftExportFromIsftViewExport(struct IsftViewExport *base)
+static struct IsftExport *IsftExportFromIsftViewExport(struct IsftViewExport *base)
 {
     struct IsftAudience *lis;
 
@@ -1823,8 +1790,7 @@ static void IsftExportDestroy(struct IsftExport *export)
     free(export);
 }
 
-static struct IsftlayExport *
-IsftCompositorfindlayExport(struct IsftCompositor *wet, const char *name)
+static struct IsftlayExport *IsftCompositorfindlayExport(struct IsftCompositor *wet, const char *name)
 {
     struct IsftlayExport *lo;
 
@@ -1837,9 +1803,9 @@ IsftCompositorfindlayExport(struct IsftCompositor *wet, const char *name)
 }
 
 static void IsftCompositorlayExportaddhead(struct IsftCompositor *wet,
-                  const char *export_name,
-                  struct IsftViewConfigSection *section,
-                  struct IsftViewHead *head)
+                                           const char *export_name,
+                                           struct IsftViewConfigSection *section,
+                                           struct IsftViewHead *head)
 {
     struct IsftlayExport *lo;
 
@@ -1863,9 +1829,9 @@ static void IsftCompositordestroylayout(struct IsftCompositor *wet)
     struct IsftExport *export, *export_tmp;
 
     IsftList_for_each_safe(lo, lo_tmp,
-                  &wet->layexportList, compositorLink) {
+                           &wet->layexportList, compositorLink) {
         IsftList_for_each_safe(export, export_tmp,
-                      &lo->exportList, link) {
+                               &lo->exportList, link) {
             IsftExportDestroy(export);
         }
         IsftlayExportDestroy(lo);
@@ -1873,7 +1839,7 @@ static void IsftCompositordestroylayout(struct IsftCompositor *wet)
 }
 
 static void DrmheadPrepareenable(struct IsftCompositor *wet,
-            struct IsftViewHead *head)
+                                 struct IsftViewHead *head)
 {
     const char *name = IsftViewHeadgetname(head);
     struct IsftViewConfigSection *section;
@@ -1887,12 +1853,13 @@ static void DrmheadPrepareenable(struct IsftCompositor *wet,
             free(mode);
             return;
         }
-        if (!mode && IsftViewHead_is_non_desktop(head))
+        if (!mode && IsftViewHead_is_non_desktop(head)) {
             return;
+        }
         free(mode);
 
         IsftViewConfigSection_get_string(section, "name",
-                         &export_name, NULL);
+                                         &export_name, NULL);
         assert(export_name);
 
         IsftCompositorlayExportaddhead(wet, export_name,
@@ -1904,7 +1871,7 @@ static void DrmheadPrepareenable(struct IsftCompositor *wet,
 }
 
 static bool DrmheadShouldforceenable(struct IsftCompositor *wet,
-                 struct IsftViewHead *head)
+                                     struct IsftViewHead *head)
 {
     const char *name = IsftViewHeadgetname(head);
     struct IsftViewConfigSection *section;
@@ -1920,8 +1887,8 @@ static bool DrmheadShouldforceenable(struct IsftCompositor *wet,
 }
 
 static void DrmTryattach(struct IsftViewExport *export,
-           struct IsftHeadArray *add,
-           struct IsftHeadArray *failed)
+                         struct IsftHeadArray *add,
+                         struct IsftHeadArray *failed)
 {
     unsigned i;
 
@@ -1940,8 +1907,8 @@ static void DrmTryattach(struct IsftViewExport *export,
 }
 
 static int DrmTryenable(struct IsftViewExport *export,
-           struct IsftHeadArray *undo,
-           struct IsftHeadArray *failed)
+                        struct IsftHeadArray *undo,
+                        struct IsftHeadArray *failed)
 {
     while (!export->enabled) {
         if (IsftViewExport_enable(export) == 0) {
@@ -2123,9 +2090,9 @@ static void DrmHeadschanged(struct IsftAudience *listener, void *arg)
 }
 
 static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
-                     struct IsftViewConfigSection *section,
-                     char *modeline,
-                     const struct IsftViewremoting_api *api)
+                                            struct IsftViewConfigSection *section,
+                                            char *modeline,
+                                            const struct IsftViewremoting_api *api)
 {
     char *gbm_format = NULL;
     char *seat = NULL;
@@ -2143,13 +2110,12 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
 
     IsftExport_set_scale(export, section, 1, 0);
     if (IsftExportsettransform(export, section,
-                     IsftTOUTPUT_TRANSFORM_NORMAL,
-                     UINT32_MAX) < 0) {
+                               IsftTOUTPUT_TRANSFORM_NORMAL,
+                               UINT32_MAX) < 0) {
         return -1;
     };
 
-    IsftViewConfigSection_get_string(section, "gbm-format", &gbm_format,
-                     NULL);
+    IsftViewConfigSection_get_string(section, "gbm-format", &gbm_format, NULL);
     api->set_gbm_format(export, gbm_format);
     free(gbm_format);
 
@@ -2158,8 +2124,7 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
     api->set_seat(export, seat);
     free(seat);
 
-    IsftViewConfigSection_get_string(section, "gst-pipeline", &pipeline,
-                     NULL);
+    IsftViewConfigSection_get_string(section, "gst-pipeline", &pipeline, NULL);
     if (pipeline) {
         api->set_gst_pipeline(export, pipeline);
         free(pipeline);
@@ -2181,15 +2146,14 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
 }
 
 static void RemotedExportinit(struct IsftViewCompositor *c,
-            struct IsftViewConfigSection *section,
-            const struct IsftViewremoting_api *api)
+                              struct IsftViewConfigSection *section,
+                              const struct IsftViewremoting_api *api)
 {
     struct IsftViewExport *export = NULL;
     char *export_name, *modeline = NULL;
     int ret;
 
-    IsftViewConfigSection_get_string(section, "name", &export_name,
-                     NULL);
+    IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
     if (!export_name) {
         return;
     }
@@ -2206,8 +2170,7 @@ static void RemotedExportinit(struct IsftViewCompositor *c,
         goto err;
     }
 
-    ret = DrmbackendRemotedExportconfigure(export, section, modeline,
-                           api);
+    ret = DrmbackendRemotedExportconfigure(export, section, modeline, api);
     if (ret < 0) {
         IsftViewlog("Cannot configure remoted export \"%s\".\n",
                     export_name);
@@ -2248,8 +2211,7 @@ static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc
         if (!api) {
             char *module_name;
             struct IsftViewConfigSection *core_section =
-                IsftViewConfiggetsection(wc, "core", NULL,
-                              NULL);
+                IsftViewConfiggetsection(wc, "core", NULL, NULL);
 
             IsftViewConfigSection_get_string(core_section,
                                              "remoting",
@@ -2278,9 +2240,9 @@ static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc
 }
 
 static int DrmbackendPipeWireExportconfigure(struct IsftViewExport *export,
-                     struct IsftViewConfigSection *section,
-                     char *modeline,
-                     const struct IsftViewpipewire_api *api)
+                                             struct IsftViewConfigSection *section,
+                                             char *modeline,
+                                             const struct IsftViewpipewire_api *api)
 {
     char *seat = NULL;
     int ret;
@@ -2294,9 +2256,7 @@ static int DrmbackendPipeWireExportconfigure(struct IsftViewExport *export,
     }
 
     IsftExport_set_scale(export, section, 1, 0);
-    if (IsftExportsettransform(export, section,
-                     IsftTOUTPUT_TRANSFORM_NORMAL,
-                     UINT32_MAX) < 0) {
+    if (IsftExportsettransform(export, section, IsftTOUTPUT_TRANSFORM_NORMAL, UINT32_MAX) < 0) {
         return -1;
     }
 
@@ -2309,15 +2269,14 @@ static int DrmbackendPipeWireExportconfigure(struct IsftViewExport *export,
 }
 
 static void PipeWireExportinit(struct IsftViewCompositor *c,
-            struct IsftViewConfigSection *section,
-            const struct IsftViewpipewire_api *api)
+                               struct IsftViewConfigSection *section,
+                               const struct IsftViewpipewire_api *api)
 {
     struct IsftViewExport *export = NULL;
     char *export_name, *modeline = NULL;
     int ret;
 
-    IsftViewConfigSection_get_string(section, "name", &export_name,
-                     NULL);
+    IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
     if (!export_name) {
         return;
     }
@@ -2334,8 +2293,7 @@ static void PipeWireExportinit(struct IsftViewCompositor *c,
         goto err;
     }
 
-    ret = DrmbackendPipeWireExportconfigure(export, section, modeline,
-                           api);
+    ret = DrmbackendPipeWireExportconfigure(export, section, modeline, api);
     if (ret < 0) {
         IsftViewlog("Cannot configure pipewire export \"%s\".\n",
                     export_name);
@@ -2376,8 +2334,7 @@ static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc
         if (!api) {
             char *module_name;
             struct IsftViewConfigSection *core_section =
-                IsftViewConfiggetsection(wc, "core", NULL,
-                              NULL);
+                IsftViewConfiggetsection(wc, "core", NULL, NULL);
 
             IsftViewConfigSection_get_string(core_section,
                                              "pipewire",
@@ -2406,7 +2363,7 @@ static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc
 }
 
 static int LoadDrmbackend(struct IsftViewCompositor *c,
-         int *argc, char **argv, struct IsftViewConfig *wc)
+                          int *argc, char **argv, struct IsftViewConfig *wc)
 {
     struct IsftViewDrm_backend_config layout = {{ 0, }};
     struct IsftViewConfigSection *section;
@@ -2416,8 +2373,7 @@ static int LoadDrmbackend(struct IsftViewCompositor *c,
     wet->Drmusecurrentmode = false;
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman,
-                       false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
         { WESTON_OPTION_STRING, "seat", 0, &layout.seat_id },
@@ -2431,24 +2387,20 @@ static int LoadDrmbackend(struct IsftViewCompositor *c,
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSection_get_string(section,
-                     "gbm-format", &layout.gbm_format,
-                     NULL);
+    IsftViewConfigSection_get_string(section, "gbm-format", &layout.gbm_format, NULL);
     IsftViewConfigSection_get_uint(section, "pageflip-clockout",
                                    &layout.pageflip_clockout, 0);
     IsftViewConfigSectiongetbool(section, "pixman-shadow",
-                       &layout.use_pixman_shadow, true);
+                                 &layout.use_pixman_shadow, true);
 
     layout.base.struct_version = WESTON_DRM_BACKEND_CONFIG_VERSION;
     layout.base.struct_size = sizeof(struct IsftViewDrm_backend_config);
     layout.configure_device = Configureimportdevice;
 
     wet->headschangedlistener.notify = DrmHeadschanged;
-    IsftViewCompositor_add_headschangedlistener(c,
-                        &wet->headschangedlistener);
+    IsftViewCompositor_add_headschangedlistener(c, &wet->headschangedlistener);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_DRM,
-                         &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_DRM, &layout.base);
 
     /* remoting */
     LoadRemoting(c, wc);
@@ -2475,7 +2427,7 @@ static int HeadlessBackendExportconfigure(struct IsftViewExport *export)
 }
 
 static int LoadHeadlessbackend(struct IsftViewCompositor *c,
-              int *argc, char **argv, struct IsftViewConfig *wc)
+                               int *argc, char **argv, struct IsftViewConfig *wc)
 {
     const struct IsftViewwindowedexportapi *api;
     struct IsftViewHeadless_backend_config layout = {{ 0, }};
@@ -2490,10 +2442,8 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
     }
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman,
-                       false);
-    IsftViewConfigSectiongetbool(section, "use-gl", &layout.use_gl,
-                       false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
+    IsftViewConfigSectiongetbool(section, "use-gl", &layout.use_gl, false);
 
     const struct IsftViewoption options[] = {
         { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
@@ -2520,8 +2470,7 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
 
     IsftsetSimpleheadconfigurator(c, HeadlessBackendExportconfigure);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_HEADLESS,
-                         &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_HEADLESS, &layout.base);
 
     if (ret < 0) {
         return ret;
@@ -2594,7 +2543,7 @@ static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *layout)
 }
 
 static int LoadRdpbackend(struct IsftViewCompositor *c,
-        int *argc, char *argv[], struct IsftViewConfig *wc)
+                          int *argc, char *argv[], struct IsftViewConfig *wc)
 {
     struct IsftViewrdpbackendconfig layout  = {{ 0, }};
     int ret = 0;
@@ -2641,9 +2590,7 @@ static int FbdevBackendExportconfigure(struct IsftViewExport *export)
 
     section = IsftViewConfiggetsection(wc, "export", "name", "fbdev");
 
-    if (IsftExportsettransform(export, section,
-                     IsftTOUTPUT_TRANSFORM_NORMAL,
-                     UINT32_MAX) < 0) {
+    if (IsftExportsettransform(export, section, IsftTOUTPUT_TRANSFORM_NORMAL, UINT32_MAX) < 0) {
         return -1;
     }
 
@@ -2653,7 +2600,7 @@ static int FbdevBackendExportconfigure(struct IsftViewExport *export)
 }
 
 static int LoadFbdevbackend(struct IsftViewCompositor *c,
-              int *argc, char **argv, struct IsftViewConfig *wc)
+                            int *argc, char **argv, struct IsftViewConfig *wc)
 {
     struct IsftViewfbdevbackendconfig layout = {{ 0, }};
     int ret = 0;
@@ -2692,7 +2639,7 @@ static int BackendExportconfigure(struct IsftViewExport *export)
 }
 
 static int Loadbackend(struct IsftViewCompositor *c,
-         int *argc, char **argv, struct IsftViewConfig *wc)
+                       int *argc, char **argv, struct IsftViewConfig *wc)
 {
     char *defaultexport;
     const struct IsftViewwindowedexportapi *api;
@@ -2705,12 +2652,12 @@ static int Loadbackend(struct IsftViewCompositor *c,
     int i;
 
     struct IsftExportConfig *parsedoptions = IsftinitParsedoptions(c);
-    if (!parsedoptions)
+    if (!parsedoptions) {
         return -1;
+    }
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman,
-                       false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
            { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
@@ -2729,8 +2676,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
 
     IsftsetSimpleheadconfigurator(c, BackendExportconfigure);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_X11,
-                         &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_X11, &layout.base);
 
     if (ret < 0) {
         return ret;
@@ -2800,7 +2746,7 @@ static int BackendExportconfigure(struct IsftViewExport *export)
 }
 
 static int Loadbackend(struct IsftViewCompositor *c,
-             int *argc, char **argv, struct IsftViewConfig *wc)
+                       int *argc, char **argv, struct IsftViewConfig *wc)
 {
     struct IsftViewbackend_config layout = {{ 0, }};
     struct IsftViewConfigSection *section;
@@ -2821,8 +2767,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
     layout.show_name = NULL;
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman,
-                       false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
         { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
@@ -2839,15 +2784,14 @@ static int Loadbackend(struct IsftViewCompositor *c,
 
     section = IsftViewConfiggetsection(wc, "shell", NULL, NULL);
     IsftViewConfigSection_get_string(section, "cursor-theme",
-                     &layout.cursor_theme, NULL);
+                                     &layout.cursor_theme, NULL);
     IsftViewConfigSection_get_int(section, "cursor-size",
-                      &layout.cursor_size, 32);
+                                  &layout.cursor_size, 32);
 
     layout.base.struct_size = sizeof(struct IsftViewbackend_config);
     layout.base.struct_version = WESTON_WAYLAND_BACKEND_CONFIG_VERSION;
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_WAYLAND,
-                         &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_WAYLAND, &layout.base);
 
     free(layout.cursor_theme);
     free(layout.show_name);
@@ -2913,7 +2857,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
 
 
 static int LoadBackend(struct IsftViewCompositor *compositor, const char *backend,
-         int *argc, char **argv, struct IsftViewConfig *layout)
+                       int *argc, char **argv, struct IsftViewConfig *layout)
 {
     if (strstr(backend, "headless-backend.so")) {
         return LoadHeadlessbackend(compositor, argc, argv, layout);
@@ -2933,8 +2877,7 @@ static int LoadBackend(struct IsftViewCompositor *compositor, const char *backen
     return -1;
 }
 
-static char *
-copyCommandline(int argc, char * const argv[])
+static char *copyCommandline(int argc, char * const argv[])
 {
     FILE *fp;
     char *str = NULL;
@@ -2963,8 +2906,8 @@ int IsftLoadx(struct IsftViewCompositor *comp)
 #endif
 
 static void IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
-            struct IsftViewlog_subscriber *subscriber,
-            const char *names)
+                                   struct IsftViewlog_subscriber *subscriber,
+                                   const char *names)
 {
     assert(log_ctx);
     assert(subscriber);
@@ -2979,18 +2922,18 @@ static void IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
 }
 
 static void flightreckeybindinghandler(struct IsftViewkeyboard *keyboard,
-                   const struct clockspec *clock, unsigned int key,
-                   void *data)
+                                       const struct clockspec *clock, unsigned int key,
+                                       void *data)
 {
     struct IsftViewlog_subscriber *flight_rec = data;
     IsftViewlog_subscriber_show_flight_rec(flight_rec);
 }
 
 static void IsftViewlogsubscribetoscopes(struct IsftViewlog_context *log_ctx,
-                   struct IsftViewlog_subscriber *logger,
-                   struct IsftViewlog_subscriber *flight_rec,
-                   const char *logScopes,
-                   const char *flight_rec_scopes)
+                                         struct IsftViewlog_subscriber *logger,
+                                         struct IsftViewlog_subscriber *flight_rec,
+                                         const char *logScopes,
+                                         const char *flight_rec_scopes)
 {
     if (logScopes) {
         IsftViewlogsetupscopes(log_ctx, logger, logScopes);
@@ -3091,10 +3034,11 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     }
 
     logScope = IsftViewlog_ctx_add_logScope(log_ctx, "log",
-            "Weston and Wayland log\n", NULL, NULL, NULL);
+                                            "Weston and Wayland log\n", NULL, NULL, NULL);
 
-    if (!IsftViewLogfileopen(log))
+    if (!IsftViewLogfileopen(log)) {
         return EXIT_FAILURE;
+    }
 
     IsftViewlog_set_handler(vlog, VlogContinue);
 
@@ -3105,11 +3049,11 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
                                  logScopes, flight_rec_scopes);
 
     IsftViewlog("%s\n"
-           STAMP_SPACE "%s\n"
-           STAMP_SPACE "Bug reports to: %s\n"
-           STAMP_SPACE "Build: %s\n",
-           PACKAGE_STRING, PACKAGE_URL, PACKAGE_BUGREPORT,
-           BUILD_ID);
+                STAMP_SPACE "%s\n"
+                STAMP_SPACE "Bug reports to: %s\n"
+                STAMP_SPACE "Build: %s\n",
+                PACKAGE_STRING, PACKAGE_URL, PACKAGE_BUGREPORT,
+                BUILD_ID);
     IsftViewlog("Command line: %s\n", cmdline);
     free(cmdline);
     LogUname();
@@ -3123,25 +3067,23 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     }
 
     loop = Isfttshow_get_event_loop(show);
-    signals[0] = Isfttevent_loop_add_signal(loop, SIGTERM, OntermSignal,
-                          show);
-    signals[1] = Isfttevent_loop_add_signal(loop, SIGINT, OntermSignal,
-                          show);
-    signals[2] = Isfttevent_loop_add_signal(loop, SIGQUIT, OntermSignal,
-                          show);
+    signals[0] = Isfttevent_loop_add_signal(loop, SIGTERM, OntermSignal, show);
+    signals[1] = Isfttevent_loop_add_signal(loop, SIGINT, OntermSignal, show);
+    signals[2] = Isfttevent_loop_add_signal(loop, SIGQUIT, OntermSignal, show);
 
     IsftList_init(&chilDprocesslist);
-    signals[3] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler,
-                          NULL);
+    signals[3] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler, NULL);
 
-    if (!signals[0] || !signals[1] || !signals[2] || !signals[3])
+    if (!signals[0] || !signals[1] || !signals[2] || !signals[3]) {
         goto out_signals;
+    }
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
-    if (LoadConfiguration(&layout, noconfig, config_file) < 0)
+    if (LoadConfiguration(&layout, noconfig, config_file) < 0) {
         goto out_signals;
+    }
     wet.layout = layout;
     wet.parsedoptions = NULL;
 
@@ -3149,7 +3091,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
 
     if (!wait_for_debugger) {
         IsftViewConfigSectiongetbool(section, "wait-for-debugger",
-                           &wait_for_debugger, false);
+                                     &wait_for_debugger, false);
     }
     if (wait_for_debugger) {
         IsftViewlog("Weston PID is %ld - "
@@ -3159,10 +3101,10 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     }
 
     if (!backend) {
-        IsftViewConfigSection_get_string(section, "backend", &backend,
-                         NULL);
-        if (!backend)
+        IsftViewConfigSection_get_string(section, "backend", &backend, NULL);
+        if (!backend) {
             backend = IsftViewchoosedefaultbackend();
+        }
     }
 
     wet.compositor = IsftViewCompositor_create(show, log_ctx, &wet);
@@ -3174,24 +3116,24 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
 
     protocolscope =
         IsftViewlog_ctx_add_logScope(log_ctx, "proto",
-                         "Wayland protocol dump for all clients.\n",
-                         NULL, NULL, NULL);
+                                     "Wayland protocol dump for all clients.\n",
+                                     NULL, NULL, NULL);
 
-    protologger = Isfttshow_add_protocol_logger(show,
-                             ProtoCollogfn,
-                             NULL);
-    if (debug_protocol)
+    protologger = Isfttshow_add_protocol_logger(show, ProtoCollogfn, NULL);
+    if (debug_protocol) {
         IsftViewCompositor_enable_debug_protocol(wet.compositor);
+    }
 
     IsftViewCompositor_add_debug_binding(wet.compositor, KEY_D,
                                          flightreckeybindinghandler,
                                          flight_rec);
 
-    if (IsftViewCompositorinitconfig(wet.compositor, layout) < 0)
+    if (IsftViewCompositorinitconfig(wet.compositor, layout) < 0) {
         goto out;
+    }
 
     IsftViewConfigSectiongetbool(section, "require-import",
-                       &wet.compositor->require_import, true);
+                                 &wet.compositor->require_import, true);
 
     if (LoadBackend(wet.compositor, backend, &argc, argv, layout) < 0) {
         IsftViewlog("fatal: failed to create compositor backend\n");
@@ -3199,13 +3141,16 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     }
 
     IsftViewCompositor_flush_heads_changed(wet.compositor);
-    if (wet.initFailed)
+    if (wet.initFailed) {
         goto out;
+    }
 
-    if (idle_clock < 0)
+    if (idle_clock < 0) {
         IsftViewConfigSection_get_int(section, "idle-clock", &idle_clock, -1);
-    if (idle_clock < 0)
+    }
+    if (idle_clock < 0) {
         idle_clock = 300;
+    }
 
     wet.compositor->idle_clock = idle_clock;
     wet.compositor->default_pointer_fetch = NULL;
@@ -3216,7 +3161,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     server_socket = getenv("WAYLAND_SERVER_SOCKET");
     if (server_socket) {
         IsftViewlog("Running with single client\n");
-        if (!safe_strtoint(server_socket, &fd))
+        if (!safe_strtoint(server_socket, &fd)) {
             fd = -1;
     } else {
         fd = -1;
@@ -3232,32 +3177,36 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
         primary_client_destroyed.notify =
             HandleprimaryClientdestroyed;
         IsfttcClient_add_destroy_listener(primary_client,
-                                         &primary_client_destroyed);
+                                          &primary_client_destroyed);
     } else if (IsftViewcreatelisteningsocket(show, socketname)) {
         goto out;
     }
 
-    if (!shell)
+    if (!shell) {
         IsftViewConfigSection_get_string(section, "shell", &shell,
-                         "desktop-shell.so");
+                                         "desktop-shell.so");
+    }
 
-    if (IsftLoadshell(wet.compositor, shell, &argc, argv) < 0)
+    if (IsftLoadshell(wet.compositor, shell, &argc, argv) < 0) {
         goto out;
+    }
 
     IsftViewConfigSection_get_string(section, "modules", &modules, "");
-    if (LoadModules(wet.compositor, modules, &argc, argv, &x) < 0)
+    if (LoadModules(wet.compositor, modules, &argc, argv, &x) < 0) {
         goto out;
+    }
 
-    if (LoadModules(wet.compositor, optionmodules, &argc, argv, &x) < 0)
+    if (LoadModules(wet.compositor, optionmodules, &argc, argv, &x) < 0) {
         goto out;
+    }
 
     if (!x) {
-        IsftViewConfigSectiongetbool(section, "x", &x,
-                           false);
+        IsftViewConfigSectiongetbool(section, "x", &x, false);
     }
     if (x) {
-        if (IsftLoadx(wet.compositor) < 0)
+        if (IsftLoadx(wet.compositor) < 0) {
             goto out;
+        }
     }
 
     section = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
@@ -3268,17 +3217,16 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
                 IsftViewseat_get_keyboard(seat);
 
             if (keyboard) {
-                IsftViewkeyboard_set_locks(keyboard,
-                              WESTON_NUM_LOCK,
-                              WESTON_NUM_LOCK);
+                IsftViewkeyboard_set_locks(keyboard, WESTON_NUM_LOCK, WESTON_NUM_LOCK);
             }
         }
     }
 
     for (i = 1; i < argc; i++)
         IsftViewlog("fatal: unhandled option: %s\n", argv[i]);
-    if (argc > 1)
+    if (argc > 1) {
         goto out;
+    }
 
     IsftViewCompositorwake(wet.compositor);
 
@@ -3290,8 +3238,9 @@ out:
 
     free(wet.parsedoptions);
 
-    if (protologger)
+    if (protologger) {
         Isfttprotocol_logger_destroy(protologger);
+    }
 
     IsftViewCompositor_destroy(wet.compositor);
     IsftViewlogScope_destroy(protocolscope);
@@ -3304,16 +3253,18 @@ out:
 
 out_signals:
     for (i = ARRAY_LENGTH(signals) - 1; i >= 0; i--)
-        if (signals[i])
+        if (signals[i]) {
             Isftteventsourceremove(signals[i]);
+        }
 
     Isfttshow_destroy(show);
 
 out_show:
     IsftViewLogfileclose();
 
-    if (layout)
+    if (layout) {
         IsftViewConfig_destroy(layout);
+    }
     free(config_file);
     free(backend);
     free(shell);
