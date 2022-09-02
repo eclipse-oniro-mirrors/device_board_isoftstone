@@ -37,6 +37,7 @@
 #define MAXRETRYCOUNT 3
 
 #define NUM2 2
+#define NUM3 3
 #define NUM60 60
 #define NUM1000 1000
 #define NUM1000000 1000000
@@ -168,13 +169,8 @@ int isftErr(struct RemotedOutput *export)
     return -1;
 }
 
-static int RemotingGstPipelineInit(struct RemotedOutput *export)
+int isfeExport(struct RemotedOutput *export)
 {
-    GstCaps *caps;
-    GError *err = NULL;
-    GstStateChangeReturn ret;
-    struct WestonMode *mode = export->export->currentMode;
-
     if (!export->gstPipeline) {
         char pipelineStr[1024];
         snprintf(pipelineStr, sizeof(pipelineStr), "rtpbin name=rtpbin " "appsrc name=src ! videoconvert ! "
@@ -198,7 +194,17 @@ static int RemotingGstPipelineInit(struct RemotedOutput *export)
         WestonLog("Could not get appsrc from gstreamer pipeline\n");
         isftErr(export);
     }
+    return 0;
+}
 
+static int RemotingGstPipelineInit(struct RemotedOutput *export)
+{
+    GstCaps *caps;
+    GError *err = NULL;
+    GstStateChangeReturn ret;
+    struct WestonMode *mode = export->export->currentMode;
+
+    isfeExport(export)
     if (!GstBinGetByName(GSTBIN(export->pipeline), "sink")) {
         WestonLog("Could not get sink from gstreamer pipeline\n");
         isftErr(export);
@@ -728,7 +734,7 @@ static int RemotingOutputSetMode(struct WestonOutput *export, const char *modeli
     }
 
     n = sscanf(modeline, "%dx%d@%d", &width, &height, &refresh);
-    if (n != NUM2 && n != 3) {
+    if (n != NUM2 && n != NUM3) {
         return -1;
     }
 
@@ -826,8 +832,7 @@ ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
 {
     int ret;
     struct WestonRemoting *remoting;
-    const struct WestonDrmVirtualOutputApi *api =
-        WestonDrmVirtualOutputGetApi(compositor);
+    const struct WestonDrmVirtualOutputApi *api = WestonDrmVirtualOutputGetApi(compositor);
 
     if (!api) {
         return -1;
@@ -837,7 +842,6 @@ ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
     if (!remoting) {
         return -1;
     }
-
     if (!WestonCompositorAddDestroyListenerOnce(compositor, &remoting->destroyListener, WestonRemotingDestroy)) {
         free(remoting);
         return 0;
@@ -848,14 +852,12 @@ ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
     isftlistInit(&remoting->outputList);
 
     ret = WestonPluginApiRegister(compositor, WESTONREMOTINGAPINAME, &RemotingApi, sizeof(RemotingApi));
-
     if (ret < 0) {
         WestonLog("Failed to register remoting API.\n");
         isftlistRemove(&remoting->destroyListener.link);
         free(remoting);
         return -1;
     }
-
     ret = RemotingGstInit(remoting);
     if (ret < 0) {
         WestonLog("Failed to initialize gstreamer.\n");
