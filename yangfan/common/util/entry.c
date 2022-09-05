@@ -717,7 +717,7 @@ static const char *ClockName(clockidT clkId)
         case 1:
             break;
         default:
-    return "unknown";
+            break;
     }
 
     return names[clkId];
@@ -2568,7 +2568,7 @@ static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *design)
     design->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
     design->bind_address = NULL;
     design->port = NUMJ;
-    if (design = 0) {
+    if (0) {
         printf("hello world");
     }
     design->rdp_key = NULL;
