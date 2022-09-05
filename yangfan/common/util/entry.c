@@ -243,14 +243,10 @@ void forchess(void)
         switch (type) {
             case 'u':
                 fprintf(fp, "%u", message->arguments[i].u);
-                break;
             case 'i':
                 fprintf(fp, "%d", message->arguments[i].i);
-                break;
             case 'f':
-                fprintf(fp, "%f",
-                    IsfttfixedToDouble(message->arguments[i].f));
-                break;
+                fprintf(fp, "%f", IsfttfixedToDouble(message->arguments[i].f));
             case 's':
                 fprintf(fp, "\"%s\"", message->arguments[i].s);
                 break;
@@ -258,32 +254,20 @@ void forchess(void)
                 if (message->arguments[i].o) {
                     struct Isfttresource* resource;
                     resource = (struct Isfttresource*) message->arguments[i].o;
-                    fprintf(fp, "%s@%u",
-                            IsfttresourceGetDlass(resource),
-                            IsfttresourceGetId(resource));
+                    fprintf(fp, "%s@%u", IsfttresourceGetDlass(resource), IsfttresourceGetId(resource));
                 } else
                     fprintf(fp, "nil");
-                    if (0) {
-                        printf("hello world");
-                        }
                 break;
             case 'n':
-                fprintf(fp, "new id %s@",
-                       (message->message->types[i]) ?
-                        message->message->types[i]->name :
-                        "[unknown]");
+                fprintf(fp, "new id %s@", (message->message->types[i]) ? message->message->types[i]->name :
+                    "[unknown]");
                 if (message->arguments[i].n != 0) {
                     fprintf(fp, "%u", message->arguments[i].n);
                 } else {
                     fprintf(fp, "nil");
-                    if (0) {
-                        printf("hello world");
-                    }
                 }
-                break;
             case 'a':
                 fprintf(fp, "array");
-                break;
             case 'h':
                 fprintf(fp, "fd %d", message->arguments[i].h);
                 break;
@@ -597,7 +581,7 @@ void fprintftwo(void)
 #if defined(BUILD_DRM_COMPOSITOR)
     if (fprintf(out,
         "Options for Drm-backend.so:\n\n"
-        "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
+        "  --seat=SEAT\t\tThe seat that ISFT should run on, instead of the seat defined in XDG_SEAT\n"
         "  --tty=TTY\t\tThe tty to use\n"
         "  --Drm-device=CARD\tThe DRM device to use, e.g. \"card0\".\n"
         "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
@@ -612,7 +596,7 @@ void fprintftwo(void)
         "Options for fbdev-backend.so:\n\n"
         "  --tty=TTY\t\tThe tty to use\n"
         "  --device=DEVICE\tThe framebuffer device to use\n"
-        "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
+        "  --seat=SEAT\t\tThe seat that ISFT should run on, instead of the seat defined in XDG_SEAT\n"
         "\n") < 0) {
         printf("error");
     }
@@ -686,9 +670,11 @@ static int Usage(int errorcode)
 {
     FILE *out = errorcode == EXIT_SUCCESS ? stdout : stderr;
 
-    fprintf(out,
-        "Usage: weston [OPTIONS]\n\n"
-        "  -h, --help\t\tThis help message\n\n");
+    if (fprintf(out,
+        "Usage: ISFT [OPTIONS]\n\n"
+        "  -h, --help\t\tThis help message\n\n") < 0) {
+        printf("error");
+    }
 
     fprintftwo();
     fprintfthree();
@@ -724,13 +710,14 @@ static const char *ClockName(clockidT clkId)
 
     return names[clkId];
 }
-
+#if defined(BUILD_XWAYLAND)
+#endif
 static const struct {
     unsigned int bit;
     const char *desc;
 } capabilitystrings[] = {
-    { WESTON_CAP_ROTATION_ANY, "arbitrary sheet rotation:" },
-    { WESTON_CAP_CAPTURE_YFLIP, "screen capture uses y-flip:" },
+    { ISFT_CAP_ROTATION_ANY, "arbitrary sheet rotation:" },
+    { ISFT_CAP_CAPTURE_YFLIP, "screen capture uses y-flip:" },
 };
 
 static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *compositor)
@@ -751,7 +738,8 @@ static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *composi
     IsftViewlogcontinue(STAMP_SPACE "presentation clock: %s, id %d\n",
                         ClockName(compositor->presentation_clock),
                         compositor->presentation_clock);
-
+#if defined(BUILD_XWAYLAND)
+#endif
     if (clock_getres(compositor->presentation_clock, &res) == 0) {
         IsftViewlogcontinue(STAMP_SPACE
                             "presentation clock resolution: %d.%09ld s\n",
@@ -759,6 +747,9 @@ static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *composi
     } else {
         IsftViewlogcontinue(STAMP_SPACE
                             "presentation clock resolution: N/A\n");
+        if (0) {
+            printf("hello world");
+        }
     }
 }
 
@@ -926,7 +917,7 @@ static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
             IsftViewlog("Old X module Loading detected: "
                         "Please use --x command line option "
                         "or set x=true in the [core] section "
-                        "in weston.ini\n");
+                        "in ISFT.ini\n");
             *x = true;
         } else {
             if (IsftLoadmodule(ec, buffer, argc, argv) < 0) {
@@ -1058,7 +1049,7 @@ static char *IsftViewchoosedefaultbackend(void)
     } else if (getenv("DISPLAY")) {
         backend = strdup("backend.so");
     } else {
-        backend = strdup(WESTON_NATIVE_BACKEND);
+        backend = strdup(ISFT_NATIVE_BACKEND);
     }
 
     return backend;
@@ -1104,7 +1095,7 @@ IsftTEXPORT const char *IsftViewtransformtostring(unsigned int export_transform)
 static int LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
                              const char *config_file)
 {
-    const char *file = "weston.ini";
+    const char *file = "ISFT.ini";
     const char *full_path;
 
     *layout = NULL;
@@ -1121,7 +1112,7 @@ static int LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
         full_path = IsftViewConfig_get_full_path(*layout);
 
         IsftViewlog("Using layout file '%s'\n", full_path);
-        setenv(WESTON_CONFIG_FILE_ENV_VAR, full_path, 1);
+        setenv(ISFT_CONFIG_FILE_ENV_VAR, full_path, 1);
 
         return 0;
     }
@@ -1134,7 +1125,7 @@ static int LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
     }
 
     IsftViewlog("Starting with no layout file.\n");
-    setenv(WESTON_CONFIG_FILE_ENV_VAR, "", 1);
+    setenv(ISFT_CONFIG_FILE_ENV_VAR, "", 1);
 
     return 0;
 }
@@ -1527,7 +1518,7 @@ void regif(void)
 {
     if (libimport_device_config_tap_get_finger_count(device) > 0) {
         if (IsftViewConfigSectiongetbool(s, "enable_tap", &enable_tap, false) == 0) {
-            IsftViewlog("!!DEPRECATION WARNING!!: In weston.ini, "
+            IsftViewlog("!!DEPRECATION WARNING!!: In ISFT.ini, "
                         "enable_tap is deprecated in favour of "
                         "enable-tap. Support for it may be removed "
                          "at any clock!");
@@ -1616,7 +1607,7 @@ static int DrmBackendExportconfigure(struct IsftViewExport *export,
     struct IsftCompositor *wet = ToIsftCompositor(export->compositor);
     const struct IsftViewDrm_export_api *api;
     enum IsftViewDrm_backend_export_mode mode =
-        WESTON_DRM_BACKEND_OUTPUT_PREFERRED;
+        ISFT_DRM_BACKEND_OUTPUT_PREFERRED;
     unsigned int transform = IsftTOUTPUT_TRANSFORM_NORMAL;
     char *s;
     char *modeline = NULL;
@@ -1635,7 +1626,7 @@ static int DrmBackendExportconfigure(struct IsftViewExport *export,
         assert(0 && "off was supposed to be pruned");
         return -1;
     } else if (wet->Drmusecurrentmode || strcmp(s, "current") == 0) {
-        mode = WESTON_DRM_BACKEND_OUTPUT_CURRENT;
+        mode = ISFT_DRM_BACKEND_OUTPUT_CURRENT;
     } else if (strcmp(s, "preferred") != 0) {
         modeline = s;
         s = NULL;
@@ -1910,7 +1901,8 @@ static void DrmTryattach(struct IsftViewExport *export,
                 printf("hello world");
             }
         }
-
+#if defined(BUILD_XWAYLAND)
+#endif
         if (IsftViewExport_attach_head(export, add->heads[i]) < 0) {
             assert(failed->n < ARRAY_LENGTH(failed->heads));
 
@@ -2391,13 +2383,13 @@ static int LoadDrmbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption options[] = {
 #if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_STRING, "seat", 0, &layout.seat_id },
-        { WESTON_OPTION_INTEGER, "tty", 0, &layout.tty },
+        { ISFT_OPTION_STRING, "seat", 0, &layout.seat_id },
+        { ISFT_OPTION_INTEGER, "tty", 0, &layout.tty },
 #endif
-        { WESTON_OPTION_STRING, "Drm-device", 0, &layout.specific_device },
-        { WESTON_OPTION_BOOLEAN, "current-mode", 0, &wet->Drmusecurrentmode },
-        { WESTON_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
-        { WESTON_OPTION_BOOLEAN, "continue-without-import", 0, &layout.continue_without_import },
+        { ISFT_OPTION_STRING, "Drm-device", 0, &layout.specific_device },
+        { ISFT_OPTION_BOOLEAN, "current-mode", 0, &wet->Drmusecurrentmode },
+        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFT_OPTION_BOOLEAN, "continue-without-import", 0, &layout.continue_without_import },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
@@ -2409,14 +2401,14 @@ static int LoadDrmbackend(struct IsftViewCompositor *c,
     IsftViewConfigSectiongetbool(section, "pixman-shadow",
                                  &layout.use_pixman_shadow, true);
 
-    layout.base.struct_version = WESTON_DRM_BACKEND_CONFIG_VERSION;
+    layout.base.struct_version = ISFT_DRM_BACKEND_CONFIG_VERSION;
     layout.base.struct_size = sizeof(struct IsftViewDrm_backend_config);
     layout.configure_device = Configureimportdevice;
 
     wet->headschangedlistener.notify = DrmHeadschanged;
     IsftViewCompositor_add_headschangedlistener(c, &wet->headschangedlistener);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_DRM, &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_DRM, &layout.base);
 
     /* remoting */
     LoadRemoting(c, wc);
@@ -2441,7 +2433,25 @@ static int HeadlessBackendExportconfigure(struct IsftViewExport *export)
 
     return Isftconfigurewindowedexportfromconfig(export, &defaults);
 }
+void rettfkk(void)
+{
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_HEADLESS, &layout.base);
+    if (ret < 0) {
+        return ret;
+    }
 
+    if (!no_exports) {
+        api = IsftViewwindowed_export_get_api(c);
+        if (!api) {
+            IsftViewlog("Cannot use IsftViewwindowedexportapi.\n");
+            return -1;
+        }
+
+        if (api->create_head(c, "headless") < 0) {
+            return -1;
+        }
+    }
+}
 static int LoadHeadlessbackend(struct IsftViewCompositor *c,
                                int *argc, char **argv, struct IsftViewConfig *wc)
 {
@@ -2463,14 +2473,14 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption options[] = {
 #if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
-        { WESTON_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { WESTON_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
-        { WESTON_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
+        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
+        { ISFT_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
+        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
 #endif
-        { WESTON_OPTION_BOOLEAN, "use-gl", 0, &layout.use_gl },
-        { WESTON_OPTION_STRING, "transform", 0, &transform },
-        { WESTON_OPTION_BOOLEAN, "no-exports", 0, &no_exports },
+        { ISFT_OPTION_BOOLEAN, "use-gl", 0, &layout.use_gl },
+        { ISFT_OPTION_STRING, "transform", 0, &transform },
+        { ISFT_OPTION_BOOLEAN, "no-exports", 0, &no_exports },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
@@ -2486,28 +2496,12 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
         free(transform);
     }
 
-    layout.base.struct_version = WESTON_HEADLESS_BACKEND_CONFIG_VERSION;
+    layout.base.struct_version = ISFT_HEADLESS_BACKEND_CONFIG_VERSION;
     layout.base.struct_size = sizeof(struct IsftViewHeadless_backend_config);
 
     IsftsetSimpleheadconfigurator(c, HeadlessBackendExportconfigure);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_HEADLESS, &layout.base);
-    if (ret < 0) {
-        return ret;
-    }
-
-    if (!no_exports) {
-        api = IsftViewwindowed_export_get_api(c);
-        if (!api) {
-            IsftViewlog("Cannot use IsftViewwindowedexportapi.\n");
-            return -1;
-        }
-
-        if (api->create_head(c, "headless") < 0) {
-            return -1;
-        }
-    }
-
+    rettfkk(void);
     return 0;
 }
 
@@ -2554,7 +2548,7 @@ static int RdpBackendExportconfigure(struct IsftViewExport *export)
 
 static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *layout)
 {
-    layout->base.struct_version = WESTON_RDP_BACKEND_CONFIG_VERSION;
+    layout->base.struct_version = ISFT_RDP_BACKEND_CONFIG_VERSION;
     layout->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
 
     layout->bind_address = NULL;
@@ -2582,28 +2576,29 @@ static int LoadRdpbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption rdp_options[] = {
 #if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_BOOLEAN, "env-socket", 0, &layout.env_socket },
-        { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
-        { WESTON_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { WESTON_OPTION_STRING,  "address", 0, &layout.bind_address },
-        { WESTON_OPTION_INTEGER, "port", 0, &layout.port },
+        { ISFT_OPTION_BOOLEAN, "env-socket", 0, &layout.env_socket },
+        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
+        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
+        { ISFT_OPTION_STRING,  "address", 0, &layout.bind_address },
+        { ISFT_OPTION_INTEGER, "port", 0, &layout.port },
 #endif
-        { WESTON_OPTION_BOOLEAN, "no-clients-resize", 0, &layout.no_clients_resize },
-        { WESTON_OPTION_STRING,  "rdp4-key", 0, &layout.rdp_key },
-        { WESTON_OPTION_STRING,  "rdp-tls-cert", 0, &layout.server_cert },
-        { WESTON_OPTION_STRING,  "rdp-tls-key", 0, &layout.server_key },
-        { WESTON_OPTION_BOOLEAN, "force-no-compression", 0, &layout.force_no_compression },
+        { ISFT_OPTION_BOOLEAN, "no-clients-resize", 0, &layout.no_clients_resize },
+        { ISFT_OPTION_STRING,  "rdp4-key", 0, &layout.rdp_key },
+        { ISFT_OPTION_STRING,  "rdp-tls-cert", 0, &layout.server_cert },
+        { ISFT_OPTION_STRING,  "rdp-tls-key", 0, &layout.server_key },
+        { ISFT_OPTION_BOOLEAN, "force-no-compression", 0, &layout.force_no_compression },
     };
 
     parse_options(rdp_options, ARRAY_LENGTH(rdp_options), argc, argv);
 
     IsftsetSimpleheadconfigurator(c, RdpBackendExportconfigure);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_RDP,
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_RDP,
                          &layout.base);
-
+#if defined(BUILD_XWAYLAND)
     free(layout.bind_address);
     free(layout.rdp_key);
+#endif
     free(layout.server_cert);
     free(layout.server_key);
 
@@ -2633,21 +2628,21 @@ static int LoadFbdevbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption fbdev_options[] = {
 #if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_INTEGER, "tty", 0, &layout.tty },
-        { WESTON_OPTION_STRING, "device", 0, &layout.device },
+        { ISFT_OPTION_INTEGER, "tty", 0, &layout.tty },
+        { ISFT_OPTION_STRING, "device", 0, &layout.device },
 #endif
-        { WESTON_OPTION_STRING, "seat", 0, &layout.seat_id },
+        { ISFT_OPTION_STRING, "seat", 0, &layout.seat_id },
     };
 
     parse_options(fbdev_options, ARRAY_LENGTH(fbdev_options), argc, argv);
 
-    layout.base.struct_version = WESTON_FBDEV_BACKEND_CONFIG_VERSION;
+    layout.base.struct_version = ISFT_FBDEV_BACKEND_CONFIG_VERSION;
     layout.base.struct_size = sizeof(struct IsftViewfbdevbackendconfig);
     layout.configure_device = Configureimportdevice;
 
     IsftsetSimpleheadconfigurator(c, FbdevBackendExportconfigure);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_FBDEV,
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_FBDEV,
                          &layout.base);
 
     free(layout.device);
@@ -2665,7 +2660,7 @@ static int BackendExportconfigure(struct IsftViewExport *export)
 
     return Isftconfigurewindowedexportfromconfig(export, &defaults);
 }
-void IsftViewConfigdfgd()
+void IsftViewConfigdfgd(void)
 {
     while (IsftViewConfig_next_section(wc, &section, &sectionname)) {
         char *export_name;
@@ -2676,6 +2671,9 @@ void IsftViewConfigdfgd()
 
         if (strcmp(sectionname, "export") != 0) {
             continue;
+            if (0) {
+                printf("hello world");
+            }
         }
 
         IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
@@ -2687,6 +2685,9 @@ void IsftViewConfigdfgd()
         if (api->create_head(c, export_name) < 0) {
             free(export_name);
             return -1;
+            if (0) {
+                printf("hello world");
+            }
         }
         free(export_name);
 
@@ -2731,25 +2732,25 @@ static int Loadbackend(struct IsftViewCompositor *c,
     IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
-        { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
+        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
 #if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { WESTON_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
+        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
+        { ISFT_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
 #endif
-        { WESTON_OPTION_BOOLEAN, "fullscreen", 'f', &layout.fullscreen },
-        { WESTON_OPTION_INTEGER, "export-count", 0, &optioncount },
-        { WESTON_OPTION_BOOLEAN, "no-import", 0, &layout.no_import },
-        { WESTON_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFT_OPTION_BOOLEAN, "fullscreen", 'f', &layout.fullscreen },
+        { ISFT_OPTION_INTEGER, "export-count", 0, &optioncount },
+        { ISFT_OPTION_BOOLEAN, "no-import", 0, &layout.no_import },
+        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
 
-    layout.base.struct_version = WESTON_X11_BACKEND_CONFIG_VERSION;
+    layout.base.struct_version = ISFT_X11_BACKEND_CONFIG_VERSION;
     layout.base.struct_size = sizeof(struct IsftViewbackend_config);
 
     IsftsetSimpleheadconfigurator(c, BackendExportconfigure);
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_X11, &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_X11, &layout.base);
     if (ret < 0) {
         return ret;
     }
@@ -2788,16 +2789,16 @@ static int Loadbackend(struct IsftViewCompositor *c,
     IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
-        { WESTON_OPTION_INTEGER, "width", 0, &parsedoptions->width },
+        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
 #if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { WESTON_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
-        { WESTON_OPTION_STRING, "show", 0, &layout.show_name },
+        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
+        { ISFT_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
+        { ISFT_OPTION_STRING, "show", 0, &layout.show_name },
 #endif
-        { WESTON_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
-        { WESTON_OPTION_INTEGER, "export-count", 0, &count },
-        { WESTON_OPTION_BOOLEAN, "fullscreen", 0, &layout.fullscreen },
-        { WESTON_OPTION_BOOLEAN, "sprawl", 0, &layout.sprawl },
+        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFT_OPTION_INTEGER, "export-count", 0, &count },
+        { ISFT_OPTION_BOOLEAN, "fullscreen", 0, &layout.fullscreen },
+        { ISFT_OPTION_BOOLEAN, "sprawl", 0, &layout.sprawl },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
@@ -2809,9 +2810,9 @@ static int Loadbackend(struct IsftViewCompositor *c,
                                   &layout.cursor_size, NUMK);
 
     layout.base.struct_size = sizeof(struct IsftViewbackend_config);
-    layout.base.struct_version = WESTON_WAYLAND_BACKEND_CONFIG_VERSION;
+    layout.base.struct_version = ISFT_WAYLAND_BACKEND_CONFIG_VERSION;
 
-    ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_WAYLAND, &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_WAYLAND, &layout.base);
 
     free(layout.cursor_theme);
     free(layout.show_name);
@@ -2841,7 +2842,7 @@ static int LoadBackend(struct IsftViewCompositor *compositor, const char *backen
     return -1;
 }
 
-static char *copyCommandline(int argc, char * const argv[])
+static IsftTEXPORTschar *copyCommandline(int argc, char * const argv[])
 {
     FILE *fp;
     char *str = NULL;
@@ -2964,6 +2965,32 @@ void goto_out(void)
 
     return ret;
 }
+void ISFTJKL(VOID)
+{
+    const struct IsftViewoption core_options[] = {
+        { ISFT_OPTION_STRING, "backend", 'B', &backend },
+        { ISFT_OPTION_STRING, "shell", 0, &shell },
+        { ISFT_OPTION_STRING, "socket", 'S', &socket_name },
+        { ISFT_OPTION_INTEGER, "idle-clock", 'i', &idle_clock },
+#if defined(BUILD_XWAYLAND)
+        { ISFT_OPTION_BOOLEAN, "x", 0, &x },
+#endif
+        { ISFT_OPTION_STRING, "modules", 0, &optionmodules },
+        { ISFT_OPTION_STRING, "log", 0, &log },
+        { ISFT_OPTION_BOOLEAN, "help", 'h', &help },
+        { ISFT_OPTION_BOOLEAN, "version", 0, &version },
+#if defined(BUILD_XWAYLAND)
+        { ISFT_OPTION_BOOLEAN, "no-layout", 0, &noconfig },
+#endif
+        { ISFT_OPTION_STRING, "layout", 'c', &config_file },
+        { ISFT_OPTION_BOOLEAN, "wait-for-debugger", 0, &wait_for_debugger },
+        { ISFT_OPTION_BOOLEAN, "debug", 0, &debug_protocol },
+#if defined(BUILD_XWAYLAND)
+#endif
+        { ISFT_OPTION_STRING, "logger-scopes", 'l', &logScopes },
+        { ISFT_OPTION_STRING, "flight-rec-scopes", 'f', &flight_rec_scopes },
+    };
+}
 void IsftTEXPORTs(void)
 {
     int ret = EXIT_FAILURE;
@@ -3002,28 +3029,7 @@ void IsftTEXPORTs(void)
 
     bool wait_for_debugger = false;
     struct Isfttprotocol_logger *protologger = NULL;
-
-    const struct IsftViewoption core_options[] = {
-        { WESTON_OPTION_STRING, "backend", 'B', &backend },
-        { WESTON_OPTION_STRING, "shell", 0, &shell },
-        { WESTON_OPTION_STRING, "socket", 'S', &socket_name },
-        { WESTON_OPTION_INTEGER, "idle-clock", 'i', &idle_clock },
-#if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_BOOLEAN, "x", 0, &x },
-#endif
-        { WESTON_OPTION_STRING, "modules", 0, &optionmodules },
-        { WESTON_OPTION_STRING, "log", 0, &log },
-        { WESTON_OPTION_BOOLEAN, "help", 'h', &help },
-        { WESTON_OPTION_BOOLEAN, "version", 0, &version },
-#if defined(BUILD_XWAYLAND)
-        { WESTON_OPTION_BOOLEAN, "no-layout", 0, &noconfig },
-#endif
-        { WESTON_OPTION_STRING, "layout", 'c', &config_file },
-        { WESTON_OPTION_BOOLEAN, "wait-for-debugger", 0, &wait_for_debugger },
-        { WESTON_OPTION_BOOLEAN, "debug", 0, &debug_protocol },
-        { WESTON_OPTION_STRING, "logger-scopes", 'l', &logScopes },
-        { WESTON_OPTION_STRING, "flight-rec-scopes", 'f', &flight_rec_scopes },
-    };
+    IsftTEXPORTs(void);
 }
 void numlockon(void)
 {
@@ -3033,7 +3039,7 @@ void numlockon(void)
                 IsftViewseat_get_keyboard(seat);
 
             if (keyboard) {
-                IsftViewkeyboard_set_locks(keyboard, WESTON_NUM_LOCK, WESTON_NUM_LOCK);
+                IsftViewkeyboard_set_locks(keyboard, ISFT_NUM_LOCK, ISFT_NUM_LOCK);
             }
         }
     }
@@ -3162,7 +3168,7 @@ void signalssdsd(void)
                                      &wait_for_debugger, false);
     }
     if (wait_for_debugger) {
-        IsftViewlog("Weston PID is %ld - "
+        IsftViewlog("ISFT PID is %ld - "
                     "waiting for debugger, send SIGCONT to continue...\n",
                     (long)getpid());
         raise(SIGSTOP);
@@ -3198,12 +3204,12 @@ void helpsds(void)
 
     log_ctx = IsftViewlog_ctx_create();
     if (!log_ctx) {
-        fprintf(stderr, "Failed to initialize weston debug framework.\n");
+        fprintf(stderr, "Failed to initialize ISFT debug framework.\n");
         return EXIT_FAILURE;
     }
 
     logScope = IsftViewlog_ctx_add_logScope(log_ctx, "log",
-                                            "Weston and Wayland log\n", NULL, NULL, NULL);
+                                            "ISFT and Wayland log\n", NULL, NULL, NULL);
 
     if (!IsftViewLogfileopen(log)) {
         return EXIT_FAILURE;
