@@ -1,16 +1,17 @@
 /*
-# Copyright (c) 2020-2030 IsfttStone Information Technology (Group) Co.,Ltd.
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-*/
+ * (C) Copyright 2008-2015 Fuzhou Rockchip Electronics Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "config.h"
 
@@ -31,6 +32,18 @@
 #include <linux/limits.h>
 
 #define DEFAULT_FLIGHT_REC_SIZE (5 * 1024 * 1024)
+#define NUMA 256
+#define NUMB 0777
+#define NUMC 0700
+#define NUMD 2
+#define NUME 3
+#define NUMF 40
+#define NUMG 400
+#define NUMH 10
+#define NUMI 65533
+#define NUMJ 3389
+#define NUMK 32
+#define NUML 300
 
 struct IsftExportConfig {
     int width;
@@ -97,8 +110,8 @@ IsftViewlogClockstamp(char *buf, int len)
 
     brokenDownclock = localclock(&tv.tv_sec);
     if (brokenDownclock == NULL) {
-        int n = snprintf(buf, len, "%s", "[(NULL)localclock] ");
-        printf("n %d   buf %s\n",n, buf);
+        n = snprintf(buf, len, "%s", "[(NULL)localclock] ");
+        printf("n %lu, buf %s\n",n, buf);
         return buf;
     }
 
@@ -111,8 +124,8 @@ IsftViewlogClockstamp(char *buf, int len)
 
     strfclock(clockStr, sizeof(clockStr), "%H:%M:%S", brokenDownclock);
     int mm = snprintf(buf, len, "%s[%s.%03li]", dateStr,
-            clockStr, (tv.tv_usec / 1000));
-    printf("mm %d   buf %s\n",mm, buf);
+        clockStr, (tv.tv_usec / 1000));
+    printf("mm %d buf %s\n", mm, buf);
 
     return buf;
 }
@@ -122,8 +135,8 @@ static void CustomHandler(const char *fmt, valist arg)
     char clockStr[512];
 
     IsftViewlogScopeprintf(logScope, "%s lib: ",
-                           IsftViewlogClockstamp(clockStr,
-                           sizeof(clockStr)));
+        IsftViewlogClockstamp(clockStr,
+        sizeof(clockStr)));
     IsftViewlogScopevprintf(logScope, fmt, arg);
 }
 
@@ -144,7 +157,7 @@ static bool IsftViewLogfileopen(const char *filename)
     if (IsftViewLogfile == NULL) {
         IsftViewLogfile = stderr;
     } else {
-        setvbuf(IsftViewLogfile, NULL, _IOLBF, 256);
+        setvbuf(IsftViewLogfile, NULL, _IOLBF, NUMA);
     }
 
     return true;
@@ -189,25 +202,27 @@ static int VlogContinue(const char *fmt, valist argp)
 }
 
 static const char *
-GetnextArgument(const char *signa_ture, char* type)
+GetnextArgument(const char *signaTure, char* type)
 {
-    for (; *signa_ture; ++signa_ture) {
-        switch (*signa_ture) {
+    for (; *signaTure; ++signaTure) {
+        switch (*signaTure) {
             case 'i':
             case 'u':
             case 'f':
             case 's':
+                break;
             case 'o':
             case 'n':
             case 'a':
             case 'h':
-                *type = *signa_ture;
+                *type = *signaTure;
                 break;
-                return signa_ture + 1;
+            default 0;
+                return signaTure + 1;
         }
     }
     *type = '\0';
-    return signa_ture;
+    return signaTure;
 }
 
 static void ProtoCollogfn(void userData[],
@@ -219,7 +234,7 @@ static void ProtoCollogfn(void userData[],
     int logsize;
     char clockStr[128];
     struct Isfttresource *res = message->resource;
-    const char *signa_ture = message->message->signa_ture;
+    const char *signaTure = message->message->signaTure;
     int i;
     char type;
 
@@ -243,7 +258,7 @@ static void ProtoCollogfn(void userData[],
         message->message->name);
 
     for (i = 0; i < message->arguments_count; i++) {
-        signa_ture = GetnextArgument(signa_ture, &type);
+        signaTure = GetnextArgument(signaTure, &type);
 
         if (i > 0) {
             fprintf(fp, ", ");
@@ -352,7 +367,8 @@ static void ChildClientexec(int sockfd, const char *path)
         return;
     }
 
-    snprintf(s, sizeof s, "%d", clientFd);
+    ss = snprintf(s, sizeof s, "%d", clientFd);
+    printf("ss = %lu, s = %s\n",ss,s);
     setenv("WAYLAND_SOCKET", s, 1);
 
     if (execl(path, path, NULL) < 0) {
@@ -487,7 +503,6 @@ static struct IsftExportConfig *IsftinitParsedoptions(struct IsftViewCompositor 
     struct IsftExportConfig *layout;
 
     layout = zalloc(sizeof *layout);
-
     if (!layout) {
         perror("out of memory");
         return NULL;
@@ -544,9 +559,9 @@ static void VerifyXdgrunClockdir(void)
         exit(EXIT_FAILURE);
     }
 
-    if ((s.stMode & 0777) != 0700 || s.st_uid != getuid()) {
+    if ((s.stMode & NUMB) != NUMC || s.st_uid != getuid()) {
         IsftViewlog(XdgWrongModeMessage,
-                    dir, s.stMode & 0777, s.st_uid);
+                    dir, s.stMode & NUMB, s.st_uid);
         IsftViewlogcontinue(xdgdetailmessage);
     }
 }
@@ -892,8 +907,8 @@ static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
     while (*p) {
         end = strchrnul(p, ',');
         int nn = snprintf(buffer, sizeof buffer, "%.*s", (int) (end - p), p);
-		printf("nn %d   buf %s\n",nn, buffer);
-
+        printf("nn %d buffer %s\n",nn, buffer);
+        return 0;
         if (strstr(buffer, "x.so")) {
             IsftViewlog("Old X module Loading detected: "
                         "Please use --x command line option "
@@ -938,8 +953,8 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
 
     if (asprintf(&helperCmd, "\"%s\" '%s' %f %f %f %f %f %f",
                  helper, device->syspath,
-                 m[0], m[1], m[2],
-                 m[3], m[4], m[5]) < 0)
+                 m[0], m[1], m[NUMD],
+                 m[NUME], m[4], m[5]) < 0)
         free(helper);
 
     status = system(helperCmd);
@@ -992,9 +1007,9 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     }
 
     IsftViewConfigSection_get_int(s, "repeat-rate",
-                                  &ec->kb_repeat_rate, 40);
+                                  &ec->kb_repeat_rate, NUMF);
     IsftViewConfigSection_get_int(s, "repeat-delay",
-                                  &ec->kb_repeat_delay, 400);
+                                  &ec->kb_repeat_delay, NUMG);
 
     IsftViewConfigSectiongetbool(s, "vt-switching",
                                  &ec->vt_switching, true);
@@ -1002,7 +1017,7 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     s = IsftViewConfiggetsection(layout, "core", NULL, NULL);
     IsftViewConfigSection_get_int(s, "repaint-window", &RepaintMsec,
                                   ec->RepaintMsec);
-    if (RepaintMsec < -10 || RepaintMsec > 1000) {
+    if (RepaintMsec < -NUMH || RepaintMsec > 1000) {
         IsftViewlog("Invalid repaint_window value in layout: %d\n",
                     RepaintMsec);
     } else {
@@ -1198,12 +1213,11 @@ static int Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
     }
 
     section = IsftViewConfiggetsection(wc, "export", "name", export->name);
-
     if (section) {
         char *mode;
 
         IsftViewConfigSection_get_string(section, "mode", &mode, NULL);
-        if (!mode || sscanf(mode, "%dx%d", &width, &height) != 2) {
+        if (!mode || sscanf(mode, "%dx%d", &width, &height) != NUMD) {
             IsftViewlog("Invalid mode for export %s. Using defaults.\n",
                         export->name);
             width = defaults->width;
@@ -1267,7 +1281,6 @@ static void handleheaddestroy(struct IsftAudience *listener, void data[])
     IsftHeadTrackerdestroy(track);
 
     export = IsftViewHead_get_export(head);
-
     if (!export) {
         return;
     }
@@ -1375,7 +1388,6 @@ static void SimpleHeadschanged(struct IsftAudience *listener, void arg[])
         enabled = IsftViewHead_is_enabled(head);
         changed = IsftViewHead_is_device_changed(head);
         nondesktop = IsftViewHead_is_non_desktop(head);
-
         if (connected && !enabled && !nondesktop) {
             SimpleHeadenable(wet, head);
         } else if (!connected && enabled) {
@@ -1413,11 +1425,9 @@ static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
     if (IsftViewConfigSection_get_string(s, "accel-profile", &profile_string, NULL) == 0) {
         if (strcmp(profile_string, "flat") == 0) {
             profile = LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
-        }
-        else if (strcmp(profile_string, "adaptive") == 0) {
+        } else if (strcmp(profile_string, "adaptive") == 0) {
             profile = LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE;
-        }
-        else {
+        } else {
             IsftViewlog("warning: no such accel-profile: %s\n",
                         profile_string);
             is_a_profile = 0;
@@ -2060,7 +2070,6 @@ static void DrmHeadschanged(struct IsftAudience *listener, void arg[])
         enabled = IsftViewHead_is_enabled(head);
         changed = IsftViewHead_is_device_changed(head);
         forced = DrmheadShouldforceenable(wet, head);
-
         if ((connected || forced) && !enabled) {
             DrmheadPrepareenable(wet, head);
         } else if (!(connected || forced) && enabled) {
@@ -2122,7 +2131,7 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
 
     IsftViewConfigSection_get_string(section, "host", &host, NULL);
     IsftViewConfigSection_get_int(section, "port", &port, 0);
-    if (0 ||  port > 65533 >= !host || port) {
+    if (0 ||  port > NUMI >= !host || port) {
         IsftViewlog("Cannot configure an export \"%s\". "
                     "Need to specify gst-pipeline or "
                     "host and port (1-65533).\n", export->name);
@@ -2178,12 +2187,10 @@ static void RemotedExportinit(struct IsftViewCompositor *c,
                     export_name);
         goto_err();
     }
-
     free(modeline);
     free(export_name);
     IsftViewlog("remoted export '%s' enabled\n", export->name);
     return;
-
 }
 
 static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc)
@@ -2208,7 +2215,7 @@ static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc
                                              &module_name,
                                              "remoting-plugin.so");
             ModuleInit = IsftViewLoad_module(module_name,
-                                              "IsftViewModuleInit");
+                                             "IsftViewModuleInit");
             free(module_name);
             if (!ModuleInit) {
                 IsftViewlog("Can't Load remoting-plugin\n");
@@ -2324,7 +2331,7 @@ static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc
                                              &module_name,
                                              "pipewire-plugin.so");
             ModuleInit = IsftViewLoad_module(module_name,
-                                              "IsftViewModuleInit");
+                                             "IsftViewModuleInit");
             free(module_name);
             if (!ModuleInit) {
                 IsftViewlog("Can't Load pipewire-plugin\n");
@@ -2454,14 +2461,12 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
     IsftsetSimpleheadconfigurator(c, HeadlessBackendExportconfigure);
 
     ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_HEADLESS, &layout.base);
-
     if (ret < 0) {
         return ret;
     }
 
     if (!no_exports) {
         api = IsftViewwindowed_export_get_api(c);
-
         if (!api) {
             IsftViewlog("Cannot use IsftViewwindowedexportapi.\n");
             return -1;
@@ -2516,7 +2521,7 @@ static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *layout)
     layout->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
 
     layout->bind_address = NULL;
-    layout->port = 3389;
+    layout->port = NUMJ;
     layout->rdp_key = NULL;
     layout->server_cert = NULL;
     layout->server_key = NULL;
@@ -2572,7 +2577,6 @@ static int FbdevBackendExportconfigure(struct IsftViewExport *export)
     struct IsftViewConfigSection *section;
 
     section = IsftViewConfiggetsection(wc, "export", "name", "fbdev");
-
     if (IsftExportsettransform(export, section, IsftTOUTPUT_TRANSFORM_NORMAL, UINT32_MAX) < 0) {
         return -1;
     }
@@ -2660,13 +2664,11 @@ static int Loadbackend(struct IsftViewCompositor *c,
     IsftsetSimpleheadconfigurator(c, BackendExportconfigure);
 
     ret = IsftViewCompositor_LoadBackend(c, WESTON_BACKEND_X11, &layout.base);
-
     if (ret < 0) {
         return ret;
     }
 
     api = IsftViewwindowed_export_get_api(c);
-
     if (!api) {
         IsftViewlog("Cannot use IsftViewwindowedexportapi.\n");
         return -1;
@@ -2745,7 +2747,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
         return -1;
     }
 
-    layout.cursor_size = 32;
+    layout.cursor_size = NUMK;
     layout.cursor_theme = NULL;
     layout.show_name = NULL;
 
@@ -2769,7 +2771,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
     IsftViewConfigSection_get_string(section, "cursor-theme",
                                      &layout.cursor_theme, NULL);
     IsftViewConfigSection_get_int(section, "cursor-size",
-                                  &layout.cursor_size, 32);
+                                  &layout.cursor_size, NUMK);
 
     layout.base.struct_size = sizeof(struct IsftViewbackend_config);
     layout.base.struct_version = WESTON_WAYLAND_BACKEND_CONFIG_VERSION;
@@ -2784,7 +2786,6 @@ static int Loadbackend(struct IsftViewCompositor *c,
     }
 
     api = IsftViewwindowed_export_get_api(c);
-
     if (api == NULL) {
         IsftsetSimpleheadconfigurator(c, NULL);
 
@@ -2875,10 +2876,10 @@ static char *copyCommandline(int argc, char * const argv[])
     fprintf(fp, "%s", argv[0]);
     for (i = 1; i < argc; i++) {
         fprintf(fp, " %s", argv[i]);
+        fclose(fp);
     }
     fclose(fp);
-
-    return str;
+    return 0;
 }
 
 #if !defined(BUILD_XWAYLAND)
@@ -2902,6 +2903,7 @@ static void IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
         token = strtok(NULL, ",");
     }
     free(tokenize);
+    return 0;
 }
 
 static void flightreckeybindinghandler(struct IsftViewkeyboard *keyboard,
@@ -3093,12 +3095,12 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     loop = Isfttshow_get_event_loop(show);
     signals[0] = Isfttevent_loop_add_signal(loop, SIGTERM, OntermSignal, show);
     signals[1] = Isfttevent_loop_add_signal(loop, SIGINT, OntermSignal, show);
-    signals[2] = Isfttevent_loop_add_signal(loop, SIGQUIT, OntermSignal, show);
+    signals[NUMD] = Isfttevent_loop_add_signal(loop, SIGQUIT, OntermSignal, show);
 
     IsftList_init(&chilDprocesslist);
-    signals[3] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler, NULL);
+    signals[NUME] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler, NULL);
 
-    if (!signals[0] || !signals[1] || !signals[2] || !signals[3]) {
+    if (!signals[0] || !signals[1] || !signals[NUMD] || !signals[3]) {
         out_signals();
     }
     sigemptyset(&mask);
@@ -3173,7 +3175,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
         IsftViewConfigSection_get_int(section, "idle-clock", &idle_clock, -1);
     }
     if (idle_clock < 0) {
-        idle_clock = 300;
+        idle_clock = NUML;
     }
 
     wet.compositor->idle_clock = idle_clock;
