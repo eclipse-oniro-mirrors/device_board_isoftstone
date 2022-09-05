@@ -44,6 +44,9 @@
 #define NUMJ 3389
 #define NUMK 32
 #define NUML 300
+#define NUMAA 4
+#define NUMBB 1000
+#define NUMCC 5
 
 struct IsftExportConfig {
     int width;
@@ -111,7 +114,7 @@ IsftViewlogClockstamp(char *buf, int len)
     brokenDownclock = localclock(&tv.tv_sec);
     if (brokenDownclock == NULL) {
         n = snprintf(buf, len, "%s", "[(NULL)localclock] ");
-        printf("n %lu, buf %s\n",n, buf);
+        printf("n %lu, buf %s\n", n, buf);
         return buf;
     }
 
@@ -123,9 +126,10 @@ IsftViewlogClockstamp(char *buf, int len)
     }
 
     strfclock(clockStr, sizeof(clockStr), "%H:%M:%S", brokenDownclock);
-    int mm = snprintf(buf, len, "%s[%s.%03li]", dateStr,
-        clockStr, (tv.tv_usec / 1000));
-    printf("mm %d buf %s\n", mm, buf);
+    int mm = snprintf(buf, len, "%s[%s.%03li]", dateStr, clockStr, (tv.tv_usec / 1000));
+        if (mm != NULL) {
+            printf("mm %d buf %s\n", mm, buf);
+        }
 
     return buf;
 }
@@ -204,8 +208,9 @@ static int VlogContinue(const char *fmt, valist argp)
 static const char *
 GetnextArgument(const char *signaTure, char* type)
 {
-    for (; *signaTure; ++signaTure) {
-        switch (*signaTure) {
+    const char *signaTureS = *signaTure;
+    for (; *signaTureS; ++signaTureS) {
+        switch (*signaTureS) {
             case 'i':
             case 'u':
             case 'f':
@@ -215,14 +220,14 @@ GetnextArgument(const char *signaTure, char* type)
             case 'n':
             case 'a':
             case 'h':
-                *type = *signaTure;
+                *type = *signaTureS;
                 break;
-            default 0;
-                return signaTure + 1;
+            default:
+                return signaTureS + 1;
         }
     }
     *type = '\0';
-    return signaTure;
+    return signaTureS;
 }
 
 static void ProtoCollogfn(void userData[],
@@ -249,14 +254,20 @@ static void ProtoCollogfn(void userData[],
 
     IsftViewlogScopeclockstamp(protocolscope,
                                clockStr, sizeof clockStr);
-    fprintf(fp, "%s ", clockStr);
-    fprintf(fp, "client %p %s ", Isfttresourcegetclient(res),
-        direction == IsftTPROTOCOLLOGGERREQUEST ? "rq" : "ev");
-    fprintf(fp, "%s@%u.%s(",
+    int ret = fprintf(fp, "%s ", clockStr);
+    if (ret < 0) {
+        printf("fprintf error");
+    }
+    if (fprintf(fp, "client %p %s ", Isfttresourcegetclient(res),
+        direction == IsftTPROTOCOLLOGGERREQUEST ? "rq" : "ev") < 0){
+        printf("fprintf error");
+    }
+    if (fprintf(fp, "%s@%u.%s(",
         IsfttresourceGetDlass(res),
         IsfttresourceGetId(res),
-        message->message->name);
-
+        message->message->name) < 0) {
+        printf("fprintf error")
+    }
     for (i = 0; i < message->arguments_count; i++) {
         signaTure = GetnextArgument(signaTure, &type);
 
@@ -308,7 +319,9 @@ static void ProtoCollogfn(void userData[],
         }
     }
 
-    fprintf(fp, ")\n");
+    if (fprintf(fp, ")\n") < 0) {
+        printf("fprintf error");
+    }
 
     if (fclose(fp) == 0) {
         IsftViewlogScopewrite(protocolscope, logstr, logsize);
@@ -368,7 +381,7 @@ static void ChildClientexec(int sockfd, const char *path)
     }
 
     ss = snprintf(s, sizeof s, "%d", clientFd);
-    printf("ss = %lu, s = %s\n",ss,s);
+    printf("ss= %lu, s= %s\n",ss,s);
     setenv("WAYLAND_SOCKET", s, 1);
 
     if (execl(path, path, NULL) < 0) {
@@ -617,27 +630,31 @@ static int Usage(int errorcode)
         "  -h, --help\t\tThis help message\n\n");
 
 #if defined(BUILD_DRM_COMPOSITOR)
-    fprintf(out,
+    if (fprintf(out,
         "Options for Drm-backend.so:\n\n"
         "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
         "  --tty=TTY\t\tThe tty to use\n"
         "  --Drm-device=CARD\tThe DRM device to use, e.g. \"card0\".\n"
         "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
         "  --current-mode\tPrefer current KMS mode over EDID preferred mode\n"
-        "  --continue-without-import\tAllow the compositor to start without import devices\n\n");
+        "  --continue-without-import\tAllow the compositor to start without import devices\n\n") < 0) {
+        printf("error");
+    }
 #endif
 
 #if defined(BUILD_FBDEV_COMPOSITOR)
-    fprintf(out,
+    if (fprintf(out,
         "Options for fbdev-backend.so:\n\n"
         "  --tty=TTY\t\tThe tty to use\n"
         "  --device=DEVICE\tThe framebuffer device to use\n"
         "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
-        "\n");
+        "\n") < 0) {
+        printf("error");
+    }
 #endif
 
 #if defined(BUILD_HEADLESS_COMPOSITOR)
-    fprintf(out,
+    if (fprintf(out,
         "Options for headless-backend.so:\n\n"
         "  --width=WIDTH\t\tWidth of memory sheet\n"
         "  --height=HEIGHT\tHeight of memory sheet\n"
@@ -647,11 +664,13 @@ static int Usage(int errorcode)
         "  --use-pixman\t\tUse the pixman (CPU) renderer (default: no rendering)\n"
         "  --use-gl\t\tUse the GL renderer (default: no rendering)\n"
         "  --no-exports\t\tDo not create any virtual exports\n"
-        "\n");
+        "\n") < 0) {
+        printf("error");
+    }
 #endif
 
 #if defined(BUILD_RDP_COMPOSITOR)
-    fprintf(out,
+    if (fprintf(out,
         "Options for rdp-backend.so:\n\n"
         "  --width=WIDTH\t\tWidth of desktop\n"
         "  --height=HEIGHT\tHeight of desktop\n"
@@ -662,11 +681,13 @@ static int Usage(int errorcode)
         "  --rdp4-key=FILE\tThe file containing the key for RDP4 encryption\n"
         "  --rdp-tls-cert=FILE\tThe file containing the certificate for TLS encryption\n"
         "  --rdp-tls-key=FILE\tThe file containing the private key for TLS encryption\n"
-        "\n");
+        "\n") < 0) {
+        printf("error");
+    }
 #endif
 
 #if defined(BUILD_WAYLAND_COMPOSITOR)
-    fprintf(out,
+    if (fprintf(out,
         "Options for -backend.so:\n\n"
         "  --width=WIDTH\t\tWidth of Wayland sheet\n"
         "  --height=HEIGHT\tHeight of Wayland sheet\n"
@@ -675,11 +696,13 @@ static int Usage(int errorcode)
         "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
         "  --export-count=COUNT\tCreate multiple exports\n"
         "  --sprawl\t\tCreate one fullscreen export for every parent export\n"
-        "  --show=DISPLAY\tWayland show to connect to\n\n");
+        "  --show=DISPLAY\tWayland show to connect to\n\n") < 0) {
+        printf("error");
+    }
 #endif
 
 #if defined(BUILD_X11_COMPOSITOR)
-    fprintf(out,
+    if (fprintf(out,
         "Options for backend.so:\n\n"
         "  --width=WIDTH\t\tWidth of X window\n"
         "  --height=HEIGHT\tHeight of X window\n"
@@ -687,7 +710,9 @@ static int Usage(int errorcode)
         "  --fullscreen\t\tRun in fullscreen mode\n"
         "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
         "  --export-count=COUNT\tCreate multiple exports\n"
-        "  --no-import\t\tDont create import devices\n\n");
+        "  --no-import\t\tDont create import devices\n\n") <0) {
+        printf("error");
+    }
 #endif
 
     exit(errorcode);
@@ -906,9 +931,9 @@ static int LoadModules(struct IsftViewCompositor *ec, const char *modules,
     p = modules;
     while (*p) {
         end = strchrnul(p, ',');
-        int nn = snprintf(buffer, sizeof buffer, "%.*s", (int) (end - p), p);
-        printf("nn %d buffer %s\n",nn, buffer);
-        return 0;
+        if (snprintf(buffer, sizeof buffer, "%.*s", (int) (end - p), p) < size) {
+        printf("nn%d buffer%s\n", nn, buffer);
+        }
         if (strstr(buffer, "x.so")) {
             IsftViewlog("Old X module Loading detected: "
                         "Please use --x command line option "
@@ -954,7 +979,7 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
     if (asprintf(&helperCmd, "\"%s\" '%s' %f %f %f %f %f %f",
                  helper, device->syspath,
                  m[0], m[1], m[NUMD],
-                 m[NUME], m[4], m[5]) < 0)
+                 m[NUME], m[NUMAA], m[NUMCC]) < 0)
         free(helper);
 
     status = system(helperCmd);
@@ -1017,7 +1042,7 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     s = IsftViewConfiggetsection(layout, "core", NULL, NULL);
     IsftViewConfigSection_get_int(s, "repaint-window", &RepaintMsec,
                                   ec->RepaintMsec);
-    if (RepaintMsec < -NUMH || RepaintMsec > 1000) {
+    if (RepaintMsec < -NUMH || RepaintMsec > NUMBB) {
         IsftViewlog("Invalid repaint_window value in layout: %d\n",
                     RepaintMsec);
     } else {
@@ -1914,7 +1939,7 @@ static int DrmTryenable(struct IsftViewExport *export,
             return 0;
         }
 
-        while (undo->n > 0 && undo->heads[--undo->n] == NULL);
+        while (undo->n > 0 && undo->heads[--(undo->n)] == NULL);
 
         if (undo->heads[undo->n] == NULL) {
             return -1;
@@ -2873,13 +2898,23 @@ static char *copyCommandline(int argc, char * const argv[])
         return NULL;
     }
 
-    fprintf(fp, "%s", argv[0]);
-    for (i = 1; i < argc; i++) {
-        fprintf(fp, " %s", argv[i]);
-        fclose(fp);
+    if (fprintf(fp, "%s", argv[0]) < 0) {
+        printf("fprint error");
     }
-    fclose(fp);
-    return 0;
+    for (i = 1; i < argc; i++) {
+        if (fprintf(fp, " %s", argv[i]) < 0) {
+            printf("fprintf error");
+        }
+        int ree = fclose(fp);
+        if (ree == 0)
+        {
+            printf("fclose success");
+        }
+    }
+    int rett = fclose(fp);
+    if (rett == 0) {
+        printf("fclose success");
+    }
 }
 
 #if !defined(BUILD_XWAYLAND)
@@ -2898,12 +2933,11 @@ static void IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
 
     char *tokenize = strdup(names);
     char *token = strtok(tokenize, ",");
-    while (token) {
+    while (token != NULL) {
         IsftViewlog_subscribe(log_ctx, subscriber, token);
         token = strtok(NULL, ",");
     }
     free(tokenize);
-    return 0;
 }
 
 static void flightreckeybindinghandler(struct IsftViewkeyboard *keyboard,
@@ -3100,7 +3134,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     IsftList_init(&chilDprocesslist);
     signals[NUME] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler, NULL);
 
-    if (!signals[0] || !signals[1] || !signals[NUMD] || !signals[3]) {
+    if (!signals[0] || !signals[1] || !signals[NUMD] || !signals[NUME]) {
         out_signals();
     }
     sigemptyset(&mask);
