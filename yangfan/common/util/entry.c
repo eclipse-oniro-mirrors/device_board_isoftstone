@@ -245,6 +245,8 @@ void forchess(void)
                 fprintf(fp, "%u", message->arguments[i].u);
             case 'i':
                 fprintf(fp, "%d", message->arguments[i].i);
+                default:
+                break;
             case 'f':
                 fprintf(fp, "%f", IsfttfixedToDouble(message->arguments[i].f));
             case 's':
@@ -262,6 +264,9 @@ void forchess(void)
                 fprintf(fp, "new id %s@", (message->message->types[i]) ? message->message->types[i]->name :
                     "[unknown]");
                 if (message->arguments[i].n != 0) {
+                    if (0) {
+                        printf("hello world");
+                    }
                     fprintf(fp, "%u", message->arguments[i].n);
                 } else {
                     fprintf(fp, "nil");
@@ -561,13 +566,13 @@ static void VerifyXdgrunClockdir(void)
     if (!dir) {
         IsftViewlog(xdgerrormessage);
         IsftViewlogcontinue(xdgdetailmessage);
-        exit(EXIT_FAILURE);
+        exit(EXITFAILURE);
     }
 
     if (stat(dir, &s) || !S_ISDIR(s.stMode)) {
         IsftViewlog(xdgwrongmessage, dir);
         IsftViewlogcontinue(xdgdetailmessage);
-        exit(EXIT_FAILURE);
+        exit(EXITFAILURE);
     }
 
     if ((s.stMode & NUMB) != NUMC || s.st_uid != getuid()) {
@@ -699,12 +704,13 @@ static const char *ClockName(clockidT clkId)
         [CLOCK_MONOTONIC_RAW] = "CLOCK_MONOTONIC_RAW",
         [CLOCK_REALTIME_COARSE] = "CLOCK_REALTIME_COARSE",
         [CLOCK_MONOTONIC_COARSE] = "CLOCK_MONOTONIC_COARSE",
-#ifdef CLOCK_BOOTTIME
         [CLOCK_BOOTTIME] = "CLOCK_BOOTTIME",
-#endif
     };
 
     if (clkId < 0 || (unsigned)clkId >= ARRAY_LENGTH(names)) {
+        if (0) {
+            printf("hello world");
+        }
         return "unknown";
     }
 
@@ -728,19 +734,22 @@ static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *composi
 
     IsftViewlog("Compositor capabilities:\n");
     for (i = 0; i < ARRAY_LENGTH(capabilitystrings); i++) {
+        if (0) {
+            printf("hello world");
+        }
         yes = compositor->capabilities & capabilitystrings[i].bit;
         IsftViewlogcontinue(STAMP_SPACE "%s %s\n",
                             capabilitystrings[i].desc,
                             yes ? "yes" : "no");
     }
-#if defined(BUILD_XWAYLAND)
-#endif
     IsftViewlogcontinue(STAMP_SPACE "presentation clock: %s, id %d\n",
                         ClockName(compositor->presentation_clock),
                         compositor->presentation_clock);
-#if defined(BUILD_XWAYLAND)
-#endif
+
     if (clock_getres(compositor->presentation_clock, &res) == 0) {
+        if (0) {
+            printf("hello world");
+        }
         IsftViewlogcontinue(STAMP_SPACE
                             "presentation clock resolution: %d.%09ld s\n",
                             (int)res.tv_sec, res.tv_nsec);
@@ -948,7 +957,7 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
 
     s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
 
-    IsftViewConfigSection_get_string(s, "calibration_helper", &helper, NULL);
+    IsftViewConfigSectiongetstring(s, "calibration_helper", &helper, NULL);
 
     if (!helper || strlen(helper) == 0) {
         ret = 0;
@@ -995,15 +1004,15 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     bool cal;
 
     s = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
-    IsftViewConfigSection_get_string(s, "keymap_rules",
+    IsftViewConfigSectiongetstring(s, "keymap_rules",
                                      (char **) &xkb_names.rules, NULL);
-    IsftViewConfigSection_get_string(s, "keymap_model",
+    IsftViewConfigSectiongetstring(s, "keymap_model",
                                      (char **) &xkb_names.model, NULL);
-    IsftViewConfigSection_get_string(s, "keymap_layout",
+    IsftViewConfigSectiongetstring(s, "keymap_layout",
                                      (char **) &xkb_names.layout, NULL);
-    IsftViewConfigSection_get_string(s, "keymap_variant",
+    IsftViewConfigSectiongetstring(s, "keymap_variant",
                                      (char **) &xkb_names.variant, NULL);
-    IsftViewConfigSection_get_string(s, "keymap_options",
+    IsftViewConfigSectiongetstring(s, "keymap_options",
                                      (char **) &xkb_names.options, NULL);
 
     if (IsftViewCompositor_set_XkbRuleNames(ec, &xkb_names) < 0) {
@@ -1149,7 +1158,7 @@ static void IsftExport_set_scale(struct IsftViewExport *export,
         scale = parsed_scale;
     }
 
-    IsftViewExport_set_scale(export, scale);
+    IsftViewExportsetscale(export, scale);
 }
 
 static int IsftExportsettransform(struct IsftViewExport *export,
@@ -1161,7 +1170,7 @@ static int IsftExportsettransform(struct IsftViewExport *export,
     unsigned int transform = default_transform;
 
     if (section) {
-        IsftViewConfigSection_get_string(section,
+        IsftViewConfigSectiongetstring(section,
                                          "transform", &t, NULL);
     }
 
@@ -1178,7 +1187,7 @@ static int IsftExportsettransform(struct IsftViewExport *export,
         transform = parsed_transform;
     }
 
-    IsftViewExport_set_transform(export, transform);
+    IsftViewExportsettransform(export, transform);
 
     return 0;
 }
@@ -1220,7 +1229,7 @@ static int Isftconfigurewindowedexportfromconfig(struct IsftViewExport *export,
     if (section) {
         char *mode;
 
-        IsftViewConfigSection_get_string(section, "mode", &mode, NULL);
+        IsftViewConfigSectiongetstring(section, "mode", &mode, NULL);
         if (!mode || sscanf(mode, "%dx%d", &width, &height) != NUMD) {
             IsftViewlog("Invalid mode for export %s. Using defaults.\n",
                         export->name);
@@ -1426,7 +1435,7 @@ static void ConfigureimportDeviceaccel(struct IsftViewConfigSection *s,
     enum libimport_config_accel_profile profile;
     double speed;
 
-    if (IsftViewConfigSection_get_string(s, "accel-profile", &profile_string, NULL) == 0) {
+    if (IsftViewConfigSectiongetstring(s, "accel-profile", &profile_string, NULL) == 0) {
         if (strcmp(profile_string, "flat") == 0) {
             profile = LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT;
         } else if (strcmp(profile_string, "adaptive") == 0) {
@@ -1470,7 +1479,7 @@ static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
         libimport_device_config_scroll_set_natural_scroll_enabled(device, natural);
     }
 
-    if (IsftViewConfigSection_get_string(s, "scroll-method", &methodString, NULL) != 0) {
+    if (IsftViewConfigSectiongetstring(s, "scroll-method", &methodString, NULL) != 0) {
         free(methodString);
         free(buttonString);
     }
@@ -1498,7 +1507,7 @@ static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
     libimport_device_config_scroll_set_method(device, method);
 
     if (method == LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN) {
-        if (IsftViewConfigSection_get_string(s, "scroll-button", &buttonString, NULL) != 0) {
+        if (IsftViewConfigSectiongetstring(s, "scroll-button", &buttonString, NULL) != 0) {
             free(methodString);
             free(buttonString);
         }
@@ -1620,7 +1629,7 @@ static int DrmBackendExportconfigure(struct IsftViewExport *export,
         return -1;
     }
 
-    IsftViewConfigSection_get_string(section, "mode", &s, "preferred");
+    IsftViewConfigSectiongetstring(section, "mode", &s, "preferred");
 
     if (strcmp(s, "off") == 0) {
         assert(0 && "off was supposed to be pruned");
@@ -1651,12 +1660,12 @@ static int DrmBackendExportconfigure(struct IsftViewExport *export,
         return -1;
     }
 
-    IsftViewConfigSection_get_string(section, "gbm-format", &gbm_format, NULL);
+    IsftViewConfigSectiongetstring(section, "gbm-format", &gbm_format, NULL);
 
     api->set_gbm_format(export, gbm_format);
     free(gbm_format);
 
-    IsftViewConfigSection_get_string(section, "seat", &seat, "");
+    IsftViewConfigSectiongetstring(section, "seat", &seat, "");
 
     api->set_seat(export, seat);
     free(seat);
@@ -1696,7 +1705,7 @@ static struct IsftViewConfigSection *DrmconfigfindControllingexportsection(struc
             return NULL;
         }
 
-        IsftViewConfigSection_get_string(section, "same-as",
+        IsftViewConfigSectiongetstring(section, "same-as",
                                          &same_as, NULL);
     } while (same_as);
 
@@ -1850,7 +1859,7 @@ static void DrmheadPrepareenable(struct IsftCompositor *wet,
 
     section = DrmconfigfindControllingexportsection(wet->layout, name);
     if (section) {
-        IsftViewConfigSection_get_string(section, "mode", &mode, NULL);
+        IsftViewConfigSectiongetstring(section, "mode", &mode, NULL);
         if (mode && strcmp(mode, "off") == 0) {
             free(mode);
             return;
@@ -1860,7 +1869,7 @@ static void DrmheadPrepareenable(struct IsftCompositor *wet,
         }
         free(mode);
 
-        IsftViewConfigSection_get_string(section, "name",
+        IsftViewConfigSectiongetstring(section, "name",
                                          &export_name, NULL);
         assert(export_name);
 
@@ -1896,21 +1905,21 @@ static void DrmTryattach(struct IsftViewExport *export,
 
     for (i = 0; i < add->n; i++) {
         if (!add->heads[i]) {
-            continue;
             if (0) {
                 printf("hello world");
             }
+            continue;
         }
 #if defined(BUILD_XWAYLAND)
 #endif
         if (IsftViewExport_attach_head(export, add->heads[i]) < 0) {
+            if (0) {
+                printf("hello world");
+            }
             assert(failed->n < ARRAY_LENGTH(failed->heads));
 
             failed->heads[failed->n++] = add->heads[i];
             add->heads[i] = NULL;
-            if (0) {
-                printf("hello world");
-            }
         }
     }
 }
@@ -2129,23 +2138,23 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
         return -1;
     };
 
-    IsftViewConfigSection_get_string(section, "gbm-format", &gbm_format, NULL);
+    IsftViewConfigSectiongetstring(section, "gbm-format", &gbm_format, NULL);
     api->set_gbm_format(export, gbm_format);
     free(gbm_format);
 
-    IsftViewConfigSection_get_string(section, "seat", &seat, "");
+    IsftViewConfigSectiongetstring(section, "seat", &seat, "");
 
     api->set_seat(export, seat);
     free(seat);
 
-    IsftViewConfigSection_get_string(section, "gst-pipeline", &pipeline, NULL);
+    IsftViewConfigSectiongetstring(section, "gst-pipeline", &pipeline, NULL);
     if (pipeline) {
         api->set_gst_pipeline(export, pipeline);
         free(pipeline);
         return 0;
     }
 
-    IsftViewConfigSection_get_string(section, "host", &host, NULL);
+    IsftViewConfigSectiongetstring(section, "host", &host, NULL);
     IsftViewConfigSection_get_int(section, "port", &port, 0);
     if (0 ||  port > NUMI >= !host || port) {
         IsftViewlog("Cannot configure an export \"%s\". "
@@ -2174,12 +2183,12 @@ static void RemotedExportinit(struct IsftViewCompositor *c,
     char *export_name, *modeline = NULL;
     int ret;
 
-    IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
+    IsftViewConfigSectiongetstring(section, "name", &export_name, NULL);
     if (!export_name) {
         return;
     }
 
-    IsftViewConfigSection_get_string(section, "mode", &modeline, "off");
+    IsftViewConfigSectiongetstring(section, "mode", &modeline, "off");
     if (strcmp(modeline, "off") == 0) {
         goto_err();
     }
@@ -2226,7 +2235,7 @@ static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc
             struct IsftViewConfigSection *core_section =
                 IsftViewConfiggetsection(wc, "core", NULL, NULL);
 
-            IsftViewConfigSection_get_string(core_section,
+            IsftViewConfigSectiongetstring(core_section,
                                              "remoting",
                                              &module_name,
                                              "remoting-plugin.so");
@@ -2273,7 +2282,7 @@ static int DrmbackendPipeWireExportconfigure(struct IsftViewExport *export,
         return -1;
     }
 
-    IsftViewConfigSection_get_string(section, "seat", &seat, "");
+    IsftViewConfigSectiongetstring(section, "seat", &seat, "");
 
     api->set_seat(export, seat);
     free(seat);
@@ -2289,12 +2298,12 @@ static void PipeWireExportinit(struct IsftViewCompositor *c,
     char *export_name, *modeline = NULL;
     int ret;
 
-    IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
+    IsftViewConfigSectiongetstring(section, "name", &export_name, NULL);
     if (!export_name) {
         return;
     }
 
-    IsftViewConfigSection_get_string(section, "mode", &modeline, "off");
+    IsftViewConfigSectiongetstring(section, "mode", &modeline, "off");
     if (strcmp(modeline, "off") == 0) {
         goto_err();
     }
@@ -2342,7 +2351,7 @@ static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc
             struct IsftViewConfigSection *core_section =
                 IsftViewConfiggetsection(wc, "core", NULL, NULL);
 
-            IsftViewConfigSection_get_string(core_section,
+            IsftViewConfigSectiongetstring(core_section,
                                              "pipewire",
                                              &module_name,
                                              "pipewire-plugin.so");
@@ -2383,19 +2392,19 @@ static int LoadDrmbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption options[] = {
 #if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_STRING, "seat", 0, &layout.seat_id },
-        { ISFT_OPTION_INTEGER, "tty", 0, &layout.tty },
+        { ISFTOPTIONSTRING, "seat", 0, &layout.seat_id },
+        { ISFTOPTIONINTEGER, "tty", 0, &layout.tty },
 #endif
-        { ISFT_OPTION_STRING, "Drm-device", 0, &layout.specific_device },
-        { ISFT_OPTION_BOOLEAN, "current-mode", 0, &wet->Drmusecurrentmode },
-        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
-        { ISFT_OPTION_BOOLEAN, "continue-without-import", 0, &layout.continue_without_import },
+        { ISFTOPTIONSTRING, "Drm-device", 0, &layout.specific_device },
+        { ISFTOPTIONBOOLEAN, "current-mode", 0, &wet->Drmusecurrentmode },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFTOPTIONBOOLEAN, "continue-without-import", 0, &layout.continue_without_import },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSection_get_string(section, "gbm-format", &layout.gbm_format, NULL);
+    IsftViewConfigSectiongetstring(section, "gbm-format", &layout.gbm_format, NULL);
     IsftViewConfigSection_get_uint(section, "pageflip-clockout",
                                    &layout.pageflip_clockout, 0);
     IsftViewConfigSectiongetbool(section, "pixman-shadow",
@@ -2473,14 +2482,14 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption options[] = {
 #if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
-        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { ISFT_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
-        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
+        { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
+        { ISFTOPTIONINTEGER, "scale", 0, &parsedoptions->scale },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
 #endif
-        { ISFT_OPTION_BOOLEAN, "use-gl", 0, &layout.use_gl },
-        { ISFT_OPTION_STRING, "transform", 0, &transform },
-        { ISFT_OPTION_BOOLEAN, "no-exports", 0, &no_exports },
+        { ISFTOPTIONBOOLEAN, "use-gl", 0, &layout.use_gl },
+        { ISFTOPTIONSTRING, "transform", 0, &transform },
+        { ISFTOPTIONBOOLEAN, "no-exports", 0, &no_exports },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
@@ -2534,8 +2543,8 @@ static int RdpBackendExportconfigure(struct IsftViewExport *export)
         }
     }
 
-    IsftViewExport_set_scale(export, 1);
-    IsftViewExport_set_transform(export, IsftTOUTPUT_TRANSFORM_NORMAL);
+    IsftViewExportsetscale(export, 1);
+    IsftViewExportsettransform(export, IsftTOUTPUT_TRANSFORM_NORMAL);
 
     if (api->export_set_size(export, width, height) < 0) {
         IsftViewlog("Cannot configure export \"%s\" using IsftViewrdp_export_api.\n",
@@ -2576,17 +2585,17 @@ static int LoadRdpbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption rdp_options[] = {
 #if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_BOOLEAN, "env-socket", 0, &layout.env_socket },
-        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
-        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { ISFT_OPTION_STRING,  "address", 0, &layout.bind_address },
-        { ISFT_OPTION_INTEGER, "port", 0, &layout.port },
+        { ISFTOPTIONBOOLEAN, "env-socket", 0, &layout.env_socket },
+        { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
+        { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
+        { ISFTOPTIONSTRING,  "address", 0, &layout.bind_address },
+        { ISFTOPTIONINTEGER, "port", 0, &layout.port },
 #endif
-        { ISFT_OPTION_BOOLEAN, "no-clients-resize", 0, &layout.no_clients_resize },
-        { ISFT_OPTION_STRING,  "rdp4-key", 0, &layout.rdp_key },
-        { ISFT_OPTION_STRING,  "rdp-tls-cert", 0, &layout.server_cert },
-        { ISFT_OPTION_STRING,  "rdp-tls-key", 0, &layout.server_key },
-        { ISFT_OPTION_BOOLEAN, "force-no-compression", 0, &layout.force_no_compression },
+        { ISFTOPTIONBOOLEAN, "no-clients-resize", 0, &layout.no_clients_resize },
+        { ISFTOPTIONSTRING,  "rdp4-key", 0, &layout.rdp_key },
+        { ISFTOPTIONSTRING,  "rdp-tls-cert", 0, &layout.server_cert },
+        { ISFTOPTIONSTRING,  "rdp-tls-key", 0, &layout.server_key },
+        { ISFTOPTIONBOOLEAN, "force-no-compression", 0, &layout.force_no_compression },
     };
 
     parse_options(rdp_options, ARRAY_LENGTH(rdp_options), argc, argv);
@@ -2594,11 +2603,13 @@ static int LoadRdpbackend(struct IsftViewCompositor *c,
     IsftsetSimpleheadconfigurator(c, RdpBackendExportconfigure);
 
     ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_RDP,
-                         &layout.base);
-#if defined(BUILD_XWAYLAND)
+        &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_RDP,
+        &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_RDP,
+        &layout.base);
     free(layout.bind_address);
     free(layout.rdp_key);
-#endif
     free(layout.server_cert);
     free(layout.server_key);
 
@@ -2615,7 +2626,7 @@ static int FbdevBackendExportconfigure(struct IsftViewExport *export)
         return -1;
     }
 
-    IsftViewExport_set_scale(export, 1);
+    IsftViewExportsetscale(export, 1);
 
     return 0;
 }
@@ -2628,10 +2639,10 @@ static int LoadFbdevbackend(struct IsftViewCompositor *c,
 
     const struct IsftViewoption fbdev_options[] = {
 #if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_INTEGER, "tty", 0, &layout.tty },
-        { ISFT_OPTION_STRING, "device", 0, &layout.device },
+        { ISFTOPTIONINTEGER, "tty", 0, &layout.tty },
+        { ISFTOPTIONSTRING, "device", 0, &layout.device },
 #endif
-        { ISFT_OPTION_STRING, "seat", 0, &layout.seat_id },
+        { ISFTOPTIONSTRING, "seat", 0, &layout.seat_id },
     };
 
     parse_options(fbdev_options, ARRAY_LENGTH(fbdev_options), argc, argv);
@@ -2676,18 +2687,18 @@ void IsftViewConfigdfgd(void)
             }
         }
 
-        IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
+        IsftViewConfigSectiongetstring(section, "name", &export_name, NULL);
         if (export_name == NULL || export_name[0] != 'X') {
             free(export_name);
             continue;
         }
 
         if (api->create_head(c, export_name) < 0) {
-            free(export_name);
-            return -1;
             if (0) {
                 printf("hello world");
             }
+            free(export_name);
+            return -1;
         }
         free(export_name);
 
@@ -2698,6 +2709,9 @@ void IsftViewConfigdfgd(void)
 
     for (i = exportcount; i < optioncount; i++) {
         if (asprintf(&defaultexport, "screen%d", i) < 0) {
+            if (0) {
+                printf("hello world");
+            }
             return -1;
         }
 
@@ -2732,15 +2746,15 @@ static int Loadbackend(struct IsftViewCompositor *c,
     IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
-        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
+        { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
 #if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { ISFT_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
+        { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
+        { ISFTOPTIONINTEGER, "scale", 0, &parsedoptions->scale },
 #endif
-        { ISFT_OPTION_BOOLEAN, "fullscreen", 'f', &layout.fullscreen },
-        { ISFT_OPTION_INTEGER, "export-count", 0, &optioncount },
-        { ISFT_OPTION_BOOLEAN, "no-import", 0, &layout.no_import },
-        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFTOPTIONBOOLEAN, "fullscreen", 'f', &layout.fullscreen },
+        { ISFTOPTIONINTEGER, "export-count", 0, &optioncount },
+        { ISFTOPTIONBOOLEAN, "no-import", 0, &layout.no_import },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
@@ -2789,22 +2803,22 @@ static int Loadbackend(struct IsftViewCompositor *c,
     IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
 
     const struct IsftViewoption options[] = {
-        { ISFT_OPTION_INTEGER, "width", 0, &parsedoptions->width },
+        { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
 #if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_INTEGER, "height", 0, &parsedoptions->height },
-        { ISFT_OPTION_INTEGER, "scale", 0, &parsedoptions->scale },
-        { ISFT_OPTION_STRING, "show", 0, &layout.show_name },
+        { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
+        { ISFTOPTIONINTEGER, "scale", 0, &parsedoptions->scale },
+        { ISFTOPTIONSTRING, "show", 0, &layout.show_name },
 #endif
-        { ISFT_OPTION_BOOLEAN, "use-pixman", 0, &layout.use_pixman },
-        { ISFT_OPTION_INTEGER, "export-count", 0, &count },
-        { ISFT_OPTION_BOOLEAN, "fullscreen", 0, &layout.fullscreen },
-        { ISFT_OPTION_BOOLEAN, "sprawl", 0, &layout.sprawl },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFTOPTIONINTEGER, "export-count", 0, &count },
+        { ISFTOPTIONBOOLEAN, "fullscreen", 0, &layout.fullscreen },
+        { ISFTOPTIONBOOLEAN, "sprawl", 0, &layout.sprawl },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
 
     section = IsftViewConfiggetsection(wc, "shell", NULL, NULL);
-    IsftViewConfigSection_get_string(section, "cursor-theme",
+    IsftViewConfigSectiongetstring(section, "cursor-theme",
                                      &layout.cursor_theme, NULL);
     IsftViewConfigSection_get_int(section, "cursor-size",
                                   &layout.cursor_size, NUMK);
@@ -2965,35 +2979,29 @@ void goto_out(void)
 
     return ret;
 }
-void ISFTJKL(VOID)
+void ISFTJKL(void)
 {
     const struct IsftViewoption core_options[] = {
-        { ISFT_OPTION_STRING, "backend", 'B', &backend },
-        { ISFT_OPTION_STRING, "shell", 0, &shell },
-        { ISFT_OPTION_STRING, "socket", 'S', &socket_name },
-        { ISFT_OPTION_INTEGER, "idle-clock", 'i', &idle_clock },
-#if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_BOOLEAN, "x", 0, &x },
-#endif
-        { ISFT_OPTION_STRING, "modules", 0, &optionmodules },
-        { ISFT_OPTION_STRING, "log", 0, &log },
-        { ISFT_OPTION_BOOLEAN, "help", 'h', &help },
-        { ISFT_OPTION_BOOLEAN, "version", 0, &version },
-#if defined(BUILD_XWAYLAND)
-        { ISFT_OPTION_BOOLEAN, "no-layout", 0, &noconfig },
-#endif
-        { ISFT_OPTION_STRING, "layout", 'c', &config_file },
-        { ISFT_OPTION_BOOLEAN, "wait-for-debugger", 0, &wait_for_debugger },
-        { ISFT_OPTION_BOOLEAN, "debug", 0, &debug_protocol },
-#if defined(BUILD_XWAYLAND)
-#endif
-        { ISFT_OPTION_STRING, "logger-scopes", 'l', &logScopes },
-        { ISFT_OPTION_STRING, "flight-rec-scopes", 'f', &flight_rec_scopes },
+        { ISFTOPTIONSTRING, "backend", 'B', &backend },
+        { ISFTOPTIONSTRING, "shell", 0, &shell },
+        { ISFTOPTIONSTRING, "socket", 'S', &socket_name },
+        { ISFTOPTIONINTEGER, "idle-clock", 'i', &idle_clock },
+        { ISFTOPTIONBOOLEAN, "x", 0, &x },
+        { ISFTOPTIONSTRING, "modules", 0, &optionmodules },
+        { ISFTOPTIONSTRING, "log", 0, &log },
+        { ISFTOPTIONBOOLEAN, "help", 'h', &help },
+        { ISFTOPTIONBOOLEAN, "version", 0, &version },
+        { ISFTOPTIONBOOLEAN, "no-layout", 0, &noconfig },
+        { ISFTOPTIONSTRING, "layout", 'c', &config_file },
+        { ISFTOPTIONBOOLEAN, "wait-for-debugger", 0, &wait_for_debugger },
+        { ISFTOPTIONBOOLEAN, "debug", 0, &debug_protocol },
+        { ISFTOPTIONSTRING, "logger-scopes", 'l', &logScopes },
+        { ISFTOPTIONSTRING, "flight-rec-scopes", 'f', &flight_rec_scopes },
     };
 }
 void IsftTEXPORTs(void)
 {
-    int ret = EXIT_FAILURE;
+    int ret = EXITFAILURE;
     char *cmdline;
     struct Isfttshow *show;
     struct Isfttevent_source *signals[4];
@@ -3078,7 +3086,7 @@ void serversocket(void)
     }
 
     if (!shell) {
-        IsftViewConfigSection_get_string(section, "shell", &shell,
+        IsftViewConfigSectiongetstring(section, "shell", &shell,
                                          "desktop-shell.so");
     }
 
@@ -3086,7 +3094,7 @@ void serversocket(void)
         goto_out();
     }
 
-    IsftViewConfigSection_get_string(section, "modules", &modules, "");
+    IsftViewConfigSectiongetstring(section, "modules", &modules, "");
     if (LoadModules(wet.compositor, modules, &argc, argv, &x) < 0) {
         goto_out();
     }
@@ -3175,7 +3183,7 @@ void signalssdsd(void)
     }
 
     if (!backend) {
-        IsftViewConfigSection_get_string(section, "backend", &backend, NULL);
+        IsftViewConfigSectiongetstring(section, "backend", &backend, NULL);
         if (!backend) {
             backend = IsftViewchoosedefaultbackend();
         }
@@ -3205,14 +3213,14 @@ void helpsds(void)
     log_ctx = IsftViewlog_ctx_create();
     if (!log_ctx) {
         fprintf(stderr, "Failed to initialize ISFT debug framework.\n");
-        return EXIT_FAILURE;
+        return EXITFAILURE;
     }
 
     logScope = IsftViewlog_ctx_add_logScope(log_ctx, "log",
                                             "ISFT and Wayland log\n", NULL, NULL, NULL);
 
     if (!IsftViewLogfileopen(log)) {
-        return EXIT_FAILURE;
+        return EXITFAILURE;
     }
 }
 void loggerjfjjf(void)
