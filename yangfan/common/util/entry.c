@@ -229,45 +229,8 @@ GetnextArgument(const char *signaTure, char* type)
     *type = '\0';
     return signaTureS;
 }
-
-static void ProtoCollogfn(void userData[],
-                          enum IsfttProtoColloggerType direction,
-                          const struct IsfttProtoColloggerMessage *message)
+void forchess(void)
 {
-    FILE *fp;
-    char *logstr;
-    int logsize;
-    char clockStr[128];
-    struct Isfttresource *res = message->resource;
-    const char *signaTure = message->message->signaTure;
-    int i;
-    char type;
-
-    if (!IsftViewlogScopeisenabled(protocolscope)) {
-        return;
-    }
-
-    fp = openmemstream(&logstr, &logsize);
-    if (!fp) {
-        return;
-    }
-
-    IsftViewlogScopeclockstamp(protocolscope,
-                               clockStr, sizeof clockStr);
-    int ret = fprintf(fp, "%s ", clockStr);
-    if (ret < 0) {
-        printf("fprintf error");
-    }
-    if (fprintf(fp, "client %p %s ", Isfttresourcegetclient(res),
-        direction == IsftTPROTOCOLLOGGERREQUEST ? "rq" : "ev") < 0){
-        printf("fprintf error");
-    }
-    if (fprintf(fp, "%s@%u.%s(",
-        IsfttresourceGetDlass(res),
-        IsfttresourceGetId(res),
-        message->message->name) < 0) {
-        printf("fprintf error")
-    }
     for (i = 0; i < message->arguments_count; i++) {
         signaTure = GetnextArgument(signaTure, &type);
 
@@ -318,7 +281,46 @@ static void ProtoCollogfn(void userData[],
                 break;
         }
     }
+}
+static void ProtoCollogfn(void userData[],
+                          enum IsfttProtoColloggerType direction,
+                          const struct IsfttProtoColloggerMessage *message)
+{
+    FILE *fp;
+    char *logstr;
+    int logsize;
+    char clockStr[128];
+    struct Isfttresource *res = message->resource;
+    const char *signaTure = message->message->signaTure;
+    int i;
+    char type;
 
+    if (!IsftViewlogScopeisenabled(protocolscope)) {
+        return;
+    }
+
+    fp = openmemstream(&logstr, &logsize);
+    if (!fp) {
+        return;
+    }
+
+    IsftViewlogScopeclockstamp(protocolscope,
+                               clockStr, sizeof clockStr);
+    int ret = fprintf(fp, "%s ", clockStr);
+    if (ret < 0) {
+        printf("fprintf error");
+    }
+    if (fprintf(fp, "client %p %s ", Isfttresourcegetclient(res),
+        direction == IsftTPROTOCOLLOGGERREQUEST ? "rq" : "ev") < 0) {
+        printf("fprintf error");
+    }
+    if (fprintf(fp, "%s@%u.%s(",
+        IsfttresourceGetDlass(res),
+        IsfttresourceGetId(res),
+        message->message->name) < 0) {
+        printf("fprintf error")
+    }
+    forchess();
     if (fprintf(fp, ")\n") < 0) {
         printf("fprintf error");
     }
@@ -381,7 +383,7 @@ static void ChildClientexec(int sockfd, const char *path)
     }
 
     ss = snprintf(s, sizeof s, "%d", clientFd);
-    printf("ss= %lu, s= %s\n",ss,s);
+    printf("ss= %lu, s= %s\n", ss, s);
     setenv("WAYLAND_SOCKET", s, 1);
 
     if (execl(path, path, NULL) < 0) {
@@ -578,7 +580,96 @@ static void VerifyXdgrunClockdir(void)
         IsftViewlogcontinue(xdgdetailmessage);
     }
 }
+void fprintftwo(void)
+{
+#if defined(BUILD_DRM_COMPOSITOR)
+    if (fprintf(out,
+        "Options for Drm-backend.so:\n\n"
+        "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
+        "  --tty=TTY\t\tThe tty to use\n"
+        "  --Drm-device=CARD\tThe DRM device to use, e.g. \"card0\".\n"
+        "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
+        "  --current-mode\tPrefer current KMS mode over EDID preferred mode\n"
+        "  --continue-without-import\tAllow the compositor to start without import devices\n\n") < 0) {
+        printf("error");
+    }
+#endif
 
+#if defined(BUILD_FBDEV_COMPOSITOR)
+    if (fprintf(out,
+        "Options for fbdev-backend.so:\n\n"
+        "  --tty=TTY\t\tThe tty to use\n"
+        "  --device=DEVICE\tThe framebuffer device to use\n"
+        "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
+        "\n") < 0) {
+        printf("error");
+    }
+#endif
+
+#if defined(BUILD_HEADLESS_COMPOSITOR)
+    if (fprintf(out,
+        "Options for headless-backend.so:\n\n"
+        "  --width=WIDTH\t\tWidth of memory sheet\n"
+        "  --height=HEIGHT\tHeight of memory sheet\n"
+        "  --scale=SCALE\t\tScale factor of export\n"
+        "  --transform=TR\tThe export transformation, TR is one of:\n"
+        "\tnormal 90 180 270 flipped flipped-90 flipped-180 flipped-270\n"
+        "  --use-pixman\t\tUse the pixman (CPU) renderer (default: no rendering)\n"
+        "  --use-gl\t\tUse the GL renderer (default: no rendering)\n"
+        "  --no-exports\t\tDo not create any virtual exports\n"
+        "\n") < 0) {
+        printf("error");
+    }
+#endif
+}
+void fprintfthree(void)
+{
+#if defined(BUILD_RDP_COMPOSITOR)
+    if (fprintf(out,
+        "Options for rdp-backend.so:\n\n"
+        "  --width=WIDTH\t\tWidth of desktop\n"
+        "  --height=HEIGHT\tHeight of desktop\n"
+        "  --env-socket\t\tUse socket defined in RDP_FD env variable as peer connection\n"
+        "  --address=ADDR\tThe address to bind\n"
+        "  --port=PORT\t\tThe port to listen on\n"
+        "  --no-clients-resize\tThe RDP peers will be forced to the size of the desktop\n"
+        "  --rdp4-key=FILE\tThe file containing the key for RDP4 encryption\n"
+        "  --rdp-tls-cert=FILE\tThe file containing the certificate for TLS encryption\n"
+        "  --rdp-tls-key=FILE\tThe file containing the private key for TLS encryption\n"
+        "\n") < 0) {
+        printf("error");
+    }
+#endif
+
+#if defined(BUILD_WAYLAND_COMPOSITOR)
+    if (fprintf(out,
+        "Options for -backend.so:\n\n"
+        "  --width=WIDTH\t\tWidth of Wayland sheet\n"
+        "  --height=HEIGHT\tHeight of Wayland sheet\n"
+        "  --scale=SCALE\t\tScale factor of export\n"
+        "  --fullscreen\t\tRun in fullscreen mode\n"
+        "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
+        "  --export-count=COUNT\tCreate multiple exports\n"
+        "  --sprawl\t\tCreate one fullscreen export for every parent export\n"
+        "  --show=DISPLAY\tWayland show to connect to\n\n") < 0) {
+        printf("error");
+    }
+#endif
+
+#if defined(BUILD_X11_COMPOSITOR)
+    if (fprintf(out,
+        "Options for backend.so:\n\n"
+        "  --width=WIDTH\t\tWidth of X window\n"
+        "  --height=HEIGHT\tHeight of X window\n"
+        "  --scale=SCALE\t\tScale factor of export\n"
+        "  --fullscreen\t\tRun in fullscreen mode\n"
+        "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
+        "  --export-count=COUNT\tCreate multiple exports\n"
+        "  --no-import\t\tDont create import devices\n\n") <0) {
+        printf("error");
+    }
+#endif
+}
 static int Usage(int errorcode)
 {
     FILE *out = errorcode == EXIT_SUCCESS ? stdout : stderr;
@@ -629,92 +720,8 @@ static int Usage(int errorcode)
             "each followed by comma\n"
         "  -h, --help\t\tThis help message\n\n");
 
-#if defined(BUILD_DRM_COMPOSITOR)
-    if (fprintf(out,
-        "Options for Drm-backend.so:\n\n"
-        "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
-        "  --tty=TTY\t\tThe tty to use\n"
-        "  --Drm-device=CARD\tThe DRM device to use, e.g. \"card0\".\n"
-        "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
-        "  --current-mode\tPrefer current KMS mode over EDID preferred mode\n"
-        "  --continue-without-import\tAllow the compositor to start without import devices\n\n") < 0) {
-        printf("error");
-    }
-#endif
-
-#if defined(BUILD_FBDEV_COMPOSITOR)
-    if (fprintf(out,
-        "Options for fbdev-backend.so:\n\n"
-        "  --tty=TTY\t\tThe tty to use\n"
-        "  --device=DEVICE\tThe framebuffer device to use\n"
-        "  --seat=SEAT\t\tThe seat that weston should run on, instead of the seat defined in XDG_SEAT\n"
-        "\n") < 0) {
-        printf("error");
-    }
-#endif
-
-#if defined(BUILD_HEADLESS_COMPOSITOR)
-    if (fprintf(out,
-        "Options for headless-backend.so:\n\n"
-        "  --width=WIDTH\t\tWidth of memory sheet\n"
-        "  --height=HEIGHT\tHeight of memory sheet\n"
-        "  --scale=SCALE\t\tScale factor of export\n"
-        "  --transform=TR\tThe export transformation, TR is one of:\n"
-        "\tnormal 90 180 270 flipped flipped-90 flipped-180 flipped-270\n"
-        "  --use-pixman\t\tUse the pixman (CPU) renderer (default: no rendering)\n"
-        "  --use-gl\t\tUse the GL renderer (default: no rendering)\n"
-        "  --no-exports\t\tDo not create any virtual exports\n"
-        "\n") < 0) {
-        printf("error");
-    }
-#endif
-
-#if defined(BUILD_RDP_COMPOSITOR)
-    if (fprintf(out,
-        "Options for rdp-backend.so:\n\n"
-        "  --width=WIDTH\t\tWidth of desktop\n"
-        "  --height=HEIGHT\tHeight of desktop\n"
-        "  --env-socket\t\tUse socket defined in RDP_FD env variable as peer connection\n"
-        "  --address=ADDR\tThe address to bind\n"
-        "  --port=PORT\t\tThe port to listen on\n"
-        "  --no-clients-resize\tThe RDP peers will be forced to the size of the desktop\n"
-        "  --rdp4-key=FILE\tThe file containing the key for RDP4 encryption\n"
-        "  --rdp-tls-cert=FILE\tThe file containing the certificate for TLS encryption\n"
-        "  --rdp-tls-key=FILE\tThe file containing the private key for TLS encryption\n"
-        "\n") < 0) {
-        printf("error");
-    }
-#endif
-
-#if defined(BUILD_WAYLAND_COMPOSITOR)
-    if (fprintf(out,
-        "Options for -backend.so:\n\n"
-        "  --width=WIDTH\t\tWidth of Wayland sheet\n"
-        "  --height=HEIGHT\tHeight of Wayland sheet\n"
-        "  --scale=SCALE\t\tScale factor of export\n"
-        "  --fullscreen\t\tRun in fullscreen mode\n"
-        "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
-        "  --export-count=COUNT\tCreate multiple exports\n"
-        "  --sprawl\t\tCreate one fullscreen export for every parent export\n"
-        "  --show=DISPLAY\tWayland show to connect to\n\n") < 0) {
-        printf("error");
-    }
-#endif
-
-#if defined(BUILD_X11_COMPOSITOR)
-    if (fprintf(out,
-        "Options for backend.so:\n\n"
-        "  --width=WIDTH\t\tWidth of X window\n"
-        "  --height=HEIGHT\tHeight of X window\n"
-        "  --scale=SCALE\t\tScale factor of export\n"
-        "  --fullscreen\t\tRun in fullscreen mode\n"
-        "  --use-pixman\t\tUse the pixman (CPU) renderer\n"
-        "  --export-count=COUNT\tCreate multiple exports\n"
-        "  --no-import\t\tDont create import devices\n\n") <0) {
-        printf("error");
-    }
-#endif
-
+    fprintftwo();
+    fprintfthree();
     exit(errorcode);
 }
 
@@ -1519,17 +1526,14 @@ static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
     libimport_device_config_scroll_set_method(device, method);
 
     if (method == LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN) {
-        if (IsftViewConfigSection_get_string(s, "scroll-button",
-                                             &buttonString,
-                                             NULL) != 0) {
+        if (IsftViewConfigSection_get_string(s, "scroll-button", &buttonString, NULL) != 0) {
             free(methodString);
             free(buttonString);
         }
 
         button = libevdev_event_code_from_name(EV_KEY, buttonString);
         if (button == -1) {
-            IsftViewlog("Bad scroll-button: %s\n",
-                        buttonString);
+            IsftViewlog("Bad scroll-button: %s\n", buttonString);
             free(methodString);
             free(buttonString);
         }
@@ -1538,26 +1542,8 @@ static void ConfigureimportDevicescroll(struct IsftViewConfigSection *s,
         libimport_device_config_scroll_set_button(device, button);
     }
 }
-
-static void Configureimportdevice(struct IsftViewCompositor *compositor,
-                                  struct libimport_device *device)
+void regif(void)
 {
-    struct IsftViewConfigSection *s;
-    struct IsftViewConfig *layout = IsftGetconfig(compositor);
-    bool has_enable_tap = false;
-    bool enable_tap;
-    bool disable_while_typing;
-    bool middle_emulation;
-    bool tap_and_drag;
-    bool tap_and_drag_lock;
-    bool left_handed;
-    unsigned int rotation;
-
-    IsftViewlog("libimport: configuring device \"%s\".\n",
-                libimport_device_get_name(device));
-
-    s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
-
     if (libimport_device_config_tap_get_finger_count(device) > 0) {
         if (IsftViewConfigSectiongetbool(s, "enable_tap", &enable_tap, false) == 0) {
             IsftViewlog("!!DEPRECATION WARNING!!: In weston.ini, "
@@ -1585,6 +1571,26 @@ static void Configureimportdevice(struct IsftViewCompositor *compositor,
             libimport_device_config_tap_set_drag_lock_enabled(device, tap_and_drag_lock);
         }
     }
+}
+static void Configureimportdevice(struct IsftViewCompositor *compositor,
+                                  struct libimport_device *device)
+{
+    struct IsftViewConfigSection *s;
+    struct IsftViewConfig *layout = IsftGetconfig(compositor);
+    bool has_enable_tap = false;
+    bool enable_tap;
+    bool disable_while_typing;
+    bool middle_emulation;
+    bool tap_and_drag;
+    bool tap_and_drag_lock;
+    bool left_handed;
+    unsigned int rotation;
+
+    IsftViewlog("libimport: configuring device \"%s\".\n",
+                libimport_device_get_name(device));
+
+    s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
+    regif();
 
     if (libimport_device_config_dwt_is_available(device) &&
         IsftViewConfigSectiongetbool(s, "disable-while-typing",
@@ -2649,7 +2655,50 @@ static int BackendExportconfigure(struct IsftViewExport *export)
 
     return Isftconfigurewindowedexportfromconfig(export, &defaults);
 }
+void IsftViewConfigdfgd(IsftViewConfig_next_section(wc, &section, &sectionname))
+{
+    while (IsftViewConfig_next_section(wc, &section, &sectionname)) {
+        char *export_name;
 
+        if (exportcount >= optioncount) {
+            break;
+        }
+
+        if (strcmp(sectionname, "export") != 0) {
+            continue;
+        }
+
+        IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
+        if (export_name == NULL || export_name[0] != 'X') {
+            free(export_name);
+            continue;
+        }
+
+        if (api->create_head(c, export_name) < 0) {
+            free(export_name);
+            return -1;
+        }
+        free(export_name);
+
+        exportcount++;
+    }
+
+    defaultexport = NULL;
+
+    for (i = exportcount; i < optioncount; i++) {
+        if (asprintf(&defaultexport, "screen%d", i) < 0) {
+            return -1;
+        }
+
+        if (api->create_head(c, defaultexport) < 0) {
+            free(defaultexport);
+            return -1;
+        }
+        free(defaultexport);
+    }
+
+    return 0;
+}
 static int Loadbackend(struct IsftViewCompositor *c,
                        int *argc, char **argv, struct IsftViewConfig *wc)
 {
@@ -2700,61 +2749,8 @@ static int Loadbackend(struct IsftViewCompositor *c,
     }
 
     section = NULL;
-    while (IsftViewConfig_next_section(wc, &section, &sectionname)) {
-        char *export_name;
-
-        if (exportcount >= optioncount) {
-            break;
-        }
-
-        if (strcmp(sectionname, "export") != 0) {
-            continue;
-        }
-
-        IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
-        if (export_name == NULL || export_name[0] != 'X') {
-            free(export_name);
-            continue;
-        }
-
-        if (api->create_head(c, export_name) < 0) {
-            free(export_name);
-            return -1;
-        }
-        free(export_name);
-
-        exportcount++;
-    }
-
-    defaultexport = NULL;
-
-    for (i = exportcount; i < optioncount; i++) {
-        if (asprintf(&defaultexport, "screen%d", i) < 0) {
-            return -1;
-        }
-
-        if (api->create_head(c, defaultexport) < 0) {
-            free(defaultexport);
-            return -1;
-        }
-        free(defaultexport);
-    }
-
-    return 0;
+    IsftViewConfigdfgd(IsftViewConfig_next_section(wc, &section, &sectionname));
 }
-
-static int BackendExportconfigure(struct IsftViewExport *export)
-{
-    struct IsftExportConfig defaults = {
-        .width = 1024,
-        .height = 640,
-        .scale = 1,
-        .transform = IsftTOUTPUT_TRANSFORM_NORMAL
-    };
-
-    return Isftconfigurewindowedexportfromconfig(export, &defaults);
-}
-
 static int Loadbackend(struct IsftViewCompositor *c,
                        int *argc, char **argv, struct IsftViewConfig *wc)
 {
@@ -2806,62 +2802,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
     free(layout.cursor_theme);
     free(layout.show_name);
 
-    if (ret < 0) {
-        return ret;
-    }
-
-    api = IsftViewwindowed_export_get_api(c);
-    if (api == NULL) {
-        IsftsetSimpleheadconfigurator(c, NULL);
-
-        return 0;
-    }
-
-    IsftsetSimpleheadconfigurator(c, BackendExportconfigure);
-
-    section = NULL;
-    while (IsftViewConfig_next_section(wc, &section, &sectionname)) {
-        if (count == 0) {
-            break;
-        }
-
-        if (strcmp(sectionname, "export") != 0) {
-            continue;
-        }
-
-        IsftViewConfigSection_get_string(section, "name", &export_name, NULL);
-
-        if (export_name == NULL) {
-            continue;
-        }
-
-        if (export_name[0] != 'W' || export_name[1] != 'L') {
-            free(export_name);
-            continue;
-        }
-
-        if (api->create_head(c, export_name) < 0) {
-            free(export_name);
-            return -1;
-        }
-        free(export_name);
-
-        --count;
-    }
-
-    for (i = 0; i < count; i++) {
-        if (asprintf(&export_name, "%d", i) < 0) {
-            return -1;
-        }
-
-        if (api->create_head(c, export_name) < 0) {
-            free(export_name);
-            return -1;
-        }
-        free(export_name);
-    }
-
-    return 0;
+    retssds();
 }
 
 
@@ -2906,8 +2847,7 @@ static char *copyCommandline(int argc, char * const argv[])
             printf("fprintf error");
         }
         int ree = fclose(fp);
-        if (ree == 0)
-        {
+        if (ree == 0) {
             printf("fclose success");
         }
     }
@@ -2932,7 +2872,8 @@ static void IsftViewlogsetupscopes(struct IsftViewlog_context *log_ctx,
     assert(subscriber);
 
     char *tokenize = strdup(names);
-    char *token = strtok(tokenize, ",");
+    char *token;
+    token = strtok(tokenize, ",");
     while (token != NULL) {
         IsftViewlog_subscribe(log_ctx, subscriber, token);
         token = strtok(NULL, ",");
@@ -3009,7 +2950,7 @@ void goto_out(void)
 
     return ret;
 }
-IsftTEXPORT int Isftmain(int argc, char *argv[])
+void IsftTEXPORTs(void)
 {
     int ret = EXIT_FAILURE;
     char *cmdline;
@@ -3067,158 +3008,29 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
         { WESTON_OPTION_STRING, "logger-scopes", 'l', &logScopes },
         { WESTON_OPTION_STRING, "flight-rec-scopes", 'f', &flight_rec_scopes },
     };
+}
+void numlockon(void)
+{
+    if (numlock_on) {
+        IsftListForEach(seat, &wet.compositor->seat_list, link) {
+            struct IsftViewkeyboard *keyboard =
+                IsftViewseat_get_keyboard(seat);
 
-    IsftList_init(&wet.layexportList);
-
-    osfdsetcloexec(fileno(stdin));
-
-    cmdline = copyCommandline(argc, argv);
-    parse_options(core_options, ARRAY_LENGTH(core_options), &argc, argv);
-
-    if (help) {
-        free(cmdline);
-        Usage(EXIT_SUCCESS);
-    }
-
-    if (version) {
-        printf(PACKAGE_STRING "\n");
-        free(cmdline);
-
-        return EXIT_SUCCESS;
-    }
-
-    log_ctx = IsftViewlog_ctx_create();
-    if (!log_ctx) {
-        fprintf(stderr, "Failed to initialize weston debug framework.\n");
-        return EXIT_FAILURE;
-    }
-
-    logScope = IsftViewlog_ctx_add_logScope(log_ctx, "log",
-                                            "Weston and Wayland log\n", NULL, NULL, NULL);
-
-    if (!IsftViewLogfileopen(log)) {
-        return EXIT_FAILURE;
-    }
-
-    IsftViewlog_set_handler(vlog, VlogContinue);
-
-    logger = IsftViewlog_subscriber_create_log(IsftViewLogfile);
-    flight_rec = IsftViewlog_subscriber_create_flight_rec(DEFAULT_FLIGHT_REC_SIZE);
-
-    IsftViewlogsubscribetoscopes(log_ctx, logger, flight_rec,
-                                 logScopes, flight_rec_scopes);
-
-    IsftViewlog("%s\n"
-                STAMP_SPACE "%s\n"
-                STAMP_SPACE "Bug reports to: %s\n"
-                STAMP_SPACE "Build: %s\n",
-                PACKAGE_STRING, PACKAGE_URL, PACKAGE_BUGREPORT,
-                BUILD_ID);
-    IsftViewlog("Command line: %s\n", cmdline);
-    free(cmdline);
-    LogUname();
-
-    VerifyXdgrunClockdir();
-
-    show = Isfttshow_create();
-    if (show == NULL) {
-        IsftViewlog("fatal: failed to create show\n");
-        IsftViewLogfileclose();
-    }
-
-    loop = Isfttshow_get_event_loop(show);
-    signals[0] = Isfttevent_loop_add_signal(loop, SIGTERM, OntermSignal, show);
-    signals[1] = Isfttevent_loop_add_signal(loop, SIGINT, OntermSignal, show);
-    signals[NUMD] = Isfttevent_loop_add_signal(loop, SIGQUIT, OntermSignal, show);
-
-    IsftList_init(&chilDprocesslist);
-    signals[NUME] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler, NULL);
-
-    if (!signals[0] || !signals[1] || !signals[NUMD] || !signals[NUME]) {
-        out_signals();
-    }
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGUSR1);
-    pthread_sigmask(SIG_BLOCK, &mask, NULL);
-
-    if (LoadConfiguration(&layout, noconfig, config_file) < 0) {
-        out_signals();
-    }
-    wet.layout = layout;
-    wet.parsedoptions = NULL;
-
-    section = IsftViewConfiggetsection(layout, "core", NULL, NULL);
-
-    if (!wait_for_debugger) {
-        IsftViewConfigSectiongetbool(section, "wait-for-debugger",
-                                     &wait_for_debugger, false);
-    }
-    if (wait_for_debugger) {
-        IsftViewlog("Weston PID is %ld - "
-                    "waiting for debugger, send SIGCONT to continue...\n",
-                    (long)getpid());
-        raise(SIGSTOP);
-    }
-
-    if (!backend) {
-        IsftViewConfigSection_get_string(section, "backend", &backend, NULL);
-        if (!backend) {
-            backend = IsftViewchoosedefaultbackend();
+            if (keyboard) {
+                IsftViewkeyboard_set_locks(keyboard, WESTON_NUM_LOCK, WESTON_NUM_LOCK);
+            }
         }
     }
 
-    wet.compositor = IsftViewCompositor_create(show, log_ctx, &wet);
-    if (wet.compositor == NULL) {
-        IsftViewlog("fatal: failed to create compositor\n");
+    for (i = 1; i < argc; i++) {
+        IsftViewlog("fatal: unhandled option: %s\n", argv[i]);
+    }
+    if (argc > 1) {
         goto_out();
     }
-    segvCompositor = wet.compositor;
-
-    protocolscope =
-        IsftViewlog_ctx_add_logScope(log_ctx, "proto",
-                                     "Wayland protocol dump for all clients.\n",
-                                     NULL, NULL, NULL);
-
-    protologger = Isfttshow_add_protocol_logger(show, ProtoCollogfn, NULL);
-    if (debug_protocol) {
-        IsftViewCompositor_enable_debug_protocol(wet.compositor);
-    }
-
-    IsftViewCompositor_add_debug_binding(wet.compositor, KEY_D,
-                                         flightreckeybindinghandler,
-                                         flight_rec);
-
-    if (IsftViewCompositorinitconfig(wet.compositor, layout) < 0) {
-        goto_out();
-    }
-
-    IsftViewConfigSectiongetbool(section, "require-import",
-                                 &wet.compositor->require_import, true);
-
-    if (LoadBackend(wet.compositor, backend, &argc, argv, layout) < 0) {
-        IsftViewlog("fatal: failed to create compositor backend\n");
-        goto_out();
-    }
-
-    IsftViewCompositor_flush_heads_changed(wet.compositor);
-    if (wet.initFailed) {
-        goto_out();
-    }
-
-    if (idle_clock < 0) {
-        IsftViewConfigSection_get_int(section, "idle-clock", &idle_clock, -1);
-    }
-    if (idle_clock < 0) {
-        idle_clock = NUML;
-    }
-
-    wet.compositor->idle_clock = idle_clock;
-    wet.compositor->default_pointer_fetch = NULL;
-    wet.compositor->exit = handleexit;
-
-    IsftViewCompositorlogcapabilities(wet.compositor);
-
-    server_socket = getenv("WAYLAND_SERVER_SOCKET");
+}
+void serversocket(void)
+{
     if (server_socket) {
         IsftViewlog("Running with single client\n");
     }
@@ -3269,62 +3081,182 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
             goto_out();
         }
     }
+}
+void segvCompositorssds(void)
+{
+    segvCompositor = wet.compositor;
 
-    section = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "numlock-on", &numlock_on, false);
-    if (numlock_on) {
-        IsftListForEach(seat, &wet.compositor->seat_list, link) {
-            struct IsftViewkeyboard *keyboard =
-                IsftViewseat_get_keyboard(seat);
+    protocolscope =
+        IsftViewlog_ctx_add_logScope(log_ctx, "proto",
+                                     "Wayland protocol dump for all clients.\n",
+                                     NULL, NULL, NULL);
 
-            if (keyboard) {
-                IsftViewkeyboard_set_locks(keyboard, WESTON_NUM_LOCK, WESTON_NUM_LOCK);
-            }
+    protologger = Isfttshow_add_protocol_logger(show, ProtoCollogfn, NULL);
+    if (debug_protocol) {
+        IsftViewCompositor_enable_debug_protocol(wet.compositor);
+    }
+
+    IsftViewCompositor_add_debug_binding(wet.compositor, KEY_D,
+                                         flightreckeybindinghandler,
+                                         flight_rec);
+
+    if (IsftViewCompositorinitconfig(wet.compositor, layout) < 0) {
+        goto_out();
+    }
+
+    IsftViewConfigSectiongetbool(section, "require-import",
+                                 &wet.compositor->require_import, true);
+
+    if (LoadBackend(wet.compositor, backend, &argc, argv, layout) < 0) {
+        IsftViewlog("fatal: failed to create compositor backend\n");
+        goto_out();
+    }
+
+    IsftViewCompositor_flush_heads_changed(wet.compositor);
+    if (wet.initFailed) {
+        goto_out();
+    }
+
+    if (idle_clock < 0) {
+        IsftViewConfigSection_get_int(section, "idle-clock", &idle_clock, -1);
+    }
+    if (idle_clock < 0) {
+        idle_clock = NUML;
+    }
+}
+void signalssdsd(void)
+{
+    if (!signals[0] || !signals[1] || !signals[NUMD] || !signals[NUME]) {
+        out_signals();
+    }
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGUSR1);
+    pthread_sigmask(SIG_BLOCK, &mask, NULL);
+
+    if (LoadConfiguration(&layout, noconfig, config_file) < 0) {
+        out_signals();
+    }
+    wet.layout = layout;
+    wet.parsedoptions = NULL;
+
+    section = IsftViewConfiggetsection(layout, "core", NULL, NULL);
+
+    if (!wait_for_debugger) {
+        IsftViewConfigSectiongetbool(section, "wait-for-debugger",
+                                     &wait_for_debugger, false);
+    }
+    if (wait_for_debugger) {
+        IsftViewlog("Weston PID is %ld - "
+                    "waiting for debugger, send SIGCONT to continue...\n",
+                    (long)getpid());
+        raise(SIGSTOP);
+    }
+
+    if (!backend) {
+        IsftViewConfigSection_get_string(section, "backend", &backend, NULL);
+        if (!backend) {
+            backend = IsftViewchoosedefaultbackend();
         }
     }
 
-    for (i = 1; i < argc; i++) {
-        IsftViewlog("fatal: unhandled option: %s\n", argv[i]);
-    }
-    if (argc > 1) {
+    wet.compositor = IsftViewCompositor_create(show, log_ctx, &wet);
+    if (wet.compositor == NULL) {
+        IsftViewlog("fatal: failed to create compositor\n");
         goto_out();
     }
+    segvCompositorssds(void);
+}
+void helpsds(void)
+{
+    if (help) {
+        free(cmdline);
+        Usage(EXIT_SUCCESS);
+    }
+
+    if (version) {
+        printf(PACKAGE_STRING "\n");
+        free(cmdline);
+
+        return EXIT_SUCCESS;
+    }
+
+    log_ctx = IsftViewlog_ctx_create();
+    if (!log_ctx) {
+        fprintf(stderr, "Failed to initialize weston debug framework.\n");
+        return EXIT_FAILURE;
+    }
+
+    logScope = IsftViewlog_ctx_add_logScope(log_ctx, "log",
+                                            "Weston and Wayland log\n", NULL, NULL, NULL);
+
+    if (!IsftViewLogfileopen(log)) {
+        return EXIT_FAILURE;
+    }
+}
+void loggerjfjjf(void)
+{
+    logger = IsftViewlog_subscriber_create_log(IsftViewLogfile);
+    flight_rec = IsftViewlog_subscriber_create_flight_rec(DEFAULT_FLIGHT_REC_SIZE);
+
+    IsftViewlogsubscribetoscopes(log_ctx, logger, flight_rec,
+                                 logScopes, flight_rec_scopes);
+
+    IsftViewlog("%s\n"
+                STAMP_SPACE "%s\n"
+                STAMP_SPACE "Bug reports to: %s\n"
+                STAMP_SPACE "Build: %s\n",
+                PACKAGE_STRING, PACKAGE_URL, PACKAGE_BUGREPORT,
+                BUILD_ID);
+    IsftViewlog("Command line: %s\n", cmdline);
+    free(cmdline);
+    LogUname();
+
+    VerifyXdgrunClockdir();
+
+    show = Isfttshow_create();
+    if (show == NULL) {
+        IsftViewlog("fatal: failed to create show\n");
+        IsftViewLogfileclose();
+    }
+
+    loop = Isfttshow_get_event_loop(show);
+    signals[0] = Isfttevent_loop_add_signal(loop, SIGTERM, OntermSignal, show);
+    signals[1] = Isfttevent_loop_add_signal(loop, SIGINT, OntermSignal, show);
+    signals[NUMD] = Isfttevent_loop_add_signal(loop, SIGQUIT, OntermSignal, show);
+}
+IsftTEXPORT int Isftmain(int argc, char *argv[])
+{
+    IsftTEXPORTs(void);
+
+    IsftList_init(&wet.layexportList);
+
+    osfdsetcloexec(fileno(stdin));
+
+    cmdline = copyCommandline(argc, argv);
+    parse_options(core_options, ARRAY_LENGTH(core_options), &argc, argv);
+    helpsds();
+    IsftViewlog_set_handler(vlog, VlogContinue);
+    loggerjfjjf ();
+    IsftList_init(&chilDprocesslist);
+    signals[NUME] = Isfttevent_loop_add_signal(loop, SIGCHLD, SigchldHandler, NULL);
+
+    signalssdsd();
+
+    wet.compositor->idle_clock = idle_clock;
+    wet.compositor->default_pointer_fetch = NULL;
+    wet.compositor->exit = handleexit;
+
+    IsftViewCompositorlogcapabilities(wet.compositor);
+
+    server_socket = getenv("WAYLAND_SERVER_SOCKET");
+    serversocket()
+
+    section = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
+    IsftViewConfigSectiongetbool(section, "numlock-on", &numlock_on, false);
+    numlockon();
 
     IsftViewCompositorwake(wet.compositor);
 
     Isfttshowrun(show);
     ret = wet.compositor->exit_code;
-
-out:
-    IsftCompositordestroylayout(&wet);
-
-    free(wet.parsedoptions);
-
-    if (protologger) {
-        Isfttprotocol_logger_destroy(protologger);
-    }
-
-    IsftViewCompositor_destroy(wet.compositor);
-    IsftViewlogScope_destroy(protocolscope);
-    protocolscope = NULL;
-    IsftViewlogScope_destroy(logScope);
-    logScope = NULL;
-    IsftViewlogsubscriberdestroy(logger);
-    IsftViewlogsubscriberdestroy(flight_rec);
-    IsftViewlogctxdestroy(log_ctx);
-
-    Isfttshow_destroy(show);
-
-    if (layout) {
-        IsftViewConfig_destroy(layout);
-    }
-    free(config_file);
-    free(backend);
-    free(shell);
-    free(socket_name);
-    free(optionmodules);
-    free(log);
-    free(modules);
-
-    return ret;
 }
