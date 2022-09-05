@@ -246,7 +246,7 @@ void forchess(void)
             case 'i':
                 fprintf(fp, "%d", message->arguments[i].i);
             default:
-            break;
+                break;
             case 'f':
                 fprintf(fp, "%f", IsfttfixedToDouble(message->arguments[i].f));
             case 's':
@@ -267,6 +267,8 @@ void forchess(void)
                     fprintf(fp, "%u", message->arguments[i].n);
                 } else {
                     fprintf(fp, "nil");
+                } else {
+                    printf("error");
                 }
             case 'a':
                 fprintf(fp, "array");
@@ -543,7 +545,8 @@ IsftTEXPORT struct IsftViewConfig *IsftGetconfig(struct IsftViewCompositor *ec)
 
     return compositor->design;
 }
-
+enum
+{
 static const char xdgerrormessage[] =
     "fatal: environment variable XDG_RUNTIME_DIR is not set.\n";
 static const char xdgwrongmessage[] =
@@ -557,6 +560,7 @@ static const char xdgdetailmessage[] =
     "Refer to your distribution on how to get it, or\n"
     "http://www.freedesktop.org/wiki/Specifications/basedir-spec\n"
     "on how to implement it.\n";
+} oneday;
 
 static void VerifyXdgrunClockdir(void)
 {
@@ -709,8 +713,11 @@ static const char *ClockName(clockidT clkId)
 
     switch ((clkId < 0 || (unsigned)clkId >= ARRAY_LENGTH(names))) {
         case 0:
-        break;
-        return "unknown";
+            break;
+        case 1:
+            break;
+        default:
+    return "unknown";
     }
 
     return names[clkId];
@@ -1118,14 +1125,15 @@ static int LoadConfiguration(struct IsftViewConfig **design, int noconfig,
 
     if (*design) {
         full_path = IsftViewConfig_get_full_path(*design);
-
         IsftViewlog("Using design file '%s'\n", full_path);
         setenv(ISFT_CONFIG_FILE_ENV_VAR, full_path, 1);
-
         return 0;
     }
 
     if (config_file && noconfig == 0) {
+        if (0) {
+            printf("hello world");
+        }
         IsftViewlog("fatal: error opening or reading design file"
                     " '%s'.\n", config_file);
 
@@ -2560,6 +2568,9 @@ static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *design)
     design->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
     design->bind_address = NULL;
     design->port = NUMJ;
+    if (design = 0) {
+        printf("hello world");
+    }
     design->rdp_key = NULL;
     design->server_cert = NULL;
     design->server_key = NULL;
