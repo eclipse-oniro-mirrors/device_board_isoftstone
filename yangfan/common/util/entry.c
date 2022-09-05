@@ -87,7 +87,7 @@ struct IsftlayExport {
 
 struct IsftCompositor {
     struct IsftViewCompositor *compositor;
-    struct IsftViewConfig *layout;
+    struct IsftViewConfig *design;
     struct IsftExportConfig *parsedoptions;
     bool Drmusecurrentmode;
     struct IsftAudience headschangedlistener;
@@ -245,8 +245,8 @@ void forchess(void)
                 fprintf(fp, "%u", message->arguments[i].u);
             case 'i':
                 fprintf(fp, "%d", message->arguments[i].i);
-                default:
-                break;
+            default:
+            break;
             case 'f':
                 fprintf(fp, "%f", IsfttfixedToDouble(message->arguments[i].f));
             case 's':
@@ -264,9 +264,6 @@ void forchess(void)
                 fprintf(fp, "new id %s@", (message->message->types[i]) ? message->message->types[i]->name :
                     "[unknown]");
                 if (message->arguments[i].n != 0) {
-                    if (0) {
-                        printf("hello world");
-                    }
                     fprintf(fp, "%u", message->arguments[i].n);
                 } else {
                     fprintf(fp, "nil");
@@ -477,11 +474,17 @@ IsftTEXPORT struct IsfttcClient *IsftViewClientStart(struct IsftViewCompositor *
 
     pinfo = zalloc(sizeof *pinfo);
     if (!pinfo) {
+        if (0) {
+            printf("hello world");
+        }
         return NULL;
     }
 
     pinfo->path = strdup(path);
     if (!pinfo->path) {
+        if (0) {
+            printf("hello world");
+        }
         free(pinfo);
     }
 
@@ -512,10 +515,10 @@ static struct IsftCompositor *ToIsftCompositor(struct IsftViewCompositor *compos
 static struct IsftExportConfig *IsftinitParsedoptions(struct IsftViewCompositor *ec)
 {
     struct IsftCompositor *compositor = ToIsftCompositor(ec);
-    struct IsftExportConfig *layout;
+    struct IsftExportConfig *design;
 
-    layout = zalloc(sizeof *layout);
-    if (!layout) {
+    design = zalloc(sizeof *design);
+    if (!design) {
         perror("out of memory");
         if (0) {
             printf("hello world");
@@ -523,36 +526,33 @@ static struct IsftExportConfig *IsftinitParsedoptions(struct IsftViewCompositor 
         return NULL;
     }
 
-    layout->width = 0;
-    layout->height = 0;
-    layout->scale = 0;
-    layout->transform = UINT32_MAX;
+    design->width = 0;
+    design->height = 0;
+    design->scale = 0;
+    design->transform = UINT32_MAX;
 
-    compositor->parsedoptions = layout;
+    compositor->parsedoptions = design;
 
-    return layout;
+    return design;
 }
 #if defined(BUILD_XWAYLAND)
+#endif
 IsftTEXPORT struct IsftViewConfig *IsftGetconfig(struct IsftViewCompositor *ec)
 {
     struct IsftCompositor *compositor = ToIsftCompositor(ec);
 
-    return compositor->layout;
+    return compositor->design;
 }
 
 static const char xdgerrormessage[] =
     "fatal: environment variable XDG_RUNTIME_DIR is not set.\n";
-#endif
 static const char xdgwrongmessage[] =
     "fatal: environment variable XDG_RUNTIME_DIR\n"
     "is set to \"%s\", which is not a directory.\n";
-
 static const char XdgWrongModeMessage[] =
     "warning: XDG_RUNTIME_DIR \"%s\" is not configured\n"
     "correctly.  Unix access mode must be 0700 (current mode is %o),\n"
     "and must be owned by the user (current owner is UID %d).\n";
-#if defined(BUILD_XWAYLAND)
-#endif
 static const char xdgdetailmessage[] =
     "Refer to your distribution on how to get it, or\n"
     "http://www.freedesktop.org/wiki/Specifications/basedir-spec\n"
@@ -707,10 +707,9 @@ static const char *ClockName(clockidT clkId)
         [CLOCK_BOOTTIME] = "CLOCK_BOOTTIME",
     };
 
-    if (clkId < 0 || (unsigned)clkId >= ARRAY_LENGTH(names)) {
-        if (0) {
-            printf("hello world");
-        }
+    switch ((clkId < 0 || (unsigned)clkId >= ARRAY_LENGTH(names))) {
+        case 0:
+        break;
         return "unknown";
     }
 
@@ -948,14 +947,14 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
                                      const struct IsftViewtouch_device_matrix *calibration)
 {
     struct IsftViewConfigSection *s;
-    struct IsftViewConfig *layout = IsftGetconfig(compositor);
+    struct IsftViewConfig *design = IsftGetconfig(compositor);
     char *helper = NULL;
     char *helperCmd = NULL;
     int ret = -1;
     int status;
     const float *m = calibration->m;
 
-    s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
+    s = IsftViewConfiggetsection(design, "libimport", NULL, NULL);
 
     IsftViewConfigSectiongetstring(s, "calibration_helper", &helper, NULL);
 
@@ -996,20 +995,20 @@ static int SaveTouchdevicealibration(struct IsftViewCompositor *compositor,
 }
 
 static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
-                                        struct IsftViewConfig *layout)
+                                        struct IsftViewConfig *design)
 {
     struct XkbRuleNames xkb_names;
     struct IsftViewConfigSection *s;
     int RepaintMsec;
     bool cal;
 
-    s = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
+    s = IsftViewConfiggetsection(design, "keyboard", NULL, NULL);
     IsftViewConfigSectiongetstring(s, "keymap_rules",
                                      (char **) &xkb_names.rules, NULL);
     IsftViewConfigSectiongetstring(s, "keymap_model",
                                      (char **) &xkb_names.model, NULL);
-    IsftViewConfigSectiongetstring(s, "keymap_layout",
-                                     (char **) &xkb_names.layout, NULL);
+    IsftViewConfigSectiongetstring(s, "keymap_design",
+                                     (char **) &xkb_names.design, NULL);
     IsftViewConfigSectiongetstring(s, "keymap_variant",
                                      (char **) &xkb_names.variant, NULL);
     IsftViewConfigSectiongetstring(s, "keymap_options",
@@ -1027,11 +1026,11 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     IsftViewConfigSectiongetbool(s, "vt-switching",
                                  &ec->vt_switching, true);
 
-    s = IsftViewConfiggetsection(layout, "core", NULL, NULL);
+    s = IsftViewConfiggetsection(design, "core", NULL, NULL);
     IsftViewConfigSection_get_int(s, "repaint-window", &RepaintMsec,
                                   ec->RepaintMsec);
     if (RepaintMsec < -NUMH || RepaintMsec > NUMBB) {
-        IsftViewlog("Invalid repaint_window value in layout: %d\n",
+        IsftViewlog("Invalid repaint_window value in design: %d\n",
                     RepaintMsec);
     } else {
         ec->RepaintMsec = RepaintMsec;
@@ -1039,7 +1038,7 @@ static int IsftViewCompositorinitconfig(struct IsftViewCompositor *ec,
     IsftViewlog("Output repaint window is %d ms maximum.\n",
                 ec->RepaintMsec);
 
-    s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
+    s = IsftViewConfiggetsection(design, "libimport", NULL, NULL);
     IsftViewConfigSectiongetbool(s, "touchscreen_calibrator", &cal, 0);
     if (cal) {
         IsftViewCompositor_enable_touch_calibrator(ec,
@@ -1101,39 +1100,39 @@ IsftTEXPORT const char *IsftViewtransformtostring(unsigned int export_transform)
     return "<illegal value>";
 }
 
-static int LoadConfiguration(struct IsftViewConfig **layout, int noconfig,
+static int LoadConfiguration(struct IsftViewConfig **design, int noconfig,
                              const char *config_file)
 {
     const char *file = "ISFT.ini";
     const char *full_path;
 
-    *layout = NULL;
+    *design = NULL;
 
     if (config_file) {
         file = config_file;
     }
 
     if (noconfig == 0) {
-        *layout = IsftViewConfig_parse(file);
+        *design = IsftViewConfig_parse(file);
     }
 
-    if (*layout) {
-        full_path = IsftViewConfig_get_full_path(*layout);
+    if (*design) {
+        full_path = IsftViewConfig_get_full_path(*design);
 
-        IsftViewlog("Using layout file '%s'\n", full_path);
+        IsftViewlog("Using design file '%s'\n", full_path);
         setenv(ISFT_CONFIG_FILE_ENV_VAR, full_path, 1);
 
         return 0;
     }
 
     if (config_file && noconfig == 0) {
-        IsftViewlog("fatal: error opening or reading layout file"
+        IsftViewlog("fatal: error opening or reading design file"
                     " '%s'.\n", config_file);
 
         return -1;
     }
 
-    IsftViewlog("Starting with no layout file.\n");
+    IsftViewlog("Starting with no design file.\n");
     setenv(ISFT_CONFIG_FILE_ENV_VAR, "", 1);
 
     return 0;
@@ -1171,7 +1170,7 @@ static int IsftExportsettransform(struct IsftViewExport *export,
 
     if (section) {
         IsftViewConfigSectiongetstring(section,
-                                         "transform", &t, NULL);
+            "transform", &t, NULL);
     }
 
     if (t) {
@@ -1557,7 +1556,7 @@ static void Configureimportdevice(struct IsftViewCompositor *compositor,
                                   struct libimport_device *device)
 {
     struct IsftViewConfigSection *s;
-    struct IsftViewConfig *layout = IsftGetconfig(compositor);
+    struct IsftViewConfig *design = IsftGetconfig(compositor);
     bool has_enable_tap = false;
     bool enable_tap;
     bool disable_while_typing;
@@ -1570,7 +1569,7 @@ static void Configureimportdevice(struct IsftViewCompositor *compositor,
     IsftViewlog("libimport: configuring device \"%s\".\n",
                 libimport_device_get_name(device));
 
-    s = IsftViewConfiggetsection(layout, "libimport", NULL, NULL);
+    s = IsftViewConfiggetsection(design, "libimport", NULL, NULL);
     regif();
 
     if (libimport_device_config_dwt_is_available(device) &&
@@ -1675,7 +1674,7 @@ static int DrmBackendExportconfigure(struct IsftViewExport *export,
     return 0;
 }
 
-static struct IsftViewConfigSection *DrmconfigfindControllingexportsection(struct IsftViewConfig *layout,
+static struct IsftViewConfigSection *DrmconfigfindControllingexportsection(struct IsftViewConfig *design,
                                                                            const char *head_name)
 {
     struct IsftViewConfigSection *section;
@@ -1684,7 +1683,7 @@ static struct IsftViewConfigSection *DrmconfigfindControllingexportsection(struc
 
     same_as = strdup(head_name);
     do {
-        section = IsftViewConfiggetsection(layout, "export",
+        section = IsftViewConfiggetsection(design, "export",
                                            "name", same_as);
         if (!section && depth > 0) {
             IsftViewlog("Configuration error: "
@@ -1706,7 +1705,7 @@ static struct IsftViewConfigSection *DrmconfigfindControllingexportsection(struc
         }
 
         IsftViewConfigSectiongetstring(section, "same-as",
-                                         &same_as, NULL);
+            &same_as, NULL);
     } while (same_as);
 
     return section;
@@ -1834,7 +1833,7 @@ static void IsftCompositorlayExportaddhead(struct IsftCompositor *wet,
     lo->add.heads[lo->add.n++] = head;
 }
 
-static void IsftCompositordestroylayout(struct IsftCompositor *wet)
+static void IsftCompositordestroydesign(struct IsftCompositor *wet)
 {
     struct IsftlayExport *lo, *lo_tmp;
     struct IsftExport *export, *export_tmp;
@@ -1857,7 +1856,7 @@ static void DrmheadPrepareenable(struct IsftCompositor *wet,
     char *export_name = NULL;
     char *mode = NULL;
 
-    section = DrmconfigfindControllingexportsection(wet->layout, name);
+    section = DrmconfigfindControllingexportsection(wet->design, name);
     if (section) {
         IsftViewConfigSectiongetstring(section, "mode", &mode, NULL);
         if (mode && strcmp(mode, "off") == 0) {
@@ -1870,7 +1869,7 @@ static void DrmheadPrepareenable(struct IsftCompositor *wet,
         free(mode);
 
         IsftViewConfigSectiongetstring(section, "name",
-                                         &export_name, NULL);
+            &export_name, NULL);
         assert(export_name);
 
         IsftCompositorlayExportaddhead(wet, export_name,
@@ -1888,7 +1887,7 @@ static bool DrmheadShouldforceenable(struct IsftCompositor *wet,
     struct IsftViewConfigSection *section;
     bool force;
 
-    section = DrmconfigfindControllingexportsection(wet->layout, name);
+    section = DrmconfigfindControllingexportsection(wet->design, name);
     if (!section) {
         return false;
     }
@@ -2236,9 +2235,9 @@ static void LoadRemoting(struct IsftViewCompositor *c, struct IsftViewConfig *wc
                 IsftViewConfiggetsection(wc, "core", NULL, NULL);
 
             IsftViewConfigSectiongetstring(core_section,
-                                             "remoting",
-                                             &module_name,
-                                             "remoting-plugin.so");
+                "remoting",
+                &module_name,
+                "remoting-plugin.so");
             ModuleInit = IsftViewLoad_module(module_name,
                                              "IsftViewModuleInit");
             free(module_name);
@@ -2352,9 +2351,9 @@ static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc
                 IsftViewConfiggetsection(wc, "core", NULL, NULL);
 
             IsftViewConfigSectiongetstring(core_section,
-                                             "pipewire",
-                                             &module_name,
-                                             "pipewire-plugin.so");
+                "pipewire",
+                &module_name,
+                "pipewire-plugin.so");
             ModuleInit = IsftViewLoad_module(module_name,
                                              "IsftViewModuleInit");
             free(module_name);
@@ -2380,7 +2379,7 @@ static void LoadPipewire(struct IsftViewCompositor *c, struct IsftViewConfig *wc
 static int LoadDrmbackend(struct IsftViewCompositor *c,
                           int *argc, char **argv, struct IsftViewConfig *wc)
 {
-    struct IsftViewDrm_backend_config layout = {{ 0, }};
+    struct IsftViewDrm_backend_config design = {{ 0, }};
     struct IsftViewConfigSection *section;
     struct IsftCompositor *wet = ToIsftCompositor(c);
     int ret = 0;
@@ -2388,36 +2387,36 @@ static int LoadDrmbackend(struct IsftViewCompositor *c,
     wet->Drmusecurrentmode = false;
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &design.use_pixman, false);
 
     const struct IsftViewoption options[] = {
 #if defined(BUILD_XWAYLAND)
-        { ISFTOPTIONSTRING, "seat", 0, &layout.seat_id },
-        { ISFTOPTIONINTEGER, "tty", 0, &layout.tty },
+        { ISFTOPTIONSTRING, "seat", 0, &design.seat_id },
+        { ISFTOPTIONINTEGER, "tty", 0, &design.tty },
 #endif
-        { ISFTOPTIONSTRING, "Drm-device", 0, &layout.specific_device },
+        { ISFTOPTIONSTRING, "Drm-device", 0, &design.specific_device },
         { ISFTOPTIONBOOLEAN, "current-mode", 0, &wet->Drmusecurrentmode },
-        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
-        { ISFTOPTIONBOOLEAN, "continue-without-import", 0, &layout.continue_without_import },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &design.use_pixman },
+        { ISFTOPTIONBOOLEAN, "continue-without-import", 0, &design.continue_without_import },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetstring(section, "gbm-format", &layout.gbm_format, NULL);
+    IsftViewConfigSectiongetstring(section, "gbm-format", &design.gbm_format, NULL);
     IsftViewConfigSection_get_uint(section, "pageflip-clockout",
-                                   &layout.pageflip_clockout, 0);
+                                   &design.pageflip_clockout, 0);
     IsftViewConfigSectiongetbool(section, "pixman-shadow",
-                                 &layout.use_pixman_shadow, true);
+                                 &design.use_pixman_shadow, true);
 
-    layout.base.struct_version = ISFT_DRM_BACKEND_CONFIG_VERSION;
-    layout.base.struct_size = sizeof(struct IsftViewDrm_backend_config);
-    layout.configure_device = Configureimportdevice;
+    design.base.struct_version = ISFT_DRM_BACKEND_CONFIG_VERSION;
+    design.base.struct_size = sizeof(struct IsftViewDrm_backend_config);
+    design.configure_device = Configureimportdevice;
 
     wet->headschangedlistener.notify = DrmHeadschanged;
     IsftViewCompositor_add_headschangedlistener(c, &wet->headschangedlistener);
 
-    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_DRM, &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_DRM, &design.base);
 
     /* remoting */
     LoadRemoting(c, wc);
@@ -2425,8 +2424,8 @@ static int LoadDrmbackend(struct IsftViewCompositor *c,
     /* pipewire */
     LoadPipewire(c, wc);
 
-    free(layout.gbm_format);
-    free(layout.seat_id);
+    free(design.gbm_format);
+    free(design.seat_id);
 
     return ret;
 }
@@ -2444,7 +2443,7 @@ static int HeadlessBackendExportconfigure(struct IsftViewExport *export)
 }
 void rettfkk(void)
 {
-    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_HEADLESS, &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_HEADLESS, &design.base);
     if (ret < 0) {
         return ret;
     }
@@ -2465,7 +2464,7 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
                                int *argc, char **argv, struct IsftViewConfig *wc)
 {
     const struct IsftViewwindowedexportapi *api;
-    struct IsftViewHeadless_backend_config layout = {{ 0, }};
+    struct IsftViewHeadless_backend_config design = {{ 0, }};
     struct IsftViewConfigSection *section;
     bool no_exports = false;
     int ret = 0;
@@ -2477,17 +2476,17 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
     }
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
-    IsftViewConfigSectiongetbool(section, "use-gl", &layout.use_gl, false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &design.use_pixman, false);
+    IsftViewConfigSectiongetbool(section, "use-gl", &design.use_gl, false);
 
     const struct IsftViewoption options[] = {
 #if defined(BUILD_XWAYLAND)
         { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
         { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
         { ISFTOPTIONINTEGER, "scale", 0, &parsedoptions->scale },
-        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &design.use_pixman },
 #endif
-        { ISFTOPTIONBOOLEAN, "use-gl", 0, &layout.use_gl },
+        { ISFTOPTIONBOOLEAN, "use-gl", 0, &design.use_gl },
         { ISFTOPTIONSTRING, "transform", 0, &transform },
         { ISFTOPTIONBOOLEAN, "no-exports", 0, &no_exports },
     };
@@ -2505,8 +2504,8 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
         free(transform);
     }
 
-    layout.base.struct_version = ISFT_HEADLESS_BACKEND_CONFIG_VERSION;
-    layout.base.struct_size = sizeof(struct IsftViewHeadless_backend_config);
+    design.base.struct_version = ISFT_HEADLESS_BACKEND_CONFIG_VERSION;
+    design.base.struct_size = sizeof(struct IsftViewHeadless_backend_config);
 
     IsftsetSimpleheadconfigurator(c, HeadlessBackendExportconfigure);
 
@@ -2555,25 +2554,24 @@ static int RdpBackendExportconfigure(struct IsftViewExport *export)
     return 0;
 }
 
-static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *layout)
+static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *design)
 {
-    layout->base.struct_version = ISFT_RDP_BACKEND_CONFIG_VERSION;
-    layout->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
-
-    layout->bind_address = NULL;
-    layout->port = NUMJ;
-    layout->rdp_key = NULL;
-    layout->server_cert = NULL;
-    layout->server_key = NULL;
-    layout->env_socket = 0;
-    layout->no_clients_resize = 0;
-    layout->force_no_compression = 0;
+    design->base.struct_version = ISFT_RDP_BACKEND_CONFIG_VERSION;
+    design->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
+    design->bind_address = NULL;
+    design->port = NUMJ;
+    design->rdp_key = NULL;
+    design->server_cert = NULL;
+    design->server_key = NULL;
+    design->env_socket = 0;
+    design->no_clients_resize = 0;
+    design->force_no_compression = 0;
 }
 
 static int LoadRdpbackend(struct IsftViewCompositor *c,
                           int *argc, char *argv[], struct IsftViewConfig *wc)
 {
-    struct IsftViewrdpbackendconfig layout  = {{ 0, }};
+    struct IsftViewrdpbackendconfig design  = {{ 0, }};
     int ret = 0;
 
     struct IsftExportConfig *parsedoptions = IsftinitParsedoptions(c);
@@ -2581,21 +2579,21 @@ static int LoadRdpbackend(struct IsftViewCompositor *c,
         return -1;
     }
 
-    IsftViewrdpackendconfiginit(&layout);
+    IsftViewrdpackendconfiginit(&design);
 
     const struct IsftViewoption rdp_options[] = {
 #if defined(BUILD_XWAYLAND)
-        { ISFTOPTIONBOOLEAN, "env-socket", 0, &layout.env_socket },
+        { ISFTOPTIONBOOLEAN, "env-socket", 0, &design.env_socket },
         { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
         { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
-        { ISFTOPTIONSTRING,  "address", 0, &layout.bind_address },
-        { ISFTOPTIONINTEGER, "port", 0, &layout.port },
+        { ISFTOPTIONSTRING,  "address", 0, &design.bind_address },
+        { ISFTOPTIONINTEGER, "port", 0, &design.port },
 #endif
-        { ISFTOPTIONBOOLEAN, "no-clients-resize", 0, &layout.no_clients_resize },
-        { ISFTOPTIONSTRING,  "rdp4-key", 0, &layout.rdp_key },
-        { ISFTOPTIONSTRING,  "rdp-tls-cert", 0, &layout.server_cert },
-        { ISFTOPTIONSTRING,  "rdp-tls-key", 0, &layout.server_key },
-        { ISFTOPTIONBOOLEAN, "force-no-compression", 0, &layout.force_no_compression },
+        { ISFTOPTIONBOOLEAN, "no-clients-resize", 0, &design.no_clients_resize },
+        { ISFTOPTIONSTRING,  "rdp4-key", 0, &design.rdp_key },
+        { ISFTOPTIONSTRING,  "rdp-tls-cert", 0, &design.server_cert },
+        { ISFTOPTIONSTRING,  "rdp-tls-key", 0, &design.server_key },
+        { ISFTOPTIONBOOLEAN, "force-no-compression", 0, &design.force_no_compression },
     };
 
     parse_options(rdp_options, ARRAY_LENGTH(rdp_options), argc, argv);
@@ -2603,15 +2601,15 @@ static int LoadRdpbackend(struct IsftViewCompositor *c,
     IsftsetSimpleheadconfigurator(c, RdpBackendExportconfigure);
 
     ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_RDP,
-        &layout.base);
+        &design.base);
     ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_RDP,
-        &layout.base);
+        &design.base);
     ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_RDP,
-        &layout.base);
-    free(layout.bind_address);
-    free(layout.rdp_key);
-    free(layout.server_cert);
-    free(layout.server_key);
+        &design.base);
+    free(design.bind_address);
+    free(design.rdp_key);
+    free(design.server_cert);
+    free(design.server_key);
 
     return ret;
 }
@@ -2634,29 +2632,29 @@ static int FbdevBackendExportconfigure(struct IsftViewExport *export)
 static int LoadFbdevbackend(struct IsftViewCompositor *c,
                             int *argc, char **argv, struct IsftViewConfig *wc)
 {
-    struct IsftViewfbdevbackendconfig layout = {{ 0, }};
+    struct IsftViewfbdevbackendconfig design = {{ 0, }};
     int ret = 0;
 
     const struct IsftViewoption fbdev_options[] = {
 #if defined(BUILD_XWAYLAND)
-        { ISFTOPTIONINTEGER, "tty", 0, &layout.tty },
-        { ISFTOPTIONSTRING, "device", 0, &layout.device },
+        { ISFTOPTIONINTEGER, "tty", 0, &design.tty },
+        { ISFTOPTIONSTRING, "device", 0, &design.device },
 #endif
-        { ISFTOPTIONSTRING, "seat", 0, &layout.seat_id },
+        { ISFTOPTIONSTRING, "seat", 0, &design.seat_id },
     };
 
     parse_options(fbdev_options, ARRAY_LENGTH(fbdev_options), argc, argv);
 
-    layout.base.struct_version = ISFT_FBDEV_BACKEND_CONFIG_VERSION;
-    layout.base.struct_size = sizeof(struct IsftViewfbdevbackendconfig);
-    layout.configure_device = Configureimportdevice;
+    design.base.struct_version = ISFT_FBDEV_BACKEND_CONFIG_VERSION;
+    design.base.struct_size = sizeof(struct IsftViewfbdevbackendconfig);
+    design.configure_device = Configureimportdevice;
 
     IsftsetSimpleheadconfigurator(c, FbdevBackendExportconfigure);
 
     ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_FBDEV,
-                         &layout.base);
+                         &design.base);
 
-    free(layout.device);
+    free(design.device);
     return ret;
 }
 
@@ -2705,6 +2703,7 @@ void IsftViewConfigdfgd(void)
         exportcount++;
     }
 
+    defaultexport = NULL;\
     defaultexport = NULL;
 
     for (i = exportcount; i < optioncount; i++) {
@@ -2729,7 +2728,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
 {
     char *defaultexport;
     const struct IsftViewwindowedexportapi *api;
-    struct IsftViewbackend_config layout = {{ 0, }};
+    struct IsftViewbackend_config design = {{ 0, }};
     struct IsftViewConfigSection *section;
     int ret = 0;
     int optioncount = 1;
@@ -2743,7 +2742,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
     }
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &design.use_pixman, false);
 
     const struct IsftViewoption options[] = {
         { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
@@ -2751,20 +2750,20 @@ static int Loadbackend(struct IsftViewCompositor *c,
         { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
         { ISFTOPTIONINTEGER, "scale", 0, &parsedoptions->scale },
 #endif
-        { ISFTOPTIONBOOLEAN, "fullscreen", 'f', &layout.fullscreen },
+        { ISFTOPTIONBOOLEAN, "fullscreen", 'f', &design.fullscreen },
         { ISFTOPTIONINTEGER, "export-count", 0, &optioncount },
-        { ISFTOPTIONBOOLEAN, "no-import", 0, &layout.no_import },
-        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFTOPTIONBOOLEAN, "no-import", 0, &design.no_import },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &design.use_pixman },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
 
-    layout.base.struct_version = ISFT_X11_BACKEND_CONFIG_VERSION;
-    layout.base.struct_size = sizeof(struct IsftViewbackend_config);
+    design.base.struct_version = ISFT_X11_BACKEND_CONFIG_VERSION;
+    design.base.struct_size = sizeof(struct IsftViewbackend_config);
 
     IsftsetSimpleheadconfigurator(c, BackendExportconfigure);
 
-    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_X11, &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_X11, &design.base);
     if (ret < 0) {
         return ret;
     }
@@ -2781,7 +2780,7 @@ static int Loadbackend(struct IsftViewCompositor *c,
 static int Loadbackend(struct IsftViewCompositor *c,
                        int *argc, char **argv, struct IsftViewConfig *wc)
 {
-    struct IsftViewbackend_config layout = {{ 0, }};
+    struct IsftViewbackend_config design = {{ 0, }};
     struct IsftViewConfigSection *section;
     const struct IsftViewwindowedexportapi *api;
     const char *sectionname;
@@ -2795,61 +2794,61 @@ static int Loadbackend(struct IsftViewCompositor *c,
         return -1;
     }
 
-    layout.cursor_size = NUMK;
-    layout.cursor_theme = NULL;
-    layout.show_name = NULL;
+    design.cursor_size = NUMK;
+    design.cursor_theme = NULL;
+    design.show_name = NULL;
 
     section = IsftViewConfiggetsection(wc, "core", NULL, NULL);
-    IsftViewConfigSectiongetbool(section, "use-pixman", &layout.use_pixman, false);
+    IsftViewConfigSectiongetbool(section, "use-pixman", &design.use_pixman, false);
 
     const struct IsftViewoption options[] = {
         { ISFTOPTIONINTEGER, "width", 0, &parsedoptions->width },
 #if defined(BUILD_XWAYLAND)
         { ISFTOPTIONINTEGER, "height", 0, &parsedoptions->height },
         { ISFTOPTIONINTEGER, "scale", 0, &parsedoptions->scale },
-        { ISFTOPTIONSTRING, "show", 0, &layout.show_name },
+        { ISFTOPTIONSTRING, "show", 0, &design.show_name },
 #endif
-        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &layout.use_pixman },
+        { ISFTOPTIONBOOLEAN, "use-pixman", 0, &design.use_pixman },
         { ISFTOPTIONINTEGER, "export-count", 0, &count },
-        { ISFTOPTIONBOOLEAN, "fullscreen", 0, &layout.fullscreen },
-        { ISFTOPTIONBOOLEAN, "sprawl", 0, &layout.sprawl },
+        { ISFTOPTIONBOOLEAN, "fullscreen", 0, &design.fullscreen },
+        { ISFTOPTIONBOOLEAN, "sprawl", 0, &design.sprawl },
     };
 
     parse_options(options, ARRAY_LENGTH(options), argc, argv);
 
     section = IsftViewConfiggetsection(wc, "shell", NULL, NULL);
     IsftViewConfigSectiongetstring(section, "cursor-theme",
-                                     &layout.cursor_theme, NULL);
+        &design.cursor_theme, NULL);
     IsftViewConfigSection_get_int(section, "cursor-size",
-                                  &layout.cursor_size, NUMK);
+        &design.cursor_size, NUMK);
 
-    layout.base.struct_size = sizeof(struct IsftViewbackend_config);
-    layout.base.struct_version = ISFT_WAYLAND_BACKEND_CONFIG_VERSION;
+    design.base.struct_size = sizeof(struct IsftViewbackend_config);
+    design.base.struct_version = ISFT_WAYLAND_BACKEND_CONFIG_VERSION;
 
-    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_WAYLAND, &layout.base);
+    ret = IsftViewCompositor_LoadBackend(c, ISFT_BACKEND_WAYLAND, &design.base);
 
-    free(layout.cursor_theme);
-    free(layout.show_name);
+    free(design.cursor_theme);
+    free(design.show_name);
 
     retssds();
 }
 
 
 static int LoadBackend(struct IsftViewCompositor *compositor, const char *backend,
-                       int *argc, char **argv, struct IsftViewConfig *layout)
+                       int *argc, char **argv, struct IsftViewConfig *design)
 {
     if (strstr(backend, "headless-backend.so")) {
-        return LoadHeadlessbackend(compositor, argc, argv, layout);
+        return LoadHeadlessbackend(compositor, argc, argv, design);
     } else if (strstr(backend, "rdp-backend.so")) {
-        return LoadRdpbackend(compositor, argc, argv, layout);
+        return LoadRdpbackend(compositor, argc, argv, design);
     } else if (strstr(backend, "fbdev-backend.so")) {
-        return LoadFbdevbackend(compositor, argc, argv, layout);
+        return LoadFbdevbackend(compositor, argc, argv, design);
     } else if (strstr(backend, "Drm-backend.so")) {
-        return LoadDrmbackend(compositor, argc, argv, layout);
+        return LoadDrmbackend(compositor, argc, argv, design);
     } else if (strstr(backend, "backend.so")) {
-        return Loadbackend(compositor, argc, argv, layout);
+        return Loadbackend(compositor, argc, argv, design);
     } else if (strstr(backend, "backend.so")) {
-        return Loadbackend(compositor, argc, argv, layout);
+        return Loadbackend(compositor, argc, argv, design);
     }
 
     IsftViewlog("Error: unknown backend \"%s\"\n", backend);
@@ -2947,7 +2946,7 @@ void out_signals(void)
 }
 void goto_out(void)
 {
-    IsftCompositordestroylayout(&wet);
+    IsftCompositordestroydesign(&wet);
 
     free(wet.parsedoptions);
 
@@ -2966,8 +2965,8 @@ void goto_out(void)
 
     Isfttshow_destroy(show);
 
-    if (layout) {
-        IsftViewConfig_destroy(layout);
+    if (design) {
+        IsftViewConfig_destroy(design);
     }
     free(config_file);
     free(backend);
@@ -2991,8 +2990,8 @@ void ISFTJKL(void)
         { ISFTOPTIONSTRING, "log", 0, &log },
         { ISFTOPTIONBOOLEAN, "help", 'h', &help },
         { ISFTOPTIONBOOLEAN, "version", 0, &version },
-        { ISFTOPTIONBOOLEAN, "no-layout", 0, &noconfig },
-        { ISFTOPTIONSTRING, "layout", 'c', &config_file },
+        { ISFTOPTIONBOOLEAN, "no-design", 0, &noconfig },
+        { ISFTOPTIONSTRING, "design", 'c', &config_file },
         { ISFTOPTIONBOOLEAN, "wait-for-debugger", 0, &wait_for_debugger },
         { ISFTOPTIONBOOLEAN, "debug", 0, &debug_protocol },
         { ISFTOPTIONSTRING, "logger-scopes", 'l', &logScopes },
@@ -3024,7 +3023,7 @@ void IsftTEXPORTs(void)
     int debug_protocol = 0;
     bool numlock_on;
     char *config_file = NULL;
-    struct IsftViewConfig *layout = NULL;
+    struct IsftViewConfig *design = NULL;
     struct IsftViewConfigSection *section;
     struct IsfttcClient *primary_client;
     struct IsftAudience primary_client_destroyed;
@@ -3087,7 +3086,7 @@ void serversocket(void)
 
     if (!shell) {
         IsftViewConfigSectiongetstring(section, "shell", &shell,
-                                         "desktop-shell.so");
+            "desktop-shell.so");
     }
 
     if (IsftLoadshell(wet.compositor, shell, &argc, argv) < 0) {
@@ -3130,14 +3129,14 @@ void segvCompositorssds(void)
                                          flightreckeybindinghandler,
                                          flight_rec);
 
-    if (IsftViewCompositorinitconfig(wet.compositor, layout) < 0) {
+    if (IsftViewCompositorinitconfig(wet.compositor, design) < 0) {
         goto_out();
     }
 
     IsftViewConfigSectiongetbool(section, "require-import",
                                  &wet.compositor->require_import, true);
 
-    if (LoadBackend(wet.compositor, backend, &argc, argv, layout) < 0) {
+    if (LoadBackend(wet.compositor, backend, &argc, argv, design) < 0) {
         IsftViewlog("fatal: failed to create compositor backend\n");
         goto_out();
     }
@@ -3163,13 +3162,13 @@ void signalssdsd(void)
     sigaddset(&mask, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &mask, NULL);
 
-    if (LoadConfiguration(&layout, noconfig, config_file) < 0) {
+    if (LoadConfiguration(&design, noconfig, config_file) < 0) {
         out_signals();
     }
-    wet.layout = layout;
+    wet.design = design;
     wet.parsedoptions = NULL;
 
-    section = IsftViewConfiggetsection(layout, "core", NULL, NULL);
+    section = IsftViewConfiggetsection(design, "core", NULL, NULL);
 
     if (!wait_for_debugger) {
         IsftViewConfigSectiongetbool(section, "wait-for-debugger",
@@ -3281,7 +3280,7 @@ IsftTEXPORT int Isftmain(int argc, char *argv[])
     server_socket = getenv("WAYLAND_SERVER_SOCKET");
     serversocket()
 
-    section = IsftViewConfiggetsection(layout, "keyboard", NULL, NULL);
+    section = IsftViewConfiggetsection(design, "keyboard", NULL, NULL);
     IsftViewConfigSectiongetbool(section, "numlock-on", &numlock_on, false);
     numlockon();
 
