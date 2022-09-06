@@ -30,9 +30,8 @@ ohos_shared_library("commom_util") {
     "utilsvr.c",
   ]
 
-  include_dirs = [
-    "//device/board/isoftstone/zhiyuan/kernel/driver/drivers/vin/utility" 
-  ]
+  include_dirs =
+      [ "//device/board/isoftstone/zhiyuan/kernel/driver/drivers/vin/utility" ]
 
   deps = [ "//third_party/libjpeg:libjpeg_static" ]
 }
