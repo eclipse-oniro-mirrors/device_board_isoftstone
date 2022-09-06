@@ -1,0 +1,65 @@
+# Copyright (c) 2020-2030 iSoftStone Information Technology (Group) Co.,Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+
+import("//build/ohos.gni")
+import("//drivers/hdf_core/adapter/uhdf2/uhdf.gni")
+import("//drivers/peripheral/camera/hal/camera.gni")
+
+ohos_shared_library("commom_util") {
+  sources = [
+    "conn.c",
+    "detl.c",
+    "etor.c",
+    "nest.c",
+    "scan.c",
+    "screen-share.c",
+    "simbuf.c",
+    "taskhandle.c",
+    "termin.c",
+    "userinterface.c",
+    "utilclit.c",
+    "utilsvr.c",
+  ]
+
+  include_dirs =
+      [ "//device/board/isoftstone/zhiyuan/kernel/driver/drivers/vin/utility" ]
+
+  deps = [ "//third_party/libjpeg:libjpeg_static" ]
+}
+
+config("pipe_config") {
+  visibility = [ ":*" ]
+  cflags_cc = [
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-Wno-error",
+    "-DGST_DISABLE_DEPRECATED",
+    "-DHAVE_CONFIG_H",
+    "-DCOLORSPACE=\"videoconvert\"",
+    "-fno-strict-aliasing",
+    "-Wno-sign-compare",
+    "-Wno-builtin-requires-header",
+    "-Wno-unused-variable",
+    "-Wno-unused-label",
+    "-Wno-implicit-function-declaration",
+    "-Wno-format",
+    "-Wno-int-conversion",
+    "-Wno-unused-function",
+    "-Wno-thread-safety-attributes",
+    "-Wno-inconsistent-missing-override",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-ffunction-sections",
+    "-fdata-sections",
+  ]
+}
