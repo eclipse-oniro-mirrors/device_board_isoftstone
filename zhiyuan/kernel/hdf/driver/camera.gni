@@ -1,4 +1,4 @@
-# Copyright (C) 2022 iSoftStone Device Co., Ltd.
+# Copyright (c) 2021 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -10,23 +10,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import("//build/ohos.gni")
-import("//build/ohos/ndk/ndk.gni")
 
-print("device_type=${product_name}")
-device_type = "${product_name}"
-group("products_group") {
-  if (device_type == "t507_pines") {
-    deps = [
-      "//device/board/seed/t507_pines/cfg:rc_files",
-      "//device/board/seed/t507_pines/cfg/rootfs:init_configs",
-      "//device/soc/allwinner/t507/hardware:hardware_group",
-    ]
-  }
-
-  deps += [
-    "//device/board/seed/t507_pines/kernel/build:kernel",
-    "//device/soc/allwinner/t507/hardware:hardware_group",
-  ]
-}
+camera_product_name_path = "//vendor/${product_company}/${product_name}"
+camera_device_name_path =
+    "//device/board/${product_company}/${device_name}/kernel/hdf/drivers"
