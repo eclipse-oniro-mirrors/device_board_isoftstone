@@ -13,5 +13,5 @@
 import("//build/ohos.gni")
 
 camera_product_name_path = "//vendor/${product_company}/${product_name}"
-camera_device_name_path = "//device/board/${product_company}/${device_name}/kernel/hdf/drivers"
-
+camera_device_name_path =
+    "//device/board/${product_company}/${device_name}/kernel/hdf/drivers"
