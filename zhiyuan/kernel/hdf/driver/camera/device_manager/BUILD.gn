@@ -71,6 +71,13 @@ ohos_shared_library("camera_device_manager") {
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
     "//drivers/peripheral/camera/interfaces/metadata/include",
+    "//drivers/hdf_core/framework/include/utils",
+
+    "//drivers/hdf_core/adapter/uhdf2/osal/include",
+    "//drivers/hdf_core/adapter/uhdf/posix/include",
+    "//drivers/hdf_core/adapter/khdf/linux/osal/include",
+    "//drivers/hdf_core/adapter/khdf/liteos_m/osal/include",
+    "//drivers/hdf_core/adapter/khdf/liteos/osal/include",
   ]
 
   deps = [
