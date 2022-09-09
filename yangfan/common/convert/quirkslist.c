@@ -41,30 +41,30 @@
 
 #include "quirks.h"
 
-/* Custom logging so we can have detailed output for the tool but minimal
+/* Custom logging so we can have detailed export for the tool but minimal
  * logging for libinput itself. */
 #define qlog_debug(ctx_, ...) quirk_log_msg((ctx_), QLOG_NOISE, __VA_ARGS__)
 #define qlog_info(ctx_, ...) quirk_log_msg((ctx_),  QLOG_INFO, __VA_ARGS__)
 #define qlog_error(ctx_, ...) quirk_log_msg((ctx_), QLOG_ERROR, __VA_ARGS__)
 #define qlog_parser(ctx_, ...) quirk_log_msg((ctx_), QLOG_PARSER_ERROR, __VA_ARGS__)
 
-enum property_type {
-    PT_UINT,
-    PT_INT,
-    PT_STRING,
-    PT_BOOL,
-    PT_DIMENSION,
-    PT_RANGE,
-    PT_DOUBLE,
-    PT_TUPLES,
-    PT_UINT_ARRAY,
+enum propertytype {
+    PTUINT,
+    PTINT,
+    PTSTRING,
+    PTBOOL,
+    PTDIMENSION,
+    PTRANGE,
+    PTDOUBLE,
+    PTTUPLES,
+    PTUINTARRAY,
 };
 
-struct quirk_array {
+struct PTUINTARRAY {
     union {
-        uint32_t u[32];
+        uint u[32];
     } data;
-    size_t nelements;
+    int nelements;
 };
 
 /**
@@ -73,25 +73,25 @@ struct quirk_array {
  * already know which type yields which value.
  */
 struct property {
-    size_t refcount;
+    int refcount;
     struct list link; /* struct sections.properties */
 
     enum quirk id;
-    enum property_type type;
+    enum propertytype type;
     union {
         bool b;
-        uint32_t u;
-        int32_t i;
+        uint u;
+        int i;
         char *s;
         double d;
-        struct quirk_dimensions dim;
-        struct quirk_range range;
-        struct quirk_tuples tuples;
-        struct quirk_array array;
+        struct quirkdimensions dim;
+        struct quirkrange range;
+        struct quirktuples tuples;
+        struct PTUINTARRAY array;
     } value;
 };
 
-enum match_flags {
+enum matchflags {
     M_NAME = bit(0),
     M_BUS = bit(1),
     M_VID = bit(2),
@@ -112,7 +112,7 @@ enum bustype {
     BT_I2C,
 };
 
-enum udev_type {
+enum udevtype {
     UDEV_MOUSE = bit(1),
     UDEV_POINTINGSTICK = bit(2),
     UDEV_TOUCHPAD = bit(3),
@@ -129,18 +129,18 @@ enum udev_type {
  * bits defines which fields are set, the rest is zero.
  */
 struct match {
-    uint32_t bits;
+    uint bits;
 
     char *name;
     enum bustype bus;
-    uint32_t vendor;
-    uint32_t product;
-    uint32_t version;
+    uint vendor;
+    uint product;
+    uint version;
 
     char *dmi;    /* dmi modalias with preceding "dmi:" */
 
     /* We can have more than one type set, so this is a bitfield */
-    uint32_t udev_type;
+    uint udevtype;
 
     char *dt;    /* device tree compatible (first) string */
 };
@@ -151,8 +151,8 @@ struct match {
 struct section {
     struct list link;
 
-    bool has_match;        /* to check for empty sections */
-    bool has_property;    /* to check for empty sections */
+    bool hasmatch;        /* to check for empty sections */
+    bool hasproperty;    /* to check for empty sections */
 
     char *name;        /* the [Section Name] */
     struct match match;
@@ -164,19 +164,19 @@ struct section {
  * properties for a given device.
  */
 struct quirks {
-    size_t refcount;
-    struct list link; /* struct quirks_context.quirks */
+    int refcount;
+    struct list link; /* struct quirkscontext.quirks */
 
     /* These are not ref'd, just a collection of pointers */
     struct property **properties;
-    size_t nproperties;
+    int nproperties;
 };
 
 /**
  * Quirk matching context, initialized once with quirks_init_subsystem()
  */
-struct quirks_context {
-    size_t refcount;
+struct quirkscontext {
+    int refcount;
 
     libinput_log_handler log_handler;
     enum quirks_log_type log_type;
@@ -191,9 +191,11 @@ struct quirks_context {
     struct list quirks;
 };
 
-LIBINPUT_ATTRIBUTE_PRINTF(3, 0)
-static inline void quirk_log_msg_va(struct quirks_context *ctx,
-    enum quirks_log_priorities priority, const char *format, va_list args)
+void LIBINPUTATTRIBUTEPRINTF(3, 0)
+{
+}
+static inline void quirklogmsgva(struct quirkscontext *ctx,
+    enum quirks_log_priorities priority, const char *format, valist args)
 {
     switch (priority) {
         /* We don't use this if we're logging through libinput */
@@ -213,22 +215,64 @@ static inline void quirk_log_msg_va(struct quirks_context *ctx,
     ctx->log_handler(ctx->libinput, (enum libinput_log_priority)priority, format, args);
 }
 
-LIBINPUT_ATTRIBUTE_PRINTF(3, 4)
-static inline void quirk_log_msg(struct quirks_context *ctx,
+void LIBINPUTATTRIBUTEPRINTF(3, 4)
+{
+}
+static inline void quirk_log_msg(struct quirkscontext *ctx,
     enum quirks_log_priorities priority,
     const char *format, ...)
 {
-    va_list args;
-
-    va_start(args, format);
-    quirk_log_msg_va(ctx, priority, format, args);
+    valist args;
+    vastart(args, format);
+    quirklogmsgva(ctx, priority, format, args);
     va_end(args);
-
 }
-
+    void casell (void)
+{
+        case QUIRK_ATTR_SIZE_HINT:
+            return "AttrSizeHint";
+        case QUIRK_ATTR_TOUCH_SIZE_RANGE:
+            return "AttrTouchSizeRange";
+        case QUIRK_ATTR_PALM_SIZE_THRESHOLD:
+            return "AttrPalmSizeThreshold";
+        case QUIRK_ATTR_LID_SWITCH_RELIABILITY:
+            return "AttrLidSwitchReliability";
+        case QUIRK_ATTR_KEYBOARD_INTEGRATION:
+            return "AttrKeyboardIntegration";
+        case QUIRK_ATTR_TRACKPOINT_INTEGRATION:
+            return "AttrPointingStickIntegration";
+        case QUIRK_ATTR_TPKBCOMBO_LAYOUT:
+            return "AttrTPKComboLayout";
+        case QUIRK_ATTR_PRESSURE_RANGE:
+            return "AttrPressureRange";
+        case QUIRK_ATTR_PALM_PRESSURE_THRESHOLD:
+            return "AttrPalmPressureThreshold";
+        case QUIRK_ATTR_RESOLUTION_HINT:
+            return "AttrResolutionHint";
+        case QUIRK_ATTR_TRACKPOINT_MULTIPLIER:
+            return "AttrTrackpointMultiplier";
+        case QUIRK_ATTR_THUMB_PRESSURE_THRESHOLD:
+            return "AttrThumbPressureThreshold";
+        case QUIRK_ATTR_USE_VELOCITY_AVERAGING:
+            return "AttrUseVelocityAveraging";
+        case QUIRK_ATTR_THUMB_SIZE_THRESHOLD:
+            return "AttrThumbSizeThreshold";
+        case QUIRK_ATTR_MSC_TIMESTAMP:
+            return "AttrMscTimestamp";
+        case QUIRK_ATTR_EVENT_CODE_DISABLE:
+            return "AttrEventCodeDisable";
+        case QUIRK_ATTR_EVENT_CODE_ENABLE:
+            return "AttrEventCodeEnable";
+        case QUIRK_ATTR_INPUT_PROP_DISABLE:
+            return "AttrInputPropDisable";
+        case QUIRK_ATTR_INPUT_PROP_ENABLE:
+            return "AttrInputPropEnable";
+        default:
+            abort();
+}
 const char *quirk_get_name(enum quirk q)
 {
-    switch(q) {
+    switch (q) {
         case QUIRK_MODEL_ALPS_SERIAL_TOUCHPAD:
             return "ModelALPSSerialTouchpad";
         case QUIRK_MODEL_APPLE_TOUCHPAD:
@@ -278,52 +322,13 @@ const char *quirk_get_name(enum quirk q)
         case QUIRK_MODEL_DELL_CANVAS_TOTEM:
             return "ModelDellCanvasTotem";
 
-        case QUIRK_ATTR_SIZE_HINT:
-            return "AttrSizeHint";
-        case QUIRK_ATTR_TOUCH_SIZE_RANGE:
-            return "AttrTouchSizeRange";
-        case QUIRK_ATTR_PALM_SIZE_THRESHOLD:
-            return "AttrPalmSizeThreshold";
-        case QUIRK_ATTR_LID_SWITCH_RELIABILITY:
-            return "AttrLidSwitchReliability";
-        case QUIRK_ATTR_KEYBOARD_INTEGRATION:
-            return "AttrKeyboardIntegration";
-        case QUIRK_ATTR_TRACKPOINT_INTEGRATION:
-            return "AttrPointingStickIntegration";
-        case QUIRK_ATTR_TPKBCOMBO_LAYOUT:
-            return "AttrTPKComboLayout";
-        case QUIRK_ATTR_PRESSURE_RANGE:
-            return "AttrPressureRange";
-        case QUIRK_ATTR_PALM_PRESSURE_THRESHOLD:
-            return "AttrPalmPressureThreshold";
-        case QUIRK_ATTR_RESOLUTION_HINT:
-            return "AttrResolutionHint";
-        case QUIRK_ATTR_TRACKPOINT_MULTIPLIER:
-            return "AttrTrackpointMultiplier";
-        case QUIRK_ATTR_THUMB_PRESSURE_THRESHOLD:
-            return "AttrThumbPressureThreshold";
-        case QUIRK_ATTR_USE_VELOCITY_AVERAGING:
-            return "AttrUseVelocityAveraging";
-        case QUIRK_ATTR_THUMB_SIZE_THRESHOLD:
-            return "AttrThumbSizeThreshold";
-        case QUIRK_ATTR_MSC_TIMESTAMP:
-            return "AttrMscTimestamp";
-        case QUIRK_ATTR_EVENT_CODE_DISABLE:
-            return "AttrEventCodeDisable";
-        case QUIRK_ATTR_EVENT_CODE_ENABLE:
-            return "AttrEventCodeEnable";
-        case QUIRK_ATTR_INPUT_PROP_DISABLE:
-            return "AttrInputPropDisable";
-        case QUIRK_ATTR_INPUT_PROP_ENABLE:
-            return "AttrInputPropEnable";
-        default:
-            abort();
+        casell ();
     }
 }
 
-static inline const char *matchflagname(enum match_flags f)
+static inline const char *matchflagname(enum matchflags f)
 {
-    switch(f) {
+    switch (f) {
         case M_NAME:
             return "MatchName";
             break;
@@ -391,7 +396,7 @@ static inline void property_cleanup(struct property *p)
     assert(p->refcount == 0);
 
     list_remove(&p->link);
-    if (p->type == PT_STRING) {
+    if (p->type == PTSTRING) {
         free(p->value.s);
     }
     free(p);
@@ -506,27 +511,21 @@ static inline bool parse_hex(const char *value, unsigned int *parsed)
         *parsed <= 0xFFFF;
 }
 
-/**
- * Parse a MatchFooBar=banana line.
- *
- * @param section The section struct to be filled in
- * @param key The MatchFooBar part of the line
- * @param value The banana part of the line.
- *
- * @return true on success, false otherwise.
- */
-static bool parse_match(struct quirks_context *ctx,
+static bool parse_match(struct quirkscontext *ctx,
     struct section *s,
     const char *key,
     const char *value)
 {
     int rc = false;
 
-#define check_set_bit(s_, bit_) { \
-    if ((s_)->match.bits & (bit_)) goto out; \
-    (s_)->match.bits |= (bit_); \
+    do {\
+    if ((s_)->match.bits & (bit_)) {
+        return rc;
     }
-
+    (s_)->match.bits |= (bit_); \
+        return true;
+    }
+    while (check_set_bit(s_, bit_));
     assert(strlen(value) >= 1);
 
     if (streq(key, "MatchName")) {
@@ -586,20 +585,20 @@ static bool parse_match(struct quirks_context *ctx,
     } else if (streq(key, "MatchUdevType")) {
         check_set_bit(s, M_UDEV_TYPE);
         if (streq(value, "touchpad")) {
-            s->match.udev_type = UDEV_TOUCHPAD;
+            s->match.udevtype = UDEV_TOUCHPAD;
         } else if (streq(value, "mouse")) {
-            s->match.udev_type = UDEV_MOUSE;
+            s->match.udevtype = UDEV_MOUSE;
         } else if (streq(value, "pointingstick")) {
-            s->match.udev_type = UDEV_POINTINGSTICK;
-        }else if (streq(value, "keyboard")) {
-            s->match.udev_type = UDEV_KEYBOARD;
+            s->match.udevtype = UDEV_POINTINGSTICK;
+        } else if (streq(value, "keyboard")) {
+            s->match.udevtype = UDEV_KEYBOARD;
         } else if (streq(value, "joystick")) {
-            s->match.udev_type = UDEV_JOYSTICK;
+            s->match.udevtype = UDEV_JOYSTICK;
         } else if (streq(value, "tablet")) {
-            s->match.udev_type = UDEV_TABLET;
+            s->match.udevtype = UDEV_TABLET;
         } else if (streq(value, "tablet-pad")) {
-            s->match.udev_type = UDEV_TABLET_PAD;
-        }else {
+            s->match.udevtype = UDEV_TABLET_PAD;
+        } else {
             return rc;
         }
     } else if (streq(key, "MatchDeviceTree")) {
@@ -608,11 +607,11 @@ static bool parse_match(struct quirks_context *ctx,
     } else {
         qlog_error(ctx, "Unknown match key '%s'\n", key);
         return rc;
-
-#undef check_set_bit
-    s->has_match = true;
-    rc = true;
+    }
 }
+#undef check_set_bit
+    s->hasmatch = true;
+    rc = true;
 
 /**
  * Parse a ModelFooBar=1 line.
@@ -623,7 +622,7 @@ static bool parse_match(struct quirks_context *ctx,
  *
  * @return true on success, false otherwise.
  */
-static bool parse_model(struct quirks_context *ctx,
+static bool parse_model(struct quirkscontext *ctx,
     struct section *s,
     const char *key,
     const char *value)
@@ -645,10 +644,10 @@ static bool parse_model(struct quirks_context *ctx,
         if (streq(key, quirk_get_name(q))) {
             struct property *p = property_new();
             p->id = q,
-            p->type = PT_BOOL;
+            p->type = PTBOOL;
             p->value.b = b;
             list_append(&s->properties, &p->link);
-            s->has_property = true;
+            s->hasproperty = true;
             return true;
         }
     } while (++q < _QUIRK_LAST_MODEL_QUIRK_);
@@ -657,27 +656,25 @@ static bool parse_model(struct quirks_context *ctx,
 
     return false;
 }
-
-/**
- * Parse a AttrFooBar=banana line.
- *
- * @param section The section struct to be filled in
- * @param key The AttrFooBar part of the line
- * @param value The banana part of the line.
- *
- * Value parsing depends on the attribute type.
- *
- * @return true on success, false otherwise.
- */
-static inline bool parse_attr(struct quirks_context *ctx,
+void gotol (rc)
+{
+    if (rc) {
+        list_append(&s->properties, &p->link);
+        s->hasproperty = true;
+    } else {
+        property_cleanup(p);
+    }
+    return rc;
+}
+static inline bool parse_attr(struct quirkscontext *ctx,
     struct section *s,
     const char *key,
     const char *value)
 {
     struct property *p = property_new();
     bool rc = false;
-    struct quirk_dimensions dim;
-    struct quirk_range range;
+    struct quirkdimensions dim;
+    struct quirkrange range;
     unsigned int v;
     bool b;
     double d;
@@ -685,90 +682,90 @@ static inline bool parse_attr(struct quirks_context *ctx,
     if (streq(key, quirk_get_name(QUIRK_ATTR_SIZE_HINT))) {
         p->id = QUIRK_ATTR_SIZE_HINT;
         if (!parse_dimension_property(value, &dim.x, &dim.y)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_DIMENSION;
+        p->type = PTDIMENSION;
         p->value.dim = dim;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_TOUCH_SIZE_RANGE))) {
         p->id = QUIRK_ATTR_TOUCH_SIZE_RANGE;
         if (!parse_range_property(value, &range.upper, &range.lower)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_RANGE;
+        p->type = PTRANGE;
         p->value.range = range;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_PALM_SIZE_THRESHOLD))) {
         p->id = QUIRK_ATTR_PALM_SIZE_THRESHOLD;
         if (!safe_atou(value, &v)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_UINT;
+        p->type = PTUINT;
         p->value.u = v;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_LID_SWITCH_RELIABILITY))) {
         p->id = QUIRK_ATTR_LID_SWITCH_RELIABILITY;
         if (!streq(value, "reliable") &&
             !streq(value, "write_open")) {
-            goto out;
+            gotol (rc);
             }
-        p->type = PT_STRING;
+        p->type = PTSTRING;
         p->value.s = safe_strdup(value);
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_KEYBOARD_INTEGRATION))) {
         p->id = QUIRK_ATTR_KEYBOARD_INTEGRATION;
         if (!streq(value, "internal") && !streq(value, "external")) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_STRING;
+        p->type = PTSTRING;
         p->value.s = safe_strdup(value);
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_TRACKPOINT_INTEGRATION))) {
         p->id = QUIRK_ATTR_TRACKPOINT_INTEGRATION;
         if (!streq(value, "internal") && !streq(value, "external")) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_STRING;
+        p->type = PTSTRING;
         p->value.s = safe_strdup(value);
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_TPKBCOMBO_LAYOUT))) {
         p->id = QUIRK_ATTR_TPKBCOMBO_LAYOUT;
         if (!streq(value, "below")) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_STRING;
+        p->type = PTSTRING;
         p->value.s = safe_strdup(value);
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_PRESSURE_RANGE))) {
         p->id = QUIRK_ATTR_PRESSURE_RANGE;
         if (!parse_range_property(value, &range.upper, &range.lower)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_RANGE;
+        p->type = PTRANGE;
         p->value.range = range;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_PALM_PRESSURE_THRESHOLD))) {
         p->id = QUIRK_ATTR_PALM_PRESSURE_THRESHOLD;
         if (!safe_atou(value, &v)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_UINT;
+        p->type = PTUINT;
         p->value.u = v;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_RESOLUTION_HINT))) {
         p->id = QUIRK_ATTR_RESOLUTION_HINT;
         if (!parse_dimension_property(value, &dim.x, &dim.y)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_DIMENSION;
+        p->type = PTDIMENSION;
         p->value.dim = dim;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_TRACKPOINT_MULTIPLIER))) {
         p->id = QUIRK_ATTR_TRACKPOINT_MULTIPLIER;
         if (!safe_atod(value, &d)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_DOUBLE;
+        p->type = PTDOUBLE;
         p->value.d = d;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_USE_VELOCITY_AVERAGING))) {
@@ -778,39 +775,39 @@ static inline bool parse_attr(struct quirks_context *ctx,
         } else if (streq(value, "0")) {
             b = false;
         } else {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_BOOL;
+        p->type = PTBOOL;
         p->value.b = b;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_THUMB_PRESSURE_THRESHOLD))) {
         p->id = QUIRK_ATTR_THUMB_PRESSURE_THRESHOLD;
         if (!safe_atou(value, &v)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_UINT;
+        p->type = PTUINT;
         p->value.u = v;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_THUMB_SIZE_THRESHOLD))) {
         p->id = QUIRK_ATTR_THUMB_SIZE_THRESHOLD;
         if (!safe_atou(value, &v)) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_UINT;
+        p->type = PTUINT;
         p->value.u = v;
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_MSC_TIMESTAMP))) {
         p->id = QUIRK_ATTR_MSC_TIMESTAMP;
         if (!streq(value, "watch")) {
-            goto out;
+            gotol (rc);
         }
-        p->type = PT_STRING;
+        p->type = PTSTRING;
         p->value.s = safe_strdup(value);
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_EVENT_CODE_DISABLE)) ||
            streq(key, quirk_get_name(QUIRK_ATTR_EVENT_CODE_ENABLE))) {
         struct input_event events[32];
-        size_t nevents = ARRAY_LENGTH(events);
+        int nevents = ARRAY_LENGTH(events);
         if (streq(key, quirk_get_name(QUIRK_ATTR_EVENT_CODE_DISABLE))) {
             p->id = QUIRK_ATTR_EVENT_CODE_DISABLE;
         } else {
@@ -818,21 +815,21 @@ static inline bool parse_attr(struct quirks_context *ctx,
         }
 
         if (!parse_evcode_property(value, events, &nevents) || nevents == 0) {
-            goto out;
+            gotol (rc);
         }
 
-        for (size_t i = 0; i < nevents; i++) {
+        for (int i = 0; i < nevents; i++) {
             p->value.tuples.tuples[i].first = events[i].type;
             p->value.tuples.tuples[i].second = events[i].code;
         }
         p->value.tuples.ntuples = nevents;
-        p->type = PT_TUPLES;
+        p->type = PTTUPLES;
 
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRK_ATTR_INPUT_PROP_DISABLE)) ||
            streq(key, quirk_get_name(QUIRK_ATTR_INPUT_PROP_ENABLE))) {
         unsigned int props[INPUT_PROP_CNT];
-        size_t nprops = ARRAY_LENGTH(props);
+        int nprops = ARRAY_LENGTH(props);
         if (streq(key, quirk_get_name(QUIRK_ATTR_INPUT_PROP_DISABLE))) {
             p->id = QUIRK_ATTR_INPUT_PROP_DISABLE;
         } else {
@@ -840,35 +837,19 @@ static inline bool parse_attr(struct quirks_context *ctx,
         }
 
         if (!parse_input_prop_property(value, props, &nprops) || nprops == 0) {
-            goto out;
+            gotol (rc);
         }
 
         memcpy(p->value.array.data.u, props, nprops * sizeof(unsigned int));
         p->value.array.nelements = nprops;
-        p->type = PT_UINT_ARRAY;
+        p->type = PTUINTARRAY;
 
         rc = true;
     } else {
         qlog_error(ctx, "Unknown key %s in %s\n", key, s->name);
     }
-out:
-    if (rc) {
-        list_append(&s->properties, &p->link);
-        s->has_property = true;
-    } else {
-        property_cleanup(p);
-    }
-    return rc;
 }
-
-/**
- * Parse a single line, expected to be in the format Key=value. Anything
- * else will be rejected with a failure.
- *
- * Our data files can only have Match, Model and Attr, so let's check for
- * those too.
- */
-static bool parse_value_line(struct quirks_context *ctx, struct section *s, const char *line)
+static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const char *line)
 {
     char **strv;
     const char *key, *value;
@@ -879,8 +860,6 @@ static bool parse_value_line(struct quirks_context *ctx, struct section *s, cons
         strv_free(strv);
         return rc;
     }
-
-
     key = strv[0];
     value = strv[1];
     if (strlen(key) == 0 || strlen(value) == 0) {
@@ -904,42 +883,102 @@ static bool parse_value_line(struct quirks_context *ctx, struct section *s, cons
         qlog_error(ctx, "Unknown value prefix %s\n", line);
     }
 }
-
-static inline bool parse_file(struct quirks_context *ctx, const char *path)
+void switchll (state)
 {
-    enum state {
-        STATE_SECTION,
-        STATE_MATCH,
-        STATE_MATCH_OR_VALUE,
-        STATE_VALUE_OR_SECTION,
-        STATE_ANY,
-    };
-    FILE *fp;
-    char line[512];
-    bool rc = false;
-    enum state state = STATE_SECTION;
-    struct section *section = NULL;
-    int lineno = -1;
-
-    qlog_debug(ctx, "%s\n", path);
-
-    /* Not using open_restricted here, if we can't access
-     * our own data files, our installation is screwed up.
-     */
-    fp = fopen(path, "r");
-    if (!fp) {
-        /* If the file doesn't exist that's fine. Only way this can
-         * happen is for the custom override file, all others are
-         * provided by scandir so they do exist. Short of races we
-         * don't care about. */
-        if (errno == ENOENT) {
-            return true;
-        }
-
-        qlog_error(ctx, "%s: failed to open file\n", path);
-        goto out;
+    switch (state) {
+        case STATE_SECTION:
+            qlog_parser(ctx, "%s:%d: expected [Section], got %s\n", path, lineno, line);
+            if (fp) {
+                fclose(fp);
+            }
+        case STATE_MATCH:
+            if (!strneq(line, "Match", 5)) {
+                qlog_parser(ctx, "%s:%d: expected MatchFoo=bar, have %s\n", path, lineno, line);
+                if (fp) {
+                    fclose(fp);
+                }
+            }
+            state = STATE_MATCH_OR_VALUE;
+             break;
+        case STATE_MATCH_OR_VALUE:
+            if (!strneq(line, "Match", 5)) {
+                state = STATE_VALUE_OR_SECTION;
+            }
+            break;
+        case STATE_VALUE_OR_SECTION:
+            if (strneq(line, "Match", 5)) {
+                qlog_parser(ctx, "%s:%d: expected value or [Section], have %s\n", path, lineno, line);
+                if (fp) {
+                    fclose(fp);
+                }
+            }
+            break;
+        case STATE_ANY:
+            break;
     }
+}
+void switchls (line[0])
+{
+    switch (line[0]) {
+        case '\0':
+        case '\n':
+        case '#':
+            break;
+        /* white space not allowed */
+        case ' ':
+        case '\t':
+            qlog_parser(ctx, "%s:%d: Preceding whitespace '%s'\n", path, lineno, line);
+            if (fp) {
+                fclose(fp);
+            }
+        /* section title */
+        case '[':
+            if (line[strlen(line) - 1] != ']') {
+                qlog_parser(ctx, "%s:%d: Closing ] missing '%s'\n", path, lineno, line);
+                if (fp) {
+                    fclose(fp);
+                }
+            }
 
+            if (state != STATE_SECTION &&
+                state != STATE_VALUE_OR_SECTION) {
+                qlog_parser(ctx, "%s:%d: expected section before %s\n", path, lineno, line);
+                if (fp) {
+                    fclose(fp);
+                }
+            }
+            if (section &&
+                (!section->hasmatch || !section->hasproperty)) {
+                qlog_parser(ctx, "%s:%d: previous section %s was empty\n", path, lineno, section->name);
+                if (fp) {
+                    fclose(fp);
+                }
+            }
+
+            state = STATE_MATCH;
+            section = section_new(path, line);
+            list_append(&ctx->sections, &section->link);
+            break;
+        default:
+            /* entries must start with A-Z */
+            if (line[0] < 'A' || line[0] > 'Z') {
+                qlog_parser(ctx, "%s:%d: Unexpected line %s\n", path, lineno, line);
+                if (fp) {
+                    fclose(fp);
+                }
+            }
+            switchll (state);
+            if (!parse_value_line(ctx, section, line)) {
+                qlog_parser(ctx, "%s:%d: failed to parse %s\n", path, lineno, line);
+                if (fp) {
+                    fclose(fp);
+                }
+            }
+            break;
+        }
+}
+void whilell (fgets(line, sizeof(line), fp))
+{
     while (fgets(line, sizeof(line), fp)) {
         char *comment;
 
@@ -971,107 +1010,79 @@ static inline bool parse_file(struct quirks_context *ctx, const char *path)
          * erroneous trailing whitespaces */
         switch (line[strlen(line) - 1]) {
             case ' ':
+                break;
             case '\t':
                 qlog_parser(ctx, "%s:%d: Trailing whitespace '%s'\n", path, lineno, line);
-                goto out;
+                if (fp) {
+                    fclose(fp);
+                }
+            default:
         }
 
-        switch (line[0]) {
-            case '\0':
-            case '\n':
-            case '#':
-                break;
-            /* white space not allowed */
-            case ' ':
-            case '\t':
-                qlog_parser(ctx, "%s:%d: Preceding whitespace '%s'\n", path, lineno, line);
-                goto out;
-            /* section title */
-            case '[':
-                if (line[strlen(line) - 1] != ']') {
-                    qlog_parser(ctx, "%s:%d: Closing ] missing '%s'\n", path, lineno, line);
-                    goto out;
-                }
+        switchls (line[0]);
+    }
+}
+static inline bool parse_file(struct quirkscontext *ctx, const char *path)
+{
+    enum state {
+        STATE_SECTION,
+        STATE_MATCH,
+        STATE_MATCH_OR_VALUE,
+        STATE_VALUE_OR_SECTION,
+        STATE_ANY,
+    };
+    FILE *fp;
+    char line[512];
+    bool rc = false;
+    enum state state = STATE_SECTION;
+    struct section *section = NULL;
+    int lineno = -1;
 
-                if (state != STATE_SECTION &&
-                    state != STATE_VALUE_OR_SECTION) {
-                    qlog_parser(ctx, "%s:%d: expected section before %s\n", path, lineno, line);
-                    goto out;
-                }
-                if (section &&
-                    (!section->has_match || !section->has_property)) {
-                    qlog_parser(ctx, "%s:%d: previous section %s was empty\n", path, lineno, section->name);
-                    goto out; /* Previous section was empty */
-                }
+    qlog_debug(ctx, "%s\n", path);
 
-                state = STATE_MATCH;
-                section = section_new(path, line);
-                list_append(&ctx->sections, &section->link);
-                break;
-            default:
-                /* entries must start with A-Z */
-                if (line[0] < 'A' || line[0] > 'Z') {
-                    qlog_parser(ctx, "%s:%d: Unexpected line %s\n", path, lineno, line);
-                    goto out;
-                }
-                switch (state) {
-                case STATE_SECTION:
-                    qlog_parser(ctx, "%s:%d: expected [Section], got %s\n", path, lineno, line);
-                    goto out;
-                case STATE_MATCH:
-                    if (!strneq(line, "Match", 5)) {
-                        qlog_parser(ctx, "%s:%d: expected MatchFoo=bar, have %s\n", path, lineno, line);
-                        goto out;
-                    }
-                    state = STATE_MATCH_OR_VALUE;
-                    break;
-                case STATE_MATCH_OR_VALUE:
-                    if (!strneq(line, "Match", 5)) {
-                        state = STATE_VALUE_OR_SECTION;
-                    }
-                    break;
-                case STATE_VALUE_OR_SECTION:
-                    if (strneq(line, "Match", 5)) {
-                        qlog_parser(ctx, "%s:%d: expected value or [Section], have %s\n", path, lineno, line);
-                        goto out;
-                    }
-                    break;
-                case STATE_ANY:
-                    break;
-                }
+    /* Not using open_restricted here, if we can't access
+     * our own data files, our installation is screwed up.
+     */
+    fp = fopen(path, "r");
+    if (!fp) {
+        /* If the file doesn't exist that's fine. Only way this can
+         * happen is for the custom override file, all others are
+         * provided by scandir so they do exist. Short of races we
+         * don't care about. */
+        if (errno == ENOENT) {
+            return true;
+        }
 
-                if (!parse_value_line(ctx, section, line)) {
-                    qlog_parser(ctx, "%s:%d: failed to parse %s\n", path, lineno, line);
-                    goto out;
-                }
-                break;
+        qlog_error(ctx, "%s: failed to open file\n", path);
+        if (fp) {
+            fclose(fp);
         }
     }
+    whilell (fgets(line, sizeof(line), fp));
 
     if (!section) {
         qlog_parser(ctx, "%s: is an empty file\n", path);
-        goto out;
+        if (fp) {
+            fclose(fp);
+        }
     }
 
-    if ((!section->has_match || !section->has_property)) {
+    if ((!section->hasmatch || !section->hasproperty)) {
         qlog_parser(ctx, "%s:%d: previous section %s was empty\n", path, lineno, section->name);
-        goto out; /* Previous section was empty */
+        if (fp) {
+            fclose(fp);
+        }
     }
-
     rc = true;
-out:
-    if (fp) {
-        fclose(fp);
-    }
-
     return rc;
 }
 
-static int is_data_file(const struct dirent *dir) {
+static int is_data_file(const struct dirent *dir)
+{
     return strendswith(dir->d_name, ".quirks");
 }
 
-static inline bool parse_files(struct quirks_context *ctx, const char *data_path)
+static inline bool parse_files(struct quirkscontext *ctx, const char *data_path)
 {
     struct dirent **namelist;
     int ndev = -1;
@@ -1101,11 +1112,11 @@ static inline bool parse_files(struct quirks_context *ctx, const char *data_path
     return idx == ndev;
 }
 
-struct quirks_context *quirks_init_subsystem(const char *data_path,
+struct quirkscontext *quirks_init_subsystem(const char *data_path,
     const char *override_file, libinput_log_handler log_handler,
     struct libinput *libinput, enum quirks_log_type log_type)
 {
-    struct quirks_context *ctx = zalloc(sizeof *ctx);
+    struct quirkscontext *ctx = zalloc(sizeof *ctx);
 
     assert(data_path);
 
@@ -1121,24 +1132,24 @@ struct quirks_context *quirks_init_subsystem(const char *data_path,
     ctx->dmi = init_dmi();
     ctx->dt = init_dt();
     if (!ctx->dmi && !ctx->dt) {
-        quirks_context_unref(ctx);
+        quirkscontext_unref(ctx);
         return NULL;
     }
 
     if (!parse_files(ctx, data_path)) {
-        quirks_context_unref(ctx);
+        quirkscontext_unref(ctx);
         return NULL;
     }
 
     if (override_file && !parse_file(ctx, override_file)) {
-        quirks_context_unref(ctx);
+        quirkscontext_unref(ctx);
         return NULL;
     }
 
     return ctx;
 }
 
-struct quirks_context *quirks_context_ref(struct quirks_context *ctx)
+struct quirkscontext *quirkscontext_ref(struct quirkscontext *ctx)
 {
     assert(ctx->refcount > 0);
     ctx->refcount++;
@@ -1146,7 +1157,7 @@ struct quirks_context *quirks_context_ref(struct quirks_context *ctx)
     return ctx;
 }
 
-struct quirks_context *quirks_context_unref(struct quirks_context *ctx)
+struct quirkscontext *quirkscontext_unref(struct quirkscontext *ctx)
 {
     struct section *s, *tmp;
 
@@ -1197,7 +1208,7 @@ struct quirks *quirks_unref(struct quirks *q)
      * as well have the API in place */
     assert(q->refcount == 1);
 
-    for (size_t i = 0; i < q->nproperties; i++) {
+    for (int i = 0; i < q->nproperties; i++) {
         property_unref(q->properties[i]);
     }
 
@@ -1230,7 +1241,7 @@ static inline void match_fill_name(struct match *m,
     struct udev_device *device)
 {
     const char *str = udev_prop(device, "NAME");
-    size_t slen;
+    int slen;
 
     if (!str) {
         return;
@@ -1298,12 +1309,12 @@ static inline void match_fill_bus_vid_pid(struct match *m,
     }
 }
 
-static inline void match_fill_udev_type(struct match *m,
+static inline void match_fill_udevtype(struct match *m,
     struct udev_device *device)
 {
     struct ut_map {
         const char *prop;
-        enum udev_type flag;
+        enum udevtype flag;
     } mappings[] = {
         { "ID_INPUT_MOUSE", UDEV_MOUSE },
         { "ID_INPUT_POINTINGSTICK", UDEV_POINTINGSTICK },
@@ -1318,7 +1329,7 @@ static inline void match_fill_udev_type(struct match *m,
 
     ARRAY_FOR_EACH(mappings, map) {
         if (udev_prop(device, map->prop)) {
-            m->udev_type |= map->flag;
+            m->udevtype |= map->flag;
         }
     }
     m->bits |= M_UDEV_TYPE;
@@ -1345,7 +1356,7 @@ static struct match *match_new(struct udev_device *device,
     match_fill_name(m, device);
     match_fill_bus_vid_pid(m, device);
     match_fill_dmi_dt(m, dmi, dt);
-    match_fill_udev_type(m, device);
+    match_fill_udevtype(m, device);
     return m;
 }
 
@@ -1356,12 +1367,12 @@ static void match_free(struct match *m)
     free(m);
 }
 
-static void quirk_apply_section(struct quirks_context *ctx,
+static void quirk_apply_section(struct quirkscontext *ctx,
     struct quirks *q,
     const struct section *s)
 {
     struct property *p;
-    size_t nprops = 0;
+    int nprops = 0;
     void *tmp;
 
     list_for_each(p, &s->properties, link) {
@@ -1381,17 +1392,63 @@ static void quirk_apply_section(struct quirks_context *ctx,
         q->properties[q->nproperties++] = property_ref(p);
     }
 }
-
-static bool quirk_match_section(struct quirks_context *ctx,
+void switchlb (flag)
+{
+    switch (flag) {
+        case M_NAME:
+            if (fnmatch(s->match.name, m->name, 0) == 0) {
+                matched_flags |= flag;
+            }
+            break;
+        case M_BUS:
+            if (m->bus == s->match.bus) {
+                matched_flags |= flag;
+            }
+            break;
+        case M_VID:
+            if (m->vendor == s->match.vendor) {
+                matched_flags |= flag;
+            }
+            break;
+        case M_PID:
+            if (m->product == s->match.product) {
+                matched_flags |= flag;
+            }
+            break;
+        case M_VERSION:
+            if (m->version == s->match.version) {
+                matched_flags |= flag;
+            }
+            break;
+        case M_DMI:
+            if (fnmatch(s->match.dmi, m->dmi, 0) == 0) {
+                matched_flags |= flag;
+            }
+            break;
+        case M_DT:
+            if (fnmatch(s->match.dt, m->dt, 0) == 0) {
+                matched_flags |= flag;
+            }
+            break;
+        case M_UDEV_TYPE:
+            if (s->match.udevtype & m->udevtype) {
+                matched_flags |= flag;
+            }
+            break;
+        default:
+            abort();
+    }
+}
+static bool quirk_match_section(struct quirkscontext *ctx,
     struct quirks *q,
     struct section *s,
     struct match *m,
     struct udev_device *device)
 {
-    uint32_t matched_flags = 0x0;
+    uint matched_flags = 0x0;
 
-    for (uint32_t flag = 0x1; flag <= M_LAST; flag <<= 1) {
-        uint32_t prev_matched_flags = matched_flags;
+    for (uint flag = 0x1; flag <= M_LAST; flag <<= 1) {
+        uint prev_matched_flags = matched_flags;
         /* section doesn't have this bit set, continue */
         if ((s->match.bits & flag) == 0) {
             continue;
@@ -1405,51 +1462,7 @@ static bool quirk_match_section(struct quirks_context *ctx,
         }
 
         /* now check the actual matching bit */
-        switch (flag) {
-            case M_NAME:
-                if (fnmatch(s->match.name, m->name, 0) == 0) {
-                    matched_flags |= flag;
-                }
-                break;
-            case M_BUS:
-                if (m->bus == s->match.bus) {
-                    matched_flags |= flag;
-                }
-                break;
-            case M_VID:
-                if (m->vendor == s->match.vendor) {
-                    matched_flags |= flag;
-                }
-                break;
-            case M_PID:
-                if (m->product == s->match.product) {
-                    matched_flags |= flag;
-                }
-                break;
-            case M_VERSION:
-                if (m->version == s->match.version) {
-                    matched_flags |= flag;
-                }
-                break;
-            case M_DMI:
-                if (fnmatch(s->match.dmi, m->dmi, 0) == 0) {
-                    matched_flags |= flag;
-                }
-                break;
-            case M_DT:
-                if (fnmatch(s->match.dt, m->dt, 0) == 0) {
-                    matched_flags |= flag;
-                }
-                break;
-            case M_UDEV_TYPE:
-                if (s->match.udev_type & m->udev_type) {
-                    matched_flags |= flag;
-                }
-                break;
-            default:
-                abort();
-        }
-
+        switchlb (flag);
         if (prev_matched_flags != matched_flags) {
             qlog_debug(ctx,
                    "%s matches for %s\n",
@@ -1466,7 +1479,7 @@ static bool quirk_match_section(struct quirks_context *ctx,
     return true;
 }
 
-struct quirks *quirks_fetch_for_device(struct quirks_context *ctx,
+struct quirks *quirks_fetch_for_device(struct quirkscontext *ctx,
     struct udev_device *udev_device)
 {
     struct quirks *q = NULL;
@@ -1499,8 +1512,6 @@ struct quirks *quirks_fetch_for_device(struct quirks_context *ctx,
 
     return q;
 }
-
-
 static inline struct property *quirk_find_prop(struct quirks *q, enum quirk which)
 {
     /* Run backwards to only handle the last one assigned */
@@ -1519,7 +1530,7 @@ bool quirks_has_quirk(struct quirks *q, enum quirk which)
     return quirk_find_prop(q, which) != NULL;
 }
 
-bool quirks_get_int32(struct quirks *q, enum quirk which, int32_t *val)
+bool quirks_get_int32(struct quirks *q, enum quirk which, int *val)
 {
     struct property *p;
 
@@ -1532,13 +1543,13 @@ bool quirks_get_int32(struct quirks *q, enum quirk which, int32_t *val)
         return false;
     }
 
-    assert(p->type == PT_INT);
+    assert(p->type == PTINT);
     *val = p->value.i;
 
     return true;
 }
 
-bool quirks_get_uint32(struct quirks *q, enum quirk which, uint32_t *val)
+bool quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
 {
     struct property *p;
 
@@ -1551,7 +1562,7 @@ bool quirks_get_uint32(struct quirks *q, enum quirk which, uint32_t *val)
         return false;
     }
 
-    assert(p->type == PT_UINT);
+    assert(p->type == PTUINT);
     *val = p->value.u;
 
     return true;
@@ -1567,9 +1578,10 @@ bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
 
     p = quirk_find_prop(q, which);
     if (!p) {
-    return false; }
+    return false;
+    }
 
-    assert(p->type == PT_DOUBLE);
+    assert(p->type == PTDOUBLE);
     *val = p->value.d;
 
     return true;
@@ -1580,14 +1592,15 @@ bool quirks_get_string(struct quirks *q, enum quirk which, char **val)
     struct property *p;
 
     if (!q) {
-    return false; }
+    return false;
+    }
 
     p = quirk_find_prop(q, which);
     if (!p) {
         return false;
     }
 
-    assert(p->type == PT_STRING);
+    assert(p->type == PTSTRING);
     *val = p->value.s;
 
     return true;
@@ -1606,7 +1619,7 @@ bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
         return false;
     }
 
-    assert(p->type == PT_BOOL);
+    assert(p->type == PTBOOL);
     *val = p->value.b;
 
     return true;
@@ -1627,7 +1640,7 @@ bool quirks_get_dimensions(struct quirks *q,
         return false;
     }
 
-    assert(p->type == PT_DIMENSION);
+    assert(p->type == PTDIMENSION);
     *val = p->value.dim;
 
     return true;
@@ -1648,7 +1661,7 @@ bool quirks_get_range(struct quirks *q,
         return false;
     }
 
-    assert(p->type == PT_RANGE);
+    assert(p->type == PTRANGE);
     *val = p->value.range;
 
     return true;
@@ -1669,7 +1682,7 @@ bool quirks_get_tuples(struct quirks *q,
         return false;
     }
 
-    assert(p->type == PT_TUPLES);
+    assert(p->type == PTTUPLES);
     *tuples = &p->value.tuples;
 
     return true;
@@ -1677,8 +1690,8 @@ bool quirks_get_tuples(struct quirks *q,
 
 bool quirks_get_uint32_array(struct quirks *q,
     enum quirk which,
-    const uint32_t **array,
-    size_t *nelements)
+    const uint **array,
+    int *nelements)
 {
     struct property *p;
 
@@ -1691,7 +1704,7 @@ bool quirks_get_uint32_array(struct quirks *q,
         return false;
     }
 
-    assert(p->type == PT_UINT_ARRAY);
+    assert(p->type == PTUINTARRAY);
     *array = p->value.array.data.u;
     *nelements = p->value.array.nelements;
 
