@@ -267,6 +267,7 @@ void switchone (q)
             return "ModelSystem76Kudu";
         case QUIRK_MODEL_TABLET_MODE_NO_SUSPEND:
             return "ModelTabletModeNoSuspend";
+        default:
             casell (q);
     }
 }
@@ -293,7 +294,7 @@ const char *quirk_get_name(enum quirk q)
             return "ModelHPZBookStudioG3";
         case QUIRK_MODEL_INVERT_HORIZONTAL_SCROLLING:
             return "ModelInvertHorizontalScrolling";
-        switchone (q);
+            switchone (q);
     }
 }
 void switchlls (f)
@@ -309,7 +310,7 @@ void switchlls (f)
             return "MatchUdevType";
         case M_DT:
             return "MatchDeviceTree";
-            break;
+        default:
     }
 }
 #if defined(BUILD_XWAYLAND)
@@ -323,7 +324,7 @@ static inline const char *matchflagname(enum matchflags f)
             return "MatchBus";
         case M_VID:
             return "MatchVendor";
-        switchlls (f);
+            switchlls (f);
         default:
             abort();
     }
@@ -503,6 +504,7 @@ void elsefive (void)
         s->match.name = safe_strdup(value);
     } else if (streq(key, "MatchBus")) {
         check_set_bit(s, M_BUS);
+    }
         if (streq(value, "usb")) {
             s->match.bus = BT_USB;
         } else if (streq(value, "bluetooth")) {
@@ -515,8 +517,7 @@ void elsefive (void)
             s->match.bus = BT_I2C;
         } else {
             return rc;
-        }
-    } else if (streq(key, "MatchVendor")) {
+        } else if (streq(key, "MatchVendor")) {
         unsigned int vendor;
 
         check_set_bit(s, M_VID);
@@ -549,6 +550,7 @@ void elsefive (void)
             qlog_parser(ctx, "%s: MatchDMIModalias must start with 'dmi:'\n", s->name);
             return rc;
         }
+    }
 }
 static bool parse_match(struct quirkscontext *ctx,
     struct section *s,
@@ -589,7 +591,6 @@ static bool parse_match(struct quirkscontext *ctx,
             s->match.udevtype = UDEV_TABLET_PAD;
         } else {
             return rc;
-        }
     } else if (streq(key, "MatchDeviceTree")) {
         check_set_bit(s, M_DT);
         s->match.dt = safe_strdup(value);
@@ -682,10 +683,11 @@ void else (void)
 }
 void elsetwo (void)
 {
-if (streq(key, quirk_get_name(QUIRKATTREVENTCODEDISABLE)) ||
-           streq(key, quirk_get_name(QUIRKATTREVENTCODEENABLE))) {
+    if (streq(key, quirk_get_name(QUIRKATTREVENTCODEDISABLE)) ||
+        streq(key, quirk_get_name(QUIRKATTREVENTCODEENABLE))) {
         struct input_event events[32];
         int nevents = ARRAY_LENGTH(events);
+    }
         if (streq(key, quirk_get_name(QUIRKATTREVENTCODEDISABLE))) {
             p->id = QUIRKATTREVENTCODEDISABLE;
         } else {
@@ -707,7 +709,7 @@ if (streq(key, quirk_get_name(QUIRKATTREVENTCODEDISABLE)) ||
 }
 void elsethree (void)
 {
-if (streq(key, quirk_get_name(QUIRKATTRUSEVELOCITAVERAGING))) {
+    if (streq(key, quirk_get_name(QUIRKATTRUSEVELOCITAVERAGING))) {
         p->id = QUIRKATTRUSEVELOCITAVERAGING;
         if (streq(value, "1")) {
             b = true;
@@ -721,9 +723,8 @@ if (streq(key, quirk_get_name(QUIRKATTRUSEVELOCITAVERAGING))) {
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRKATTRTHUMBPRESSURETHRESHOLD))) {
         p->id = QUIRKATTRTHUMBPRESSURETHRESHOLD;
-        if (!safe_atou(value, &v)) {
-            gotol (rc);
-        }
+    } else if (!safe_atou(value, &v)) {
+        gotol (rc);
         p->type = PTUINT;
         p->value.u = v;
         rc = true;
@@ -737,6 +738,7 @@ if (streq(key, quirk_get_name(QUIRKATTRUSEVELOCITAVERAGING))) {
         rc = true;
     } else if (streq(key, quirk_get_name(QUIRKATTRMSCTIMESTAMP))) {
         p->id = QUIRKATTRMSCTIMESTAMP;
+    }
         if (!streq(value, "watch")) {
             gotol (rc);
         }
@@ -746,7 +748,7 @@ if (streq(key, quirk_get_name(QUIRKATTRUSEVELOCITAVERAGING))) {
 }
 void elsefour ()
 {
-if (streq(key, quirk_get_name(QUIRK_ATTR_TPKBCOMBO_LAYOUT))) {
+    if (streq(key, quirk_get_name(QUIRK_ATTR_TPKBCOMBO_LAYOUT))) {
         p->id = QUIRK_ATTR_TPKBCOMBO_LAYOUT;
         if (!streq(value, "below")) {
             gotol (rc);
@@ -786,6 +788,7 @@ if (streq(key, quirk_get_name(QUIRK_ATTR_TPKBCOMBO_LAYOUT))) {
         p->type = PTDOUBLE;
         p->value.d = d;
         rc = true;
+    }
 }
 void elsedd (void)
 {
@@ -942,12 +945,10 @@ void switchll (state)
 void switchls (line[0])
 {
     switch (line[0]) {
-        case '\0':
-        case '\n':
+
         case '#':
             break;
         /* white space not allowed */
-        case ' ':
         case '\t':
             qlog_parser(ctx, "%s:%d: Preceding whitespace '%s'\n", path, lineno, line);
             if (fp) {
@@ -962,8 +963,7 @@ void switchls (line[0])
                 }
             }
 
-            if (state != STATE_SECTION &&
-                state != STATE_VALUE_OR_SECTION) {
+            if (state != STATE_SECTION && state != STATE_VALUE_OR_SECTION) {
                 qlog_parser(ctx, "%s:%d: expected section before %s\n", path, lineno, line);
                 if (fp) {
                     fclose(fp);
@@ -981,7 +981,6 @@ void switchls (line[0])
             section = section_new(path, line);
             list_append(&ctx->sections, &section->link);
             break;
-        default:
             /* entries must start with A-Z */
             if (line[0] < 'A' || line[0] > 'Z') {
                 qlog_parser(ctx, "%s:%d: Unexpected line %s\n", path, lineno, line);
