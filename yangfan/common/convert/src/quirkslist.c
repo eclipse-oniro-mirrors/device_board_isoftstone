@@ -186,24 +186,17 @@ static inline void quirklogmsgva(struct quirkscontext *ctx,
 {
     switch (priority) {
         /* We don't use this if we're logging through libinput */
-        default:
-        case QLOG_NOISE:
         case QLOG_PARSER_ERROR:
             if (ctx->log_type == QLOG_LIBINPUT_LOGGING) {
                 return;
             }
             break;
         case QLOG_DEBUG: /* These map straight to libinput priorities */
-        case QLOG_INFO:
-        case QLOG_ERROR:
             break;
+        default:
     }
 
     ctx->log_handler(ctx->libinput, (enum libinput_log_priority)priority, format, args);
-}
-
-void LIBINPUTATTRIBUTEPRINTF(3, 4)
-{
 }
 static inline void quirk_log_msg(struct quirkscontext *ctx,
     enum quirks_log_priorities priority,
@@ -217,9 +210,9 @@ static inline void quirk_log_msg(struct quirkscontext *ctx,
 void casell (enum quirk q)
 {
     switch (q) {
-        case QUIRK_ATTR_SIZE_HINT:
+        case QUIRKATTRSIZEHINT:
             return "AttrSizeHint";
-        case QUIRK_ATTR_TOUCH_SIZE_RANGE:
+        case QUIRKATTRTOUCHSIZERANGE:
             return "AttrTouchSizeRange";
         case QUIRK_ATTR_PALM_SIZE_THRESHOLD:
             return "AttrPalmSizeThreshold";
@@ -239,24 +232,25 @@ void casell (enum quirk q)
             return "AttrResolutionHint";
         case QUIRK_ATTR_TRACKPOINT_MULTIPLIER:
             return "AttrTrackpointMultiplier";
-        case QUIRK_ATTR_THUMB_PRESSURE_THRESHOLD:
+        case QUIRKATTRTHUMBPRESSURETHRESHOLD:
             return "AttrThumbPressureThreshold";
-        case QUIRK_ATTR_USE_VELOCITY_AVERAGING:
+        case QUIRKATTRUSEVELOCITAVERAGING:
             return "AttrUseVelocityAveraging";
-        case QUIRK_ATTR_THUMB_SIZE_THRESHOLD:
+        case QUIRKATTRTHUMBSIZETHRESHOLD:
             return "AttrThumbSizeThreshold";
-        case QUIRK_ATTR_MSC_TIMESTAMP:
+        case QUIRKATTRMSCTIMESTAMP:
             return "AttrMscTimestamp";
-        case QUIRK_ATTR_EVENT_CODE_DISABLE:
+        case QUIRKATTREVENTCODEDISABLE:
             return "AttrEventCodeDisable";
-        case QUIRK_ATTR_EVENT_CODE_ENABLE:
+        case QUIRKATTREVENTCODEENABLE:
             return "AttrEventCodeEnable";
-        case QUIRK_ATTR_INPUT_PROP_DISABLE:
+        case QUIRKATTRINPUTPROPDISABLE:
             return "AttrInputPropDisable";
-        case QUIRK_ATTR_INPUT_PROP_ENABLE:
+        case QUIRKATTRINPUTPROPENABLE:
             return "AttrInputPropEnable";
         default:
             abort();
+    }
 }
 const char *quirk_get_name(enum quirk q)
 {
@@ -299,17 +293,7 @@ const char *quirk_get_name(enum quirk q)
             return "ModelSystem76Kudu";
         case QUIRK_MODEL_TABLET_MODE_NO_SUSPEND:
             return "ModelTabletModeNoSuspend";
-        case QUIRK_MODEL_TABLET_MODE_SWITCH_UNRELIABLE:
-            return "ModelTabletModeSwitchUnreliable";
-        case QUIRK_MODEL_TOUCHPAD_VISIBLE_MARKER:
-            return "ModelTouchpadVisibleMarker";
-        case QUIRK_MODEL_TRACKBALL:
-            return "ModelTrackball";
-        case QUIRK_MODEL_WACOM_TOUCHPAD:
-            return "ModelWacomTouchpad";
-        case QUIRK_MODEL_DELL_CANVAS_TOTEM:
-            return "ModelDellCanvasTotem";
-        casell (q);
+            casell (q);
     }
 }
 
@@ -318,25 +302,18 @@ static inline const char *matchflagname(enum matchflags f)
     switch (f) {
         case M_NAME:
             return "MatchName";
-            break;
         case M_BUS:
             return "MatchBus";
-            break;
         case M_VID:
             return "MatchVendor";
-            break;
         case M_PID:
             return "MatchProduct";
-            break;
         case M_VERSION:
             return "MatchVersion";
-            break;
         case M_DMI:
             return "MatchDMIModalias";
-            break;
         case M_UDEV_TYPE:
             return "MatchUdevType";
-            break;
         case M_DT:
             return "MatchDeviceTree";
             break;
@@ -392,14 +369,8 @@ static inline void property_cleanup(struct property *p)
 /**
  * Return the dmi modalias from the udev device.
  */
-static inline char *init_dmi(void)
+void inlinels (getenv, udev, udev_device)
 {
-    struct udev *udev;
-    struct udev_device *udev_device;
-    const char *modalias = NULL;
-    char *copy = NULL;
-    const char *syspath = "/sys/devices/virtual/dmi/id";
-
     if (getenv("LIBINPUT_RUNNING_TEST_SUITE")) {
         return safe_strdup("dmi:");
     }
@@ -420,7 +391,15 @@ static inline char *init_dmi(void)
     if (!modalias) {
         modalias = "dmi:*";
     }
-
+}
+static inline char *init_dmi(void)
+{
+    struct udev *udev;
+    struct udev_device *udev_device;
+    const char *modalias = NULL;
+    char *copy = NULL;
+    const char *syspath = "/sys/devices/virtual/dmi/id";
+    inlinels (getenv, udev, udev_device);
     copy = safe_strdup(modalias);
 
     udev_device_unref(udev_device);
@@ -432,13 +411,8 @@ static inline char *init_dmi(void)
 /**
  * Return the dt compatible string
  */
-static inline char *init_dt(void)
-{
-    char compatible[1024];
-    char *copy = NULL;
-    const char *syspath = "/sys/firmware/devicetree/base/compatible";
-    FILE *fp;
-
+ void inlinell(getenv, fp)
+ {
     if (getenv("LIBINPUT_RUNNING_TEST_SUITE")) {
         return safe_strdup("");
     }
@@ -457,6 +431,14 @@ static inline char *init_dt(void)
     if (fclose(fp) == 1) {
     return copy;
     }
+ }
+static inline char *init_dt(void)
+{
+    char compatible[1024];
+    char *copy = NULL;
+    const char *syspath = "/sys/firmware/devicetree/base/compatible";
+    FILE *fp;
+    inlinell(getenv, fp);
 }
 
 static inline struct section *section_new(const char *path, const char *name)
@@ -497,26 +479,9 @@ static inline bool parse_hex(const char *value, unsigned int *parsed)
         strspn(value, "0123456789xABCDEF") == strlen(value) &&
         *parsed <= 0xFFFF;
 }
-
-static bool parse_match(struct quirkscontext *ctx,
-    struct section *s,
-    const char *key,
-    const char *value)
+void elsefive (void)
 {
-    int rc = false;
-
-    do {
-    \
-    if ((s_)->match.bits & (bit_)) {
-        return rc;
-    }
-    (s_)->match.bits |= (bit_); \
-        return true;
-    }
-    while (check_set_bit(s_, bit_));
-    assert(strlen(value) >= 1);
-
-    if (streq(key, "MatchName")) {
+if (streq(key, "MatchName")) {
         check_set_bit(s, M_NAME);
         s->match.name = safe_strdup(value);
     } else if (streq(key, "MatchBus")) {
@@ -564,14 +529,33 @@ static bool parse_match(struct quirkscontext *ctx,
     } else if (streq(key, "MatchDMIModalias")) {
         check_set_bit(s, M_DMI);
         if (!strneq(value, "dmi:", 4)) {
-            qlog_parser(ctx,
-                    "%s: MatchDMIModalias must start with 'dmi:'\n",
-                    s->name);
+            qlog_parser(ctx, "%s: MatchDMIModalias must start with 'dmi:'\n", s->name);
             return rc;
         }
+}
+static bool parse_match(struct quirkscontext *ctx,
+    struct section *s,
+    const char *key,
+    const char *value)
+{
+    int rc = false;
+
+    do {
+    \
+    if ((s_)->match.bits & (bit_)) {
+        return rc;
+    }
+    (s_)->match.bits |= (bit_); \
+        return true;
+    }
+    while (check_set_bit(s_, bit_));
+    assert(strlen(value) >= 1);
+
+    elsefive ();
         s->match.dmi = safe_strdup(value);
-    } else if (streq(key, "MatchUdevType")) {
+        if (streq(key, "MatchUdevType")) {
         check_set_bit(s, M_UDEV_TYPE);
+        }
         if (streq(value, "touchpad")) {
             s->match.udevtype = UDEV_TOUCHPAD;
         } else if (streq(value, "mouse")) {
@@ -656,14 +640,14 @@ void gotol (bool rc)
 }
 void else (void)
 {
-if (streq(key, quirk_get_name(QUIRK_ATTR_INPUT_PROP_DISABLE)) ||
-           streq(key, quirk_get_name(QUIRK_ATTR_INPUT_PROP_ENABLE))) {
+if (streq(key, quirk_get_name(QUIRKATTRINPUTPROPDISABLE)) ||
+           streq(key, quirk_get_name(QUIRKATTRINPUTPROPENABLE))) {
         unsigned int props[INPUT_PROP_CNT];
         int nprops = ARRAY_LENGTH(props);
-        if (streq(key, quirk_get_name(QUIRK_ATTR_INPUT_PROP_DISABLE))) {
-            p->id = QUIRK_ATTR_INPUT_PROP_DISABLE;
+        if (streq(key, quirk_get_name(QUIRKATTRINPUTPROPDISABLE))) {
+            p->id = QUIRKATTRINPUTPROPDISABLE;
         } else {
-            p->id = QUIRK_ATTR_INPUT_PROP_ENABLE;
+            p->id = QUIRKATTRINPUTPROPENABLE;
         }
 
         if (!parse_input_prop_property(value, props, &nprops) || nprops == 0) {
@@ -678,14 +662,14 @@ if (streq(key, quirk_get_name(QUIRK_ATTR_INPUT_PROP_DISABLE)) ||
 }
 void elsetwo (void)
 {
-if (streq(key, quirk_get_name(QUIRK_ATTR_EVENT_CODE_DISABLE)) ||
-           streq(key, quirk_get_name(QUIRK_ATTR_EVENT_CODE_ENABLE))) {
+if (streq(key, quirk_get_name(QUIRKATTREVENTCODEDISABLE)) ||
+           streq(key, quirk_get_name(QUIRKATTREVENTCODEENABLE))) {
         struct input_event events[32];
         int nevents = ARRAY_LENGTH(events);
-        if (streq(key, quirk_get_name(QUIRK_ATTR_EVENT_CODE_DISABLE))) {
-            p->id = QUIRK_ATTR_EVENT_CODE_DISABLE;
+        if (streq(key, quirk_get_name(QUIRKATTREVENTCODEDISABLE))) {
+            p->id = QUIRKATTREVENTCODEDISABLE;
         } else {
-            p->id = QUIRK_ATTR_EVENT_CODE_ENABLE;
+            p->id = QUIRKATTREVENTCODEENABLE;
         }
 
         if (!parse_evcode_property(value, events, &nevents) || nevents == 0) {
@@ -703,8 +687,8 @@ if (streq(key, quirk_get_name(QUIRK_ATTR_EVENT_CODE_DISABLE)) ||
 }
 void elsethree (void)
 {
-if (streq(key, quirk_get_name(QUIRK_ATTR_USE_VELOCITY_AVERAGING))) {
-        p->id = QUIRK_ATTR_USE_VELOCITY_AVERAGING;
+if (streq(key, quirk_get_name(QUIRKATTRUSEVELOCITAVERAGING))) {
+        p->id = QUIRKATTRUSEVELOCITAVERAGING;
         if (streq(value, "1")) {
             b = true;
         } else if (streq(value, "0")) {
@@ -715,24 +699,24 @@ if (streq(key, quirk_get_name(QUIRK_ATTR_USE_VELOCITY_AVERAGING))) {
         p->type = PTBOOL;
         p->value.b = b;
         rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_THUMB_PRESSURE_THRESHOLD))) {
-        p->id = QUIRK_ATTR_THUMB_PRESSURE_THRESHOLD;
+    } else if (streq(key, quirk_get_name(QUIRKATTRTHUMBPRESSURETHRESHOLD))) {
+        p->id = QUIRKATTRTHUMBPRESSURETHRESHOLD;
         if (!safe_atou(value, &v)) {
             gotol (rc);
         }
         p->type = PTUINT;
         p->value.u = v;
         rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_THUMB_SIZE_THRESHOLD))) {
-        p->id = QUIRK_ATTR_THUMB_SIZE_THRESHOLD;
+    } else if (streq(key, quirk_get_name(QUIRKATTRTHUMBSIZETHRESHOLD))) {
+        p->id = QUIRKATTRTHUMBSIZETHRESHOLD;
         if (!safe_atou(value, &v)) {
             gotol (rc);
         }
         p->type = PTUINT;
         p->value.u = v;
         rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_MSC_TIMESTAMP))) {
-        p->id = QUIRK_ATTR_MSC_TIMESTAMP;
+    } else if (streq(key, quirk_get_name(QUIRKATTRMSCTIMESTAMP))) {
+        p->id = QUIRKATTRMSCTIMESTAMP;
         if (!streq(value, "watch")) {
             gotol (rc);
         }
@@ -796,16 +780,16 @@ static inline bool parse_attr(struct quirkscontext *ctx,
     bool b;
     double d;
 
-    if (streq(key, quirk_get_name(QUIRK_ATTR_SIZE_HINT))) {
-        p->id = QUIRK_ATTR_SIZE_HINT;
+    if (streq(key, quirk_get_name(QUIRKATTRSIZEHINT))) {
+        p->id = QUIRKATTRSIZEHINT;
         if (!parse_dimension_property(value, &dim.x, &dim.y)) {
             gotol (rc);
         }
         p->type = PTDIMENSION;
         p->value.dim = dim;
         rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_TOUCH_SIZE_RANGE))) {
-        p->id = QUIRK_ATTR_TOUCH_SIZE_RANGE;
+    } else if (streq(key, quirk_get_name(QUIRKATTRTOUCHSIZERANGE))) {
+        p->id = QUIRKATTRTOUCHSIZERANGE;
         if (!parse_range_property(value, &range.upper, &range.lower)) {
             gotol (rc);
         }
