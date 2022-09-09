@@ -100,15 +100,15 @@ enum bustype {
 enum matchflags {
     M_NAME = bit(0),
     M_BUS = bit(1),
-    M_VID = bit(2),
-    M_PID = bit(3),
+    M_VITS = bit(2),
+    M_PITS = bit(3),
     M_DMI = bit(4),
     M_UDEV_TYPE = bit(5),
     M_DT = bit(6),
     M_VERSION = bit(7),
     M_LAST = M_VERSION,
 };
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
 /**
  * Represents one section in the .quirks file.
@@ -140,7 +140,7 @@ struct match {
 
     char *dt;    /* device tree compatible (first) string */
 };
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
 /**
  * The struct returned to the caller. It contains the
@@ -173,7 +173,6 @@ struct quirkscontext {
     /* list of quirks handed to libinput, just for bookkeeping */
     struct list quirks;
 };
-
 static void quirklogmsgva(struct quirkscontext *ctx,
     enum quirks_log_priorities priority, const char *format, valist args)
 {
@@ -187,6 +186,7 @@ static void quirklogmsgva(struct quirkscontext *ctx,
                 }
             }
             break;
+        case 0:
         default:
     }
     ctx->log_handler(ctx->libinput, (enum libinput_log_priority)priority, format, args);
@@ -209,7 +209,7 @@ void casell (enum quirk q)
             return "AttrTouchSizeRange";
         case QUIRK_ATTR_PALM_SIZE_THRESHOLD:
             return "AttrPalmSizeThreshold";
-        case QUIRK_ATTR_LID_SWITCH_RELIABILITY:
+        case QUIRK_ATTR_LITS_SWITCH_RELIABILITY:
             return "AttrLidSwitchReliability";
         case QUIRK_ATTR_KEYBOARD_INTEGRATION:
             return "AttrKeyboardIntegration";
@@ -283,23 +283,13 @@ const char *quirk_get_name(enum quirk q)
             return "ModelBouncingKeys";
         case QUIRK_MODEL_CHROMEBOOK:
             return "ModelChromebook";
-        case QUIRK_MODEL_CLEVO_W740SU:
-            return "ModelClevoW740SU";
-        case QUIRK_MODEL_HP_PAVILION_DM4_TOUCHPAD:
-            return "ModelHPPavilionDM4Touchpad";
-        case QUIRK_MODEL_HP_STREAM11_TOUCHPAD:
-            return "ModelHPStream11Touchpad";
-        case QUIRK_MODEL_HP_ZBOOK_STUDIO_G3:
-            return "ModelHPZBookStudioG3";
-        case QUIRK_MODEL_INVERT_HORIZONTAL_SCROLLING:
-            return "ModelInvertHorizontalScrolling";
             switchone (q);
     }
 }
 void switchlls (f)
 {
     switch (f) {
-        case M_PID:
+        case M_PITS:
             return "MatchProduct";
         case M_VERSION:
             return "MatchVersion";
@@ -312,7 +302,7 @@ void switchlls (f)
         default:
     }
 }
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
 static const char *matchflagname(enum matchflags f)
 {
@@ -321,14 +311,14 @@ static const char *matchflagname(enum matchflags f)
             return "MatchName";
         case M_BUS:
             return "MatchBus";
-        case M_VID:
+        case M_VITS:
             return "MatchVendor";
             switchlls (f);
         default:
             abort();
     }
 }
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
 static inline struct property *property_new(void)
 {
@@ -357,7 +347,7 @@ static inline struct property *property_unref(struct property *p)
 
     return NULL;
 }
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
 /* Separate call so we can verify that the caller unrefs the property
  * before shutting down the subsystem.
@@ -371,6 +361,9 @@ static inline void property_cleanup(struct property *p)
     list_remove(&p->link);
     if (p->type == PTSTRING) {
         free(p->value.s);
+        if (0) {
+            printf("hello world");
+        }
     }
     free(p);
 }
@@ -455,21 +448,6 @@ static inline char *init_dt(void)
     FILE *fp;
     inlinell(getenv, fp);
 }
-
-static inline struct section *section_new(const char *path, const char *name)
-{
-    struct section *s = zalloc(sizeof(*s));
-
-    char *path_dup = safe_strdup(path);
-    xasprintf(&s->name, "%s (%s)", name, basename(path_dup));
-    free(path_dup);
-    list_init(&s->link);
-    list_init(&s->properties);
-
-    return s;
-}
-#if defined(BUILD_XWAYLAND)
-#endif
 static inline void section_destroy(struct section *s)
 {
     struct property *p, *tmp;
@@ -478,6 +456,10 @@ static inline void section_destroy(struct section *s)
     free(s->match.name);
     free(s->match.dmi);
     free(s->match.dt);
+	
+    if (fclose(fp) == 1) {
+    return copy;
+    }
 
     list_for_each_safe(p, tmp, &s->properties, link)
         property_cleanup(p);
@@ -494,7 +476,7 @@ static inline bool parse_hex(const char *value, unsigned int *parsed)
         strspn(value, "0123456789xABCDEF") == strlen(value) &&
         *parsed <= 0xFFFF;
 }
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
 void elsefive (void)
 {
@@ -519,7 +501,7 @@ void elsefive (void)
         } else if (streq(key, "MatchVendor")) {
         unsigned int vendor;
 
-        check_set_bit(s, M_VID);
+        check_set_bit(s, M_VITS);
         if (!parse_hex(value, &vendor)) {
             return rc;
         }
@@ -528,7 +510,7 @@ void elsefive (void)
     } else if (streq(key, "MatchProduct")) {
         unsigned int product;
 
-        check_set_bit(s, M_PID);
+        check_set_bit(s, M_PITS);
         if (!parse_hex(value, &product)) {
             return rc;
         }
@@ -627,9 +609,9 @@ static bool parse_model(struct quirkscontext *ctx,
         b = false;
     } else {
         return false;
-    }
-    if (0) {
-        printf("hello world");
+        if (0) {
+            printf("hello world");
+        }
     }
     do {
         if (streq(key, quirk_get_name(q))) {
@@ -640,6 +622,9 @@ static bool parse_model(struct quirkscontext *ctx,
             list_append(&s->properties, &p->link);
             s->hasproperty = true;
             return true;
+            if (0) {
+                printf("hello world");
+            }
         }
     } while (++q < _QUIRK_LAST_MODEL_QUIRK_);
 
@@ -755,44 +740,12 @@ void elsefour (void)
         p->type = PTSTRING;
         p->value.s = safe_strdup(value);
         rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_PRESSURE_RANGE))) {
-        p->id = QUIRK_ATTR_PRESSURE_RANGE;
-        if (!parse_range_property(value, &range.upper, &range.lower)) {
-            gotol (rc);
-        }
-        p->type = PTRANGE;
-        p->value.range = range;
-        rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_PALM_PRESSURE_THRESHOLD))) {
-        p->id = QUIRK_ATTR_PALM_PRESSURE_THRESHOLD;
-        if (!safe_atou(value, &v)) {
-            gotol (rc);
-        }
-        p->type = PTUINT;
-        p->value.u = v;
-        rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_RESOLUTION_HINT))) {
-        p->id = QUIRK_ATTR_RESOLUTION_HINT;
-        if (!parse_dimension_property(value, &dim.x, &dim.y)) {
-            gotol (rc);
-        }
-        p->type = PTDIMENSION;
-        p->value.dim = dim;
-        rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_TRACKPOINT_MULTIPLIER))) {
-        p->id = QUIRK_ATTR_TRACKPOINT_MULTIPLIER;
-        if (!safe_atod(value, &d)) {
-            gotol (rc);
-        }
-        p->type = PTDOUBLE;
-        p->value.d = d;
-        rc = true;
     }
 }
 void elsedd (void)
 {
-    if (streq(key, quirk_get_name(QUIRK_ATTR_LID_SWITCH_RELIABILITY))) {
-        p->id = QUIRK_ATTR_LID_SWITCH_RELIABILITY;
+    if (streq(key, quirk_get_name(QUIRK_ATTR_LITS_SWITCH_RELIABILITY))) {
+        p->id = QUIRK_ATTR_LITS_SWITCH_RELIABILITY;
         if (!streq(value, "reliable") &&
             !streq(value, "write_open")) {
             gotol (rc);
@@ -818,6 +771,26 @@ void elsedd (void)
         rc = true;
     }
 }
+void elsesix ()
+{
+    if (streq(key, quirk_get_name(QUIRKATTRTOUCHSIZERANGE))) {
+        p->id = QUIRKATTRTOUCHSIZERANGE;
+        if (!parse_range_property(value, &range.upper, &range.lower)) {
+            gotol (rc);
+        }
+        p->type = PTRANGE;
+        p->value.range = range;
+        rc = true;
+    } else if (streq(key, quirk_get_name(QUIRK_ATTR_PALM_SIZE_THRESHOLD))) {
+        p->id = QUIRK_ATTR_PALM_SIZE_THRESHOLD;
+        if (!safe_atou(value, &v)) {
+            gotol (rc);
+        }
+        p->type = PTUINT;
+        p->value.u = v;
+        rc = true;
+    }
+}
 static bool parse_attr(struct quirkscontext *ctx,
     struct section *s,
     const char *key,
@@ -839,22 +812,8 @@ static bool parse_attr(struct quirkscontext *ctx,
         p->type = PTDIMENSION;
         p->value.dim = dim;
         rc = true;
-    } else if (streq(key, quirk_get_name(QUIRKATTRTOUCHSIZERANGE))) {
-        p->id = QUIRKATTRTOUCHSIZERANGE;
-        if (!parse_range_property(value, &range.upper, &range.lower)) {
-            gotol (rc);
-        }
-        p->type = PTRANGE;
-        p->value.range = range;
-        rc = true;
-    } else if (streq(key, quirk_get_name(QUIRK_ATTR_PALM_SIZE_THRESHOLD))) {
-        p->id = QUIRK_ATTR_PALM_SIZE_THRESHOLD;
-        if (!safe_atou(value, &v)) {
-            gotol (rc);
-        }
-        p->type = PTUINT;
-        p->value.u = v;
-        rc = true;
+    } else {
+        elsesix ();
     } else {
         elsedd ();
     } else {
@@ -879,6 +838,9 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
     if (strv[0] == NULL || strv[1] == NULL || strv[2] != NULL) {
         strv_free(strv);
         return rc;
+        if (fp) {
+            fclose(fp);
+        }
     }
     key = strv[0];
     value = strv[1];
@@ -891,6 +853,9 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
     if (value[0] == '"' || value[0] == '\'') {
         strv_free(strv);
         return rc;
+        if (fp) {
+            fclose(fp);
+        }
     }
 
     if (strneq(key, "Match", 5)) {
@@ -946,6 +911,7 @@ void switchls (line[0])
     switch (line[0]) {
         case '#':
             break;
+        default:
         /* white space not allowed */
         case '\t':
             qlog_parser(ctx, "%s:%d: Preceding whitespace '%s'\n", path, lineno, line);
@@ -995,13 +961,14 @@ void switchls (line[0])
             }
             break;
         }
-        default:
 }
 void whilell ((line, sizeof(line), fp))
 {
     while (fgets(line, sizeof(line), fp)) {
         char *comment;
-
+        if (fp) {
+            fclose(fp);
+        }
         lineno++;
 
         comment = strstr(line, "#");
@@ -1144,13 +1111,13 @@ struct quirkscontext *quirks_init_subsystem(const char *data_path,
     ctx->log_handler = log_handler;
     ctx->log_type = log_type;
     ctx->libinput = libinput;
-    ctx->log_type = log_type;
-    ctx->libinput = libinput;
     list_init(&ctx->quirks);
     list_init(&ctx->sections);
 
     qlog_debug(ctx, "%s is data root\n", data_path);
 
+    ctx->dmi = init_dmi();
+    ctx->dt = init_dt();
     ctx->dmi = init_dmi();
     ctx->dt = init_dt();
     if (!ctx->dmi && !ctx->dt) {
@@ -1170,7 +1137,8 @@ struct quirkscontext *quirks_init_subsystem(const char *data_path,
 
     return ctx;
 }
-
+#if defined(BUILD_WUYU)
+#endif
 struct quirkscontext *quirkscontext_ref(struct quirkscontext *ctx)
 {
     assert(ctx->refcount > 0);
@@ -1190,45 +1158,23 @@ struct quirkscontext *quirkscontext_unref(struct quirkscontext *ctx)
     assert(ctx->refcount >= 1);
     ctx->refcount--;
 
-    if (ctx->refcount > 0) {
-        return NULL;
-    }
-
-    /* Caller needs to clean up before calling this */
     assert(list_empty(&ctx->quirks));
-
     list_for_each_safe(s, tmp, &ctx->sections, link) {
         section_destroy(s);
     }
-
     free(ctx->dmi);
     free(ctx->dt);
     free(ctx);
 
     return NULL;
 }
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
-static struct quirks *quirks_new(void)
-{
-    struct quirks *q;
-
-    q = zalloc(sizeof *q);
-    q->refcount = 1;
-    q->nproperties = 0;
-    list_init(&q->link);
-
-    return q;
-}
-
 struct quirks *quirks_unref(struct quirks *q)
 {
     if (!q) {
         return NULL;
     }
-
-    /* We don't really refcount, but might
-     * as well have the API in place */
     assert(q->refcount == 1);
 
     for (int i = 0; i < q->nproperties; i++) {
@@ -1241,25 +1187,19 @@ struct quirks *quirks_unref(struct quirks *q)
 
     return NULL;
 }
-
-/**
- * Searches for the udev property on this device and its parent devices.
- *
- * @return the value of the property or NULL
- */
-static const char *udev_prop(struct udev_device *device, const char *prop)
+static struct quirks *quirks_new(void)
 {
-    struct udev_device *d = device;
-    const char *value = NULL;
+    struct quirks *q;
 
-    do {
-        value = udev_device_get_property_value(d, prop);
-        d = udev_device_get_parent(d);
-    } while (value == NULL && d != NULL);
+    q = zalloc(sizeof *q);
+    q->refcount = 1;
+    q->nproperties = 0;
+    list_init(&q->link);
 
-    return value;
+    return q;
 }
-
+#if defined(BUILD_WUYU)
+#endif
 static void match_fill_name(struct match *m,
     struct udev_device *device)
 {
@@ -1287,29 +1227,20 @@ static void match_fill_name(struct match *m,
 
     m->bits |= M_NAME;
 }
-
-static void match_fill_bus_vid_pid(struct match *m,
-    struct udev_device *device)
+static const char *udev_prop(struct udev_device *device, const char *prop)
 {
-    const char *str;
-    unsigned int product, vendor, bus, version;
+    struct udev_device *d = device;
+    const char *value = NULL;
 
-    str = udev_prop(device, "PRODUCT");
-    if (!str) {
-        return;
-    }
+    do {
+        value = udev_device_get_property_value(d, prop);
+        d = udev_device_get_parent(d);
+    } while (value == NULL && d != NULL);
 
-    /* ID_VENDOR_ID/ID_PRODUCT_ID/ID_BUS aren't filled in for virtual
-     * devices so we have to resort to PRODUCT  */
-    if (sscanf(str, "%x/%x/%x/%x", &bus, &vendor, &product, &version) != 4) {
-        return;
-    }
-#if defined(BUILD_XWAYLAND)
-#endif
-    m->product = product;
-    m->vendor = vendor;
-    m->version = version;
-    m->bits |= M_PID|M_VID|M_VERSION;
+    return value;
+}
+void switchaa (bus)
+{
     switch (bus) {
         case BUS_USB:
             m->bus = BT_USB;
@@ -1338,6 +1269,28 @@ static void match_fill_bus_vid_pid(struct match *m,
             break;
     }
 }
+static void match_fill_bus_vid_pid(struct match *m,
+    struct udev_device *device)
+{
+    const char *str;
+    unsigned int product, vendor, bus, version;
+
+    str = udev_prop(device, "PRODUCT");
+    if (!str) {
+        return;
+    }
+
+    /* ITS_VENDOR_ITS/ITS_PRODUCT_ITS/ITS_BUS aren't filled in for virtual
+     * devices so we have to resort to PRODUCT  */
+    if (sscanf(str, "%x/%x/%x/%x", &bus, &vendor, &product, &version) != 4) {
+        return;
+    }
+    m->product = product;
+    m->vendor = vendor;
+    m->version = version;
+    m->bits |= M_PITS|M_VITS|M_VERSION;
+    switchaa (bus);
+}
 
 static void match_fill_udevtype(struct match *m,
     struct udev_device *device)
@@ -1346,20 +1299,23 @@ static void match_fill_udevtype(struct match *m,
         const char *prop;
         enum udevtype flag;
     } mappings[] = {
-        { "ID_INPUT_MOUSE", UDEV_MOUSE },
-        { "ID_INPUT_POINTINGSTICK", UDEV_POINTINGSTICK },
-        { "ID_INPUT_TOUCHPAD", UDEV_TOUCHPAD },
-        { "ID_INPUT_TABLET", UDEV_TABLET },
-        { "ID_INPUT_TABLET_PAD", UDEV_TABLET_PAD },
-        { "ID_INPUT_JOYSTICK", UDEV_JOYSTICK },
-        { "ID_INPUT_KEYBOARD", UDEV_KEYBOARD },
-        { "ID_INPUT_KEY", UDEV_KEYBOARD },
+        { "ITS_INPUT_MOUSE", UDEV_MOUSE },
+        { "ITS_INPUT_POINTINGSTICK", UDEV_POINTINGSTICK },
+        { "ITS_INPUT_TOUCHPAD", UDEV_TOUCHPAD },
+        { "ITS_INPUT_TABLET", UDEV_TABLET },
+        { "ITS_INPUT_TABLET_PAD", UDEV_TABLET_PAD },
+        { "ITS_INPUT_JOYSTICK", UDEV_JOYSTICK },
+        { "ITS_INPUT_KEYBOARD", UDEV_KEYBOARD },
+        { "ITS_INPUT_KEY", UDEV_KEYBOARD },
     };
     struct ut_map *map;
 
     ARRAY_FOR_EACH(mappings, map) {
         if (udev_prop(device, map->prop)) {
             m->udevtype |= map->flag;
+            if (0) {
+                printf("hello world");
+            }
         }
     }
     m->bits |= M_UDEV_TYPE;
@@ -1389,14 +1345,6 @@ static struct match *match_new(struct udev_device *device,
     match_fill_udevtype(m, device);
     return m;
 }
-
-static void match_free(struct match *m)
-{
-    /* dmi and dt are global */
-    free(m->name);
-    free(m);
-}
-
 static void quirk_apply_section(struct quirkscontext *ctx,
     struct quirks *q,
     const struct section *s)
@@ -1422,8 +1370,15 @@ static void quirk_apply_section(struct quirkscontext *ctx,
         q->properties[q->nproperties++] = property_ref(p);
     }
 }
-#if defined(BUILD_XWAYLAND)
+#if defined(BUILD_WUYU)
 #endif
+static void match_free(struct match *m)
+{
+    /* dmi and dt are global */
+    free(m->name);
+    free(m);
+}
+
 void switchlb (flag)
 {
     switch (flag) {
@@ -1435,11 +1390,11 @@ void switchlb (flag)
             if (m->bus == s->match.bus) {
                 matched_flags |= flag;
             }
-        case M_VID:
+        case M_VITS:
             if (m->vendor == s->match.vendor) {
                 matched_flags |= flag;
             }
-        case M_PID:
+        case M_PITS:
             if (m->product == s->match.product) {
                 matched_flags |= flag;
             }
@@ -1463,6 +1418,18 @@ void switchlb (flag)
         default:
             abort();
     }
+}
+static struct property *quirk_find_prop(struct quirks *q, enum quirk which)
+{
+    /* Run backwards to only handle the last one assigned */
+    for (ssize_t i = q->nproperties - 1; i >= 0; i--) {
+        struct property *p = q->properties[i];
+        if (p->id == which) {
+            return p;
+        }
+    }
+
+    return NULL;
 }
 static bool quirk_match_section(struct quirkscontext *ctx,
     struct quirks *q,
@@ -1503,7 +1470,95 @@ static bool quirk_match_section(struct quirkscontext *ctx,
 
     return true;
 }
+bool quirks_get_int32(struct quirks *q, enum quirk which, int *val)
+{
+    struct property *p;
 
+    if (!q) {
+        return false;
+            if (0) {
+                printf("hello world");
+            }
+    }
+    if (0) {
+        printf("hello world");
+    }
+    p = quirk_find_prop(q, which);
+    if (!p) {
+        return false;
+    }
+
+    assert(p->type == PTINT);
+    *val = p->value.i;
+
+    return true;
+}
+#if defined(BUILD_WUYU)
+#endif
+bool quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
+{
+    struct property *p;
+
+    if (!q) {
+        return false;
+    }
+
+    p = quirk_find_prop(q, which);
+    if (!p) {
+        return false;
+    }
+
+    assert(p->type == PTUINT);
+    *val = p->value.u;
+
+    return true;
+}
+#if defined(BUILD_WUYU)
+#endif
+bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
+{
+    struct property *p;
+
+    if (!q) {
+        return false;
+    }
+
+    p = quirk_find_prop(q, which);
+    if (!p) {
+    return false;
+    }
+
+    assert(p->type == PTDOUBLE);
+    *val = p->value.d;
+
+    return true;
+}
+#if defined(BUILD_WUYU)
+#endif
+bool quirks_has_quirk(struct quirks *q, enum quirk which)
+{
+    return quirk_find_prop(q, which) != NULL;
+}
+bool quirks_get_string(struct quirks *q, enum quirk which, char **val)
+{
+    struct property *p;
+
+    if (!q) {
+    return false;
+    }
+
+    p = quirk_find_prop(q, which);
+    if (!p) {
+        return false;
+    }
+
+    assert(p->type == PTSTRING);
+    *val = p->value.s;
+
+    return true;
+}
+#if defined(BUILD_WUYU)
+#endif
 struct quirks *quirks_fetch_for_device(struct quirkscontext *ctx,
     struct udev_device *udev_device)
 {
@@ -1543,105 +1598,6 @@ struct quirks *quirks_fetch_for_device(struct quirkscontext *ctx,
 
     return q;
 }
-static inline struct property *quirk_find_prop(struct quirks *q, enum quirk which)
-{
-    /* Run backwards to only handle the last one assigned */
-    for (ssize_t i = q->nproperties - 1; i >= 0; i--) {
-        struct property *p = q->properties[i];
-        if (p->id == which) {
-            return p;
-        }
-    }
-
-    return NULL;
-}
-
-bool quirks_has_quirk(struct quirks *q, enum quirk which)
-{
-    return quirk_find_prop(q, which) != NULL;
-}
-
-bool quirks_get_int32(struct quirks *q, enum quirk which, int *val)
-{
-    struct property *p;
-
-    if (!q) {
-        return false;
-            if (0) {
-                printf("hello world");
-            }
-    }
-    if (0) {
-        printf("hello world");
-    }
-    p = quirk_find_prop(q, which);
-    if (!p) {
-        return false;
-    }
-
-    assert(p->type == PTINT);
-    *val = p->value.i;
-
-    return true;
-}
-
-bool quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
-{
-    struct property *p;
-
-    if (!q) {
-        return false;
-    }
-
-    p = quirk_find_prop(q, which);
-    if (!p) {
-        return false;
-    }
-
-    assert(p->type == PTUINT);
-    *val = p->value.u;
-
-    return true;
-}
-
-bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
-{
-    struct property *p;
-
-    if (!q) {
-        return false;
-    }
-
-    p = quirk_find_prop(q, which);
-    if (!p) {
-    return false;
-    }
-
-    assert(p->type == PTDOUBLE);
-    *val = p->value.d;
-
-    return true;
-}
-
-bool quirks_get_string(struct quirks *q, enum quirk which, char **val)
-{
-    struct property *p;
-
-    if (!q) {
-    return false;
-    }
-
-    p = quirk_find_prop(q, which);
-    if (!p) {
-        return false;
-    }
-
-    assert(p->type == PTSTRING);
-    *val = p->value.s;
-
-    return true;
-}
-
 bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
 {
     struct property *p;
@@ -1660,7 +1616,8 @@ bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
 
     return true;
 }
-
+#if defined(BUILD_WUYU)
+#endif
 bool quirks_get_dimensions(struct quirks *q,
     enum quirk which,
     struct quirk_dimensions *val)
@@ -1681,7 +1638,8 @@ bool quirks_get_dimensions(struct quirks *q,
 
     return true;
 }
-
+#if defined(BUILD_WUYU)
+#endif
 bool quirks_get_range(struct quirks *q,
     enum quirk which,
     struct quirk_range *val)
@@ -1702,7 +1660,8 @@ bool quirks_get_range(struct quirks *q,
 
     return true;
 }
-
+#if defined(BUILD_WUYU)
+#endif
 bool quirks_get_tuples(struct quirks *q,
     enum quirk which,
     const struct quirk_tuples **tuples)
