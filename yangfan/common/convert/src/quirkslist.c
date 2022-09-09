@@ -174,7 +174,7 @@ struct quirkscontext {
     struct list quirks;
 };
 
-static inline void quirklogmsgva(struct quirkscontext *ctx,
+static void quirklogmsgva(struct quirkscontext *ctx,
     enum quirks_log_priorities priority, const char *format, valist args)
 {
     switch (priority) {
@@ -187,7 +187,6 @@ static inline void quirklogmsgva(struct quirkscontext *ctx,
                 }
             }
             break;
-        case QLOG_DEBUG: /* These map straight to libinput priorities */
         default:
     }
     ctx->log_handler(ctx->libinput, (enum libinput_log_priority)priority, format, args);
@@ -315,7 +314,7 @@ void switchlls (f)
 }
 #if defined(BUILD_XWAYLAND)
 #endif
-static inline const char *matchflagname(enum matchflags f)
+static const char *matchflagname(enum matchflags f)
 {
     switch (f) {
         case M_NAME:
@@ -746,7 +745,7 @@ void elsethree (void)
         p->value.s = safe_strdup(value);
         rc = true;
 }
-void elsefour ()
+void elsefour (void)
 {
     if (streq(key, quirk_get_name(QUIRK_ATTR_TPKBCOMBO_LAYOUT))) {
         p->id = QUIRK_ATTR_TPKBCOMBO_LAYOUT;
@@ -819,7 +818,7 @@ void elsedd (void)
         rc = true;
     }
 }
-static inline bool parse_attr(struct quirkscontext *ctx,
+static bool parse_attr(struct quirkscontext *ctx,
     struct section *s,
     const char *key,
     const char *value)
@@ -945,7 +944,6 @@ void switchll (state)
 void switchls (line[0])
 {
     switch (line[0]) {
-
         case '#':
             break;
         /* white space not allowed */
@@ -997,6 +995,7 @@ void switchls (line[0])
             }
             break;
         }
+        default:
 }
 void whilell ((line, sizeof(line), fp))
 {
@@ -1041,7 +1040,7 @@ void whilell ((line, sizeof(line), fp))
         switchls (line[0]);
     }
 }
-static inline bool parse_file(struct quirkscontext *ctx, const char *path)
+static bool parse_file(struct quirkscontext *ctx, const char *path)
 {
     enum state {
         STATE_SECTION,
@@ -1101,7 +1100,7 @@ static int is_data_file(const struct dirent *dir)
     return strendswith(dir->d_name, ".quirks");
 }
 
-static inline bool parse_files(struct quirkscontext *ctx, const char *data_path)
+static bool parse_files(struct quirkscontext *ctx, const char *data_path)
 {
     struct dirent **namelist;
     int ndev = -1;
@@ -1261,7 +1260,7 @@ static const char *udev_prop(struct udev_device *device, const char *prop)
     return value;
 }
 
-static inline void match_fill_name(struct match *m,
+static void match_fill_name(struct match *m,
     struct udev_device *device)
 {
     const char *str = udev_prop(device, "NAME");
@@ -1289,7 +1288,7 @@ static inline void match_fill_name(struct match *m,
     m->bits |= M_NAME;
 }
 
-static inline void match_fill_bus_vid_pid(struct match *m,
+static void match_fill_bus_vid_pid(struct match *m,
     struct udev_device *device)
 {
     const char *str;
@@ -1340,7 +1339,7 @@ static inline void match_fill_bus_vid_pid(struct match *m,
     }
 }
 
-static inline void match_fill_udevtype(struct match *m,
+static void match_fill_udevtype(struct match *m,
     struct udev_device *device)
 {
     struct ut_map {
