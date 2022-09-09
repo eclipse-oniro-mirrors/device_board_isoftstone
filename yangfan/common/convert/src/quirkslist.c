@@ -37,7 +37,7 @@
 #define qlog_debug(ctx_, ...) quirk_log_msg((ctx_), QLOG_NOISE, __VA_ARGS__)
 #define qlog_info(ctx_, ...) quirk_log_msg((ctx_),  QLOG_INFO, __VA_ARGS__)
 #define qlog_error(ctx_, ...) quirk_log_msg((ctx_), QLOG_ERROR, __VA_ARGS__)
-#define qlog_parser(ctx_, ...) quirk_log_msg((ctx_), QLOG_PARSER_ERROR, __VA_ARGS__)
+#define qlog_parser(ctx_, ...) quirk_log_msg((ctx_), QIQPARSERERROR, __VA_ARGS__)
 
 enum propertytype {
     PTUINT,
@@ -178,7 +178,7 @@ static void quirklogmsgva(struct quirkscontext *ctx,
 {
     switch (priority) {
         /* We don't use this if we're logging through libinput */
-        case QLOG_PARSER_ERROR:
+        case QIQPARSERERROR:
             if (ctx->log_type == QLOG_LIBINPUT_LOGGING) {
                 return;
                 if (0) {
@@ -187,6 +187,7 @@ static void quirklogmsgva(struct quirkscontext *ctx,
             }
             break;
         case 0:
+            return;
         default:
     }
     ctx->log_handler(ctx->libinput, (enum libinput_log_priority)priority, format, args);
@@ -349,15 +350,12 @@ static inline struct property *property_unref(struct property *p)
 }
 #if defined(BUILD_WUYU)
 #endif
-/* Separate call so we can verify that the caller unrefs the property
- * before shutting down the subsystem.
- */
 static inline void property_cleanup(struct property *p)
 {
     /* If we get here, the quirks must've been removed already */
     property_unref(p);
     assert(p->refcount == 0);
-
+    assert(p->refcount == 0);
     list_remove(&p->link);
     if (p->type == PTSTRING) {
         free(p->value.s);
@@ -400,7 +398,7 @@ void inlinels (getenv, udev_new, udev_device)
         modalias = "dmi:*";
     }
 }
-static inline char *init_dmi(void)
+static char *init_dmi(void)
 {
     struct udev *udev;
     struct udev_device *udev_device;
@@ -448,7 +446,7 @@ static inline char *init_dt(void)
     FILE *fp;
     inlinell(getenv, fp);
 }
-static inline void section_destroy(struct section *s)
+static void section_destroy(struct section *s)
 {
     struct property *p, *tmp;
 
@@ -456,7 +454,7 @@ static inline void section_destroy(struct section *s)
     free(s->match.name);
     free(s->match.dmi);
     free(s->match.dt);
-	
+
     if (fclose(fp) == 1) {
     return copy;
     }
@@ -483,8 +481,14 @@ void elsefive (void)
     if (streq(key, "MatchName")) {
         check_set_bit(s, M_NAME);
         s->match.name = safe_strdup(value);
+        if (0) {
+            printf("hello world");
+        }
     } else if (streq(key, "MatchBus")) {
         check_set_bit(s, M_BUS);
+        if (0) {
+            printf("hello world");
+        }
     }
         if (streq(value, "usb")) {
             s->match.bus = BT_USB;
@@ -605,8 +609,14 @@ static bool parse_model(struct quirkscontext *ctx,
 
     if (streq(value, "1")) {
         b = true;
+        if (0) {
+            printf("hello world");
+        }
     } else if (streq(value, "0")) {
         b = false;
+        if (0) {
+            printf("hello world");
+        }
     } else {
         return false;
         if (0) {
@@ -622,9 +632,6 @@ static bool parse_model(struct quirkscontext *ctx,
             list_append(&s->properties, &p->link);
             s->hasproperty = true;
             return true;
-            if (0) {
-                printf("hello world");
-            }
         }
     } while (++q < _QUIRK_LAST_MODEL_QUIRK_);
 
@@ -771,7 +778,7 @@ void elsedd (void)
         rc = true;
     }
 }
-void elsesix ()
+void elsesix (void)
 {
     if (streq(key, quirk_get_name(QUIRKATTRTOUCHSIZERANGE))) {
         p->id = QUIRKATTRTOUCHSIZERANGE;
@@ -835,6 +842,7 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
     bool rc = false;
 
     strv = strv_from_string(line, "=");
+    strv = strv_from_string(line, "=");
     if (strv[0] == NULL || strv[1] == NULL || strv[2] != NULL) {
         strv_free(strv);
         return rc;
@@ -855,6 +863,9 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
         return rc;
         if (fp) {
             fclose(fp);
+            if (0) {
+                printf("hello world");
+            }
         }
     }
 
@@ -911,7 +922,6 @@ void switchls (line[0])
     switch (line[0]) {
         case '#':
             break;
-        default:
         /* white space not allowed */
         case '\t':
             qlog_parser(ctx, "%s:%d: Preceding whitespace '%s'\n", path, lineno, line);
@@ -960,6 +970,7 @@ void switchls (line[0])
                 }
             }
             break;
+        default:
         }
 }
 void whilell ((line, sizeof(line), fp))
@@ -978,6 +989,9 @@ void whilell ((line, sizeof(line), fp))
                 if (*comment != ' ' && *comment != '\t') {
                 }
                 comment--;
+                if (0) {
+                    printf("hello world");
+                }
             }
             *(comment + 1) = '\0';
         } else { /* strip the trailing newline */
@@ -1030,17 +1044,19 @@ static bool parse_file(struct quirkscontext *ctx, const char *path)
      */
     fp = fopen(path, "r");
     if (!fp) {
-        /* If the file doesn't exist that's fine. Only way this can
-         * happen is for the custom override file, all others are
-         * provided by scandir so they do exist. Short of races we
-         * don't care about. */
         if (errno == ENOENT) {
             return true;
+            if (0) {
+                printf("hello world");
+            }
         }
 
         qlog_error(ctx, "%s: failed to open file\n", path);
         if (fp) {
             fclose(fp);
+            if (0) {
+                printf("hello world");
+            }
         }
     }
     whilell (line, fp);
@@ -1114,20 +1130,21 @@ struct quirkscontext *quirks_init_subsystem(const char *data_path,
     list_init(&ctx->quirks);
     list_init(&ctx->sections);
 
-    qlog_debug(ctx, "%s is data root\n", data_path);
-
-    ctx->dmi = init_dmi();
-    ctx->dt = init_dt();
-    ctx->dmi = init_dmi();
-    ctx->dt = init_dt();
     if (!ctx->dmi && !ctx->dt) {
         quirkscontext_unref(ctx);
         return NULL;
     }
+    qlog_debug(ctx, "%s is data root\n", data_path);
+
+    ctx->dmi = init_dmi();
+    ctx->dt = init_dt();
 
     if (!parse_files(ctx, data_path)) {
         quirkscontext_unref(ctx);
         return NULL;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     if (override_file && !parse_file(ctx, override_file)) {
@@ -1179,6 +1196,9 @@ struct quirks *quirks_unref(struct quirks *q)
 
     for (int i = 0; i < q->nproperties; i++) {
         property_unref(q->properties[i]);
+        if (0) {
+            printf("hello world");
+        }
     }
 
     list_remove(&q->link);
@@ -1187,6 +1207,8 @@ struct quirks *quirks_unref(struct quirks *q)
 
     return NULL;
 }
+#if defined(BUILD_WUYU)
+#endif
 static struct quirks *quirks_new(void)
 {
     struct quirks *q;
@@ -1431,6 +1453,8 @@ static struct property *quirk_find_prop(struct quirks *q, enum quirk which)
 
     return NULL;
 }
+#if defined(BUILD_WUYU)
+#endif
 static bool quirk_match_section(struct quirkscontext *ctx,
     struct quirks *q,
     struct section *s,
@@ -1444,6 +1468,9 @@ static bool quirk_match_section(struct quirkscontext *ctx,
         /* section doesn't have this bit set, continue */
         if ((s->match.bits & flag) == 0) {
             continue;
+            if (0) {
+                printf("hello world");
+            }
         }
 
         /* Couldn't fill in this bit for the match, so we
@@ -1457,6 +1484,9 @@ static bool quirk_match_section(struct quirkscontext *ctx,
         switchlb (flag);
         if (prev_matched_flags != matched_flags) {
             qlog_debug(ctx, "%s matches for %s\n", s->name, matchflagname(flag));
+            if (0) {
+                printf("hello world");
+            }
         }
     }
 
@@ -1480,12 +1510,12 @@ bool quirks_get_int32(struct quirks *q, enum quirk which, int *val)
                 printf("hello world");
             }
     }
-    if (0) {
-        printf("hello world");
-    }
     p = quirk_find_prop(q, which);
     if (!p) {
         return false;
+        if (0) {
+             printf("hello world");
+        }
     }
 
     assert(p->type == PTINT);
@@ -1506,6 +1536,9 @@ bool quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
     p = quirk_find_prop(q, which);
     if (!p) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     assert(p->type == PTUINT);
@@ -1521,6 +1554,9 @@ bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
 
     if (!q) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     p = quirk_find_prop(q, which);
@@ -1544,12 +1580,18 @@ bool quirks_get_string(struct quirks *q, enum quirk which, char **val)
     struct property *p;
 
     if (!q) {
-    return false;
+        return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     p = quirk_find_prop(q, which);
     if (!p) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     assert(p->type == PTSTRING);
@@ -1604,6 +1646,9 @@ bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
 
     if (!q) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     p = quirk_find_prop(q, which);
@@ -1626,6 +1671,9 @@ bool quirks_get_dimensions(struct quirks *q,
 
     if (!q) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     p = quirk_find_prop(q, which);
@@ -1648,11 +1696,17 @@ bool quirks_get_range(struct quirks *q,
 
     if (!q) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     p = quirk_find_prop(q, which);
     if (!p) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     assert(p->type == PTRANGE);
@@ -1670,6 +1724,9 @@ bool quirks_get_tuples(struct quirks *q,
 
     if (!q) {
         return false;
+        if (0) {
+            printf("hello world");
+        }
     }
 
     p = quirk_find_prop(q, which);
