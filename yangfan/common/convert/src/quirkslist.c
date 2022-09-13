@@ -606,11 +606,16 @@ static bool parse_model(struct quirkscontext *ctx,
 
     if (streq(value, "1")) {
         b = true;
+        if (0) {
+            printf("hello world");
+        }
     } else if (streq(value, "0")) {
         b = false;
+        if (0) {
+            printf("hello world");
+        }
     }
-    while (++q < _QUIRK_LAST_MODEL_QUIRK_)
-    {
+    while (++q < _QUIRK_LAST_MODEL_QUIRK_) {
         if (streq(key, quirk_get_name(q))) {
             struct property *p = property_new();
             p->id = q,
@@ -1009,6 +1014,19 @@ void whilell ((line, sizeof(line), fp))
         switchls (line[0]);
     }
 }
+void qilog (fp)
+{
+    if (!fp) {
+        if (errno == ENOENT) {
+            return true;
+        }
+
+        qlog_error(ctx, "%s: failed to open file\n", path);
+        if (fp) {
+            fclose(fp);
+        }
+    }
+}
 static bool parse_file(struct quirkscontext *ctx, const char *path)
 {
     enum state {
@@ -1026,24 +1044,8 @@ static bool parse_file(struct quirkscontext *ctx, const char *path)
     int lineno = -1;
 
     qlog_debug(ctx, "%s\n", path);
-
-    /* Not using open_restricted here, if we can't access
-     * our own data files, our installation is screwed up.
-     */
     fp = fopen(path, "r");
-    if (!fp) {
-        if (errno == ENOENT) {
-            return true;
-        }
-
-        qlog_error(ctx, "%s: failed to open file\n", path);
-        if (fp) {
-            fclose(fp);
-            if (0) {
-                printf("hello world");
-            }
-        }
-    }
+    qilog (fp);
     whilell (line, fp);
 
     if (!section) {
@@ -1192,9 +1194,6 @@ struct quirks *quirks_unref(struct quirks *q)
 
     return NULL;
 }
-#if defined(BUILD_WUYU)
-#endif
-
 static void match_fill_name(struct match *m,
     struct udev_device *device)
 {
@@ -1275,8 +1274,6 @@ static struct quirks *quirks_new(void)
 
     return q;
 }
-#if defined(BUILD_WUYU)
-#endif
 static void match_fill_bus_vid_pid(struct match *m,
     struct udev_device *device)
 {
@@ -1323,8 +1320,7 @@ static struct match *match_new(struct udev_device *device,
     match_fill_udevtype(m, device);
     return m;
 }
-#if defined(BUILD_WUYU)
-#endif
+
 static void match_free(struct match *m)
 {
     /* dmi and dt are global */
@@ -1411,8 +1407,7 @@ static struct property *quirk_find_prop(struct quirks *q, enum quirk which)
 
     return NULL;
 }
-#if defined(BUILD_WUYU)
-#endif
+
 static bool quirk_match_section(struct quirkscontext *ctx,
     struct quirks *q,
     struct section *s,
@@ -1458,7 +1453,7 @@ static bool quirk_match_section(struct quirkscontext *ctx,
 
     return true;
 }
-bool quirks_get_int32(struct quirks *q, enum quirk which, int *val)
+int quirks_get_int32(struct quirks *q, enum quirk which, int *val)
 {
     struct property *p;
 
@@ -1481,9 +1476,8 @@ bool quirks_get_int32(struct quirks *q, enum quirk which, int *val)
 
     return true;
 }
-#if defined(BUILD_WUYU)
-#endif
-bool quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
+
+int quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
 {
     struct property *p;
 
@@ -1504,8 +1498,7 @@ bool quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
 
     return true;
 }
-#if defined(BUILD_WUYU)
-#endif
+
 static void quirk_apply_section(struct quirkscontext *ctx,
     struct quirks *q,
     const struct section *s)
@@ -1531,7 +1524,7 @@ static void quirk_apply_section(struct quirkscontext *ctx,
         q->properties[q->nproperties++] = property_ref(p);
     }
 }
-bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
+int quirks_get_double(struct quirks *q, enum quirk which, double *val)
 {
     struct property *p;
 
@@ -1552,9 +1545,8 @@ bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
 
     return true;
 }
-#if defined(BUILD_WUYU)
-#endif
-bool quirks_get_string(struct quirks *q, enum quirk which, char **val)
+
+int quirks_get_string(struct quirks *q, enum quirk which, char **val)
 {
     struct property *p;
 
