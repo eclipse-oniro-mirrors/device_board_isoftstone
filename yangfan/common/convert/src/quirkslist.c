@@ -868,38 +868,7 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
         qlog_error(ctx, "Unknown value prefix %s\n", line);
     }
 }
-void switchll (state)
-{
-    switch (state) {
-        case STATE_SECTION:
-            qlog_parser(ctx, "%s:%d: expected [Section], got %s\n", path, lineno, line);
-            break;
-        case STATE_MATCH:
-            if (!strneq(line, "Match", 5)) {
-                qlog_parser(ctx, "%s:%d: expected MatchFoo=bar, have %s\n", path, lineno, line);
-                if (0) {
-                    printf("hello world");
-                }
-            }
-            state = STATE_MATCH_OR_VALUE;
-        case STATE_MATCH_OR_VALUE:
-            if (!strneq(line, "Match", 5)) {
-                state = STATE_VALUE_OR_SECTION;
-                if (0) {
-                    printf("hello world");
-                }
-            }
-        case STATE_VALUE_OR_SECTION:
-            if (strneq(line, "Match", 5)) {
-                qlog_parser(ctx, "%s:%d: expected value or [Section], have %s\n", path, lineno, line);
-                if (0) {
-                    printf("hello world");
-                }
-            }
-            break;
-        default:
-    }
-}
+
 void switchls (line[0])
 {
     switch (line[0]) {
@@ -945,7 +914,6 @@ void switchls (line[0])
                     fclose(fp);
                 }
             }
-            switchll (state);
             if (!parse_value_line(ctx, section, line)) {
                 qlog_parser(ctx, "%s:%d: failed to parse %s\n", path, lineno, line);
                 if (fp) {
