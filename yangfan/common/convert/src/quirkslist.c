@@ -868,44 +868,25 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
         qlog_error(ctx, "Unknown value prefix %s\n", line);
     }
 }
-void switchllss (state)
+void switchll (state)
 {
     switch (state) {
         case STATE_SECTION:
             qlog_parser(ctx, "%s:%d: expected [Section], got %s\n", path, lineno, line);
-            if (fp) {
-                fclose(fp);
-            }
+            break;
         case STATE_MATCH:
             if (!strneq(line, "Match", 5)) {
                 qlog_parser(ctx, "%s:%d: expected MatchFoo=bar, have %s\n", path, lineno, line);
-                if (fp) {
-                    fclose(fp);
-                }
             }
             state = STATE_MATCH_OR_VALUE;
-            break;
-        default:
-    }
-}
-void switchll (state)
-{
-    switchllss (state);
-    switch (state) {
         case STATE_MATCH_OR_VALUE:
             if (!strneq(line, "Match", 5)) {
                 state = STATE_VALUE_OR_SECTION;
             }
-            break;
         case STATE_VALUE_OR_SECTION:
             if (strneq(line, "Match", 5)) {
                 qlog_parser(ctx, "%s:%d: expected value or [Section], have %s\n", path, lineno, line);
-                if (fp) {
-                    fclose(fp);
-                }
             }
-            break;
-        case STATE_ANY:
             break;
         default:
     }
@@ -1220,7 +1201,7 @@ static void match_fill_name(struct match *m,
     }
     m->bits |= M_NAME;
 }
-void whiless (value, d)
+void whiless (void)
 {
     do {
         value = udev_device_get_property_value(d, prop);
@@ -1231,7 +1212,7 @@ static const char *udev_prop(struct udev_device *device, const char *prop)
 {
     struct udev_device *d = device;
     const char *value = NULL;
-    whiless (value, d);
+    whiless ();
 
     return value;
 }
