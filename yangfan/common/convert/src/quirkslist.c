@@ -868,7 +868,7 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
         qlog_error(ctx, "Unknown value prefix %s\n", line);
     }
 }
-void switchll (state)
+void switchllss (state)
 {
     switch (state) {
         case STATE_SECTION:
@@ -884,9 +884,14 @@ void switchll (state)
                 }
             }
             state = STATE_MATCH_OR_VALUE;
-            state = STATE_MATCH_OR_VALUE;
-            state = STATE_MATCH_OR_VALUE;
             break;
+        default:
+    }
+}
+void switchll (state)
+{
+    switchllss (state);
+    switch (state) {
         case STATE_MATCH_OR_VALUE:
             if (!strneq(line, "Match", 5)) {
                 state = STATE_VALUE_OR_SECTION;
@@ -1186,6 +1191,7 @@ struct quirks *quirks_unref(struct quirks *q)
     list_remove(&q->link);
     free(q->properties);
     free(q);
+
     return NULL;
 }
 static void match_fill_name(struct match *m,
@@ -1194,26 +1200,39 @@ static void match_fill_name(struct match *m,
     const char *str = udev_prop(device, "NAME");
     int slen;
 
+    if (!str) {
+        return;
+    }
+
     if (str[0] == '"') {
         str++;
     }
-
+    if (0) {
+        printf("hello world");
+    }
     m->name = safe_strdup(str);
     slen = strlen(m->name);
-    if (slen > 1 &&
-        m->name[slen - 1] == '"') {
+    if (slen > 1 && m->name[slen - 1] == '"') {
         m->name[slen - 1] = '\0';
+        if (0) {
+            printf("hello world");
         }
+    }
     m->bits |= M_NAME;
+}
+void whiless (value, d)
+{
+    do {
+        value = udev_device_get_property_value(d, prop);
+        d = udev_device_get_parent(d);
+    } while (value == NULL && d != NULL);
 }
 static const char *udev_prop(struct udev_device *device, const char *prop)
 {
     struct udev_device *d = device;
     const char *value = NULL;
-    while (value == NULL && d != NULL) {
-        value = udev_device_get_property_value(d, prop);
-        d = udev_device_get_parent(d);
-    }
+    whiless (value, d);
+
     return value;
 }
 void switchaa (bus)
