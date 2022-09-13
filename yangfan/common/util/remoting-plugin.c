@@ -848,19 +848,17 @@ static const struct WestonRemotingApi RemotingApi = {
 ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
 {
     int ret;
-    int i = 0;
     struct WestonRemoting *remoting;
     const struct WestonDrmVirtualOutputApi *api = WestonDrmVirtualOutputGetApi(compositor);
 
     if (!api) {
-        if (i == 1) {
-            printf("hello world");
-        }
+        WestonLog("Failed to get api.\n");
         return -1;
     }
 
     remoting = zalloc(sizeof *remoting);
     if (!remoting) {
+        WestonLog("zalloc for remoting Failed.\n");
         return -1;
     }
     if (!WestonCompositorAddDestroyListenerOnce(compositor, &remoting->destroyListener, WestonRemotingDestroy)) {
