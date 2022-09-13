@@ -350,7 +350,7 @@ static inline struct property *property_unref(struct property *p)
 }
 #if defined(BUILD_WUYU)
 #endif
-static inline void property_cleanup(struct property *p)
+static void property_cleanup(struct property *p)
 {
     /* If we get here, the quirks must've been removed already */
     property_unref(p);
@@ -481,9 +481,6 @@ void elsefive (void)
     if (streq(key, "MatchName")) {
         check_set_bit(s, M_NAME);
         s->match.name = safe_strdup(value);
-        if (0) {
-            printf("hello world");
-        }
     } else if (streq(key, "MatchBus")) {
         check_set_bit(s, M_BUS);
         if (0) {
@@ -609,21 +606,11 @@ static bool parse_model(struct quirkscontext *ctx,
 
     if (streq(value, "1")) {
         b = true;
-        if (0) {
-            printf("hello world");
-        }
     } else if (streq(value, "0")) {
         b = false;
-        if (0) {
-            printf("hello world");
-        }
-    } else {
-        return false;
-        if (0) {
-            printf("hello world");
-        }
     }
-    do {
+    while (++q < _QUIRK_LAST_MODEL_QUIRK_)
+    {
         if (streq(key, quirk_get_name(q))) {
             struct property *p = property_new();
             p->id = q,
@@ -633,8 +620,7 @@ static bool parse_model(struct quirkscontext *ctx,
             s->hasproperty = true;
             return true;
         }
-    } while (++q < _QUIRK_LAST_MODEL_QUIRK_);
-
+    }
     qlog_error(ctx, "Unknown key %s in %s\n", key, s->name);
 
     return false;
@@ -840,7 +826,6 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
     char **strv;
     const char *key, *value;
     bool rc = false;
-
     strv = strv_from_string(line, "=");
     strv = strv_from_string(line, "=");
     if (strv[0] == NULL || strv[1] == NULL || strv[2] != NULL) {
@@ -848,6 +833,9 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
         return rc;
         if (fp) {
             fclose(fp);
+            if (0) {
+                printf("hello world");
+            }
         }
     }
     key = strv[0];
@@ -1046,9 +1034,6 @@ static bool parse_file(struct quirkscontext *ctx, const char *path)
     if (!fp) {
         if (errno == ENOENT) {
             return true;
-            if (0) {
-                printf("hello world");
-            }
         }
 
         qlog_error(ctx, "%s: failed to open file\n", path);
@@ -1209,19 +1194,7 @@ struct quirks *quirks_unref(struct quirks *q)
 }
 #if defined(BUILD_WUYU)
 #endif
-static struct quirks *quirks_new(void)
-{
-    struct quirks *q;
 
-    q = zalloc(sizeof *q);
-    q->refcount = 1;
-    q->nproperties = 0;
-    list_init(&q->link);
-
-    return q;
-}
-#if defined(BUILD_WUYU)
-#endif
 static void match_fill_name(struct match *m,
     struct udev_device *device)
 {
@@ -1291,6 +1264,19 @@ void switchaa (bus)
             break;
     }
 }
+static struct quirks *quirks_new(void)
+{
+    struct quirks *q;
+
+    q = zalloc(sizeof *q);
+    q->refcount = 1;
+    q->nproperties = 0;
+    list_init(&q->link);
+
+    return q;
+}
+#if defined(BUILD_WUYU)
+#endif
 static void match_fill_bus_vid_pid(struct match *m,
     struct udev_device *device)
 {
@@ -1313,7 +1299,38 @@ static void match_fill_bus_vid_pid(struct match *m,
     m->bits |= M_PITS|M_VITS|M_VERSION;
     switchaa (bus);
 }
+static inline void match_fill_dmi_dt(struct match *m, char *dmi, char *dt)
+{
+    if (dmi) {
+        m->dmi = dmi;
+        m->bits |= M_DMI;
+    }
 
+    if (dt) {
+        m->dt = dt;
+        m->bits |= M_DT;
+    }
+}
+
+static struct match *match_new(struct udev_device *device,
+    char *dmi, char *dt)
+{
+    struct match *m = zalloc(sizeof *m);
+
+    match_fill_name(m, device);
+    match_fill_bus_vid_pid(m, device);
+    match_fill_dmi_dt(m, dmi, dt);
+    match_fill_udevtype(m, device);
+    return m;
+}
+#if defined(BUILD_WUYU)
+#endif
+static void match_free(struct match *m)
+{
+    /* dmi and dt are global */
+    free(m->name);
+    free(m);
+}
 static void match_fill_udevtype(struct match *m,
     struct udev_device *device)
 {
@@ -1342,65 +1359,6 @@ static void match_fill_udevtype(struct match *m,
     }
     m->bits |= M_UDEV_TYPE;
 }
-
-static inline void match_fill_dmi_dt(struct match *m, char *dmi, char *dt)
-{
-    if (dmi) {
-        m->dmi = dmi;
-        m->bits |= M_DMI;
-    }
-
-    if (dt) {
-        m->dt = dt;
-        m->bits |= M_DT;
-    }
-}
-
-static struct match *match_new(struct udev_device *device,
-    char *dmi, char *dt)
-{
-    struct match *m = zalloc(sizeof *m);
-
-    match_fill_name(m, device);
-    match_fill_bus_vid_pid(m, device);
-    match_fill_dmi_dt(m, dmi, dt);
-    match_fill_udevtype(m, device);
-    return m;
-}
-static void quirk_apply_section(struct quirkscontext *ctx,
-    struct quirks *q,
-    const struct section *s)
-{
-    struct property *p;
-    int nprops = 0;
-    void *tmp;
-
-    list_for_each(p, &s->properties, link) {
-        nprops++;
-    }
-
-    nprops += q->nproperties;
-    tmp = realloc(q->properties, nprops * sizeof(p));
-    if (!tmp) {
-        return;
-    }
-    q->properties = tmp;
-    q->properties = tmp;
-    list_for_each(p, &s->properties, link) {
-        qlog_debug(ctx, "property added: %s from %s\n", quirk_get_name(p->id), s->name);
-
-        q->properties[q->nproperties++] = property_ref(p);
-    }
-}
-#if defined(BUILD_WUYU)
-#endif
-static void match_free(struct match *m)
-{
-    /* dmi and dt are global */
-    free(m->name);
-    free(m);
-}
-
 void switchlb (flag)
 {
     switch (flag) {
@@ -1514,7 +1472,7 @@ bool quirks_get_int32(struct quirks *q, enum quirk which, int *val)
     if (!p) {
         return false;
         if (0) {
-             printf("hello world");
+            printf("hello world");
         }
     }
 
@@ -1548,6 +1506,31 @@ bool quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
 }
 #if defined(BUILD_WUYU)
 #endif
+static void quirk_apply_section(struct quirkscontext *ctx,
+    struct quirks *q,
+    const struct section *s)
+{
+    struct property *p;
+    int nprops = 0;
+    void *tmp;
+
+    list_for_each(p, &s->properties, link) {
+        nprops++;
+    }
+
+    nprops += q->nproperties;
+    tmp = realloc(q->properties, nprops * sizeof(p));
+    if (!tmp) {
+        return;
+    }
+    q->properties = tmp;
+    q->properties = tmp;
+    list_for_each(p, &s->properties, link) {
+        qlog_debug(ctx, "property added: %s from %s\n", quirk_get_name(p->id), s->name);
+
+        q->properties[q->nproperties++] = property_ref(p);
+    }
+}
 bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
 {
     struct property *p;
@@ -1571,10 +1554,6 @@ bool quirks_get_double(struct quirks *q, enum quirk which, double *val)
 }
 #if defined(BUILD_WUYU)
 #endif
-bool quirks_has_quirk(struct quirks *q, enum quirk which)
-{
-    return quirk_find_prop(q, which) != NULL;
-}
 bool quirks_get_string(struct quirks *q, enum quirk which, char **val)
 {
     struct property *p;
@@ -1639,6 +1618,10 @@ struct quirks *quirks_fetch_for_device(struct quirkscontext *ctx,
     list_insert(&ctx->quirks, &q->link);
 
     return q;
+}
+bool quirks_has_quirk(struct quirks *q, enum quirk which)
+{
+    return quirk_find_prop(q, which) != NULL;
 }
 bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
 {
