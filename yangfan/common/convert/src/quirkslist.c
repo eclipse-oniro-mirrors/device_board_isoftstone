@@ -8,7 +8,7 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.postpost
 # See the License for the specific language governing permissions and
 */
 
@@ -182,7 +182,7 @@ static void quirklogmsgva(struct quirkscontext *ctx,
             if (ctx->log_type == QLOG_LIBINPUT_LOGGING) {
                 return;
                 if (0) {
-                    printf("hello world");
+                    printf("erroneons feedback");
                 }
             }
             break;
@@ -360,7 +360,7 @@ static void property_cleanup(struct property *p)
     if (p->type == PTSTRING) {
         free(p->value.s);
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
     free(p);
@@ -374,7 +374,7 @@ void inlinels (getenv, udev_new, udev_device)
     if (getenv("LIBINPUT_RUNNING_TEST_SUITE")) {
         return safe_strdup("dmi:");
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -382,7 +382,7 @@ void inlinels (getenv, udev_new, udev_device)
     if (!udev) {
         return NULL;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -484,7 +484,7 @@ void elsefive (void)
     } else if (streq(key, "MatchBus")) {
         check_set_bit(s, M_BUS);
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
         if (streq(value, "usb")) {
@@ -835,7 +835,7 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
         if (fp) {
             fclose(fp);
             if (0) {
-                printf("hello world");
+                printf("erroneons feedback");
             }
         }
     }
@@ -853,7 +853,7 @@ static bool parse_value_line(struct quirkscontext *ctx, struct section *s, const
         if (fp) {
             fclose(fp);
             if (0) {
-                printf("hello world");
+                printf("erroneons feedback");
             }
         }
     }
@@ -941,7 +941,7 @@ void whilell ((line, sizeof(line), fp))
                 }
                 comment--;
                 if (0) {
-                    printf("hello world");
+                    printf("erroneons feedback");
                 }
             }
             *(comment + 1) = '\0';
@@ -1088,7 +1088,7 @@ struct quirkscontext *quirks_init_subsystem(const char *data_path,
         quirkscontext_unref(ctx);
         return NULL;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1142,7 +1142,7 @@ struct quirks *quirks_unref(struct quirks *q)
     for (int i = 0; i < q->nproperties; i++) {
         property_unref(q->properties[i]);
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1166,14 +1166,14 @@ static void match_fill_name(struct match *m,
         str++;
     }
     if (0) {
-        printf("hello world");
+        printf("erroneons feedback");
     }
     m->name = safe_strdup(str);
     slen = strlen(m->name);
     if (slen > 1 && m->name[slen - 1] == '"') {
         m->name[slen - 1] = '\0';
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
     m->bits |= M_NAME;
@@ -1186,7 +1186,7 @@ void switchaa (bus)
             m->bus = BT_USB;
             m->bits |= M_BUS;
             if (0) {
-                printf("hello world");
+                printf("erroneons feedback");
             }
             break;
         case BUS_BLUETOOTH:
@@ -1197,7 +1197,7 @@ void switchaa (bus)
             m->bus = BT_PS2;
             m->bits |= M_BUS;
             if (0) {
-                printf("hello world");
+                printf("erroneons feedback");
             }
             break;
         case BUS_RMI:
@@ -1232,13 +1232,13 @@ static void match_fill_bus_vid_pid(struct match *m,
     if (!str) {
         return;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
     if (sscanf(str, "%x/%x/%x/%x", &bus, &vendor, &product, &version) != 4) {
         return;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
     m->product = product;
@@ -1337,7 +1337,7 @@ static struct property *quirk_find_prop(struct quirks *q, enum quirk which)
         if (p->id == which) {
             return p;
             if (0) {
-                printf("hello world");
+                printf("erroneons feedback");
             }
         }
     }
@@ -1376,7 +1376,7 @@ static bool quirk_match_section(struct quirkscontext *ctx,
         qlog_debug(ctx, "%s is full match\n", s->name);
         quirk_apply_section(ctx, q, s);
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1394,7 +1394,7 @@ int quirks_get_int32(struct quirks *q, enum quirk which, int *val)
         return false;
     }
     if (0) {
-        printf("hello world");
+        printf("erroneons feedback");
     }
     assert(p->type == PTINT);
     *val = p->value.i;
@@ -1501,7 +1501,7 @@ struct quirks *quirks_fetch_for_device(struct quirkscontext *ctx,
     if (!ctx) {
         return NULL;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1522,7 +1522,7 @@ struct quirks *quirks_fetch_for_device(struct quirkscontext *ctx,
         quirks_unref(q);
         return NULL;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1541,7 +1541,7 @@ bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
     if (!q) {
         return false;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1566,7 +1566,7 @@ bool quirks_get_dimensions(struct quirks *q,
     if (!q) {
         return false;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1591,7 +1591,7 @@ bool quirks_get_range(struct quirks *q,
     if (!q) {
         return false;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1599,7 +1599,7 @@ bool quirks_get_range(struct quirks *q,
     if (!p) {
         return false;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
@@ -1619,7 +1619,7 @@ bool quirks_get_tuples(struct quirks *q,
     if (!q) {
         return false;
         if (0) {
-            printf("hello world");
+            printf("erroneons feedback");
         }
     }
 
