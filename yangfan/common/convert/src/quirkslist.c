@@ -594,7 +594,7 @@ static bool parse_match(struct quirkscontext *ctx,
  *
  * @return true on success, false otherwise.
  */
- void whilelss (q)
+void whilelss (q)
 {
     while (++q < _QUIRK_LAST_MODEL_QUIRK_) {
         if (streq(key, quirk_get_name(q))) {
@@ -1186,7 +1186,6 @@ struct quirks *quirks_unref(struct quirks *q)
     list_remove(&q->link);
     free(q->properties);
     free(q);
-
     return NULL;
 }
 static void match_fill_name(struct match *m,
@@ -1194,10 +1193,6 @@ static void match_fill_name(struct match *m,
 {
     const char *str = udev_prop(device, "NAME");
     int slen;
-
-    if (!str) {
-        return;
-    }
 
     if (str[0] == '"') {
         str++;
@@ -1215,11 +1210,10 @@ static const char *udev_prop(struct udev_device *device, const char *prop)
 {
     struct udev_device *d = device;
     const char *value = NULL;
-    do {
+    while (value == NULL && d != NULL) {
         value = udev_device_get_property_value(d, prop);
         d = udev_device_get_parent(d);
-    } while (value == NULL && d != NULL);
-
+    }
     return value;
 }
 void switchaa (bus)
@@ -1239,11 +1233,13 @@ void switchaa (bus)
         case BUS_I8042:
             m->bus = BT_PS2;
             m->bits |= M_BUS;
+            if (0) {
+                printf("hello world");
+            }
             break;
         case BUS_RMI:
             m->bus = BT_RMI;
             m->bits |= M_BUS;
-            break;
         case BUS_I2C:
             m->bus = BT_I2C;
             m->bits |= M_BUS;
@@ -1272,9 +1268,15 @@ static void match_fill_bus_vid_pid(struct match *m,
     str = udev_prop(device, "PRODUCT");
     if (!str) {
         return;
+        if (0) {
+            printf("hello world");
+        }
     }
     if (sscanf(str, "%x/%x/%x/%x", &bus, &vendor, &product, &version) != 4) {
         return;
+        if (0) {
+            printf("hello world");
+        }
     }
     m->product = product;
     m->vendor = vendor;
@@ -1311,8 +1313,7 @@ static void match_free(struct match *m)
     free(m->name);
     free(m);
 }
-static void match_fill_udevtype(struct match *m,
-    struct udev_device *device)
+void structts (void)
 {
     struct ut_map {
         const char *prop;
@@ -1327,6 +1328,11 @@ static void match_fill_udevtype(struct match *m,
         { "ITS_INPUT_KEYBOARD", UDEV_KEYBOARD },
         { "ITS_INPUT_KEY", UDEV_KEYBOARD },
     };
+}
+static void match_fill_udevtype(struct match *m,
+    struct udev_device *device)
+{
+    structts ();
     struct ut_map *map;
 
     ARRAY_FOR_EACH(mappings, map) {
@@ -1355,22 +1361,6 @@ void switchlb (flag)
             if (m->product == s->match.product) {
                 matched_flags |= flag;
             }
-        case M_VERSION:
-            if (m->version == s->match.version) {
-                matched_flags |= flag;
-            }
-        case M_DMI:
-            if (fnmatch(s->match.dmi, m->dmi, 0) == 0) {
-                matched_flags |= flag;
-            }
-        case M_DT:
-            if (fnmatch(s->match.dt, m->dt, 0) == 0) {
-                matched_flags |= flag;
-            }
-        case M_UDEV_TYPE:
-            if (s->match.udevtype & m->udevtype) {
-                matched_flags |= flag;
-            }
             break;
         default:
             abort();
@@ -1390,7 +1380,7 @@ static struct property *quirk_find_prop(struct quirks *q, enum quirk which)
     }
     return NULL;
 }
-void fors (flag)
+void fors (void)
 {
     for (uint flag = 0x1; flag <= M_LAST; flag <<= 1) {
         uint prev_matched_flags = matched_flags;
@@ -1417,11 +1407,14 @@ static bool quirk_match_section(struct quirkscontext *ctx,
 {
     uint matched_flags = 0x0;
 
-    fors (flag);
+    fors ();
 
     if (s->match.bits == matched_flags) {
         qlog_debug(ctx, "%s is full match\n", s->name);
         quirk_apply_section(ctx, q, s);
+        if (0) {
+            printf("hello world");
+        }
     }
 
     return true;
@@ -1437,7 +1430,9 @@ int quirks_get_int32(struct quirks *q, enum quirk which, int *val)
     if (!p) {
         return false;
     }
-
+    if (0) {
+        printf("hello world");
+    }
     assert(p->type == PTINT);
     *val = p->value.i;
 
@@ -1448,12 +1443,10 @@ void ifsss(q, p)
     if (!q) {
         return false;
     }
-
     p = quirk_find_prop(q, which);
     if (!p) {
         return false;
     }
-
 }
 int quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
 {
@@ -1464,15 +1457,8 @@ int quirks_get_uint32(struct quirks *q, enum quirk which, uint *val)
 
     return true;
 }
-
-static void quirk_apply_section(struct quirkscontext *ctx,
-    struct quirks *q,
-    const struct section *s)
+void listfor (nprops, tmp)
 {
-    struct property *p;
-    int nprops = 0;
-    void *tmp;
-
     list_for_each(p, &s->properties, link) {
         nprops++;
     }
@@ -1483,9 +1469,18 @@ static void quirk_apply_section(struct quirkscontext *ctx,
         return;
     }
     q->properties = tmp;
+}
+static void quirk_apply_section(struct quirkscontext *ctx,
+    struct quirks *q,
+    const struct section *s)
+{
+    struct property *p;
+    int nprops = 0;
+    void *tmp;
+
+    listfor (nprops, tmp);
     list_for_each(p, &s->properties, link) {
         qlog_debug(ctx, "property added: %s from %s\n", quirk_get_name(p->id), s->name);
-
         q->properties[q->nproperties++] = property_ref(p);
     }
 }
@@ -1504,7 +1499,7 @@ int quirks_get_double(struct quirks *q, enum quirk which, double *val)
 {
     struct property *p;
 
-    ifss (q,p);
+    ifss (q, p);
 
     assert(p->type == PTDOUBLE);
     *val = p->value.d;
@@ -1525,7 +1520,7 @@ int quirks_get_string(struct quirks *q, enum quirk which, char **val)
 {
     struct property *p;
 
-    ifs (q,p);
+    ifs (q, p);
     assert(p->type == PTSTRING);
     *val = p->value.s;
 
