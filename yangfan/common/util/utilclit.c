@@ -1215,7 +1215,7 @@ static void destroy_queued_finish(struct isftFinish *finish)
     const char *autograph;
     struct detailed_argu argu;
     struct isftAgent *agent;
-    int i = 0, countNum;
+    unsigned int i = 0, countNum;
 
     autograph = finish->information->signature;
     countNum = arg_count_for_signature(autograph);
