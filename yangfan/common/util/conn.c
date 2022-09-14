@@ -33,6 +33,8 @@
 #define NUM4096 4096
 #define MAXFDSOUT    28
 #define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
+#define LENGTHIOV   2
+
 unsigned int isftconnectionpendinginput(struct isftconnection *connection)
 {
     return isftbufsize(&connection->in);
@@ -40,7 +42,7 @@ unsigned int isftconnectionpendinginput(struct isftconnection *connection)
 
 int isftconnectionread(struct isftconnection *connection)
 {
-    struct iovec iov[2];
+    struct iovec iov[LENGTHIOV];
     struct msghdr msg;
     char cmsg[CLEN];
     int len, cnt, ret;
@@ -57,7 +59,7 @@ int isftconnectionread(struct isftconnection *connection)
     msg.msgiov = iov;
     msg.msgiovlen = cnt;
     msg.msgcontrol = cmsg;
-    msg.msgcontrollen = sizeof cmsg;
+    msg.msgcontrollen = sizeof(cmsg);
     msg.msgflags = 0;
 
     do {
