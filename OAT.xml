@@ -31,6 +31,7 @@
                 <policyitem type="copyright" name="iSoftStone Device Co., Ltd." path=".*" desc=""/>
                 <policyitem type="copyright" name="iSoftStone Open Source Organization ." path=".*" desc=""/>
                 <policyitem type="copyright" name="HiHope Open Source Organization ." path=".*" desc=""/>
+                <policyitem type="copyright" name="Copyright (c) 2014, 2017 IBM Corp." path=".*" desc=""/>
 	        </policy>
         </policylist>
         <filefilterlist>
@@ -43,6 +44,7 @@
                 <filteritem type="filepath" name="yangfan/kernel/logo/.*" desc="png file"/>				
                 <filteritem type="filepath" name="yangfan/kernel/drivers/wifi/.*" desc="binary file "/>
                 <filteritem type="filepath" name="yangfan/kernel/src/.*" desc="thirdparty file "/>
+                <filteritem type="filepath" name="yangfan/common/.*" desc="thirdparty file "/>
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/BUILD.gn" desc="no license heard"/>
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/device_manager/BUILD.gn" desc="no license heard"/>
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/driver_adapter/BUILD.gn" desc="no license heard"/>
