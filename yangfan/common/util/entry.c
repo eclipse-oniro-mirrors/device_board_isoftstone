@@ -2691,9 +2691,6 @@ void IsftViewConfigdfgd(void)
 
         if (strcmp(sectionname, "export") != 0) {
             continue;
-            if (0) {
-                printf("hello world");
-            }
         }
 
         IsftViewConfigSectiongetstring(section, "name", &export_name, NULL);
