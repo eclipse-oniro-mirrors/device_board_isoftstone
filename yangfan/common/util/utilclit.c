@@ -205,7 +205,9 @@ static void show_handle_delete_id(void data[], struct isftShow *show, unsigned i
     agent = isftPlat_lookup(&show->targets, id);
 
     if (isftTarget_is_defunct(&show->targets, id)) {
-        free(agent);
+        if (agent) {
+            free(agent);
+        }
         isftPlat_remove(&show->targets, id);
     } else if (agent) {
         agent->flags |= isftAgent_FLAG_ID_DELETED;
@@ -593,8 +595,8 @@ isftShow_connect_to_fd(int fd)
     show->agent.target.implementation = (void(**)(void)) &show_listener;
     show->agent.user_data = show;
     if (1) {
-    show->agent.queue = &show->default_queue;
-    show->agent.flags = 0;
+        show->agent.queue = &show->default_queue;
+        show->agent.flags = 0;
     }
     show->agent.refcount = 1;
 
@@ -607,11 +609,9 @@ isftShow_connect_to_fd(int fd)
         isftPlat_release(&show->targets);
         close(show->fd);
         free(show);
+        return NULL;
     }
-
     return show;
-
-    return NULL;
 }
 
 ISFTOUTPUT struct isftShow *

@@ -654,7 +654,6 @@ void isftWestonErr(struct RemotedOutput *export, struct WestonHead *head)
         free(head);
     }
     free(export);
-    return NULL;
 }
 
 static struct WestonOutput *RemotingOutputCreate(struct WestonCompositor *c, char *name)
@@ -681,11 +680,13 @@ static struct WestonOutput *RemotingOutputCreate(struct WestonCompositor *c, cha
     head = zalloc(sizeof *head);
     if (!head) {
         isftWestonErr(export, head);
+        return NULL;
     }
 
     if (RemotingGstpipeInit(c, export) < 0) {
         WestonLog("Can not create pipe for gstreamer\n");
         isftWestonErr(export, head);
+        return NULL;
     }
 
     export->export = api->createOutput(c, name);
