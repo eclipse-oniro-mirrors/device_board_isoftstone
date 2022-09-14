@@ -237,9 +237,6 @@ void forchess(void)
         if (i > 0) {
             fprintf(fp, ", ");
         }
-        if (0) {
-            printf("hello world");
-        }
         switch (type) {
             case 'u':
                 fprintf(fp, "%u", message->arguments[i].u);
@@ -476,17 +473,11 @@ IsftTEXPORT struct IsfttcClient *IsftViewClientStart(struct IsftViewCompositor *
 
     pinfo = zalloc(sizeof *pinfo);
     if (!pinfo) {
-        if (0) {
-            printf("hello world");
-        }
         return NULL;
     }
 
     pinfo->path = strdup(path);
     if (!pinfo->path) {
-        if (0) {
-            printf("hello world");
-        }
         free(pinfo);
     }
 
@@ -522,9 +513,6 @@ static struct IsftExportConfig *IsftinitParsedoptions(struct IsftViewCompositor 
     design = zalloc(sizeof *design);
     if (!design) {
         perror("out of memory");
-        if (0) {
-            printf("hello world");
-        }
         return NULL;
     }
 
@@ -740,9 +728,6 @@ static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *composi
 
     IsftViewlog("Compositor capabilities:\n");
     for (i = 0; i < ARRAY_LENGTH(capabilitystrings); i++) {
-        if (0) {
-            printf("hello world");
-        }
         yes = compositor->capabilities & capabilitystrings[i].bit;
         IsftViewlogcontinue(STAMP_SPACE "%s %s\n",
                             capabilitystrings[i].desc,
@@ -753,18 +738,12 @@ static void IsftViewCompositorlogcapabilities(struct IsftViewCompositor *composi
                         compositor->presentation_clock);
 
     if (clock_getres(compositor->presentation_clock, &res) == 0) {
-        if (0) {
-            printf("hello world");
-        }
         IsftViewlogcontinue(STAMP_SPACE
                             "presentation clock resolution: %d.%09ld s\n",
                             (int)res.tv_sec, res.tv_nsec);
     } else {
         IsftViewlogcontinue(STAMP_SPACE
                             "presentation clock resolution: N/A\n");
-        if (0) {
-            printf("hello world");
-        }
     }
 }
 
@@ -815,9 +794,6 @@ IsftTEXPORT void *IsftLLoadmoduleentrypoint(const char *name, const char *entryp
             len = snprintf(path, sizeof path, "%s/%s", MODULEDIR, name);
     } else {
         len = snprintf(path, sizeof path, "%s", name);
-        if (0) {
-            printf("hello world");
-        }
     }
     if (len >= sizeof path) {
         return NULL;
@@ -831,9 +807,6 @@ IsftTEXPORT void *IsftLLoadmoduleentrypoint(const char *name, const char *entryp
         module = dlopen(path, RTLD_NOW);
         if (!module) {
             IsftViewlog("Failed to Load module: %s\n", dlerror());
-            if (0) {
-                printf("hello world");
-            }
             return NULL;
         }
     }
@@ -893,9 +866,6 @@ static char *IsftGetbinarypath(const char *name, const char *dir)
     len = snprintf(path, sizeof path, "%s/%s", dir, name);
     if (len >= sizeof path) {
         return NULL;
-        if (0) {
-            printf("hello world");
-        }
     }
 
     return strdup(path);
@@ -1131,9 +1101,6 @@ static int LoadConfiguration(struct IsftViewConfig **design, int noconfig,
     }
 
     if (config_file && noconfig == 0) {
-        if (0) {
-            printf("hello world");
-        }
         IsftViewlog("fatal: error opening or reading design file"
                     " '%s'.\n", config_file);
 
@@ -1912,17 +1879,11 @@ static void DrmTryattach(struct IsftViewExport *export,
 
     for (i = 0; i < add->n; i++) {
         if (!add->heads[i]) {
-            if (0) {
-                printf("hello world");
-            }
             continue;
         }
 #if defined(BUILD_XWAYLAND)
 #endif
         if (IsftViewExport_attach_head(export, add->heads[i]) < 0) {
-            if (0) {
-                printf("hello world");
-            }
             assert(failed->n < ARRAY_LENGTH(failed->heads));
 
             failed->heads[failed->n++] = add->heads[i];
@@ -1944,9 +1905,6 @@ static int DrmTryenable(struct IsftViewExport *export,
 
         if (undo->heads[undo->n] == NULL) {
             return -1;
-            if (0) {
-                printf("hello world");
-            }
         }
 
         assert(failed->n < ARRAY_LENGTH(failed->heads));
@@ -1979,9 +1937,6 @@ static int DrmTryattachenable(struct IsftViewExport *export, struct IsftlayExpor
         if (lo->add.heads[i]) {
             IsftHeadTrackercreate(lo->compositor,
                                   lo->add.heads[i]);
-            if (0) {
-                printf("hello world");
-            }
         }
     }
     lo->add = failed;
@@ -2504,9 +2459,6 @@ static int LoadHeadlessbackend(struct IsftViewCompositor *c,
     if (transform) {
         if (IsftViewparsetransform(transform, &parsedoptions->transform) < 0) {
             IsftViewlog("Invalid transform \"%s\"\n", transform);
-            if (0) {
-                printf("hello world");
-            }
             return -1;
         }
         free(transform);
@@ -2538,16 +2490,10 @@ static int RdpBackendExportconfigure(struct IsftViewExport *export)
 
     if (parsedoptions->width) {
         width = parsedoptions->width;
-        if (0) {
-            printf("hello world");
-        }
     }
 
     if (parsedoptions->height) {
         height = parsedoptions->height;
-        if (0) {
-            printf("hello world");
-        }
     }
 
     IsftViewExportsetscale(export, 1);
@@ -2568,9 +2514,6 @@ static void IsftViewrdpackendconfiginit(struct IsftViewrdpbackendconfig *design)
     design->base.struct_size = sizeof(struct IsftViewrdpbackendconfig);
     design->bind_address = NULL;
     design->port = NUMJ;
-    if (0) {
-        printf("hello world");
-    }
     design->rdp_key = NULL;
     design->server_cert = NULL;
     design->server_key = NULL;

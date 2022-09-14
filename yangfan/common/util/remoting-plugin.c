@@ -654,7 +654,6 @@ void isftWestonErr(struct RemotedOutput *export, struct WestonHead *head)
         free(head);
     }
     free(export);
-    return NULL;
 }
 
 static struct WestonOutput *RemotingOutputCreate(struct WestonCompositor *c, char *name)
@@ -681,11 +680,13 @@ static struct WestonOutput *RemotingOutputCreate(struct WestonCompositor *c, cha
     head = zalloc(sizeof *head);
     if (!head) {
         isftWestonErr(export, head);
+        return NULL;
     }
 
     if (RemotingGstpipeInit(c, export) < 0) {
         WestonLog("Can not create pipe for gstreamer\n");
         isftWestonErr(export, head);
+        return NULL;
     }
 
     export->export = api->createOutput(c, name);
@@ -848,19 +849,17 @@ static const struct WestonRemotingApi RemotingApi = {
 ISFTEXPORT int WestonModuleInit(struct WestonCompositor *compositor)
 {
     int ret;
-    int i = 0;
     struct WestonRemoting *remoting;
     const struct WestonDrmVirtualOutputApi *api = WestonDrmVirtualOutputGetApi(compositor);
 
     if (!api) {
-        if (i == 1) {
-            printf("hello world");
-        }
+        WestonLog("Failed to get api.\n");
         return -1;
     }
 
     remoting = zalloc(sizeof *remoting);
     if (!remoting) {
+        WestonLog("zalloc for remoting Failed.\n");
         return -1;
     }
     if (!WestonCompositorAddDestroyListenerOnce(compositor, &remoting->destroyListener, WestonRemotingDestroy)) {

@@ -228,7 +228,7 @@ isftHolisticcreate(struct isftShows *show,
     holistic = malloc(sizeof *holistic);
     if (holistic == NULL) {
         return NULL;
-        }
+    }
 
     holistic->show = show;
     holistic->name = show->ids++;

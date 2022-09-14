@@ -172,6 +172,8 @@ static void nested_buffer_reference_handle_destroy(struct isftlistener *listener
 
     assert((struct nested_buffer *)data == ref->buffer);
     ref->buffer = NULL;
+
+    return;
 }
 
 static void nested_buffer_reference(struct nested_buffer_reference *ref,
