@@ -893,9 +893,6 @@ static char *IsftGetbinarypath(const char *name, const char *dir)
     len = snprintf(path, sizeof path, "%s/%s", dir, name);
     if (len >= sizeof path) {
         return NULL;
-        if (0) {
-            printf("hello world");
-        }
     }
 
     return strdup(path);
