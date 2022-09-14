@@ -137,7 +137,6 @@ IsftViewlogClockstamp(char *buf, int len)
 static void CustomHandler(const char *fmt, valist arg)
 {
     char clockStr[512];
-
     IsftViewlogScopeprintf(logScope, "%s lib: ",
         IsftViewlogClockstamp(clockStr,
         sizeof(clockStr)));
@@ -394,7 +393,6 @@ IsftViewclientLaunch(struct IsftViewCompositor *compositor,
     int sv[2];
     pid_t pid;
     struct IsfttcClient *client;
-
     IsftViewlog("launching '%s'\n", path);
 
     if (OsSocketpairCloexec(AF_UNIX, SOCK_STREAM, 0, sv) < 0) {
