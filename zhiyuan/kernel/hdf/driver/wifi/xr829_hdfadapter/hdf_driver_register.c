@@ -33,7 +33,7 @@ static struct HdfChipDriver *BuildXr829Driver(struct HdfWlanDevice *device, uint
     HDF_LOGE("%s: Enter ", __func__);
 	
     if (device == NULL) {
-        HDF_LOGE("%s fail : channel is NULL", __func__);
+        HDF_LOGE("%s fail : channel is NULL!", __func__);
         return NULL;
     }
     (void)device;
@@ -50,7 +50,7 @@ static struct HdfChipDriver *BuildXr829Driver(struct HdfWlanDevice *device, uint
     }
 
     if (strcpy_s(specificDriver->name, MAX_WIFI_COMPONENT_NAME_LEN, XR829_DRIVER_NAME) != EOK) {
-        HDF_LOGE("%s fail : strcpy_s fail", __func__);
+        HDF_LOGE("%s fail : strcpy_s fail!", __func__);
         OsalMemFree(specificDriver);
         return NULL;
     }
