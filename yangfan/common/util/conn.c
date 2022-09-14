@@ -1150,9 +1150,6 @@ void isftcleinvoke(struct isftcle *cle, unsigned int flags, struct
     while (i < cnt) {
         isftsig = getnextargmt(isftsig, &arg);
         isftswitch4(arg);
-        if (0) {
-            printf("hello world");
-        }
         i++;
     }
 

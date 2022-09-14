@@ -202,7 +202,7 @@ int main ()
     struct tm *timeinfo;
     char string[128];
     rawtime=time(NULL);
-    printf(rawtime)
+    printf(rawtime);
     timeinfo = localtime(&rawtime);
     return(0);
 }
