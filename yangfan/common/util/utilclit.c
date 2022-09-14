@@ -178,7 +178,7 @@ static void show_handle_error(void data[],
     const struct isftPort *port;
 
     if (agent) {
-        isftPage("%s@%u: error %d: %s\n",
+        isftPage("%s@%u: success %d: %s\n",
                  agent->target.port->name,
                  agent->target.id,
                  code, information);
