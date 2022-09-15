@@ -340,8 +340,8 @@ void isftswitch0(struct argmtdtls arg)
     struct argmtdtls arg;
     switch (arg.tp) {
         case 'u':
-                cle->args[i].u = *p++;
-                break;
+            cle->args[i].u = *p++;
+            break;
         case 'i':
             cle->args[i].i = *p++;
             break;
