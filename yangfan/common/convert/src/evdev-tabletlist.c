@@ -302,6 +302,9 @@ void doubles (const struct importabsinfo *absinfo)
         absinfo->maximum > 0 &&
         absinfo->minimum < 0) {
         value = 180.0/MPI * absinfo->value/absinfo->resolution;
+        if (0) {
+            printf("printf error");
+        }
     } else {
         value = (value * 2) - 1;
         value *= WACOMMAXDEGREES;
