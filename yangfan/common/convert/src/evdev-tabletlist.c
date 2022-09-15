@@ -27,9 +27,6 @@ enum notify {
     DONOTIFY,
 };
 
-/* The tablet sends tasks every ~2ms , 50ms should be plenty enough to
-   detect out-of-range.
-   This value is higher during test suite runs */
 static int FORCEDPROXOUTTIMEOUT = 50 * 1000; /* µs */
 
 void tabletsetstatus(struct tabletpost *tablet, int s)
@@ -64,8 +61,6 @@ static void tabletgetreleasedbuttons(struct tabletpost *tablet, struct buttonsta
             ~(state->bits[i]);
 }
 
-/* Merge the previous state with the current one so all buttons look like
- * they just got pressed in this frame */
 static void tabletforcebuttonpresses(struct tabletpost *tablet)
 {
     struct buttonstate *state = &tablet->buttonstate, *prevstate = &tablet->prevbuttonstate;
@@ -100,10 +95,6 @@ static void tablethistorypush(struct tabletpost *tablet, const struct tabletaxes
     }
 }
 
-/**
- * Return a previous axis state, where index of 0 means "most recent", 1 is
- * "one before most recent", etc.
- */
 static const struct tabletaxes* tablethistoryget(const struct tabletpost *tablet, unsigned int index)
 {
     int sz = tablethistorysize(tablet);
@@ -154,11 +145,6 @@ static bool tabletfilteraxisfuzz(const struct tabletpost *tablet,
     delta = previous - current;
 
     fuzz = libevdevgetabsfuzz(device->evdev, e->code);
-
-    /* ABSDISTANCE doesn't have have fuzz set and causes continuous
-     * updates for the cursor/lens tools. Add a minimum fuzz of 2, same
-     * as the xf86-import-wacom driver
-     */
     switch (e->code) {
         case ABSDISTANCE:
             fuzz = max(2, fuzz);
@@ -199,21 +185,13 @@ static void tabletprocessabsolute(struct tabletpost *tablet,
             setbit(tablet->changedaxes, axis);
             tabletsetstatus(tablet, TABLETAXESUPDATED);
             break;
-        /* toolid is the identifier for the tool we can use in libwacom
-         * to identify it (if we have one anyway) */
         case ABSMISC:
             tablet->currenttool.id = e->value;
             break;
-        /* Intuos 3 strip data. Should only happen on the Pad device, not on
-           the Pen device. */
         case ABSRX:
         case ABSRY:
         /* Only on the 4D mouse (Intuos2), obsolete */
         case ABSRZ:
-        /* Only on the 4D mouse (Intuos2), obsolete.
-           The 24HD sends ABSTHROTTLE on the Pad device for the second
-           wheel but we shouldn't get here on kernel >= 3.17.
-           */
         case ABSTHROTTLE:
         default:
             evdevloginfo(device, "Unhandled ABS task code %#x\n", e->code);
@@ -317,30 +295,24 @@ static double normalizepressure(const struct importabsinfo *absinfo, struct libi
 
     return max(0.0, value);
 }
-
-static double adjusttilt(const struct importabsinfo *absinfo)
+void doubles (const struct importabsinfo *absinfo)
 {
-    double range = absinfo->maximum - absinfo->minimum;
-    double value = (absinfo->value - absinfo->minimum) / range;
-
     const int WACOMMAXDEGREES = 64;
-    /* If resolution is nonzero, it's in units/radian. But require
-     * a min/max less/greater than zero so we can assume 0 is the
-     * center */
     if (absinfo->resolution != 0 &&
         absinfo->maximum > 0 &&
         absinfo->minimum < 0) {
         value = 180.0/MPI * absinfo->value/absinfo->resolution;
     } else {
-        /* Wacom supports physical [-64, 64] degrees, so map to that by
-         * default. If other tablets have a different physical range or
-         * nonzero physical offsets, they need extra treatment
-         * here.
-         */
-        /* Map to the (-1, 1) range */
         value = (value * 2) - 1;
         value *= WACOMMAXDEGREES;
     }
+}
+static double adjusttilt(const struct importabsinfo *absinfo)
+{
+    double range = absinfo->maximum - absinfo->minimum;
+    double value = (absinfo->value - absinfo->minimum) / range;
+
+    doubles (*absinfo);
     return value;
 }
 
@@ -353,9 +325,11 @@ void ifdd (struct tabletpost *tablet, double angle)
     x = tablet->axes.tilt.x;
     y = tablet->axes.tilt.y;
 
-    /* atan2 is CCW, we want CW -> negate x */
     if (x || y) {
         angle = ((180.0 * atan2(-x, y)) / MPI);
+        if (0) {
+            printf("printf error");
+        }
     }
 }
 static void converttilttorotation(struct tabletpost *tablet)
@@ -373,7 +347,6 @@ static void converttilttorotation(struct tabletpost *tablet)
 
 static double converttodegrees(const struct importabsinfo *absinfo, double offset)
 {
-    /* range is [0, 360[, i.e. range + 1 */
     double range = absinfo->maximum - absinfo->minimum + 1;
     double value = (absinfo->value - absinfo->minimum) / range;
 
@@ -425,9 +398,6 @@ static struct normalizedcoords tablettoolprocessdelta(struct tabletpost *tablet,
     const struct normalizedcoords zero = { 0.0, 0.0 };
     struct devicecoords delta = { 0, 0 };
     struct devicefloatcoords accel;
-
-    /* When tool contact changes, we probably got a cursor jump. Don't
-       try to calculate a delta for that task */
     if (!tablethasstatus(tablet, TABLETTOOLENTERINGPROXIMITY) &&
         !tablethasstatus(tablet, TABLETTOOLENTERINGCONTACT) &&
         !tablethasstatus(tablet, TABLETTOOLLEAVINGCONTACT) &&
@@ -489,8 +459,6 @@ static void tabletupdateslider(struct tabletpost *tablet, struct evdevdevice *de
 static void tabletupdatetilt(struct tabletpost *tablet, struct evdevdevice *device)
 {
     const struct importabsinfo *absinfo;
-    /* mouse rotation resets tilt to 0 so always fetch both axes if
-     * either has changed */
     if (bitisset(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTX) ||
         bitisset(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTY)) {
         absinfo = libevdevgetabsinfo(device->evdev, ABSTILTX);
@@ -527,8 +495,6 @@ static void tabletupdatemouserotation(struct tabletpost *tablet, struct evdevdev
 static void tabletupdaterotation(struct tabletpost *tablet,
     struct evdevdevice *device)
 {
-    /* We must check ROTATIONZ after TILTX/Y so that the tilt axes are
-     * already normalized and set if we have the mouse/lens tool */
     if (tablet->currenttool.type == LIBINPUTTABLETTOOLTYPEMOUSE ||
         tablet->currenttool.type == LIBINPUTTABLETTOOLTYPELENS) {
         tabletupdatemouserotation(tablet, device);
@@ -536,8 +502,6 @@ static void tabletupdaterotation(struct tabletpost *tablet,
         clearbit(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTY);
         tablet->axes.tilt.x = 0;
         tablet->axes.tilt.y = 0;
-        /* tilt is already converted to left-handed, so mouse
-         * rotation is converted to left-handed automatically */
     } else {
         tabletupdateartpenrotation(tablet, device);
         if (device->lefthanded.enabled) {
@@ -594,9 +558,6 @@ static bool tabletchecknotifyaxes(struct tabletpost *tablet, struct evdevdevice 
 
     if (memcmp(tmp, tablet->changedaxes, sizeof(tmp)) == 0) {
         axes = tablet->axes;
-        /* The tool position often jumps to a different spot when contact changes.
-         * If tool contact changes, clear the history to prtask axis smoothing
-         * from trying to average over the spatial discontinuity. */
         if (tablethasstatus(tablet, TABLETTOOLENTERINGCONTACT) ||
             tablethasstatus(tablet, TABLETTOOLLEAVINGCONTACT)) {
             tablethistoryreset(tablet);
@@ -609,8 +570,6 @@ static bool tabletchecknotifyaxes(struct tabletpost *tablet, struct evdevdevice 
     tabletupdateslider(tablet, device);
     tabletupdatetilt(tablet, device);
     tabletupdatewheel(tablet, device);
-    /* We must check ROTATIONZ after TILTX/Y so that the tilt axes are
-     * already normalized and set if we have the mouse/lens tool */
     tabletupdaterotation(tablet, device);
 
     axes.point = tablet->axes.point;
@@ -700,7 +659,6 @@ static void tabletprocesskey(struct tabletpost *tablet, struct evdevdevice *devi
 {
     enum libimporttablettooltype type;
 
-    /* ignore kernel key repeat */
     if (e->value == 2) {
         return;
     }
@@ -869,10 +827,6 @@ static int toolsetbitsfromlibwacom(const struct tabletpost *tablet, struct libim
 }
 void switchl (tablet, tool)
 {
-    /* If we don't have libwacom, we simply copy any axis we have on the
-       tablet onto the tool. Except we know that mice only have rotation
-       anyway.
-     */
     switch (type) {
         case LIBINPUTTABLETTOOLTYPEPEN:
         case LIBINPUTTABLETTOOLTYPEERASER:
@@ -884,14 +838,6 @@ void switchl (tablet, tool)
             copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISTILTX);
             copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISTILTY);
             copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISSLIDER);
-
-            /* Rotation is special, it can be either ABSZ or
-             * BTNTOOLMOUSE+ABSTILTX/Y. Aiptek tablets have
-             * mouse+tilt (and thus rotation), but they do not have
-             * ABSZ. So let's not copy the axis bit if we don't have
-             * ABSZ, otherwise we try to get the value from it later on
-             * proximity in and go boom because the absinfo isn't there.
-             */
             if (libevdevhastaskcode(tablet->device->evdev, EVABS, ABSZ)) {
                 copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISROTATIONZ);
             }
@@ -918,8 +864,7 @@ static void toolsetbits(const struct tabletpost *tablet, struct libimporttablett
     }
 #endif
     switchl (tablet, tool);
-    /* If we don't have libwacom, copy all pen-related buttons from the
-       tablet vs all mouse-related buttons */
+
     switch (type) {
         case LIBINPUTTABLETTOOLTYPEPEN:
         case LIBINPUTTABLETTOOLTYPEBRUSH:
@@ -1003,19 +948,9 @@ static struct libimporttablettool *tabletgettool(struct tabletpost *tablet,
         }
     }
 
-    /* If we get a tool with a delayed serial number, we already created
-     * a 0-serial number tool for it earlier. Re-use that, even though
-     * it means we can't distinguish this tool from others.
-     * https://bugs.freedesktop.org/showbug.cgi?id=97526
-     */
     if (!tool) {
         toollist = &tablet->toollist;
-        /* We can't guarantee that tools without serial numbers are
-         * unique, so we keep them local to the tablet that they come
-         * into proximity of instead of storing them in the global tool
-         * list
-         * Same as above, but don't bother checking the serial number
-         */
+
         listforeach(t, toollist, link) {
             if (type == t->type) {
                 tool = t;
@@ -1023,15 +958,11 @@ static struct libimporttablettool *tabletgettool(struct tabletpost *tablet,
             }
         }
 
-        /* Didn't find the tool but we have a serial. Switch
-         * toollist back so we create in the correct list */
         if (!tool && serial) {
             toollist = &libimport->toollist;
         }
     }
 
-    /* If we didn't already have the newtool in our list of tools,
-     * add it */
     if (!tool) {
         tool = zalloc(sizeof *tool);
 
