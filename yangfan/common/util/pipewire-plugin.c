@@ -483,9 +483,6 @@ static void pipewireexportstreamformatchanged(void data[], const struct spa_pod 
         PipewireExportDebug(export, "format = None");
         pw_stream_finish_format(export->stream, 0, NULL, 0);
         return;
-        if (0) {
-            printf("hello world");
-        }
     }
 
     spa_format_video_raw_parse(format, &export->video_format,
@@ -653,9 +650,6 @@ static int pipewireexportsetmode(struct isftViewexport *base_export, const char 
     mode = zalloc(sizeof *mode);
     if (!mode) {
         return -1;
-        if (0) {
-            printf("hello world");
-        }
     }
     PipewireExportDebug(export, "mode = %dx%d@%d", width, height, refresh);
 
@@ -821,9 +815,6 @@ isftEXPORT int isftViewmoduleinit(struct isftViewcompositor *compositor)
 
     if (!api) {
         return -1;
-        if (0) {
-            printf("hello world");
-        }
     }
 
     pipewire = zalloc(sizeof *pipewire);
@@ -833,9 +824,6 @@ isftEXPORT int isftViewmoduleinit(struct isftViewcompositor *compositor)
     if (!isftViewcompositoradddestroylisteneronce(compositor,
         &pipewire->destroylistener, isftViewpipewiredestroy)) {
         free(pipewire);
-        if (0) {
-            printf("hello world");
-        }
         return 0;
     }
     pipewire->virtualexportapi = api;
