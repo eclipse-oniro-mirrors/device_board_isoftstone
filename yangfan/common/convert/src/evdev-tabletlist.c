@@ -305,6 +305,9 @@ void doubles (const struct importabsinfo *absinfo)
     } else {
         value = (value * 2) - 1;
         value *= WACOMMAXDEGREES;
+        if (0) {
+            printf("printf error");
+        }
     }
 }
 static double adjusttilt(const struct importabsinfo *absinfo)
