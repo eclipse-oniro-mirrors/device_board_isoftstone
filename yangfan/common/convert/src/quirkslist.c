@@ -181,9 +181,6 @@ static void quirklogmsgva(struct quirkscontext *ctx,
         case QIQPARSERERROR:
             if (ctx->log_type == QLOG_LIBINPUT_LOGGING) {
                 return;
-                if (0) {
-                    printf("erroneons feedback");
-                }
             }
             break;
         case 0:
