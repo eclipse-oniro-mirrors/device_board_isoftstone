@@ -2129,14 +2129,21 @@ static int DrmbackendRemotedExportconfigure(struct IsftViewExport *export,
 
     return 0;
 }
-void goto_err(void)
+                                            
+static void goto_err(struct IsftViewExport *export,
+    char *export_name, char *modeline)
 {
-    free(modeline);
-    free(export_name);
+    if (modeline) {
+        free(modeline);
+    }
+    if (export_name) {
+        free(export_name);
+    }
     if (export) {
         IsftViewExport_destroy(export);
     }
 }
+
 static void RemotedExportinit(struct IsftViewCompositor *c,
                               struct IsftViewConfigSection *section,
                               const struct IsftViewremoting_api *api)
@@ -2152,27 +2159,31 @@ static void RemotedExportinit(struct IsftViewCompositor *c,
 
     IsftViewConfigSectiongetstring(section, "mode", &modeline, "off");
     if (strcmp(modeline, "off") == 0) {
-        goto_err();
+        goto_err(export, export_name, modeline);
+        return;
     }
 
     export = api->create_export(c, export_name);
     if (!export) {
         IsftViewlog("Cannot create remoted export \"%s\".\n",
                     export_name);
-        goto_err();
+        goto_err(export, export_name, modeline);
+        return;
     }
 
     ret = DrmbackendRemotedExportconfigure(export, section, modeline, api);
     if (ret < 0) {
         IsftViewlog("Cannot configure remoted export \"%s\".\n",
                     export_name);
-        goto_err();
+        goto_err(export, export_name, modeline);
+        return;
     }
 
     if (IsftViewExport_enable(export) < 0) {
         IsftViewlog("Enabling remoted export \"%s\" failed.\n",
                     export_name);
-        goto_err();
+        goto_err(export, export_name, modeline);
+        return;
     }
     free(modeline);
     free(export_name);
@@ -2267,27 +2278,31 @@ static void PipeWireExportinit(struct IsftViewCompositor *c,
 
     IsftViewConfigSectiongetstring(section, "mode", &modeline, "off");
     if (strcmp(modeline, "off") == 0) {
-        goto_err();
+        goto_err(export, export_name, modeline);
+        return;
     }
 
     export = api->create_export(c, export_name);
     if (!export) {
         IsftViewlog("Cannot create pipewire export \"%s\".\n",
                     export_name);
-        goto_err();
+        goto_err(export, export_name, modeline);
+        return;
     }
 
     ret = DrmbackendPipeWireExportconfigure(export, section, modeline, api);
     if (ret < 0) {
         IsftViewlog("Cannot configure pipewire export \"%s\".\n",
                     export_name);
-        goto_err();
+        goto_err(export, export_name, modeline);
+        return;
     }
 
     if (IsftViewExport_enable(export) < 0) {
         IsftViewlog("Enabling pipewire export \"%s\" failed.\n",
                     export_name);
-        goto_err()；
+        goto_err(export, export_name, modeline);
+        return;
     }
 
     free(modeline);
