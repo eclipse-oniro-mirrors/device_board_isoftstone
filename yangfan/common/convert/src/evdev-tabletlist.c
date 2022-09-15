@@ -317,8 +317,12 @@ static double normalizepressure(const struct importabsinfo *absinfo, struct libi
 
     return max(0.0, value);
 }
-void doubles (const struct importabsinfo *absinfo)
+
+static double adjusttilt(const struct importabsinfo *absinfo)
 {
+    double range = absinfo->maximum - absinfo->minimum;
+    double value = (absinfo->value - absinfo->minimum) / range;
+
     const int WACOMMAXDEGREES = 64;
     /* If resolution is nonzero, it's in units/radian. But require
      * a min/max less/greater than zero so we can assume 0 is the
@@ -337,13 +341,6 @@ void doubles (const struct importabsinfo *absinfo)
         value = (value * 2) - 1;
         value *= WACOMMAXDEGREES;
     }
-}
-static double adjusttilt(const struct importabsinfo *absinfo)
-{
-    double range = absinfo->maximum - absinfo->minimum;
-    double value = (absinfo->value - absinfo->minimum) / range;
-
-    doubles (*absinfo);
     return value;
 }
 
@@ -351,17 +348,8 @@ static int invertaxis(const struct importabsinfo *absinfo)
 {
     return absinfo->maximum - (absinfo->value - absinfo->minimum);
 }
-
-static void converttilttorotation(struct tabletpost *tablet)
+void ifdd (struct tabletpost *tablet, double angle)
 {
-    const int offset = 5;
-    double x, y;
-    double angle = 0.0;
-
-    /* Wacom Intuos 4, 5, Pro mouse calculates rotation from the x/y tilt
-       values. The device has a 175 degree CCW hardware offset but since we use
-       atan2 the effective offset is just 5 degrees.
-       */
     x = tablet->axes.tilt.x;
     y = tablet->axes.tilt.y;
 
@@ -369,6 +357,13 @@ static void converttilttorotation(struct tabletpost *tablet)
     if (x || y) {
         angle = ((180.0 * atan2(-x, y)) / MPI);
     }
+}
+static void converttilttorotation(struct tabletpost *tablet)
+{
+    const int offset = 5;
+    double x, y;
+    double angle = 0.0;
+    ifdd (*tablet, angle);
 
     angle = fmod(360 + angle - offset, 360);
 
