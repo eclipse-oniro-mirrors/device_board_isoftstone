@@ -22,7 +22,7 @@
 using namespace testing::ext;
 namespace OHOS::Camera {
 void V4L2UvcCallback(const std::string cameraId, const std::vector<DeviceControl>& control,
-    const std::vector<DeviceFormat>& fromat, const bool inOut)
+    const std::vector<DeviceFormat>& format, const bool inOut)
 {
     std::cout << "V4L2UvcCallback" << std::endl;
 }
