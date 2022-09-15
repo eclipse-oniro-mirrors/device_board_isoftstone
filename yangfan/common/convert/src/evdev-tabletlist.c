@@ -32,11 +32,11 @@ enum notify {
    This value is higher during test suite runs */
 static int FORCEDPROXOUTTIMEOUT = 50 * 1000; /* µs */
 
-#define tabletsetstatus(tablet,s) (tablet)->status |= (s)
-#define tabletunsetstatus(tablet,s) (tablet)->status &= ~(s)
-#define tablethasstatus(tablet,s) (!!((tablet)->status & (s)))
+#define tabletsetstatus(tablet, s) (tablet)->status |= (s)
+#define tabletunsetstatus(tablet, s) (tablet)->status &= ~(s)
+#define tablethasstatus(tablet, s) (!!((tablet)->status & (s)))
 
-static inline void tabletgetpressedbuttons(struct tabletpost *tablet, struct buttonstate *buttons)
+static void tabletgetpressedbuttons(struct tabletpost *tablet, struct buttonstate *buttons)
 {
     int i;
     const struct buttonstate *state = &tablet->buttonstate, *prevstate = &tablet->prevbuttonstate;
@@ -45,7 +45,7 @@ static inline void tabletgetpressedbuttons(struct tabletpost *tablet, struct but
         buttons->bits[i] = state->bits[i] & ~(prevstate->bits[i]);
 }
 
-static inline void tabletgetreleasedbuttons(struct tabletpost *tablet, struct buttonstate *buttons)
+static void tabletgetreleasedbuttons(struct tabletpost *tablet, struct buttonstate *buttons)
 {
     int i;
     const struct buttonstate *state = &tablet->buttonstate, *prevstate = &tablet->prevbuttonstate;
@@ -57,7 +57,7 @@ static inline void tabletgetreleasedbuttons(struct tabletpost *tablet, struct bu
 
 /* Merge the previous state with the current one so all buttons look like
  * they just got pressed in this frame */
-static inline void tabletforcebuttonpresses(struct tabletpost *tablet)
+static void tabletforcebuttonpresses(struct tabletpost *tablet)
 {
     struct buttonstate *state = &tablet->buttonstate, *prevstate = &tablet->prevbuttonstate;
     int i;
@@ -68,17 +68,17 @@ static inline void tabletforcebuttonpresses(struct tabletpost *tablet)
     }
 }
 
-static inline int tablethistorysize(const struct tabletpost *tablet)
+static int tablethistorysize(const struct tabletpost *tablet)
 {
     return tablet->history.size;
 }
 
-static inline void tablethistoryreset(struct tabletpost *tablet)
+static void tablethistoryreset(struct tabletpost *tablet)
 {
     tablet->history.count = 0;
 }
 
-static inline void tablethistorypush(struct tabletpost *tablet, const struct tabletaxes *axes)
+static void tablethistorypush(struct tabletpost *tablet, const struct tabletaxes *axes)
 {
     unsigned int index = (tablet->history.index + 1) % tablethistorysize(tablet);
 
@@ -95,7 +95,7 @@ static inline void tablethistorypush(struct tabletpost *tablet, const struct tab
  * Return a previous axis state, where index of 0 means "most recent", 1 is
  * "one before most recent", etc.
  */
-static inline const struct tabletaxes* tablethistoryget(const struct tabletpost *tablet, unsigned int index)
+static const struct tabletaxes* tablethistoryget(const struct tabletpost *tablet, unsigned int index)
 {
     int sz = tablethistorysize(tablet);
 
@@ -106,7 +106,7 @@ static inline const struct tabletaxes* tablethistoryget(const struct tabletpost 
     return &tablet->history.samples[index];
 }
 
-static inline void tabletresetchangedaxes(struct tabletpost *tablet)
+static void tabletresetchangedaxes(struct tabletpost *tablet)
 {
     memset(tablet->changedaxes, 0, sizeof(tablet->changedaxes));
 }
@@ -133,7 +133,8 @@ static bool tabletdevicehasaxis(struct tabletpost *tablet, enum libimporttablett
     return hasaxis;
 }
 
-static inline bool tabletfilteraxisfuzz(const struct tabletpost *tablet, const struct evdevdevice *device, const struct importtask *e,
+static bool tabletfilteraxisfuzz(const struct tabletpost *tablet,
+    const struct evdevdevice *device, const struct importtask *e,
     enum libimporttablettoolaxis axis)
 {
     int delta, fuzz;
@@ -150,17 +151,18 @@ static inline bool tabletfilteraxisfuzz(const struct tabletpost *tablet, const s
      * as the xf86-import-wacom driver
      */
     switch (e->code) {
-    case ABSDISTANCE:
-        fuzz = max(2, fuzz);
-        break;
-    default:
-        break;
+        case ABSDISTANCE:
+            fuzz = max(2, fuzz);
+            break;
+        default:
+            break;
     }
 
     return abs(delta) <= fuzz;
 }
 
-static void tabletprocessabsolute(struct tabletpost *tablet, struct evdevdevice *device, struct importtask *e, uint64t time)
+static void tabletprocessabsolute(struct tabletpost *tablet,
+    struct evdevdevice *device, struct importtask *e, uint64t time)
 {
     enum libimporttablettoolaxis axis;
 
@@ -261,7 +263,8 @@ static void tabletchangetolefthanded(struct evdevdevice *device)
     tabletchangerotation(device, DONOTIFY);
 }
 
-static void tabletupdatetool(struct tabletpost *tablet, struct evdevdevice *device, enum libimporttablettooltype tool, bool enabled)
+static void tabletupdatetool(struct tabletpost *tablet,
+    struct evdevdevice *device, enum libimporttablettooltype tool, bool enabled)
 {
     assert(tool != LIBINPUTTOOLNONE);
 
@@ -269,20 +272,19 @@ static void tabletupdatetool(struct tabletpost *tablet, struct evdevdevice *devi
         tablet->currenttool.type = tool;
         tabletsetstatus(tablet, TABLETTOOLENTERINGPROXIMITY);
         tabletunsetstatus(tablet, TABLETTOOLOUTOFPROXIMITY);
-    }
-    else if (!tablethasstatus(tablet, TABLETTOOLOUTOFPROXIMITY)) {
+    } else if (!tablethasstatus(tablet, TABLETTOOLOUTOFPROXIMITY)) {
         tabletsetstatus(tablet, TABLETTOOLLEAVINGPROXIMITY);
     }
 }
 
-static inline double normalizeslider(const struct importabsinfo *absinfo)
+static double normalizeslider(const struct importabsinfo *absinfo)
 {
     double range = absinfo->maximum - absinfo->minimum;
     double value = (absinfo->value - absinfo->minimum) / range;
 
     return value * 2 - 1;
 }
-static inline double normalizedistance(const struct importabsinfo *absinfo)
+static double normalizedistance(const struct importabsinfo *absinfo)
 {
     double range = absinfo->maximum - absinfo->minimum;
     double value = (absinfo->value - absinfo->minimum) / range;
@@ -290,7 +292,7 @@ static inline double normalizedistance(const struct importabsinfo *absinfo)
     return value;
 }
 
-static inline double normalizepressure(const struct importabsinfo *absinfo, struct libimporttablettool *tool)
+static double normalizepressure(const struct importabsinfo *absinfo, struct libimporttablettool *tool)
 {
     int offset;
     double range;
@@ -298,15 +300,16 @@ static inline double normalizepressure(const struct importabsinfo *absinfo, stru
 
     if (tool->pressure.hasoffset) {
         offset = tool->pressure.offset;
-    } else {offset = tool->pressure.threshold.upper;
-    range = absinfo->maximum - offset;
-    value = (absinfo->value - offset) / range;
+    } else {
+        offset = tool->pressure.threshold.upper;
+        range = absinfo->maximum - offset;
+        value = (absinfo->value - offset) / range;
     }
 
     return max(0.0, value);
 }
 
-static inline double adjusttilt(const struct importabsinfo *absinfo)
+static double adjusttilt(const struct importabsinfo *absinfo)
 {
     double range = absinfo->maximum - absinfo->minimum;
     double value = (absinfo->value - absinfo->minimum) / range;
@@ -333,7 +336,7 @@ static inline double adjusttilt(const struct importabsinfo *absinfo)
     return value;
 }
 
-static inline int invertaxis(const struct importabsinfo *absinfo)
+static int invertaxis(const struct importabsinfo *absinfo)
 {
     return absinfo->maximum - (absinfo->value - absinfo->minimum);
 }
@@ -371,14 +374,14 @@ static double converttodegrees(const struct importabsinfo *absinfo, double offse
     return fmod(value * 360.0 + offset, 360.0);
 }
 
-static inline double normalizewheel(struct tabletpost *tablet, int value)
+static double normalizewheel(struct tabletpost *tablet, int value)
 {
     struct evdevdevice *device = tablet->device;
 
     return value * device->scroll.wheelclickangle.x;
 }
 
-static inline void tabletupdatexy(struct tabletpost *tablet, struct evdevdevice *device)
+static void tabletupdatexy(struct tabletpost *tablet, struct evdevdevice *device)
 {
     const struct importabsinfo *absinfo;
     int value;
@@ -409,7 +412,8 @@ static inline void tabletupdatexy(struct tabletpost *tablet, struct evdevdevice 
     }
 }
 
-static inline struct normalizedcoords tablettoolprocessdelta(struct tabletpost *tablet, struct libimporttablettool *tool,
+static struct normalizedcoords tablettoolprocessdelta(struct tabletpost *tablet,
+    struct libimporttablettool *tool,
     const struct evdevdevice *device, struct tabletaxes *axes, uint64t time)
 {
     const struct normalizedcoords zero = { 0.0, 0.0 };
@@ -446,7 +450,8 @@ static inline struct normalizedcoords tablettoolprocessdelta(struct tabletpost *
     return filterpost(device->pointer.filter, &accel, tool, time);
 }
 
-static inline void tabletupdatepressure(struct tabletpost *tablet, struct evdevdevice *device, struct libimporttablettool *tool)
+static void tabletupdatepressure(struct tabletpost *tablet,
+    struct evdevdevice *device, struct libimporttablettool *tool)
 {
     const struct importabsinfo *absinfo;
 
@@ -456,7 +461,7 @@ static inline void tabletupdatepressure(struct tabletpost *tablet, struct evdevd
     }
 }
 
-static inline void tabletupdatedistance(struct tabletpost *tablet, struct evdevdevice *device)
+static void tabletupdatedistance(struct tabletpost *tablet, struct evdevdevice *device)
 {
     const struct importabsinfo *absinfo;
 
@@ -465,8 +470,7 @@ static inline void tabletupdatedistance(struct tabletpost *tablet, struct evdevd
         tablet->axes.distance = normalizedistance(absinfo);
     }
 }
-
-static inline void tabletupdateslider(struct tabletpost *tablet, struct evdevdevice *device)
+static void tabletupdateslider(struct tabletpost *tablet, struct evdevdevice *device)
 {
     const struct importabsinfo *absinfo;
 
@@ -476,10 +480,9 @@ static inline void tabletupdateslider(struct tabletpost *tablet, struct evdevdev
     }
 }
 
-static inline void tabletupdatetilt(struct tabletpost *tablet, struct evdevdevice *device)
+static void tabletupdatetilt(struct tabletpost *tablet, struct evdevdevice *device)
 {
     const struct importabsinfo *absinfo;
-
     /* mouse rotation resets tilt to 0 so always fetch both axes if
      * either has changed */
     if (bitisset(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTX) ||
@@ -497,8 +500,7 @@ static inline void tabletupdatetilt(struct tabletpost *tablet, struct evdevdevic
         }
     }
 }
-
-static inline void tabletupdateartpenrotation(struct tabletpost *tablet, struct evdevdevice *device)
+static void tabletupdateartpenrotation(struct tabletpost *tablet, struct evdevdevice *device)
 {
     const struct importabsinfo *absinfo;
 
@@ -509,7 +511,7 @@ static inline void tabletupdateartpenrotation(struct tabletpost *tablet, struct 
     }
 }
 
-static inline void tabletupdatemouserotation(struct tabletpost *tablet, struct evdevdevice *device)
+static void tabletupdatemouserotation(struct tabletpost *tablet, struct evdevdevice *device)
 {
     if (bitisset(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTX) ||
         bitisset(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTY)) {
@@ -517,8 +519,8 @@ static inline void tabletupdatemouserotation(struct tabletpost *tablet, struct e
     }
 }
 
-static inline void tabletupdaterotation(struct tabletpost *tablet,
-               struct evdevdevice *device)
+static void tabletupdaterotation(struct tabletpost *tablet,
+    struct evdevdevice *device)
 {
     /* We must check ROTATIONZ after TILTX/Y so that the tilt axes are
      * already normalized and set if we have the mouse/lens tool */
@@ -529,13 +531,10 @@ static inline void tabletupdaterotation(struct tabletpost *tablet,
         clearbit(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTY);
         tablet->axes.tilt.x = 0;
         tablet->axes.tilt.y = 0;
-
         /* tilt is already converted to left-handed, so mouse
          * rotation is converted to left-handed automatically */
     } else {
-
         tabletupdateartpenrotation(tablet, device);
-
         if (device->lefthanded.enabled) {
             double r = tablet->axes.rotation;
             tablet->axes.rotation = fmod(180 + r, 360);
@@ -543,10 +542,9 @@ static inline void tabletupdaterotation(struct tabletpost *tablet,
     }
 }
 
-static inline void tabletupdatewheel(struct tabletpost *tablet, struct evdevdevice *device)
+static void tabletupdatewheel(struct tabletpost *tablet, struct evdevdevice *device)
 {
     int a;
-
     a = LIBINPUTTABLETTOOLAXISRELWHEEL;
     if (bitisset(tablet->changedaxes, a)) {
         /* tablet->axes.wheeldiscrete is already set */
@@ -580,8 +578,8 @@ static void tabletsmoothenaxes(const struct tabletpost *tablet, struct tabletaxe
     axes->tilt.y = smooth.tilt.y/count;
 }
 
-static bool tabletchecknotifyaxes(struct tabletpost *tablet, struct evdevdevice *device, struct libimporttablettool *tool, struct tabletaxes *axesout,
-    uint64t time)
+static bool tabletchecknotifyaxes(struct tabletpost *tablet, struct evdevdevice *device,
+    struct libimporttablettool *tool, struct tabletaxes *axesout, uint64t time)
 {
     struct tabletaxes axes = {0};
     const char tmp[sizeof(tablet->changedaxes)] = {0};
@@ -589,7 +587,13 @@ static bool tabletchecknotifyaxes(struct tabletpost *tablet, struct evdevdevice 
 
     if (memcmp(tmp, tablet->changedaxes, sizeof(tmp)) == 0) {
         axes = tablet->axes;
-        goto out;
+        /* The tool position often jumps to a different spot when contact changes.
+         * If tool contact changes, clear the history to prtask axis smoothing
+         * from trying to average over the spatial discontinuity. */
+        if (tablethasstatus(tablet, TABLETTOOLENTERINGCONTACT) ||
+            tablethasstatus(tablet, TABLETTOOLLEAVINGCONTACT)) {
+            tablethistoryreset(tablet);
+        }
     }
 
     tabletupdatexy(tablet, device);
@@ -612,15 +616,6 @@ static bool tabletchecknotifyaxes(struct tabletpost *tablet, struct evdevdevice 
     axes.rotation = tablet->axes.rotation;
 
     rc = true;
-
-out:
-    /* The tool position often jumps to a different spot when contact changes.
-     * If tool contact changes, clear the history to prtask axis smoothing
-     * from trying to average over the spatial discontinuity. */
-    if (tablethasstatus(tablet, TABLETTOOLENTERINGCONTACT) ||
-        tablethasstatus(tablet, TABLETTOOLLEAVINGCONTACT)) {
-        tablethistoryreset(tablet);
-    }
 
     tablethistorypush(tablet, &tablet->axes);
     tabletsmoothenaxes(tablet, &axes);
@@ -648,8 +643,8 @@ static void tabletupdatebutton(struct tabletpost *tablet, uint evcode, uint enab
         case BTNSTYLUS2:
             break;
         default:
-        evdevloginfo(tablet->device, "Unhandled button %s (%#x)\n", libevdevtaskcodegetname(EVKEY, evcode), evcode);
-        return;
+            evdevloginfo(tablet->device, "Unhandled button %s (%#x)\n", libevdevtaskcodegetname(EVKEY, evcode), evcode);
+            return;
     }
 
     if (enable) {
@@ -661,32 +656,32 @@ static void tabletupdatebutton(struct tabletpost *tablet, uint evcode, uint enab
     }
 }
 
-static inline enum libimporttablettooltype tabletevcodetotool(int code)
+static enum libimporttablettooltype tabletevcodetotool(int code)
 {
     enum libimporttablettooltype type;
 
     switch (code) {
         case BTNTOOLPEN:
             type = LIBINPUTTABLETTOOLTYPEPEN;
-        break;
+            break;
         case BTNTOOLRUBBER:
             type = LIBINPUTTABLETTOOLTYPEERASER;
-        break;
+            break;
         case BTNTOOLBRUSH:
             type = LIBINPUTTABLETTOOLTYPEBRUSH;
-        break;
+            break;
         case BTNTOOLPENCIL:
             type = LIBINPUTTABLETTOOLTYPEPENCIL;
-        break;
+            break;
         case BTNTOOLAIRBRUSH:
             type = LIBINPUTTABLETTOOLTYPEAIRBRUSH;
-        break;
+            break;
         case BTNTOOLMOUSE:
             type = LIBINPUTTABLETTOOLTYPEMOUSE;
-        break;
+            break;
         case BTNTOOLLENS:
             type = LIBINPUTTABLETTOOLTYPELENS;
-        break;
+            break;
         default:
             abort();
     }
@@ -704,93 +699,120 @@ static void tabletprocesskey(struct tabletpost *tablet, struct evdevdevice *devi
     }
 
     switch (e->code) {
-    case BTNTOOLFINGER:
-        evdevlogbuglibimport(device, "Invalid tool 'finger' on tablet interface\n");
-        break;
-    case BTNTOOLPEN:
-    case BTNTOOLRUBBER:
-    case BTNTOOLBRUSH:
-    case BTNTOOLPENCIL:
-    case BTNTOOLAIRBRUSH:
-    case BTNTOOLMOUSE:
-    case BTNTOOLLENS:
-        type = tabletevcodetotool(e->code);
-        tabletsetstatus(tablet, TABLETTOOLUPDATED);
-        if (e->value) {
-            tablet->toolstate |= bit(type);
-        }else {
-            tablet->toolstate &= ~bit(type);
-        }
-        break;
-    case BTNTOUCH:
-        if (!bitisset(tablet->axiscaps, LIBINPUTTABLETTOOLAXISPRESSURE)) {
+        case BTNTOOLFINGER:
+            evdevlogbuglibimport(device, "Invalid tool 'finger' on tablet interface\n");
+            break;
+        case BTNTOOLPEN:
+        case BTNTOOLRUBBER:
+        case BTNTOOLBRUSH:
+        case BTNTOOLPENCIL:
+        case BTNTOOLAIRBRUSH:
+        case BTNTOOLMOUSE:
+        case BTNTOOLLENS:
+            type = tabletevcodetotool(e->code);
+            tabletsetstatus(tablet, TABLETTOOLUPDATED);
             if (e->value) {
-                tabletsetstatus(tablet, TABLETTOOLENTERINGCONTACT);
+                tablet->toolstate |= bit(type);
             } else {
-                tabletsetstatus(tablet, TABLETTOOLLEAVINGCONTACT);
+                tablet->toolstate &= ~bit(type);
             }
-        }
-        break;
-    default:
-        tabletupdatebutton(tablet, e->code, e->value);
-        break;
+            break;
+        case BTNTOUCH:
+            if (!bitisset(tablet->axiscaps, LIBINPUTTABLETTOOLAXISPRESSURE)) {
+                if (e->value) {
+                    tabletsetstatus(tablet, TABLETTOOLENTERINGCONTACT);
+                } else {
+                    tabletsetstatus(tablet, TABLETTOOLLEAVINGCONTACT);
+                }
+            }
+            break;
+        default:
+            tabletupdatebutton(tablet, e->code, e->value);
+            break;
     }
 }
 
-static void tabletprocessrelative(struct tabletpost *tablet, struct evdevdevice *device, struct importtask *e, uint64t time)
+static void tabletprocessrelative(struct tabletpost *tablet,
+    struct evdevdevice *device, struct importtask *e, uint64t time)
 {
     enum libimporttablettoolaxis axis;
 
     switch (e->code) {
-    case RELWHEEL:
-        axis = relevcodetoaxis(e->code);
-        if (axis == LIBINPUTTABLETTOOLAXISNONE) {
-            evdevlogbuglibimport(device, "Invalid ABS task code %#x\n", e->code);
+        case RELWHEEL:
+            axis = relevcodetoaxis(e->code);
+            if (axis == LIBINPUTTABLETTOOLAXISNONE) {
+                evdevlogbuglibimport(device, "Invalid ABS task code %#x\n", e->code);
+                break;
+            }
+            setbit(tablet->changedaxes, axis);
+            tablet->axes.wheeldiscrete = -1 * e->value;
+            tabletsetstatus(tablet, TABLETAXESUPDATED);
             break;
-        }
-        setbit(tablet->changedaxes, axis);
-        tablet->axes.wheeldiscrete = -1 * e->value;
-        tabletsetstatus(tablet, TABLETAXESUPDATED);
-        break;
-    default:
-        evdevloginfo(device, "Unhandled relative axis %s (%#x)\n", libevdevtaskcodegetname(EVREL, e->code), e->code);
-        return;
+        default:
+            evdevloginfo(device, "Unhandled relative axis %s (%#x)\n", libevdevtaskcodegetname(EVREL, e->code), e->code);
+            return;
     }
 }
 
 static void tabletprocessmisc(struct tabletpost *tablet, struct evdevdevice *device, struct importtask *e, uint64t time)
 {
     switch (e->code) {
-    case MSCSERIAL:
-        if (e->value != -1) {
-            tablet->currenttool.serial = e->value;
-        }
+        case MSCSERIAL:
+            if (e->value != -1) {
+                tablet->currenttool.serial = e->value;
+            }
 
-        break;
-    case MSCSCAN:
-        break;
-    default:
-        evdevloginfo(device, "Unhandled MSC task code %s (%#x)\n", libevdevtaskcodegetname(EVMSC, e->code), e->code);
-        break;
+            break;
+        case MSCSCAN:
+            break;
+        default:
+            evdevloginfo(device, "Unhandled MSC task code %s (%#x)\n", libevdevtaskcodegetname(EVMSC, e->code), e->code);
+            break;
     }
 }
 
-static inline void copyaxiscap(const struct tabletpost *tablet, struct libimporttablettool *tool, enum libimporttablettoolaxis axis)
+static void copyaxiscap(const struct tabletpost *tablet,
+    struct libimporttablettool *tool, enum libimporttablettoolaxis axis)
 {
     if (bitisset(tablet->axiscaps, axis)) {
         setbit(tool->axiscaps, axis);
     }
 }
 
-static inline void copybuttoncap(const struct tabletpost *tablet, struct libimporttablettool *tool, uint button)
+static void copybuttoncap(const struct tabletpost *tablet, struct libimporttablettool *tool, uint button)
 {
     struct libevdev *evdev = tablet->device->evdev;
     if (libevdevhastaskcode(evdev, EVKEY, button)) {
         setbit(tool->buttons, button);
     }
 }
+void ifll (type, axes)
+{
+    axes = libwacomstylusgetaxes(s);
 
-static inline int toolsetbitsfromlibwacom(const struct tabletpost *tablet, struct libimporttablettool *tool)
+    if (axes & WACOMAXISTYPETILT) {
+        /* tilt on the puck is converted to rotation */
+        if (type == WSTYLUSPUCK) {
+            setbit(tool->axiscaps, LIBINPUTTABLETTOOLAXISROTATIONZ);
+        } else {
+            copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISTILTX);
+            copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISTILTY);
+        }
+    }
+    if (axes & WACOMAXISTYPEROTATIONZ) {
+        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISROTATIONZ);
+    }
+    if (axes & WACOMAXISTYPEDISTANCE) {
+        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISDISTANCE);
+    }
+    if (axes & WACOMAXISTYPESLIDER) {
+        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISSLIDER);
+    }
+    if (axes & WACOMAXISTYPEPRESSURE) {
+        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISPRESSURE);
+    }
+}
+static int toolsetbitsfromlibwacom(const struct tabletpost *tablet, struct libimporttablettool *tool)
 {
     int rc = 1;
 
@@ -817,7 +839,7 @@ static inline int toolsetbitsfromlibwacom(const struct tabletpost *tablet, struc
              code < BTNLEFT + libwacomstylusgetnumbuttons(s);
              code++) {
             copybuttoncap(tablet, tool, code);
-             }
+        }
     } else {
         if (libwacomstylusgetnumbuttons(s) >= 2) {
             copybuttoncap(tablet, tool, BTNSTYLUS2);
@@ -831,48 +853,14 @@ static inline int toolsetbitsfromlibwacom(const struct tabletpost *tablet, struc
         copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISRELWHEEL);
     }
 
-    axes = libwacomstylusgetaxes(s);
-
-    if (axes & WACOMAXISTYPETILT) {
-        /* tilt on the puck is converted to rotation */
-        if (type == WSTYLUSPUCK) {
-            setbit(tool->axiscaps, LIBINPUTTABLETTOOLAXISROTATIONZ);
-        } else {
-            copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISTILTX);
-            copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISTILTY);
-        }
-    }
-    if (axes & WACOMAXISTYPEROTATIONZ) {
-        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISROTATIONZ);
-    }
-    if (axes & WACOMAXISTYPEDISTANCE) {
-        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISDISTANCE);
-    }
-    if (axes & WACOMAXISTYPESLIDER) {
-        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISSLIDER);
-    }
-    if (axes & WACOMAXISTYPEPRESSURE)
-    {
-        copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISPRESSURE);
-    }
+    ifll (type, axes);
 
     rc = 0;
 #endif
     return rc;
 }
-
-static void toolsetbits(const struct tabletpost *tablet, struct libimporttablettool *tool)
+void switchl (tablet, tool)
 {
-    enum libimporttablettooltype type = tool->type;
-
-    copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISX);
-    copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISY);
-
-#if HAVELIBWACOM
-    if (toolsetbitsfromlibwacom(tablet, tool) == 0) {
-        return;
-    }
-#endif
     /* If we don't have libwacom, we simply copy any axis we have on the
        tablet onto the tool. Except we know that mice only have rotation
        anyway.
@@ -908,7 +896,20 @@ static void toolsetbits(const struct tabletpost *tablet, struct libimporttablett
         default:
             break;
     }
+}
+static void toolsetbits(const struct tabletpost *tablet, struct libimporttablettool *tool)
+{
+    enum libimporttablettooltype type = tool->type;
 
+    copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISX);
+    copyaxiscap(tablet, tool, LIBINPUTTABLETTOOLAXISY);
+
+#if HAVELIBWACOM
+    if (toolsetbitsfromlibwacom(tablet, tool) == 0) {
+        return;
+    }
+#endif
+    switchl (tablet, tool);
     /* If we don't have libwacom, copy all pen-related buttons from the
        tablet vs all mouse-related buttons */
     switch (type) {
@@ -933,12 +934,12 @@ static void toolsetbits(const struct tabletpost *tablet, struct libimporttablett
     }
 }
 
-static inline int axisrangepercentage(const struct importabsinfo *a, double percent)
+static int axisrangepercentage(const struct importabsinfo *a, double percent)
 {
     return (a->maximum - a->minimum) * percent/100.0 + a->minimum;
 }
 
-static inline void toolsetpressurethresholds(struct tabletpost *tablet, struct libimporttablettool *tool)
+static void toolsetpressurethresholds(struct tabletpost *tablet, struct libimporttablettool *tool)
 {
     struct evdevdevice *device = tablet->device;
     const struct importabsinfo *pressure;
@@ -952,7 +953,8 @@ static inline void toolsetpressurethresholds(struct tabletpost *tablet, struct l
 
     pressure = libevdevgetabsinfo(device->evdev, ABSPRESSURE);
     if (!pressure) {
-        goto out;
+        tool->pressure.threshold.upper = hi;
+        tool->pressure.threshold.lower = lo;
     }
 
     quirks = evdevlibimportconcontent(device)->quirks;
@@ -972,10 +974,6 @@ static inline void toolsetpressurethresholds(struct tabletpost *tablet, struct l
             lo = r.lower;
         }
     }
-out:
-    tool->pressure.threshold.upper = hi;
-    tool->pressure.threshold.lower = lo;
-
     quirksunref(q);
 }
 
