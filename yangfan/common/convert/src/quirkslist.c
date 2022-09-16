@@ -243,7 +243,7 @@ void casell (enum quirk q)
             abort();
     }
 }
-void switchone (q)
+const char *switchone (q)
 {
     switch (q) {
         case QUIRK_MODEL_LENOVO_SCROLLPOINT:
@@ -265,7 +265,7 @@ void switchone (q)
         case QUIRK_MODEL_TABLET_MODE_NO_SUSPEND:
             return "ModelTabletModeNoSuspend";
         default:
-            casell (q);
+            return casell (q);
     }
 }
 const char *quirk_get_name(enum quirk q)
@@ -284,7 +284,7 @@ const char *quirk_get_name(enum quirk q)
             switchone (q);
     }
 }
-void switchlls (f)
+const char *switchlls (f)
 {
     switch (f) {
         case M_PITS:
@@ -298,6 +298,7 @@ void switchlls (f)
         case M_DT:
             return "MatchDeviceTree";
         default:
+            return NULL;
     }
 }
 #if defined(BUILD_WUYU)
