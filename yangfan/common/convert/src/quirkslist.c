@@ -281,6 +281,7 @@ const char *quirk_get_name(enum quirk q)
             return "ModelBouncingKeys";
         case QUIRK_MODEL_CHROMEBOOK:
             return "ModelChromebook";
+        default:
             switchone (q);
     }
 }
