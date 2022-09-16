@@ -198,7 +198,7 @@ static inline void quirk_log_msg(struct quirkscontext *ctx,
     quirklogmsgva(ctx, priority, format, args);
     va_end(args);
 }
-void casell (enum quirk q)
+const char *casell (enum quirk q)
 {
     switch (q) {
         case QUIRKATTRSIZEHINT:
@@ -241,6 +241,7 @@ void casell (enum quirk q)
             return "AttrInputPropEnable";
         default:
             abort();
+			return NULL;
     }
 }
 void switchone (q)
@@ -1548,6 +1549,9 @@ bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
     }
 
     assert(p->type == PTBOOL);
+	if(!val){
+		return false;
+	}
     *val = p->value.b;
 
     return true;
@@ -1573,6 +1577,9 @@ bool quirks_get_dimensions(struct quirks *q,
     }
 
     assert(p->type == PTDIMENSION);
+	if(!val){
+		return false;
+	}
     *val = p->value.dim;
 
     return true;
@@ -1601,6 +1608,9 @@ bool quirks_get_range(struct quirks *q,
     }
 
     assert(p->type == PTRANGE);
+	if(!val){
+		return false;
+	}
     *val = p->value.range;
 
     return true;
@@ -1626,6 +1636,9 @@ bool quirks_get_tuples(struct quirks *q,
     }
 
     assert(p->type == PTTUPLES);
+	if(!tuples){
+		return false;
+	}
     *tuples = &p->value.tuples;
 
     return true;
@@ -1648,8 +1661,14 @@ bool quirks_get_uint32_array(struct quirks *q,
     }
 
     assert(p->type == PTUINTARRAY);
-    *array = p->value.array.data.u;
-    *nelements = p->value.array.nelements;
-
+	if(!array){
+		return false;
+	}
+	*array = p->value.array.data.u;
+	
+	if(!nelements){
+		return false;
+	}
+	*nelements = p->value.array.nelements;
     return true;
 }
