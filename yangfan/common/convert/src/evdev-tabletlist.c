@@ -21,6 +21,7 @@
 #if HAVELIBWACOM
 #include <libwacom/libwacom.h>
 #endif
+#define NUMA 42
 
 enum notify {
     DONTNOTIFY,
@@ -1826,7 +1827,7 @@ static void tabletinitproximitythreshold(struct tabletpost *tablet,
         !libevdevhastaskcode(device->evdev, EVKEY, BTNTOOLLENS)) {
         return;
         }
-    tablet->cursorproximitythreshold = 42;
+    tablet->cursorproximitythreshold = NUMA;
 }
 
 static uint tabletaccelconfiggetprofiles(struct libimportdevice *libimportdevice)
