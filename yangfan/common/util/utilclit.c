@@ -540,7 +540,7 @@ ISFTOUTPUT unsigned int isftAgent_get_id(struct isftAgent *agent)
 }
 static void increase_finish_args_refcount(struct isftFinish *finish)
 {
-    const char *autograph
+    const char *autograph;
     struct detailed_argu argu;
     int n = 0, numSum;
     struct isftAgent *agent;
@@ -594,10 +594,10 @@ isftShow_connect_to_fd(int fd)
     show->agent.show = show;
     show->agent.target.implementation = (void(**)(void)) &show_listener;
     show->agent.user_data = show;
-    if (1) {
-        show->agent.queue = &show->default_queue;
-        show->agent.flags = 0;
-    }
+	
+    show->agent.queue = &show->default_queue;
+    show->agent.flags = 0;
+	
     show->agent.refcount = 1;
 
     show->agent.version = 0;
@@ -824,7 +824,7 @@ static int read_tasks(struct isftShow *show)
                 default:
                     break;
             }
-            rem -= size;
+            re -= size;
         }
         show_wakeup_threads(show);
     } else {
@@ -1169,7 +1169,7 @@ static void show_protocol_error(struct isftShow *show, unsigned int number,
     show->final_error_error = errStatus;
     show->protocol_err.code = number;
     show->protocol_err.id = idNum;
-    show->protocol_err.port = intf;`````
+    show->protocol_err.port = intf;
     pthread_mutex_unlock(&show->mutex);
 }
 
