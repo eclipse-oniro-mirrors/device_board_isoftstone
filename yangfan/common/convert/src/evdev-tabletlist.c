@@ -988,8 +988,9 @@ static struct libimporttablettool *tabletgettool(struct tabletpost *tablet,
     return tool;
 }
 static void tabletnotifybuttonmask(struct tabletpost *tablet, struct evdevdevice *device, uint64t time,
-    struct libimporttablettool *tool, const struct buttonstate *buttons, enum libimportbuttonstate state)
+    struct libimporttablettool *tool, enum libimportbuttonstate state)
 {
+    struct buttonstate buttons;
     struct libimportdevice *base = &device->base;
     int i;
     int nbits = 8 * sizeof(buttons->bits);
@@ -1031,7 +1032,6 @@ static void sanitizepressuredistance(struct tabletpost *tablet, struct libimport
 
     distance = libevdevgetabsinfo(tablet->device->evdev, ABSDISTANCE);
     pressure = libevdevgetabsinfo(tablet->device->evdev, ABSPRESSURE);
-
     if (!pressure || !distance) {
         return;
     }
@@ -1067,7 +1067,7 @@ static void sanitizepressuredistance(struct tabletpost *tablet, struct libimport
     }
 }
 
-static inline void sanitizemouselensrotation(struct tabletpost *tablet)
+static void sanitizemouselensrotation(struct tabletpost *tablet)
 {
     if ((tablet->currenttool.type == LIBINPUTTABLETTOOLTYPEMOUSE ||
         tablet->currenttool.type == LIBINPUTTABLETTOOLTYPELENS) &&
@@ -1083,7 +1083,8 @@ static void sanitizetabletaxes(struct tabletpost *tablet, struct libimporttablet
     sanitizemouselensrotation(tablet);
 }
 
-static void detectpressureoffset(struct tabletpost *tablet, struct evdevdevice *device, struct libimporttablettool *tool)
+static void detectpressureoffset(struct tabletpost *tablet, struct evdevdevice *device,
+    struct libimporttablettool *tool)
 {
     const struct importabsinfo *pressure, *distance;
     int offset;
@@ -1094,7 +1095,6 @@ static void detectpressureoffset(struct tabletpost *tablet, struct evdevdevice *
 
     pressure = libevdevgetabsinfo(device->evdev, ABSPRESSURE);
     distance = libevdevgetabsinfo(device->evdev, ABSDISTANCE);
-
     if (!pressure || !distance) {
         return;
     }
@@ -1181,7 +1181,8 @@ static void tabletmarkallaxeschanged(struct tabletpost *tablet, struct libimport
     memcpy(tablet->changedaxes, tool->axiscaps, sizeof(tablet->changedaxes));
 }
 
-static void tabletupdateproximitystate(struct tabletpost *tablet, struct evdevdevice *device, struct libimporttablettool *tool)
+static void tabletupdateproximitystate(struct tabletpost *tablet, struct evdevdevice *device,
+    struct libimporttablettool *tool)
 {
     const struct importabsinfo *distance;
     int distmax = tablet->cursorproximitythreshold;
@@ -1222,7 +1223,7 @@ static void tabletupdateproximitystate(struct tabletpost *tablet, struct evdevde
         }
 
     /* Tool entered prox but is outside of permitted range */
-    if (tablethasstatus(tablet,TABLETTOOLENTERINGPROXIMITY)) {
+    if (tablethasstatus(tablet, TABLETTOOLENTERINGPROXIMITY)) {
         tabletsetstatus(tablet, TABLETTOOLOUTOFRANGE);
         tabletunsetstatus(tablet, TABLETTOOLENTERINGPROXIMITY);
         return;
@@ -1263,7 +1264,7 @@ static struct physrect tabletcalculatearbitrationrect(struct tabletpost *tablet)
     return r;
 }
 
-static inline void tabletupdatetouchdevicerect(struct tabletpost *tablet, const struct tabletaxes *axes, uint64t time)
+static void tabletupdatetouchdevicerect(struct tabletpost *tablet, const struct tabletaxes *axes, uint64t time)
 {
     struct evdevpost *post;
     struct physrect rect = {0};
@@ -1281,8 +1282,8 @@ static inline void tabletupdatetouchdevicerect(struct tabletpost *tablet, const 
     }
 }
 
-static inline bool tabletsendproximityin(struct tabletpost *tablet, struct libimporttablettool *tool, struct evdevdevice *device,
-    struct tabletaxes *axes, uint64t time)
+static bool tabletsendproximityin(struct tabletpost *tablet, struct libimporttablettool *tool,
+    struct evdevdevice *device, struct tabletaxes *axes, uint64t time)
 {
     if (!tablethasstatus(tablet, TABLETTOOLENTERINGPROXIMITY)) {
         return false;
@@ -1299,8 +1300,8 @@ static inline bool tabletsendproximityin(struct tabletpost *tablet, struct libim
     return true;
 }
 
-static inline bool tabletsendproximityout(struct tabletpost *tablet, struct libimporttablettool *tool, struct evdevdevice *device,
-    struct tabletaxes *axes, uint64t time)
+static bool tabletsendproximityout(struct tabletpost *tablet, struct libimporttablettool *tool,
+    struct evdevdevice *device, struct tabletaxes *axes, uint64t time)
 {
     if (!tablethasstatus(tablet, TABLETTOOLLEAVINGPROXIMITY)) {
         return false;
@@ -1318,8 +1319,8 @@ static inline bool tabletsendproximityout(struct tabletpost *tablet, struct libi
     return true;
 }
 
-static inline bool tabletsendtip(struct tabletpost *tablet, struct libimporttablettool *tool, struct evdevdevice *device,
-    struct tabletaxes *axes, uint64t time)
+static bool tabletsendtip(struct tabletpost *tablet, struct libimporttablettool *tool,
+    struct evdevdevice *device, struct tabletaxes *axes, uint64t time)
 {
     if (tablethasstatus(tablet, TABLETTOOLENTERINGCONTACT)) {
         tabletnotifytip(&device->base, time, tool, LIBINPUTTABLETTOOLTIPDOWN, tablet->changedaxes, axes);
@@ -1350,8 +1351,8 @@ static inline bool tabletsendtip(struct tabletpost *tablet, struct libimporttabl
     return false;
 }
 
-static inline void tabletsendaxes(struct tabletpost *tablet, struct libimporttablettool *tool, struct evdevdevice *device,
-    struct tabletaxes *axes, uint64t time)
+static void tabletsendaxes(struct tabletpost *tablet, struct libimporttablettool *tool,
+    struct evdevdevice *device, struct tabletaxes *axes, uint64t time)
 {
     enum libimporttablettooltipstate tipstate;
 
@@ -1372,7 +1373,7 @@ static inline void tabletsendaxes(struct tabletpost *tablet, struct libimporttab
     axes->delta.y = 0;
 }
 
-static inline void tabletsendbuttons(struct tabletpost *tablet, struct libimporttablettool *tool,
+static void tabletsendbuttons(struct tabletpost *tablet, struct libimporttablettool *tool,
     struct evdevdevice *device, uint64t time)
 {
     if (tablethasstatus(tablet, TABLETBUTTONSRELEASED)) {
@@ -1421,7 +1422,7 @@ static void tabletsendtasks(struct tabletpost *tablet, struct libimporttablettoo
     }
 }
 
-static inline void tabletproximityoutquirksetclock(struct tabletpost *tablet, uint64t time)
+static void tabletproximityoutquirksetclock(struct tabletpost *tablet, uint64t time)
 {
     if (tablet->quirks.needtoforceproxout) {
         libimportclockset(&tablet->quirks.proxoutclock, time + FORCEDPROXOUTTIMEOUT);
@@ -1505,10 +1506,6 @@ static void tabletflush(struct tabletpost *tablet, struct evdevdevice *device, u
 {
     struct libimporttablettool *tool;
     bool processtooltwice;
-
-reprocess:
-    processtooltwice = tabletupdatetoolstate(tablet, device, time);
-
     tool = tabletgetcurrenttool(tablet);
     if (!tool) {
         return; /* OOM */
@@ -1544,11 +1541,11 @@ reprocess:
     tabletsendtasks(tablet, tool, device, time);
 
     if (processtooltwice) {
-        goto reprocess;
+        processtooltwice = tabletupdatetoolstate(tablet, device, time);
     }
 }
 
-static inline void tabletsettouchdeviceenabled(struct tabletpost *tablet, enum evdevarbitrationstate which,
+static void tabletsettouchdeviceenabled(struct tabletpost *tablet, enum evdevarbitrationstate which,
     const struct physrect *rect, uint64t time)
 {
     struct evdevdevice *touchdevice = tablet->touchdevice;
@@ -1566,7 +1563,7 @@ static inline void tabletsettouchdeviceenabled(struct tabletpost *tablet, enum e
     }
 }
 
-static inline void tablettoggletouchdevice(struct tabletpost *tablet,
+static void tablettoggletouchdevice(struct tabletpost *tablet,
     struct evdevdevice *tabletdevice, uint64t time)
 {
     enum evdevarbitrationstate which;
@@ -1593,7 +1590,7 @@ static inline void tablettoggletouchdevice(struct tabletpost *tablet,
     tabletsettouchdeviceenabled(tablet, which, rect, time);
 }
 
-static inline void tabletresetstate(struct tabletpost *tablet)
+static void tabletresetstate(struct tabletpost *tablet)
 {
     struct buttonstate zero = {0};
 
@@ -1608,7 +1605,7 @@ static inline void tabletresetstate(struct tabletpost *tablet)
     }
 }
 
-static void tabletproximityoutquirkclockfunc(uint64t now, void *data)
+static void tabletproximityoutquirkclockfunc(uint64t now, void data[])
 {
     struct tabletpost *tablet = data;
     struct timeval tv = us2tv(now);
@@ -1731,7 +1728,6 @@ static void tabletdeviceadded(struct evdevdevice *device, struct evdevdevice *ad
             tabletchangerotation(device, DONOTIFY);
         }
     }
-
 }
 
 static void tabletdevicereationd(struct evdevdevice *device,
@@ -1761,7 +1757,6 @@ static void tabletcheckinitialproximity(struct evdevdevice *device, struct evdev
          tool <= LIBINPUTTABLETTOOLTYPEMAX;
          tool++) {
         code = tablettooltoevcode(tool);
-
         /* we only expect one tool to be in proximity at a time */
         if (libevdevfetchtaskvalue(device->evdev, EVKEY, code, &state) && state) {
             tablet->toolstate = bit(tool);
@@ -1839,7 +1834,8 @@ static uint tabletaccelconfiggetprofiles(struct libimportdevice *libimportdevice
     return LIBINPUTCONFIGACCELPROFILENONE;
 }
 
-static enum libimportconfigstatus tabletaccelconfigsetprofile(struct libimportdevice *libimportdevice, enum libimportconfigaccelprofile profile)
+static enum libimportconfigstatus tabletaccelconfigsetprofile(struct libimportdevice *libimportdevice,
+    enum libimportconfigaccelprofile profile)
 {
     return LIBINPUTCONFIGSTATUSUNSUPPORTED;
 }
@@ -1938,7 +1934,6 @@ static bool tabletrejectdevice(struct evdevdevice *device)
     haspen = libevdevhastaskcode(evdev, EVKEY, BTNTOOLPEN);
     hasbtnstylus = libevdevhastaskcode(evdev, EVKEY, BTNSTYLUS);
     hassize = evdevdevicegetsize(device, &w, &h) == 0;
-
     if (hasxy && (haspen || hasbtnstylus) && hassize) {
         return false;
     }
@@ -2003,7 +1998,8 @@ static int tabletinit(struct tabletpost *tablet,
        device gives us the right task sequence */
     tablet->quirks.needtoforceproxout = true;
 
-    libimportclockinit(&tablet->quirks.proxoutclock, tabletlibimportconcontent(tablet), "proxout", tabletproximityoutquirkclockfunc, tablet);
+    libimportclockinit(&tablet->quirks.proxoutclock, tabletlibimportconcontent(tablet),
+        "proxout", tabletproximityoutquirkclockfunc, tablet);
 
     return 0;
 }
@@ -2020,7 +2016,6 @@ struct evdevpost *evdevtabletcreate(struct evdevdevice *device)
     }
 
     tablet = zalloc(sizeof *tablet);
-
     if (tabletinit(tablet, device) != 0) {
         tabletdestroy(&tablet->base);
         return NULL;
