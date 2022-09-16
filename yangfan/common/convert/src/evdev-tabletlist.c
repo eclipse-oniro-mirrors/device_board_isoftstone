@@ -1069,8 +1069,6 @@ static void sanitizepressuredistance(struct tabletpost *tablet, struct libimport
 
 static inline void sanitizemouselensrotation(struct tabletpost *tablet)
 {
-    /* If we have a mouse/lens cursor and the tilt changed, the rotation
-       changed. Mark this, calculate the angle later */
     if ((tablet->currenttool.type == LIBINPUTTABLETTOOLTYPEMOUSE ||
         tablet->currenttool.type == LIBINPUTTABLETTOOLTYPELENS) &&
         (bitisset(tablet->changedaxes, LIBINPUTTABLETTOOLAXISTILTX) ||
@@ -1103,11 +1101,6 @@ static void detectpressureoffset(struct tabletpost *tablet, struct evdevdevice *
 
     offset = pressure->value;
 
-    /* If we have an task that falls below the current offset, adjust
-     * the offset downwards. A fast contact can start with a
-     * higher-than-needed pressure offset and then we'd be tied into a
-     * high pressure offset for the rest of the session.
-     */
     if (tool->pressure.hasoffset) {
         if (offset < tool->pressure.offset) {
             tool->pressure.offset = offset;
@@ -1235,9 +1228,6 @@ static void tabletupdateproximitystate(struct tabletpost *tablet, struct evdevde
         return;
     }
 
-    /* Tool was in prox and is now outside of range. Set leaving
-     * proximity, on the next task it will be OUTOFPROXIMITY and thus
-     * caught by the above conditions */
     tabletsetstatus(tablet, TABLETTOOLLEAVINGPROXIMITY);
 }
 
@@ -1402,12 +1392,7 @@ static void tabletsendtasks(struct tabletpost *tablet, struct libimporttablettoo
     struct tabletaxes axes = {0};
 
     if (tablethasstatus(tablet, TABLETTOOLLEAVINGPROXIMITY)) {
-        /* Tool is leaving proximity, we can't rely on the last axis
-         * information (it'll be mostly 0), so we just get the
-         * current state and skip over updating the axes.
-         */
         axes = tablet->axes;
-
         /* Don't send an axis task, but we may have a tip task
          * update */
         tabletunsetstatus(tablet, TABLETAXESUPDATED);
@@ -1450,26 +1435,10 @@ static bool tabletupdatetoolstate(struct tabletpost *tablet, struct evdevdevice 
     int state;
     uint doubledupnewtoolbit = 0;
 
-    /* we were already out of proximity but now got a tool update but
-     * our tool state is zero - i.e. we got a valid prox out from the
-     * device.
-     */
     if (tablet->quirks.proximityoutforced && tablethasstatus(tablet, TABLETTOOLUPDATED) && !tablet->toolstate) {
         tablet->quirks.needtoforceproxout = false;
         tablet->quirks.proximityoutforced = false;
     }
-    /* We need to emulate a BTNTOOLPEN if we get an axis task (i.e.
-     * stylus is def. in proximity) and:
-     * - we forced a proximity out before, or
-     * - on the very first task after init, because if we didn't get a
-     *   BTNTOOLPEN and the state for the tool was 0, this device will
-     *   never send the task.
-     * We don't do this for pure button tasks because we discard those.
-     *
-     * But: on some devices the proximity out is delayed by the kernel,
-     * so we get it after our forced prox-out has triggered. In that
-     * case we need to just ignore the change.
-     */
     if (tablethasstatus(tablet, TABLETAXESUPDATED)) {
         if (tablet->quirks.proximityoutforced) {
             if (!tablethasstatus(tablet, TABLETTOOLUPDATED)  && !tablet->toolstate)
@@ -1484,20 +1453,7 @@ static bool tabletupdatetoolstate(struct tabletpost *tablet, struct evdevdevice 
     if (tablet->toolstate == tablet->prevtoolstate) {
         return false;
     }
-
-    /* Kernel tools are supposed to be mutually exclusive, if we have
-     * two, we force a proximity out for the older tool and handle the
-     * new tool as separate proximity in task.
-     */
     if (tablet->toolstate & (tablet->toolstate - 1)) {
-        /* toolstate has 2 bits set. We set the current tool state
-         * to zero, thus setting everything up for a prox out on the
-         * tool. Once that is set up, we change the tool state to be
-         * the new one we just got so when we re-process this
-         * function we now get the new tool as prox in.
-         * Importantly, we basically rely on nothing else happening
-         * in the meantime.
-         */
         doubledupnewtoolbit = tablet->toolstate ^ tablet->prevtoolstate;
         tablet->toolstate = 0;
     }
