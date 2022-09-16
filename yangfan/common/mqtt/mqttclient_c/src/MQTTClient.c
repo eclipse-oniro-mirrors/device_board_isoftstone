@@ -57,7 +57,7 @@ static int sendPacket(MQTTClient* c, int length, Timer* timer)
         // c->last_received.end_time.tv_sec,
         // c->last_received.end_time.tv_usec);
         rc = SUCCESS;
-    } else{
+    } else {
         // LogDebug("sent=%{public}d,length=%{public}d,isexpired=%{public}d, rc = %{public}d, errno = %{public}d", sent, length, isexpired, rc, errno);
         rc = FAILURE;
     }
