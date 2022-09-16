@@ -37,16 +37,14 @@ static int sendPacket(MQTTClient* c, int length, Timer* timer)
     int rc = FAILURE,
         sent = 0;
     bool isexpired = TimerIsExpired(timer);
-    while (sent < length && !isexpired)
-    {
+    while (sent < length && !isexpired) {
         rc = c->ipstack->mqttwrite(c->ipstack, &c->buf[sent], length, TimerLeftMS(timer));
         if (rc < 0)  // there was an error writing the data
             break;
         sent += rc;
         isexpired = TimerIsExpired(timer);
     }
-    if (sent == length)
-    {
+    if (sent == length) {
         // LogDebug("before sendPacket TimerCountdown...lastsent.tv_sec=%{public}lld, lastsent.tv_usec=%{public}lld, last_received.tv_sec=%{public}lld, last_received.tv_usec=%{public}lld",
         // c->last_sent.end_time.tv_sec,
         // c->last_sent.end_time.tv_usec,
@@ -59,8 +57,7 @@ static int sendPacket(MQTTClient* c, int length, Timer* timer)
         // c->last_received.end_time.tv_sec,
         // c->last_received.end_time.tv_usec);
         rc = SUCCESS;
-    }
-    else{
+    } else{
         // LogDebug("sent=%{public}d,length=%{public}d,isexpired=%{public}d, rc = %{public}d, errno = %{public}d", sent, length, isexpired, rc, errno);
         rc = FAILURE;
     }
