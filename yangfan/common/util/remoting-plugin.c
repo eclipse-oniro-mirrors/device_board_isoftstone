@@ -281,6 +281,7 @@ static void RemotingGstBusMessageHandler(struct RemotedOutput *export)
 
     message = GstBusPop(export->bus);
     if (!message) {
+        WestonLog("gst: GstBusPop failed!\n");
         return;
     }
     switch (GSTMESSAGETYPE(message)) {

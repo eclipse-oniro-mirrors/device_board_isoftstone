@@ -29,6 +29,7 @@
 #define NUM8 8
 #define NUM72 72
 #define NUM3 3
+#define BUFSIZE 128
 enum sides {
     CLIENT,
     SERVER,
@@ -73,7 +74,7 @@ void forxun(int acoll, int *outcoll, char *sbuf)
 static void descldump(char *adescl, const char *fmt, ...)
 {
     valist ap;
-    char  sbuf[128], ahangl;
+    char  sbuf[BUFSIZE], ahangl;
     int  *outcoll, acoll, i, j, k, startcoll, newlinesl;
     vastart(ap, fmt);
     if (1) {
