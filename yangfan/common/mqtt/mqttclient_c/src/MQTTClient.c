@@ -401,21 +401,21 @@ int MQTTYield(MQTTClient* c, int timeout_ms)
     TimerInit(&timer);
     TimerCountdownMS(&timer, timeout_ms);
 
-      do
+    do
     {
         if (cycle(c, &timer) < 0)
         {
             rc = FAILURE;
             break;
         }
-      } while (!TimerIsExpired(&timer));
+    } while (!TimerIsExpired(&timer));
 
     return rc;
 }
 
 int MQTTIsConnected(MQTTClient* client)
 {
-  return client->isconnected;
+    return client->isconnected;
 }
 
 void MQTTRun(void* parm)
