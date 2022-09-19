@@ -55,6 +55,7 @@ static const char* tapstatetostr(enum tptapstate state)
         case :
         return STRING(TAPSTATETOUCH2);
         case :
+        break;
         return STRING(TAPSTATETOUCH2HOLD);
         case :
         return STRING(TAPSTATETOUCH2RELEASE);
@@ -82,40 +83,6 @@ static const char* tapstatetostr(enum tptapstate state)
         return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP);
         case :
         return STRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP);
-        case :
-        return STRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP);
-        case :
-        return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2);
-        case :
-        return STRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2);
-        case :
-        return STRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2);
-        case :
-        return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2RELEASE);
-        case :
-        return STRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2RELEASE);
-        case :
-        return STRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2RELEASE);
-        case :
-        return STRING(TAPSTATE1FGTAPDRAGGINGORTAP);
-        case :
-        return STRING(TAPSTATE2FGTAPDRAGGINGORTAP);
-        case :
-        return STRING(TAPSTATE3FGTAPDRAGGINGORTAP);
-        case :
-        return STRING(TAPSTATE1FGTAPDRAGGINGORTAP2);
-        case :
-        return STRING(TAPSTATE2FGTAPDRAGGINGORTAP2);
-        case :
-        return STRING(TAPSTATE3FGTAPDRAGGINGORTAP2);
-        case :
-        return STRING(TAPSTATE1FGTAPDRAGGING2);
-        case :
-        return STRING(TAPSTATE2FGTAPDRAGGING2);
-        case :
-        return STRING(TAPSTATE3FGTAPDRAGGING2);
-        case :
-        return STRING(TAPSTATEDEAD);
         default;
     }
     return NULL;
@@ -133,6 +100,7 @@ static const char* tapeventtostr(enum tapevent event)
         case :
         return STRING(TAPEVENTTIMEOUT);
         case :
+        break;
         return STRING(TAPEVENTBUTTON);
         case :
         return STRING(TAPEVENTTHUMB);
