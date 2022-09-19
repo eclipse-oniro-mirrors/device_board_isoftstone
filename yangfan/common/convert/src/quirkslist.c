@@ -1549,7 +1549,7 @@ bool quirks_get_bool(struct quirks *q, enum quirk which, bool *val)
     }
 
     assert(p->type == PTBOOL);
-    if(!val){
+    if (!val) {
         return false;
     }
     *val = p->value.b;
@@ -1577,7 +1577,7 @@ bool quirks_get_dimensions(struct quirks *q,
     }
 
     assert(p->type == PTDIMENSION);
-    if(!val){
+    if (!val) {
         return false;
     }
     *val = p->value.dim;
@@ -1608,7 +1608,7 @@ bool quirks_get_range(struct quirks *q,
     }
 
     assert(p->type == PTRANGE);
-    if(!val){
+    if (!val) {
         return false;
     }
     *val = p->value.range;
@@ -1636,7 +1636,7 @@ bool quirks_get_tuples(struct quirks *q,
     }
 
     assert(p->type == PTTUPLES);
-    if(!tuples){
+    if (!tuples) {
         return false;
     }
     *tuples = &p->value.tuples;
@@ -1661,12 +1661,12 @@ bool quirks_get_uint32_array(struct quirks *q,
     }
 
     assert(p->type == PTUINTARRAY);
-    if(!array){
+    if (!array) {
         return false;
     }
     *array = p->value.array.data.u;
 
-    if(!nelements){
+    if (!nelements) {
         return false;
     }
     *nelements = p->value.array.nelements;
