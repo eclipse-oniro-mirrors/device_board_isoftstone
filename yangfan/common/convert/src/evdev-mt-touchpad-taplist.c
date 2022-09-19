@@ -20,940 +20,913 @@
 
 #include "evdev-mt-touchpad.h"
 
-#define DEFAULT_TAP_TIMEOUT_PERIOD ms2us(180)
-#define DEFAULT_DRAG_TIMEOUT_PERIOD ms2us(300)
-#define DEFAULT_TAP_MOVE_THRESHOLD 1.3 /* mm */
+#define DEFAULTTAPTIMEOUTPERIOD ms2us(180)
+#define DEFAULTDRAGTIMEOUTPERIOD ms2us(300)
+#define DEFAULTTAPMOVETHRESHOLD 1.3 /* mm */
 
-enum tap_event {
-	TAP_EVENT_TOUCH = 12,
-	TAP_EVENT_MOTION,
-	TAP_EVENT_RELEASE,
-	TAP_EVENT_BUTTON,
-	TAP_EVENT_TIMEOUT,
-	TAP_EVENT_THUMB,
-	TAP_EVENT_PALM,
-	TAP_EVENT_PALM_UP,
+enum tapevent {
+	TAPEVENTTOUCH = 12,
+	TAPEVENTMOTION,
+	TAPEVENTRELEASE,
+	TAPEVENTBUTTON,
+	TAPEVENTTIMEOUT,
+	TAPEVENTTHUMB,
+	TAPEVENTPALM,
+	TAPEVENTPALMUP,
 };
 
-static inline const char*
-tap_state_to_str(enum tp_tap_state state)
+static inline const char* tapstatetostr(enum tptapstate state)
 {
 	switch(state) {
-	CASE_RETURN_STRING(TAP_STATE_IDLE);
-	CASE_RETURN_STRING(TAP_STATE_HOLD);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_TAPPED);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_TAPPED);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_TAPPED);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH_2);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH_2_HOLD);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH_2_RELEASE);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH_3);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH_3_HOLD);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH_3_RELEASE);
-	CASE_RETURN_STRING(TAP_STATE_TOUCH_3_RELEASE_2);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING_WAIT);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING_WAIT);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING_WAIT);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING_OR_DOUBLETAP);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING_OR_DOUBLETAP);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING_OR_DOUBLETAP);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING_OR_DOUBLETAP_2);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING_OR_DOUBLETAP_2);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING_OR_DOUBLETAP_2);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING_OR_DOUBLETAP_2_RELEASE);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING_OR_DOUBLETAP_2_RELEASE);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING_OR_DOUBLETAP_2_RELEASE);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING_OR_TAP);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING_OR_TAP);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING_OR_TAP);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING_OR_TAP_2);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING_OR_TAP_2);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING_OR_TAP_2);
-	CASE_RETURN_STRING(TAP_STATE_1FGTAP_DRAGGING_2);
-	CASE_RETURN_STRING(TAP_STATE_2FGTAP_DRAGGING_2);
-	CASE_RETURN_STRING(TAP_STATE_3FGTAP_DRAGGING_2);
-	CASE_RETURN_STRING(TAP_STATE_DEAD);
+		CASERETURNSTRING(TAPSTATEIDLE);
+		CASERETURNSTRING(TAPSTATEHOLD);
+		CASERETURNSTRING(TAPSTATETOUCH);
+		CASERETURNSTRING(TAPSTATE1FGTAPTAPPED);
+		CASERETURNSTRING(TAPSTATE2FGTAPTAPPED);
+		CASERETURNSTRING(TAPSTATE3FGTAPTAPPED);
+		CASERETURNSTRING(TAPSTATETOUCH2);
+		CASERETURNSTRING(TAPSTATETOUCH2HOLD);
+		CASERETURNSTRING(TAPSTATETOUCH2RELEASE);
+		CASERETURNSTRING(TAPSTATETOUCH3);
+		CASERETURNSTRING(TAPSTATETOUCH3HOLD);
+		CASERETURNSTRING(TAPSTATETOUCH3RELEASE);
+		CASERETURNSTRING(TAPSTATETOUCH3RELEASE2);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGING);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGING);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGING);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGINGWAIT);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGINGWAIT);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGINGWAIT);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2RELEASE);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2RELEASE);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2RELEASE);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGINGORTAP);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGINGORTAP);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGINGORTAP);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGINGORTAP2);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGINGORTAP2);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGINGORTAP2);
+		CASERETURNSTRING(TAPSTATE1FGTAPDRAGGING2);
+		CASERETURNSTRING(TAPSTATE2FGTAPDRAGGING2);
+		CASERETURNSTRING(TAPSTATE3FGTAPDRAGGING2);
+		CASERETURNSTRING(TAPSTATEDEAD);
 	}
 	return NULL;
 }
 
-static inline const char*
-tap_event_to_str(enum tap_event event)
+static inline const char* tapeventtostr(enum tapevent event)
 {
 	switch(event) {
-	CASE_RETURN_STRING(TAP_EVENT_TOUCH);
-	CASE_RETURN_STRING(TAP_EVENT_MOTION);
-	CASE_RETURN_STRING(TAP_EVENT_RELEASE);
-	CASE_RETURN_STRING(TAP_EVENT_TIMEOUT);
-	CASE_RETURN_STRING(TAP_EVENT_BUTTON);
-	CASE_RETURN_STRING(TAP_EVENT_THUMB);
-	CASE_RETURN_STRING(TAP_EVENT_PALM);
-	CASE_RETURN_STRING(TAP_EVENT_PALM_UP);
+		CASERETURNSTRING(TAPEVENTTOUCH);
+		CASERETURNSTRING(TAPEVENTMOTION);
+		CASERETURNSTRING(TAPEVENTRELEASE);
+		CASERETURNSTRING(TAPEVENTTIMEOUT);
+		CASERETURNSTRING(TAPEVENTBUTTON);
+		CASERETURNSTRING(TAPEVENTTHUMB);
+		CASERETURNSTRING(TAPEVENTPALM);
+		CASERETURNSTRING(TAPEVENTPALMUP);
 	}
 	return NULL;
 }
 
-static inline void
-log_tap_bug(struct tp_dispatch *tp, struct tp_touch *t, enum tap_event event)
+static inline void logtapbug(struct tpdispatch *tp, struct tptouch *t, enum tapevent event)
 {
-	evdev_log_bug_libinput(tp->device,
-			       "%d: invalid tap event %s in state %s\n",
-			       t->index,
-			       tap_event_to_str(event),
-			       tap_state_to_str(tp->tap.state));
+	evdevlogbuglibinput(tp->device,
+		"%d: invalid tap event %s in state %s\n",
+		t->index,
+		tapeventtostr(event),
+		tapstatetostr(tp->tap.state));
 
 }
 
-static void
-tp_tap_notify(struct tp_dispatch *tp,
-	      uint64_t time,
-	      int nfingers,
-	      enum libinput_button_state state)
+static void tptapnotify(struct tpdispatch *tp,
+	uint64_t time,
+	int nfingers,
+	enum libinputbuttonstate state)
 {
-	int32_t button;
-	int32_t button_map[2][3] = {
-		{ BTN_LEFT, BTN_RIGHT, BTN_MIDDLE },
-		{ BTN_LEFT, BTN_MIDDLE, BTN_RIGHT },
+	int32t button;
+	int32t buttonmap[2][3] = {
+		{ BTNLEFT, BTNRIGHT, BTNMIDDLE },
+		{ BTNLEFT, BTNMIDDLE, BTNRIGHT },
 	};
 
-	assert(tp->tap.map < ARRAY_LENGTH(button_map));
+	assert(tp->tap.map < ARRAYLENGTH(buttonmap));
 
 	if (nfingers < 1 || nfingers > 3)
 		return;
 
-	button = button_map[tp->tap.map][nfingers - 1];
+	button = buttonmap[tp->tap.map][nfingers - 1];
 
-	if (state == LIBINPUT_BUTTON_STATE_PRESSED)
-		tp->tap.buttons_pressed |= (1 << nfingers);
+	if (state == LIBINPUTBUTTONSTATEPRESSED)
+		tp->tap.buttonspressed |= (1 << nfingers);
 	else
-		tp->tap.buttons_pressed &= ~(1 << nfingers);
+		tp->tap.buttonspressed &= ~(1 << nfingers);
 
-	evdev_pointer_notify_button(tp->device,
-				    time,
-				    button,
-				    state);
+	evdevpointernotifybutton(tp->device,
+		time,
+		button,
+		state);
 }
 
-static void
-tp_tap_set_timer(struct tp_dispatch *tp, uint64_t time)
+static void tptapsettimer(struct tpdispatch *tp, uint64_t time)
 {
-	libinput_timer_set(&tp->tap.timer, time + DEFAULT_TAP_TIMEOUT_PERIOD);
+	libinputtimerset(&tp->tap.timer, time + DEFAULTTAPTIMEOUTPERIOD);
 }
 
-static void
-tp_tap_set_drag_timer(struct tp_dispatch *tp, uint64_t time)
+static void tptapsetdragtimer(struct tpdispatch *tp, uint64_t time)
 {
-	libinput_timer_set(&tp->tap.timer, time + DEFAULT_DRAG_TIMEOUT_PERIOD);
+	libinputtimerset(&tp->tap.timer, time + DEFAULTDRAGTIMEOUTPERIOD);
 }
 
-static void
-tp_tap_clear_timer(struct tp_dispatch *tp)
+static void tptapcleartimer(struct tpdispatch *tp)
 {
-	libinput_timer_cancel(&tp->tap.timer);
+	libinputtimercancel(&tp->tap.timer);
 }
 
-static void
-tp_tap_move_to_dead(struct tp_dispatch *tp, struct tp_touch *t)
+static void tptapmovetodead(struct tpdispatch *tp, struct tptouch *t)
 {
-	tp->tap.state = TAP_STATE_DEAD;
-	t->tap.state = TAP_TOUCH_STATE_DEAD;
-	tp_tap_clear_timer(tp);
+	tp->tap.state = TAPSTATEDEAD;
+	t->tap.state = TAPTOUCHSTATEDEAD;
+	tptapcleartimer(tp);
 }
 
-static void
-tp_tap_idle_handle_event(struct tp_dispatch *tp,
-			 struct tp_touch *t,
-			 enum tap_event event, uint64_t time)
+static void tptapidlehandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
 {
 	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_TOUCH;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		break;
-	case TAP_EVENT_MOTION:
-		log_tap_bug(tp, t, event);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		log_tap_bug(tp, t, event);
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_IDLE;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_touch_handle_event(struct tp_dispatch *tp,
-			  struct tp_touch *t,
-			  enum tap_event event, uint64_t time)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_TOUCH_2;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      1,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		if (tp->tap.drag_enabled) {
-			tp->tap.state = TAP_STATE_1FGTAP_TAPPED;
-			tp->tap.saved_release_time = time;
-			tp_tap_set_timer(tp, time);
-		} else {
-			tp_tap_notify(tp,
-				      time,
-				      1,
-				      LIBINPUT_BUTTON_STATE_RELEASED);
-			tp->tap.state = TAP_STATE_IDLE;
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATETOUCH;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			break;
+		case TAPEVENTMOTION:
+			logtapbug(tp, t, event);
+			break;
+		case TAPEVENTTIMEOUT:
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			logtapbug(tp, t, event);
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATEIDLE;
+			break;
+		case TAPEVENTPALMUP:
+			break;
 		}
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		tp->tap.state = TAP_STATE_HOLD;
-		tp_tap_clear_timer(tp);
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		tp->tap.state = TAP_STATE_IDLE;
-		t->tap.is_thumb = true;
-		tp->tap.nfingers_down--;
-		t->tap.state = TAP_TOUCH_STATE_DEAD;
-		tp_tap_clear_timer(tp);
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_IDLE;
-		tp_tap_clear_timer(tp);
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
 }
 
-static void
-tp_tap_hold_handle_event(struct tp_dispatch *tp,
-			 struct tp_touch *t,
-			 enum tap_event event, uint64_t time)
+static void tptaptouchhandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
 {
 
 	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_TOUCH_2;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_IDLE;
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		tp->tap.state = TAP_STATE_IDLE;
-		t->tap.is_thumb = true;
-		tp->tap.nfingers_down--;
-		t->tap.state = TAP_TOUCH_STATE_DEAD;
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_IDLE;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_tapped_handle_event(struct tp_dispatch *tp,
-			   struct tp_touch *t,
-			   enum tap_event event, uint64_t time,
-			   int nfingers_tapped)
-{
-	switch (event) {
-	case TAP_EVENT_MOTION:
-	case TAP_EVENT_RELEASE:
-		log_tap_bug(tp, t, event);
-		break;
-	case TAP_EVENT_TOUCH: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING_OR_DOUBLETAP,
-			TAP_STATE_2FGTAP_DRAGGING_OR_DOUBLETAP,
-			TAP_STATE_3FGTAP_DRAGGING_OR_DOUBLETAP,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	}
-	case TAP_EVENT_TIMEOUT:
-		tp->tap.state = TAP_STATE_IDLE;
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		break;
-	case TAP_EVENT_THUMB:
-		log_tap_bug(tp, t, event);
-		break;
-	case TAP_EVENT_PALM:
-		log_tap_bug(tp, t, event);
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_touch2_handle_event(struct tp_dispatch *tp,
-			   struct tp_touch *t,
-			   enum tap_event event, uint64_t time)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_TOUCH_3;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_TOUCH_2_RELEASE;
-		tp->tap.saved_release_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		tp->tap.state = TAP_STATE_TOUCH_2_HOLD;
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_TOUCH;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_touch2_hold_handle_event(struct tp_dispatch *tp,
-				struct tp_touch *t,
-				enum tap_event event, uint64_t time)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_TOUCH_3;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_HOLD;
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		tp->tap.state = TAP_STATE_TOUCH_2_HOLD;
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_HOLD;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_touch2_release_handle_event(struct tp_dispatch *tp,
-				   struct tp_touch *t,
-				   enum tap_event event, uint64_t time)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_TOUCH_2_HOLD;
-		t->tap.state = TAP_TOUCH_STATE_DEAD;
-		tp_tap_clear_timer(tp);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      2,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		if (tp->tap.drag_enabled) {
-			tp->tap.state = TAP_STATE_2FGTAP_TAPPED;
-			tp_tap_set_timer(tp, time);
-		} else {
-			tp_tap_notify(tp,
-				      tp->tap.saved_release_time,
-				      2,
-				      LIBINPUT_BUTTON_STATE_RELEASED);
-			tp->tap.state = TAP_STATE_IDLE;
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATETOUCH2;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				1,
+				LIBINPUTBUTTONSTATEPRESSED);
+			if (tp->tap.dragenabled) {
+				tp->tap.state = TAPSTATE1FGTAPTAPPED;
+				tp->tap.savedreleasetime = time;
+				tptapsettimer(tp, time);
+			} else {
+				tptapnotify(tp,
+					time,
+					1,
+					LIBINPUTBUTTONSTATERELEASED);
+				tp->tap.state = TAPSTATEIDLE;
+			}
+			break;
+		case TAPEVENTMOTION:
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			tp->tap.state = TAPSTATEHOLD;
+			tptapcleartimer(tp);
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			tp->tap.state = TAPSTATEIDLE;
+			t->tap.isthumb = true;
+			tp->tap.nfingersdown--;
+			t->tap.state = TAPTOUCHSTATEDEAD;
+			tptapcleartimer(tp);
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATEIDLE;
+			tptapcleartimer(tp);
+			break;
+		case TAPEVENTPALMUP:
+			break;
 		}
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		tp->tap.state = TAP_STATE_HOLD;
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		/* There's only one saved press time and it's overwritten by
-		 * the last touch down. So in the case of finger down, palm
-		 * down, finger up, palm detected, we use the
-		 * palm touch's press time here instead of the finger's press
-		 * time. Let's wait and see if that's an issue.
-		 */
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      1,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		if (tp->tap.drag_enabled) {
-			tp->tap.state = TAP_STATE_1FGTAP_TAPPED;
-		} else {
-			tp_tap_notify(tp,
-				      tp->tap.saved_release_time,
-				      1,
-				      LIBINPUT_BUTTON_STATE_RELEASED);
-			tp->tap.state = TAP_STATE_IDLE;
-		}
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
 }
 
-static void
-tp_tap_touch3_handle_event(struct tp_dispatch *tp,
-			   struct tp_touch *t,
-			   enum tap_event event, uint64_t time)
+static void tptapholdhandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
 {
 
 	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_DEAD;
-		tp_tap_clear_timer(tp);
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		tp->tap.state = TAP_STATE_TOUCH_3_HOLD;
-		tp_tap_clear_timer(tp);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_TOUCH_3_RELEASE;
-		tp->tap.saved_release_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_TOUCH_2;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATETOUCH2;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATEIDLE;
+			break;
+		case TAPEVENTMOTION:
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			tp->tap.state = TAPSTATEIDLE;
+			t->tap.isthumb = true;
+			tp->tap.nfingersdown--;
+			t->tap.state = TAPTOUCHSTATEDEAD;
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATEIDLE;
+			break;
+		case TAPEVENTPALMUP:
+			break;
+    }
 }
 
-static void
-tp_tap_touch3_hold_handle_event(struct tp_dispatch *tp,
-				struct tp_touch *t,
-				enum tap_event event, uint64_t time)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp->tap.state = TAP_STATE_DEAD;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_TOUCH_2_HOLD;
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_TOUCH_2_HOLD;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_touch3_release_handle_event(struct tp_dispatch *tp,
-				   struct tp_touch *t,
-				   enum tap_event event, uint64_t time)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_TOUCH_3;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_TOUCH_3_RELEASE_2;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_TOUCH_2_HOLD;
-		break;
-	case TAP_EVENT_BUTTON:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_TOUCH_2_RELEASE;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_touch3_release2_handle_event(struct tp_dispatch *tp,
-				    struct tp_touch *t,
-				    enum tap_event event, uint64_t time)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_TOUCH_2;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		if (tp->tap.drag_enabled) {
-			tp->tap.state = TAP_STATE_3FGTAP_TAPPED;
-			tp_tap_set_timer(tp, time);
-		} else {
-			tp_tap_notify(tp,
-				      tp->tap.saved_release_time,
-				      3,
-				      LIBINPUT_BUTTON_STATE_RELEASED);
-			tp->tap.state = TAP_STATE_IDLE;
-		}
-		break;
-	case TAP_EVENT_MOTION:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp_tap_move_to_dead(tp, t);
-		break;
-	case TAP_EVENT_TIMEOUT:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_HOLD;
-		break;
-	case TAP_EVENT_BUTTON:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      3,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_DEAD;
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      2,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		if (tp->tap.drag_enabled) {
-			tp->tap.state = TAP_STATE_2FGTAP_TAPPED;
-		} else {
-			tp_tap_notify(tp,
-				      tp->tap.saved_release_time,
-				      2,
-				      LIBINPUT_BUTTON_STATE_RELEASED);
-			tp->tap.state = TAP_STATE_IDLE;
-		}
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_dragging_or_doubletap_handle_event(struct tp_dispatch *tp,
-					  struct tp_touch *t,
-					  enum tap_event event, uint64_t time,
-					  int nfingers_tapped)
+static void tptaptappedhandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time,
+	int nfingerstapped)
 {
 	switch (event) {
-	case TAP_EVENT_TOUCH: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING_OR_DOUBLETAP_2,
-			TAP_STATE_2FGTAP_DRAGGING_OR_DOUBLETAP_2,
-			TAP_STATE_3FGTAP_DRAGGING_OR_DOUBLETAP_2,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	}
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_1FGTAP_TAPPED;
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      1,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp->tap.saved_release_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_MOTION:
-	case TAP_EVENT_TIMEOUT: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING,
-			TAP_STATE_2FGTAP_DRAGGING,
-			TAP_STATE_3FGTAP_DRAGGING,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		break;
-	}
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_TAPPED,
-			TAP_STATE_2FGTAP_TAPPED,
-			TAP_STATE_3FGTAP_TAPPED,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		break;
-	}
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_dragging_or_doubletap_2_handle_event(struct tp_dispatch *tp,
-					    struct tp_touch *t,
-					    enum tap_event event, uint64_t time,
-					    int nfingers_tapped)
-{
-	switch (event) {
-	case TAP_EVENT_TOUCH:
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_TOUCH_3;
-		tp->tap.saved_press_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_RELEASE: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING_OR_DOUBLETAP_2_RELEASE,
-			TAP_STATE_2FGTAP_DRAGGING_OR_DOUBLETAP_2_RELEASE,
-			TAP_STATE_3FGTAP_DRAGGING_OR_DOUBLETAP_2_RELEASE,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		/* We are overwriting saved_release_time, but if this is indeed
-		   a multitap with two fingers, then we will need its previous
-		   value for the click release event we withheld just in case
-		   this is still a drag. */
-		tp->tap.saved_multitap_release_time = tp->tap.saved_release_time;
-		tp->tap.saved_release_time = time;
-		tp_tap_set_timer(tp, time);
-		break;
-	}
-	case TAP_EVENT_MOTION:
-	case TAP_EVENT_TIMEOUT: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING_2,
-			TAP_STATE_2FGTAP_DRAGGING_2,
-			TAP_STATE_3FGTAP_DRAGGING_2,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		break;
-	}
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING_OR_DOUBLETAP,
-			TAP_STATE_2FGTAP_DRAGGING_OR_DOUBLETAP,
-			TAP_STATE_3FGTAP_DRAGGING_OR_DOUBLETAP,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		break;
-	}
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_dragging_or_doubletap_2_release_handle_event(struct tp_dispatch *tp,
-						    struct tp_touch *t,
-						    enum tap_event event,
-						    uint64_t time,
-						    int nfingers_tapped)
-{
-	switch (event) {
-	case TAP_EVENT_TOUCH: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING_2,
-			TAP_STATE_2FGTAP_DRAGGING_2,
-			TAP_STATE_3FGTAP_DRAGGING_2,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		break;
-	}
-	case TAP_EVENT_RELEASE:
-		tp->tap.state = TAP_STATE_2FGTAP_TAPPED;
-		tp_tap_notify(tp,
-			      tp->tap.saved_multitap_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      2,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-		tp_tap_set_timer(tp, time);
-		break;
-	case TAP_EVENT_MOTION:
-	case TAP_EVENT_TIMEOUT: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING,
-			TAP_STATE_2FGTAP_DRAGGING,
-			TAP_STATE_3FGTAP_DRAGGING,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		break;
-	}
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp->tap.state = TAP_STATE_1FGTAP_TAPPED;
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp_tap_notify(tp,
-			      tp->tap.saved_press_time,
-			      1,
-			      LIBINPUT_BUTTON_STATE_PRESSED);
-	case TAP_EVENT_PALM_UP:
-		break;
-	}
-}
-
-static void
-tp_tap_dragging_handle_event(struct tp_dispatch *tp,
-			     struct tp_touch *t,
-			     enum tap_event event, uint64_t time,
-			     int nfingers_tapped)
-{
-
-	switch (event) {
-	case TAP_EVENT_TOUCH: {
-		enum tp_tap_state dest[3] = {
-			TAP_STATE_1FGTAP_DRAGGING_2,
-			TAP_STATE_2FGTAP_DRAGGING_2,
-			TAP_STATE_3FGTAP_DRAGGING_2,
-		};
-		assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-		tp->tap.state = dest[nfingers_tapped - 1];
-		break;
-	}
-	case TAP_EVENT_RELEASE:
-		if (tp->tap.drag_lock_enabled) {
-			enum tp_tap_state dest[3] = {
-				TAP_STATE_1FGTAP_DRAGGING_WAIT,
-				TAP_STATE_2FGTAP_DRAGGING_WAIT,
-				TAP_STATE_3FGTAP_DRAGGING_WAIT,
+		case TAPEVENTMOTION:
+		case TAPEVENTRELEASE:
+			logtapbug(tp, t, event);
+			break;
+		case TAPEVENTTOUCH: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGINGORDOUBLETAP,
+				TAPSTATE2FGTAPDRAGGINGORDOUBLETAP,
+				TAPSTATE3FGTAPDRAGGINGORDOUBLETAP,
 			};
-			assert(nfingers_tapped >= 1 && nfingers_tapped <= 3);
-			tp->tap.state = dest[nfingers_tapped - 1];
-			tp_tap_set_drag_timer(tp, time);
-		} else {
-			tp_tap_notify(tp,
-				      time,
-				      nfingers_tapped,
-				      LIBINPUT_BUTTON_STATE_RELEASED);
-			tp->tap.state = TAP_STATE_IDLE;
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
 		}
-		break;
-	case TAP_EVENT_MOTION:
-	case TAP_EVENT_TIMEOUT:
-		/* noop */
-		break;
-	case TAP_EVENT_BUTTON:
-		tp->tap.state = TAP_STATE_DEAD;
-		tp_tap_notify(tp,
-			      time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		break;
-	case TAP_EVENT_THUMB:
-		break;
-	case TAP_EVENT_PALM:
-		tp_tap_notify(tp,
-			      tp->tap.saved_release_time,
-			      nfingers_tapped,
-			      LIBINPUT_BUTTON_STATE_RELEASED);
-		tp->tap.state = TAP_STATE_IDLE;
-		break;
-	case TAP_EVENT_PALM_UP:
-		break;
+		case TAPEVENTTIMEOUT:
+			tp->tap.state = TAPSTATEIDLE;
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			break;
+		case TAPEVENTTHUMB:
+			logtapbug(tp, t, event);
+			break;
+		case TAPEVENTPALM:
+			logtapbug(tp, t, event);
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptaptouch2handleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
+{
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATETOUCH3;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATETOUCH2RELEASE;
+			tp->tap.savedreleasetime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTMOTION:
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			tp->tap.state = TAPSTATETOUCH2HOLD;
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATETOUCH;
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptaptouch2holdhandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
+{
+
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATETOUCH3;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATEHOLD;
+			break;
+		case TAPEVENTMOTION:
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			tp->tap.state = TAPSTATETOUCH2HOLD;
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATEHOLD;
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptaptouch2releasehandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
+{
+
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATETOUCH2HOLD;
+			t->tap.state = TAPTOUCHSTATEDEAD;
+			tptapcleartimer(tp);
+			break;
+		case TAPEVENTRELEASE:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				2,
+				LIBINPUTBUTTONSTATEPRESSED);
+			if (tp->tap.dragenabled) {
+				tp->tap.state = TAPSTATE2FGTAPTAPPED;
+				tptapsettimer(tp, time);
+			} else {
+				tptapnotify(tp,
+					tp->tap.savedreleasetime,
+					2,
+					LIBINPUTBUTTONSTATERELEASED);
+				tp->tap.state = TAPSTATEIDLE;
+			}
+			break;
+		case TAPEVENTMOTION:
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			tp->tap.state = TAPSTATEHOLD;
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			/* There's only one saved press time and it's overwritten by
+			 * the last touch down. So in the case of finger down, palm
+			 * down, finger up, palm detected, we use the
+			 * palm touch's press time here instead of the finger's press
+			 * time. Let's wait and see if that's an issue.
+			 */
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				1,
+				LIBINPUTBUTTONSTATEPRESSED);
+			if (tp->tap.dragenabled) {
+				tp->tap.state = TAPSTATE1FGTAPTAPPED;
+			} else {
+				tptapnotify(tp,
+					tp->tap.savedreleasetime,
+					1,
+					LIBINPUTBUTTONSTATERELEASED);
+				tp->tap.state = TAPSTATEIDLE;
+			}
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptaptouch3handleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
+{
+
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATEDEAD;
+			tptapcleartimer(tp);
+			break;
+		case TAPEVENTMOTION:
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			tp->tap.state = TAPSTATETOUCH3HOLD;
+			tptapcleartimer(tp);
+			break;
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATETOUCH3RELEASE;
+			tp->tap.savedreleasetime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATETOUCH2;
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptaptouch3holdhandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
+{
+
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tp->tap.state = TAPSTATEDEAD;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATETOUCH2HOLD;
+			break;
+		case TAPEVENTMOTION:
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATETOUCH2HOLD;
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptaptouch3releasehandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
+{
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATETOUCH3;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATETOUCH3RELEASE2;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTMOTION:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATETOUCH2HOLD;
+			break;
+		case TAPEVENTBUTTON:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATETOUCH2RELEASE;
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptaptouch3release2handleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time)
+{
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATETOUCH2;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			if (tp->tap.dragenabled) {
+				tp->tap.state = TAPSTATE3FGTAPTAPPED;
+				tptapsettimer(tp, time);
+			} else {
+				tptapnotify(tp,
+					tp->tap.savedreleasetime,
+					3,
+					LIBINPUTBUTTONSTATERELEASED);
+				tp->tap.state = TAPSTATEIDLE;
+			}
+			break;
+		case TAPEVENTMOTION:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tptapmovetodead(tp, t);
+			break;
+		case TAPEVENTTIMEOUT:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATEHOLD;
+			break;
+		case TAPEVENTBUTTON:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				3,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				3,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATEDEAD;
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				2,
+				LIBINPUTBUTTONSTATEPRESSED);
+			if (tp->tap.dragenabled) {
+				tp->tap.state = TAPSTATE2FGTAPTAPPED;
+			} else {
+				tptapnotify(tp,
+					tp->tap.savedreleasetime,
+					2,
+					LIBINPUTBUTTONSTATERELEASED);
+				tp->tap.state = TAPSTATEIDLE;
+			}
+			break;
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptapdraggingordoubletaphandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time,
+	int nfingerstapped)
+{
+	switch (event) {
+		case TAPEVENTTOUCH: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2,
+				TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2,
+				TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		}
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATE1FGTAPTAPPED;
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				1,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tp->tap.savedreleasetime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTMOTION:
+		case TAPEVENTTIMEOUT: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGING,
+				TAPSTATE2FGTAPDRAGGING,
+				TAPSTATE3FGTAPDRAGGING,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			break;
+		}
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPTAPPED,
+				TAPSTATE2FGTAPTAPPED,
+				TAPSTATE3FGTAPTAPPED,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			break;
+		}
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptapdraggingordoubletap2handleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time,
+	int nfingerstapped)
+{
+	switch (event) {
+		case TAPEVENTTOUCH:
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATETOUCH3;
+			tp->tap.savedpresstime = time;
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTRELEASE: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2RELEASE,
+				TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2RELEASE,
+				TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2RELEASE,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			/* We are overwriting savedreleasetime, but if this is indeed
+			   a multitap with two fingers, then we will need its previous
+			   value for the click release event we withheld just in case
+			   this is still a drag. */
+			tp->tap.savedmultitapreleasetime = tp->tap.savedreleasetime;
+			tp->tap.savedreleasetime = time;
+			tptapsettimer(tp, time);
+			break;
+		}
+		case TAPEVENTMOTION:
+		case TAPEVENTTIMEOUT: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGING2,
+				TAPSTATE2FGTAPDRAGGING2,
+				TAPSTATE3FGTAPDRAGGING2,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			break;
+		}
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGINGORDOUBLETAP,
+				TAPSTATE2FGTAPDRAGGINGORDOUBLETAP,
+				TAPSTATE3FGTAPDRAGGINGORDOUBLETAP,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			break;
+		}
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptapdraggingordoubletap2releasehandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event,
+	uint64_t time,
+	int nfingerstapped)
+{
+	switch (event) {
+		case TAPEVENTTOUCH: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGING2,
+				TAPSTATE2FGTAPDRAGGING2,
+				TAPSTATE3FGTAPDRAGGING2,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			break;
+		}
+		case TAPEVENTRELEASE:
+			tp->tap.state = TAPSTATE2FGTAPTAPPED;
+			tptapnotify(tp,
+				tp->tap.savedmultitapreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				2,
+				LIBINPUTBUTTONSTATEPRESSED);
+			tptapsettimer(tp, time);
+			break;
+		case TAPEVENTMOTION:
+		case TAPEVENTTIMEOUT: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGING,
+				TAPSTATE2FGTAPDRAGGING,
+				TAPSTATE3FGTAPDRAGGING,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			break;
+		}
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tp->tap.state = TAPSTATE1FGTAPTAPPED;
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			tptapnotify(tp,
+				tp->tap.savedpresstime,
+				1,
+				LIBINPUTBUTTONSTATEPRESSED);
+		case TAPEVENTPALMUP:
+			break;
+	}
+}
+
+static void tptapdragginghandleevent(struct tpdispatch *tp,
+	struct tptouch *t,
+	enum tapevent event, uint64_t time,
+	int nfingerstapped)
+{
+	switch (event) {
+		case TAPEVENTTOUCH: {
+			enum tptapstate dest[3] = {
+				TAPSTATE1FGTAPDRAGGING2,
+				TAPSTATE2FGTAPDRAGGING2,
+				TAPSTATE3FGTAPDRAGGING2,
+			};
+			assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+			tp->tap.state = dest[nfingerstapped - 1];
+			break;
+		}
+		case TAPEVENTRELEASE:
+			if (tp->tap.draglockenabled) {
+				enum tptapstate dest[3] = {
+					TAPSTATE1FGTAPDRAGGINGWAIT,
+					TAPSTATE2FGTAPDRAGGINGWAIT,
+					TAPSTATE3FGTAPDRAGGINGWAIT,
+				};
+				assert(nfingerstapped >= 1 && nfingerstapped <= 3);
+				tp->tap.state = dest[nfingerstapped - 1];
+				tptapsetdragtimer(tp, time);
+			} else {
+				tptapnotify(tp,
+					time,
+					nfingerstapped,
+					LIBINPUTBUTTONSTATERELEASED);
+				tp->tap.state = TAPSTATEIDLE;
+			}
+			break;
+		case TAPEVENTMOTION:
+		case TAPEVENTTIMEOUT:
+			/* noop */
+			break;
+		case TAPEVENTBUTTON:
+			tp->tap.state = TAPSTATEDEAD;
+			tptapnotify(tp,
+				time,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			break;
+		case TAPEVENTTHUMB:
+			break;
+		case TAPEVENTPALM:
+			tptapnotify(tp,
+				tp->tap.savedreleasetime,
+				nfingerstapped,
+				LIBINPUTBUTTONSTATERELEASED);
+			tp->tap.state = TAPSTATEIDLE;
+			break;
+		case TAPEVENTPALMUP:
+			break;
 	}
 }
