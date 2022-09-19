@@ -74,7 +74,6 @@ int isftconnectionread(struct isftconnection *connection)
         return -1;
     }
     connection->in.hd += len;
-
     return isftconnectionpendinginput(connection);
 }
 
@@ -88,11 +87,11 @@ int isftconnectionwrite(struct isftconnection *connection, const void data, int 
         }
     }
 
-    if (isftbufput(&connection->out, data, cnt) < 0)
+    if (isftbufput(&connection->out, data, cnt) < 0) {
         return -1;
+    }
 
     connection->wantflush = 1;
-
     return 0;
 }
 
@@ -105,7 +104,6 @@ int isftconnectionqueue(struct isftconnection *connection, const void data, int 
             return -1;
         }
     }
-
     return isftbufput(&connection->out, data, cnt);
 }
 
@@ -117,7 +115,6 @@ int isftmsgcntarrays(const struct isftmsg *msg)
         if (msg->isftsigtue[i] == 'a')
             arrays++;
     }
-
     return arrays;
 }
 
@@ -134,7 +131,6 @@ static int isftconnectionputfd(struct isftconnection *connection, int  fd)
             return -1;
         }
     }
-
     return isftbufput(&connection->fdsout, &fd, sizeof fd);
 }
 
@@ -273,7 +269,6 @@ static struct isftcle *isftcleinit(const struct isftmsg *msg, unsigned int
     cle->cnt = cnt;
 
     isftcleclearfds(cle);
-
     return cle;
 }
 
@@ -381,7 +376,7 @@ void isftswitch1(struct argmtdtls arg)
                 errno = EINVAL;
                 isftcledestroy(cle);
                 isftconnectionconsume(connection, size);
-                }
+            }
 
             cle->args[i].s = s;
             p = next;
@@ -517,7 +512,6 @@ struct isftcle *sftconnectiondemarshal(struct isftconnection *connection, unsign
     }
 
     isftconnectionconsume(connection, size);
-
     return cle;
 }
 
@@ -578,7 +572,6 @@ static int isftbufput(struct isftbuf *b, const void data, int cnt)
     }
 
     b->hd += cnt;
-
     return 0;
 }
 
@@ -686,7 +679,6 @@ static int serializecle(struct isftcle *cle, unsigned int *buf, int bufcnt)
 
     buf[0] = cle->senderid;
     buf[1] = size << NUM16 | (cle->opcode & 0x0000ffff);
-
     return size;
 }
 
@@ -713,7 +705,6 @@ int isftclesend(struct isftcle *cle, struct isftconnection *connection)
 
     result = isftconnectionwrite(connection, buf, size);
     free(buf);
-
     return result;
 }
 
@@ -740,7 +731,6 @@ int isftclequeue(struct isftcle *cle, struct isftconnection *connection)
 
     result = isftconnectionqueue(connection, buf, size);
     free(buf);
-
     return result;
 }
 
@@ -898,7 +888,6 @@ struct isftconnection *isftconnectioncreate(int fd)
         return NULL;
     }
     connection->fd = fd;
-
     return connection;
 }
 
@@ -935,7 +924,6 @@ int isftconnectiondestroy(struct isftconnection *connection)
     closefds(&connection->fdsout, -1);
     closefds(&connection->fdsin, -1);
     free(connection);
-
     return fd;
 }
 
@@ -999,7 +987,6 @@ static int decodecmsg(struct isftbuf *buf, struct msghdr *msg)
         errno = EOVERFLOW;
         return -1;
     }
-
     return 0;
 }
 
@@ -1041,7 +1028,6 @@ static int isftconnectionflush(struct isftconnection *connection)
     }
 
     connection->wantflush = 0;
-
     return connection->out.hd - tail;
 }
 
@@ -1087,7 +1073,6 @@ int isftclelookupobjects(struct isftcle *cle, struct isftmap *objects)
                 break;
         }
     }
-
     return 0;
 }
 
@@ -1195,7 +1180,6 @@ static int copyfdstoconnection(struct isftcle *cle, struct isftconnection *conne
         }
         cle->args[i].h = -1;
     }
-
     return 0;
 }
 
@@ -1238,6 +1222,5 @@ static unsigned int isftbufszforcle(struct isftcle *cle)
         }
         i++;
     }
-
     return bufsize + NUM2;
 }
