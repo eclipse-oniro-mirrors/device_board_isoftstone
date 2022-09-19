@@ -299,6 +299,8 @@ static double normalizepressure(const struct importabsinfo *absinfo, struct libi
 void doubles (const struct importabsinfo *absinfo)
 {
     const int WACOMMAXDEGREES = 64;
+    double value = 0;
+    
     if (absinfo->resolution != 0 &&
         absinfo->maximum > 0 &&
         absinfo->minimum < 0) {
@@ -329,6 +331,8 @@ static int invertaxis(const struct importabsinfo *absinfo)
 }
 void ifdd (struct tabletpost *tablet, double angle)
 {
+    double x, y;
+    
     x = tablet->axes.tilt.x;
     y = tablet->axes.tilt.y;
 
