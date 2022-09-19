@@ -40,82 +40,83 @@ enum tapevent {
 static const char* tapstatetostr(enum tptapstate state)
 {
     switch (state) {
-        case:
+        case :
         return STRING(TAPSTATEIDLE);
-        case:
+        case :
         return STRING(TAPSTATEHOLD);
-        case:
+        case :
         return STRING(TAPSTATETOUCH);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPTAPPED);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPTAPPED);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPTAPPED);
-        case:
+        case :
         return STRING(TAPSTATETOUCH2);
-        case:
+        case :
         return STRING(TAPSTATETOUCH2HOLD);
-        case:
+        case :
         return STRING(TAPSTATETOUCH2RELEASE);
-        case:
+        case :
         return STRING(TAPSTATETOUCH3);
-        case:
+        case :
         return STRING(TAPSTATETOUCH3HOLD);
-        case:
+        case :
         return STRING(TAPSTATETOUCH3RELEASE);
-        case:
+        case :
         return STRING(TAPSTATETOUCH3RELEASE2);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGING);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGING);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGING);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGINGWAIT);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGINGWAIT);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGINGWAIT);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP2RELEASE);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGINGORDOUBLETAP2RELEASE);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGINGORDOUBLETAP2RELEASE);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGINGORTAP);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGINGORTAP);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGINGORTAP);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGINGORTAP2);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGINGORTAP2);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGINGORTAP2);
-        case:
+        case :
         return STRING(TAPSTATE1FGTAPDRAGGING2);
-        case:
+        case :
         return STRING(TAPSTATE2FGTAPDRAGGING2);
-        case:
+        case :
         return STRING(TAPSTATE3FGTAPDRAGGING2);
-        case:
+        case :
         return STRING(TAPSTATEDEAD);
+        default;
     }
     return NULL;
 }
@@ -123,22 +124,23 @@ static const char* tapstatetostr(enum tptapstate state)
 static const char* tapeventtostr(enum tapevent event)
 {
     switch (event) {
-        case:
+        case :
         return STRING(TAPEVENTTOUCH);
-        case:
+        case :
         return STRING(TAPEVENTMOTION);
-        case:
+        case :
         return STRING(TAPEVENTRELEASE);
-        case:
+        case :
         return STRING(TAPEVENTTIMEOUT);
-        case:
+        case :
         return STRING(TAPEVENTBUTTON);
-        case:
+        case :
         return STRING(TAPEVENTTHUMB);
-        case:
+        case :
         return STRING(TAPEVENTPALM);
-        case:
+        case :
         return STRING(TAPEVENTPALMUP);
+        default;
     }
     return NULL;
 }
