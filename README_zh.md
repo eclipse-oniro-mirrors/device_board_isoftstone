@@ -18,21 +18,21 @@
 ## 目录
 
 ```
-device/board/isoftston				
-├── yangfan                 			  # yangfan board
-└── zhiyuan                 			  # zhiyuan board                        
+device/board/isoftstone
+├── yangfan                               # yangfan board
+└── zhiyuan                               # zhiyuan board
 ```
 
 ## 使用说明
 
 扬帆 参考:
-- [yangfan](https://gitee.com/openharmony-sig/device_board_isoftstone/tree/master/yangfan/README_zh.md)
+- [yangfan](https://gitee.com/openharmony/device_board_isoftstone/tree/master/yangfan/README_zh.md)
 
 致远 参考:
-- [zhiyuan](https://gitee.com/openharmony-sig/device_board_isoftstone/tree/master/zhiyuan/README_zh.md)
+- [zhiyuan](https://gitee.com/openharmony/device_board_isoftstone/tree/master/zhiyuan/README_zh.md)
 
 
 ## 相关仓
 
-* [vendor_isoftstone](https://gitee.com/openharmony-sig/vendor_isoftstone)
-* [device_soc_rockchip](https://gitee.com/openharmony-sig/device_soc_rockchip)
+* [vendor_isoftstone](https://gitee.com/openharmony/vendor_isoftstone)
+* [device_soc_rockchip](https://gitee.com/openharmony/device_soc_rockchip)

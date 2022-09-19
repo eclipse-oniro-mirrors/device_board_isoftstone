@@ -11,6 +11,6 @@ group("rk3399_group") {
   deps = [
     "bootanimation:bootanimation",
     "cfg/rootfs:init_configs",
-    "//device/soc/${product_company}/${product_name}/hardware:hardware_group",
+    "//device/soc/rockchip/rk3399/hardware:hardware_group",
   ]
 }
