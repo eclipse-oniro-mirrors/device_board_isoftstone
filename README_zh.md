@@ -18,9 +18,9 @@
 ## 目录
 
 ```
-device/board/isoftston				
-├── yangfan                 			  # yangfan board
-└── zhiyuan                 			  # zhiyuan board                        
+device/board/isoftstone
+├── yangfan                               # yangfan board
+└── zhiyuan                               # zhiyuan board
 ```
 
 ## 使用说明
