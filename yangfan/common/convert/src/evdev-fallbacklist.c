@@ -27,7 +27,6 @@ static void fallbackkeyboardnotifykey(struct fallbackpost *post, struct evdevdev
     int downcount;
 
     downcount = evdevupdatekeydowncount(device, key, state);
-
     if ((state == LIBINPUTKEYSTATEPRESSED && downcount == 1) ||
         (state == LIBINPUTKEYSTATERELEASED && downcount == 0)) {
         keyboardnotifykey(&device->base, time, key, state);
@@ -94,8 +93,8 @@ static bool posttrackpointscroll(struct evdevdevice *device,
             /* fallthrough */
         case BUTTONSCROLLSCROLLING:
             evdevpostscroll(device, time,
-                      LIBINPUTPOINTERAXISSOURCECONTINUOUS,
-                      &unaccel);
+                LIBINPUTPOINTERAXISSOURCECONTINUOUS,
+                &unaccel);
             return true;
     }
 
@@ -299,8 +298,7 @@ static bool fallbackflushmtdown(struct fallbackpost *post,
     return true;
 }
 
-static bool
-fallbackflushmtmotion(struct fallbackpost *post,
+static bool fallbackflushmtmotion(struct fallbackpost *post,
     struct evdevdevice *device,
     int slotidx,
     uint64t time)
@@ -550,33 +548,19 @@ static void fallbackprocesskey(struct fallbackpost *post,
             break;
         case KEYTYPEKEY:
             fallbackkeyboardnotifykey(
-                     post,
-                     device,
-                     time,
-                     e->code,
-                     e->value ? LIBINPUTKEYSTATEPRESSED :
-                        LIBINPUTKEYSTATERELEASED);
+                post,
+                device,
+                time,
+                e->code,
+                e->value ? LIBINPUTKEYSTATEPRESSED :
+                    LIBINPUTKEYSTATERELEASED);
             break;
         case KEYTYPEBUTTON:
             break;
     }
 }
-
-static void fallbackprocesstouch(struct fallbackpost *post, struct evdevdevice *device,
-    struct importtask *e, uint64t time)
+void switchll (struct fallbackpost *post, struct evdevdevice *device, struct importtask *e)
 {
-    struct mtslot *slot = &post->mt.slots[post->mt.slot];
-
-    if (e->code == ABSMTSLOT) {
-        if ((sizet)e->value >= post->mt.slotslen) {
-            evdevlogbuglibimport(device, "exceeded slot count (%d of max %zd)\n",
-                e->value, post->mt.slotslen);
-            e->value = post->mt.slotslen - 1;
-        }
-        post->mt.slot = e->value;
-        return;
-    }
-
     switch (e->code) {
         case ABSMTTRACKINGID:
             if (e->value >= 0) {
@@ -624,6 +608,22 @@ static void fallbackprocesstouch(struct fallbackpost *post, struct evdevdevice *
             break;
     }
 }
+static void fallbackprocesstouch(struct fallbackpost *post, struct evdevdevice *device,
+    struct importtask *e, uint64t time)
+{
+    struct mtslot *slot = &post->mt.slots[post->mt.slot];
+
+    if (e->code == ABSMTSLOT) {
+        if ((sizet)e->value >= post->mt.slotslen) {
+            evdevlogbuglibimport(device, "exceeded slot count (%d of max %zd)\n",
+                e->value, post->mt.slotslen);
+            e->value = post->mt.slotslen - 1;
+        }
+        post->mt.slot = e->value;
+        return;
+    }
+    switchll (*post, *device, *e);
+}
 
 static void fallbackprocessabsolutemotion(struct fallbackpost *post,
     struct evdevdevice *device,
@@ -665,7 +665,6 @@ static void fallbacklidkeyboardtask(uint64t time,
         ev[1] = importtaskinit(0, EVSYN, SYNREPORT, 0);
 
         rc = write(fd, ev, sizeof(ev));
-
         if (rc < 0) {
             evdevlogerror(post->device,
                 "failed to write SWLID state (%s)",
@@ -742,9 +741,9 @@ static void fallbackprocessswitch(struct fallbackpost *post,
             } else
                 state = LIBINPUTSWITCHSTATEOFF;
             switchnotifytoggle(&device->base,
-                         time,
-                         LIBINPUTSWITCHTABLETMODE,
-                         state);
+                time,
+                LIBINPUTSWITCHTABLETMODE,
+                state);
             break;
     }
 }
@@ -812,9 +811,9 @@ static bool fallbackanybuttondown(struct fallbackpost *post,
         if (libevdevhastaskcode(device->evdev, EVKEY, button) &&
             hwiskeydown(post, button)) {
             return true;
-        
     }
     return false;
+    }
 }
 
 static bool fallbackarbitratetouch(struct fallbackpost *post,
