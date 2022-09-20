@@ -15,11 +15,10 @@ import("//build/config/clang/clang.gni")
 import("//build/ohos.gni")
 import("//build/ohos/kernel/kernel.gni")
 
-ic_name="t507"
-arch_version="arm64"
-root_path=rebase_path("$root_build_dir/../..")
+ic_name = "t507"
+arch_version = "arm64"
+root_path = rebase_path("$root_build_dir/../..")
 kernel_source_dir = "//kernel/linux/$linux_kernel_version"
-
 
 action("kernel") {
   script = "make_kernel.sh"
@@ -32,5 +31,3 @@ action("kernel") {
     root_path,
   ]
 }
-
-
