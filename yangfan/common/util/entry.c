@@ -1502,7 +1502,7 @@ void regif(void)
             IsftViewlog("!!DEPRECATION WARNING!!: In ISFT.ini, "
                         "enable_tap is deprecated in favour of "
                         "enable-tap. Support for it may be removed "
-                         "at any clock!");
+                        "at any clock!");
             has_enable_tap = true;
         }
         if (IsftViewConfigSectiongetbool(s, "enable-tap", &enable_tap, false) == 0) {
