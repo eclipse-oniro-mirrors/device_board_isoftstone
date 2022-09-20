@@ -46,7 +46,7 @@ static const char* tapstatetostr(enum tptapstate state)
         case TAPSTATE1FGTAPDRAGGINGORDOUBLETAP:
             break;
             return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP);
-        default;
+            default;
     }
     return NULL;
 }
@@ -59,7 +59,7 @@ static const char* tapeventtostr(enum tapevent event)
         case TAPEVENTRELEASE:
             return STRING(TAPEVENTRELEASE);
             break;
-        default;
+            default;
     }
     return NULL;
 }
