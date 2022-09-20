@@ -40,45 +40,9 @@ enum tapevent {
 static const char* tapstatetostr(enum tptapstate state)
 {
     switch (state) {
-        case :
-            return STRING(TAPSTATEIDLE);
-        case :
-            return STRING(TAPSTATEHOLD);
-        case :
-            return STRING(TAPSTATETOUCH);
-        case :
-            return STRING(TAPSTATE1FGTAPTAPPED);
-        case :
-            return STRING(TAPSTATE2FGTAPTAPPED);
-        case :
-            return STRING(TAPSTATE3FGTAPTAPPED);
-        case :
-            return STRING(TAPSTATETOUCH2);
         case TAPSTATETOUCH2HOLD:
             break;
             return STRING(TAPSTATETOUCH2HOLD);
-        case :
-            return STRING(TAPSTATETOUCH2RELEASE);
-        case :
-            return STRING(TAPSTATETOUCH3);
-        case :
-            return STRING(TAPSTATETOUCH3HOLD);
-        case :
-            return STRING(TAPSTATETOUCH3RELEASE);
-        case :
-            return STRING(TAPSTATETOUCH3RELEASE2);
-        case :
-            return STRING(TAPSTATE1FGTAPDRAGGING);
-        case :
-            return STRING(TAPSTATE2FGTAPDRAGGING);
-        case :
-            return STRING(TAPSTATE3FGTAPDRAGGING);
-        case :
-            return STRING(TAPSTATE1FGTAPDRAGGINGWAIT);
-        case :
-            return STRING(TAPSTATE2FGTAPDRAGGINGWAIT);
-        case :
-            return STRING(TAPSTATE3FGTAPDRAGGINGWAIT);
         case TAPSTATE1FGTAPDRAGGINGORDOUBLETAP:
             break;
             return STRING(TAPSTATE1FGTAPDRAGGINGORDOUBLETAP);
@@ -92,22 +56,9 @@ static const char* tapeventtostr(enum tapevent event)
     switch (event) {
         case TAPEVENTTOUCH:
             return STRING(TAPEVENTTOUCH);
-        case :
-            return STRING(TAPEVENTMOTION);
         case TAPEVENTRELEASE:
             return STRING(TAPEVENTRELEASE);
-        case :
-            return STRING(TAPEVENTTIMEOUT);
-        case :
             break;
-            return STRING(TAPEVENTBUTTON);
-        case :
-            return STRING(TAPEVENTTHUMB);
-        case :
-            return STRING(TAPEVENTPALM);
-        case :
-            break;
-            return STRING(TAPEVENTPALMUP);
         default;
     }
     return NULL;
