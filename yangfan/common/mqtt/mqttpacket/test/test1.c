@@ -37,7 +37,7 @@
 #define ECONNRESET WSAECONNRESET
 #endif
 
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 struct Options {
     char* connection;         /**< connection to system under test. */
@@ -61,34 +61,34 @@ void getopts(int argc, char** argv)
 {
     int count = 1;
 
-    while (count < argc)
-    {
+    while (count < argc) {
         if (strcmp(argv[count], "--test_no") == 0) {
-            if (++count < argc)
+            if (++count < argc) {
                 options.test_no = atoi(argv[count]);
-            else
+            } else {
                 usage();
+            }
         } else if (strcmp(argv[count], "--connection") == 0) {
             if (++count < argc) {
                 options.connection = argv[count];
                 printf("\nSetting connection to %s\n", options.connection);
-            } else
+            } else {
                 usage();
-        }
-        else if (strcmp(argv[count], "--haconnections") == 0) {
+            }
+        } else if (strcmp(argv[count], "--haconnections") == 0) {
             if (++count < argc) {
                 char* tok = strtok(argv[count], " ");
                 options.hacount = 0;
                 options.haconnections = malloc(sizeof(char*) * 5);
-                while (tok)
-                {
+                while (tok) {
                     options.haconnections[options.hacount] = malloc(strlen(tok) + 1);
                     strcpy(options.haconnections[options.hacount], tok);
                     options.hacount++;
                     tok = strtok(NULL, " ");
                 }
-            } else
+            } else {
                 usage();
+            }
         } else if (strcmp(argv[count], "--verbose") == 0) {
             options.verbose = 1;
             printf("\nSetting verbose on\n");
@@ -110,8 +110,9 @@ void MyLog(int LOGA_level, char* format, ...)
 
     struct tm *timeinfo;
 
-    if (LOGA_level == LOGA_DEBUG && options.verbose == 0)
+    if (LOGA_level == LOGA_DEBUG && options.verbose == 0) {
       return;
+    }
 
     ftime(&ts);
     timeinfo = localtime(&ts.time);
@@ -148,7 +149,7 @@ START_TIME_TYPE start_clock(void)
 #else
 #define mqsleep sleep
 #define START_TIME_TYPE struct timeval
-/* TODO - unused - remove? static struct timeval start_time; */
+/* Todo - unused - remove? static struct timeval start_time; */
 START_TIME_TYPE start_clock(void)
 {
     struct timeval start_time;
@@ -224,22 +225,21 @@ void myassert(char* filename, int lineno, char* description, int value, char* fo
 
         cur_output += sprintf(cur_output, "<failure type=\"%s\">file %s, line %d </failure>\n",
             description, filename, lineno);
-    } else
+    } else {
         MyLog(LOGA_DEBUG, "Assertion succeeded, file %s, line %d, description: %s", filename, lineno, description);
+    }
 }
 
 #define min(a, b) ((a < b) ? a : b)
 
 int checkMQTTStrings(MQTTString a, MQTTString b)
 {
-    if (!a.lenstring.data)
-    {
+    if (!a.lenstring.data) {
         a.lenstring.data = a.cstring;
         if (a.cstring)
             a.lenstring.len = strlen(a.cstring);
     }
-    if (!b.lenstring.data)
-    {
+    if (!b.lenstring.data) {
         b.lenstring.data = b.cstring;
         if (b.cstring)
             b.lenstring.len = strlen(b.cstring);
@@ -273,10 +273,9 @@ int checkConnectPackets(MQTTPacket_connectData* before, MQTTPacket_connectData* 
             before->cleansession == after->cleansession, "cleansessions were different\n", rc);
 
     assert("willFlags should be the same",
-                before->willFlag == after->willFlag, "willFlags were different\n", rc);
+        before->willFlag == after->willFlag, "willFlags were different\n", rc);
 
-    if (before->willFlag)
-    {
+    if (before->willFlag) {
         assert("will struct_ids should be the same",
                 memcmp(before->will.struct_id, after->will.struct_id, 4) == 0,
                     "will struct_ids were different %.4s\n", after->struct_id);
@@ -445,8 +444,7 @@ int test3(struct Options options)
 
     assert("count should be the same", count == count2, "counts were different %d\n", count2);
 
-    for (i = 0; i < count2; ++i)
-    {
+    for (i = 0; i < count2; ++i) {
         assert("topics should be the same",
             checkMQTTStrings(topicStrings[i], topicStrings2[i]), "topics were different %s\n", "");
 
@@ -493,8 +491,9 @@ int test4(struct Options options)
 
     assert("count should be the same", count == count2, "counts were different %d\n", count2);
 
-    for (i = 0; i < count2; ++i)
+    for (i = 0; i < count2; ++i) {
         assert("qoss should be the same", granted_qoss[i] == granted_qoss2[i], "qoss were different %d\n", granted_qoss2[i]);
+    }
 
 /* exit: */
     MyLog(LOGA_INFO, "TEST4: test %s. %d tests run, %d failures.",
@@ -596,15 +595,17 @@ int main(int argc, char** argv)
     fprintf(xml, "<testsuite name=\"test1\" tests=\"%d\">\n", (int)(ARRAY_SIZE(tests) - 1));
 
     getopts(argc, argv);
-     if (options.test_no == 0) { /* run all the tests */
+    if (options.test_no == 0) { /* run all the tests */
         for (options.test_no = 1; options.test_no < ARRAY_SIZE(tests); ++options.test_no)
             rc += tests[options.test_no](options); /* return number of failures.  0 = test succeeded */
-    } else
+    } else {
         rc = tests[options.test_no](options); /* run just the selected test */
-    if (rc == 0)
+    }
+    if (rc == 0) {
         MyLog(LOGA_INFO, "verdict pass");
-    else
+    } else {
         MyLog(LOGA_INFO, "verdict fail");
+    }
 
     fprintf(xml, "</testsuite>\n");
     fclose(xml);
