@@ -15,10 +15,10 @@
  *******************************************************************************/
 
 
-#include "MQTTPacket.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "MQTTPacket.h"
 
 #if !defined(_WINDOWS)
 #include <sys/time.h>
@@ -53,7 +53,7 @@ struct Options {
     0,
 };
 
-void usage()
+void usage(void)
 {
 }
 
@@ -111,7 +111,7 @@ void MyLog(int LOGA_level, char* format, ...)
     struct tm *timeinfo;
 
     if (LOGA_level == LOGA_DEBUG && options.verbose == 0) {
-      return;
+        return;
     }
 
     ftime(&ts);
@@ -185,7 +185,6 @@ long elapsed(START_TIME_TYPE start_time)
 }
 #endif
 
-
 #define assert(a, b, c, d) myassert(__FILE__, __LINE__, a, b, c, d)
 #define assert1(a, b, c, d, e) myassert(__FILE__, __LINE__, a, b, c, d, e)
 
@@ -197,7 +196,7 @@ char output[3000];
 char* cur_output = output;
 
 
-void write_test_result()
+void write_test_result(void)
 {
     long duration = elapsed(global_start_time);
 
@@ -230,7 +229,7 @@ void myassert(char* filename, int lineno, char* description, int value, char* fo
     }
 }
 
-#define min(a, b) ((a < b) ? a : b)
+#define min(a, b) (((a) < (b)) ? (a) : (b))
 
 int checkMQTTStrings(MQTTString a, MQTTString b)
 {
@@ -390,7 +389,7 @@ int test2(struct Options options)
     assert("msgids should be the same", msgid == msgid2, "msgids were different %d\n", msgid2);
 
     assert("topics should be the same",
-        checkMQTTStrings(topicString, topicString2), "topics were different %s\n", ""); //topicString2);
+        checkMQTTStrings(topicString, topicString2), "topics were different %s\n", ""); // topicString2);
 
     assert("payload lengths should be the same",
         payloadlen == payloadlen2, "payload lengths were different %d\n", payloadlen2);
@@ -398,7 +397,7 @@ int test2(struct Options options)
     assert("payloads should be the same",
         memcmp(payload, payload2, payloadlen) == 0, "payloads were different %s\n", "");
 
-/*exit:*/
+    /* exit: */
     MyLog(LOGA_INFO, "TEST2: test %s. %d tests run, %d failures.",
         (failures == 0) ? "passed" : "failed", tests, failures);
     write_test_result();
@@ -451,7 +450,7 @@ int test3(struct Options options)
         assert("qoss should be the same", req_qoss[i] == req_qoss2[i], "qoss were different %d\n", req_qoss2[i]);
     }
 
-/*exit:*/
+    /* exit: */
     MyLog(LOGA_INFO, "TEST3: test %s. %d tests run, %d failures.",
         (failures == 0) ? "passed" : "failed", tests, failures);
     write_test_result();
@@ -492,7 +491,8 @@ int test4(struct Options options)
     assert("count should be the same", count == count2, "counts were different %d\n", count2);
 
     for (i = 0; i < count2; ++i) {
-        assert("qoss should be the same", granted_qoss[i] == granted_qoss2[i], "qoss were different %d\n", granted_qoss2[i]);
+        assert("qoss should be the same", granted_qoss[i] == granted_qoss2[i],
+            "qoss were different %d\n", granted_qoss2[i]);
     }
 
 /* exit: */
@@ -596,8 +596,9 @@ int main(int argc, char** argv)
 
     getopts(argc, argv);
     if (options.test_no == 0) { /* run all the tests */
-        for (options.test_no = 1; options.test_no < ARRAY_SIZE(tests); ++options.test_no)
+        for (options.test_no = 1; options.test_no < ARRAY_SIZE(tests); ++options.test_no) {
             rc += tests[options.test_no](options); /* return number of failures.  0 = test succeeded */
+        }
     } else {
         rc = tests[options.test_no](options); /* run just the selected test */
     }
