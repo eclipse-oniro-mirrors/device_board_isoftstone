@@ -31,7 +31,7 @@ int MQTTSerialize_unsubscribeLength(int count, MQTTString topicFilters[])
     int len = 2; /* packetid */
 
     for (i = 0; i < count; ++i)
-        len += 2 + MQTTstrlen(topicFilters[i]); /* length + topic*/
+        len += 2 + MQTTstrlen(topicFilters[i]); /* length + topic */
     return len;
 }
 
@@ -47,7 +47,7 @@ int MQTTSerialize_unsubscribeLength(int count, MQTTString topicFilters[])
   * @return the length of the serialized data.  <= 0 indicates error
   */
 int MQTTSerialize_unsubscribe(unsigned char* buf, int buflen, unsigned char dup, unsigned short packetid,
-        int count, MQTTString topicFilters[])
+    int count, MQTTString topicFilters[])
 {
     unsigned char *ptr = buf;
     MQTTHeader header = {0};
@@ -56,10 +56,10 @@ int MQTTSerialize_unsubscribe(unsigned char* buf, int buflen, unsigned char dup,
     int i = 0;
 
     FUNC_ENTRY;
-    if (MQTTPacket_len(rem_len = MQTTSerialize_unsubscribeLength(count, topicFilters)) > buflen)
-    {
+    if (MQTTPacket_len(rem_len = MQTTSerialize_unsubscribeLength(count, topicFilters)) > buflen) {
         rc = MQTTPACKET_BUFFER_TOO_SHORT;
-        goto exit;
+        FUNC_EXIT_RC(rc);
+        return rc;
     }
 
     header.byte = 0;
@@ -68,7 +68,7 @@ int MQTTSerialize_unsubscribe(unsigned char* buf, int buflen, unsigned char dup,
     header.bits.qos = 1;
     writeChar(&ptr, header.byte); /* write header */
 
-    ptr += MQTTPacket_encode(ptr, rem_len); /* write remaining length */;
+    ptr += MQTTPacket_encode(ptr, rem_len); /* write remaining length */
 
     writeInt(&ptr, packetid);
 
@@ -76,12 +76,7 @@ int MQTTSerialize_unsubscribe(unsigned char* buf, int buflen, unsigned char dup,
         writeMQTTString(&ptr, topicFilters[i]);
 
     rc = ptr - buf;
-exit:
-    FUNC_EXIT_RC(rc);
-    return rc;
 }
-
-
 /**
   * Deserializes the supplied (wire) buffer into unsuback data
   * @param packetid returned integer - the MQTT packet identifier
@@ -102,5 +97,3 @@ int MQTTDeserialize_unsuback(unsigned short* packetid, unsigned char* buf, int b
     FUNC_EXIT_RC(rc);
     return rc;
 }
-
-
