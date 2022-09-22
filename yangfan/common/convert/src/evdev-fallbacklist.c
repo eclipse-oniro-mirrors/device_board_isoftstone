@@ -18,6 +18,8 @@
 
 #include "evdev-fallback.h"
 #include "util-import-task.h"
+#define NUMA 2
+#define NUMB 10
 
 static void fallbackkeyboardnotifykey(struct fallbackpost *post, struct evdevdevice *device,
     uint64_t time,
@@ -897,14 +899,11 @@ static void fallbackhandlestate(struct fallbackpost *post,
         }
     } else if (post->pendingtask & EVDEVABSOLUTEMOTION) {
         if (device->seatcaps & EVDEVDEVICETOUCH) {
-            if (fallbackflushstmotion(post,
-                device,
-                time)) {
-             needtouchframe = true;
+            if (fallbackflushstmotion(post, device, time)) {
+                needtouchframe = true;
             }
         } else if (device->seatcaps & EVDEVDEVICEPOINTER) {
-            fallbackflushabsolutemotion(post,
-                device,
+            fallbackflushabsolutemotion(post, device,
                 time);
         }
     }
@@ -1019,11 +1018,9 @@ static void releasepressedkeys(struct fallbackpost *post,
     int code;
     for (code = 0; code < KEYCNT; code++) {
         int count = getkeydowncount(device, code);
-
         if (count == 0) {
             continue;
         }
-
         if (count > 1) {
             evdevlogbuglibimport(device,
                 "key %d is down %d times.\n",
@@ -1162,7 +1159,7 @@ static void fallbackinterfacetoggletouch(struct evdevpost *evdevpost,
     switch (which) {
         case ARBITRATIONNOTACTIVE:
             libimporttimerset(&post->arbitration.arbitrationtimer,
-                       time + ms2us(90));
+                time + ms2us(90));
             break;
         case ARBITRATIONIGNORERECT:
             assert(physrect);
@@ -1277,6 +1274,7 @@ static void fallbacktabletmodeswitchtask(uint64_t time,
             fallbacksuspend(post, device);
             evdevlogdebug(device, "tablet-mode: suspending device\n");
             break;
+        default;
     }
 }
 
@@ -1300,8 +1298,6 @@ static void fallbackpairtabletmode(struct evdevdevice *keyboard,
         QUIRKMODELTABLETMODENOSUSPEND)) {
         return;
     }
-
-
     if ((tabletmodeswitch->tags & EVDEVTAGTABLETMODESWITCH) == 0) {
         return;
     }
@@ -1477,7 +1473,7 @@ static int fallbackpostinitslots(struct fallbackpost *post,
         device->mtdev = mtdevnewopen(device->fd);
         if (!device->mtdev)
             return -1;
-        numslots = 10;
+        numslots = NUMB;
         activeslot = device->mtdev->caps.slot.value;
     } else {
         numslots = libevdevgetnumslots(device->evdev);
@@ -1489,9 +1485,9 @@ static int fallbackpostinitslots(struct fallbackpost *post,
     for (slot = 0; slot < numslots; ++slot) {
         slots[slot].seatslot = -1;
 
-        if (evdevneedmtdev(device))
+        if (evdevneedmtdev(device)) {
             continue;
-
+        }
         slots[slot].point.x = libevdevgetslotvalue(evdev,
             slot,
             ABSMTPOSITIONX);
@@ -1508,8 +1504,8 @@ static int fallbackpostinitslots(struct fallbackpost *post,
 
     if (device->abs.absinfox->fuzz || device->abs.absinfoy->fuzz) {
         post->mt.wanthysteresis = true;
-        post->mt.hysteresismargin.x = device->abs.absinfox->fuzz/2;
-        post->mt.hysteresismargin.y = device->abs.absinfoy->fuzz/2;
+        post->mt.hysteresismargin.x = device->abs.absinfox->fuzz/NUMA;
+        post->mt.hysteresismargin.y = device->abs.absinfoy->fuzz/NUMA;
     }
 
     return 0;
@@ -1571,10 +1567,11 @@ static void fallbackinitarbitration(struct fallbackpost *post,
 {
     char timername[64];
 
-    snprintf(timername,
+    ner = snprintf(timername,
         sizeof(timername),
         "%s arbitration",
         evdevdevicegetsysname(device));
+        printf("err")
     libimporttimerinit(&post->arbitration.arbitrationtimer,
         evdevlibimportconcontent(device),
         timername,
