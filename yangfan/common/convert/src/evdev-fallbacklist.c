@@ -20,7 +20,7 @@
 #include "util-import-task.h"
 
 static void fallbackkeyboardnotifykey(struct fallbackpost *post, struct evdevdevice *device,
-    uint64t time,
+    uint64_t time,
     int key,
     enum libimportkeystate state)
 {
@@ -34,7 +34,7 @@ static void fallbackkeyboardnotifykey(struct fallbackpost *post, struct evdevdev
 }
 
 static void fallbacklidnotifytoggle(struct fallbackpost *post,
-    struct evdevdevice *device, uint64t time)
+    struct evdevdevice *device, uint64_t time)
 {
     if (post->lid.isclosed ^ post->lid.isclosedclientstate) {
         switchnotifytoggle(&device->base,
@@ -73,7 +73,7 @@ static void normalizedelta(struct evdevdevice *device,
 
 static bool posttrackpointscroll(struct evdevdevice *device,
     struct normalizedcoords unaccel,
-    uint64t time)
+    uint64_t time)
 {
     if (device->scroll.method != LIBINPUTCONFIGSCROLLONBUTTONDOWN) {
         return false;
@@ -144,7 +144,7 @@ static void fallbackrotaterelative(struct fallbackpost *post,
 
 static void fallbackflushrelativemotion(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct normalizedcoords accel, unaccel;
@@ -186,7 +186,7 @@ static void fallbackflushrelativemotion(struct fallbackpost *post,
 
 static void fallbackflushwheels(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     struct normalizedcoords wheeldegrees = { 0.0, 0.0 };
     struct discretecoords discrete = { 0.0, 0.0 };
@@ -243,7 +243,7 @@ static void fallbackflushwheels(struct fallbackpost *post,
 
 static void fallbackflushabsolutemotion(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct devicecoords point;
@@ -261,7 +261,7 @@ static void fallbackflushabsolutemotion(struct fallbackpost *post,
 static bool fallbackflushmtdown(struct fallbackpost *post,
     struct evdevdevice *device,
     int slotidx,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct libimportseat *seat = base->seat;
@@ -301,7 +301,7 @@ static bool fallbackflushmtdown(struct fallbackpost *post,
 static bool fallbackflushmtmotion(struct fallbackpost *post,
     struct evdevdevice *device,
     int slotidx,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct devicecoords point;
@@ -334,7 +334,7 @@ static bool fallbackflushmtmotion(struct fallbackpost *post,
 static bool fallbackflushmtup(struct fallbackpost *post,
     struct evdevdevice *device,
     int slotidx,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct libimportseat *seat = base->seat;
@@ -363,7 +363,7 @@ static bool fallbackflushmtup(struct fallbackpost *post,
 static bool fallbackflushmtcancel(struct fallbackpost *post,
     struct evdevdevice *device,
     int slotidx,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct libimportseat *seat = base->seat;
@@ -391,7 +391,7 @@ static bool fallbackflushmtcancel(struct fallbackpost *post,
 
 static bool fallbackflushstdown(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct libimportseat *seat = base->seat;
@@ -427,7 +427,7 @@ static bool fallbackflushstdown(struct fallbackpost *post,
 
 static bool fallbackflushstmotion(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct devicecoords point;
@@ -449,7 +449,7 @@ static bool fallbackflushstmotion(struct fallbackpost *post,
 
 static bool fallbackflushstup(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct libimportseat *seat = base->seat;
@@ -475,7 +475,7 @@ static bool fallbackflushstup(struct fallbackpost *post,
 
 static bool fallbackflushstcancel(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     struct libimportdevice *base = &device->base;
     struct libimportseat *seat = base->seat;
@@ -501,7 +501,7 @@ static bool fallbackflushstcancel(struct fallbackpost *post,
 
 static void fallbackprocesstouchbutton(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time, int value)
+    uint64_t time, int value)
 {
     post->pendingtask |= (value) ? EVDEVABSOLUTETOUCHDOWN :
         EVDEVABSOLUTETOUCHUP;
@@ -509,7 +509,7 @@ static void fallbackprocesstouchbutton(struct fallbackpost *post,
 
 static void fallbackprocesskey(struct fallbackpost *post,
     struct evdevdevice *device,
-    struct importtask *e, uint64t time)
+    struct importtask *e, uint64_t time)
 {
     enum keytype type;
 
@@ -609,7 +609,7 @@ void switchll (struct fallbackpost *post, struct evdevdevice *device, struct imp
     }
 }
 static void fallbackprocesstouch(struct fallbackpost *post, struct evdevdevice *device,
-    struct importtask *e, uint64t time)
+    struct importtask *e, uint64_t time)
 {
     struct mtslot *slot = &post->mt.slots[post->mt.slot];
 
@@ -643,7 +643,7 @@ static void fallbackprocessabsolutemotion(struct fallbackpost *post,
     }
 }
 
-static void fallbacklidkeyboardtask(uint64t time,
+static void fallbacklidkeyboardtask(uint64_t time,
     struct libimporttask *task, void data[])
 {
     struct fallbackpost *post = fallbackpost(data);
@@ -712,7 +712,7 @@ static void fallbacklidtogglekeyboardlisteners(struct fallbackpost *post,
 static void fallbackprocessswitch(struct fallbackpost *post,
     struct evdevdevice *device,
     struct importtask *e,
-    uint64t time)
+    uint64_t time)
 {
     enum libimportswitchstate state;
     bool isclosed;
@@ -749,7 +749,7 @@ static void fallbackprocessswitch(struct fallbackpost *post,
 }
 
 static bool fallbackrejectrelative(struct evdevdevice *device,
-    const struct importtask *e, uint64t time)
+    const struct importtask *e, uint64_t time)
 {
     if ((e->code == RELX || e->code == RELY) &&
         (device->seatcaps & EVDEVDEVICEPOINTER) == 0) {
@@ -764,7 +764,7 @@ static bool fallbackrejectrelative(struct evdevdevice *device,
 
 static void fallbackprocessrelative(struct fallbackpost *post,
     struct evdevdevice *device,
-    struct importtask *e, uint64t time)
+    struct importtask *e, uint64_t time)
 {
     if (fallbackrejectrelative(device, e, time)) {
         return;
@@ -793,7 +793,7 @@ static void fallbackprocessrelative(struct fallbackpost *post,
 static void fallbackprocessabsolute(struct fallbackpost *post,
     struct evdevdevice *device,
     struct importtask *e,
-    uint64t time)
+    uint64_t time)
 {
     if (device->ismt) {
         fallbackprocesstouch(post, device, e, time);
@@ -832,7 +832,7 @@ static bool fallbackarbitratetouch(struct fallbackpost *post,
 
 static bool fallbackflushmttasks(struct fallbackpost *post,
     struct evdevdevice *device,
-    uint64t time)
+    uint64_t time)
 {
     bool sent = false;
 
@@ -879,47 +879,51 @@ static bool fallbackflushmttasks(struct fallbackpost *post,
     }
     return sent;
 }
-static void
-fallbackhandlestate(struct fallbackpost *post,
-              struct evdevdevice *device,
-              uint64t time)
+static void fallbackhandlestate(struct fallbackpost *post,
+    struct evdevdevice *device,
+    uint64_t time)
 {
     bool needtouchframe = false;
 
     /* Relative motion */
-    if (post->pendingtask & EVDEVRELATIVEMOTION)
+    if (post->pendingtask & EVDEVRELATIVEMOTION) {
         fallbackflushrelativemotion(post, device, time);
+    }
 
     /* Single touch or absolute pointer devices */
     if (post->pendingtask & EVDEVABSOLUTETOUCHDOWN) {
-        if (fallbackflushstdown(post, device, time))
+        if (fallbackflushstdown(post, device, time)) {
             needtouchframe = true;
+        }
     } else if (post->pendingtask & EVDEVABSOLUTEMOTION) {
         if (device->seatcaps & EVDEVDEVICETOUCH) {
             if (fallbackflushstmotion(post,
-                             device,
-                             time))
-                needtouchframe = true;
+                device,
+                time)) {
+             needtouchframe = true;
+            }
         } else if (device->seatcaps & EVDEVDEVICEPOINTER) {
             fallbackflushabsolutemotion(post,
-                               device,
-                               time);
+                device,
+                time);
         }
     }
 
     if (post->pendingtask & EVDEVABSOLUTETOUCHUP) {
-        if (fallbackflushstup(post, device, time))
+        if (fallbackflushstup(post, device, time)) {
             needtouchframe = true;
+        }
+    }
+    /* Multitouch devices */
+    if (post->pendingtask & EVDEVABSOLUTEMT) {
+        needtouchframe = fallbackflushmttasks(post,
+            device,
+            time);
     }
 
-    /* Multitouch devices */
-    if (post->pendingtask & EVDEVABSOLUTEMT)
-        needtouchframe = fallbackflushmttasks(post,
-                                device,
-                                time);
-
-    if (needtouchframe)
+    if (needtouchframe) {
         touchnotifyframe(&device->base, time);
+    }
 
     fallbackflushwheels(post, device, time);
 
@@ -927,8 +931,9 @@ fallbackhandlestate(struct fallbackpost *post,
     if (post->pendingtask & EVDEVKEY) {
         bool wantdebounce = false;
         for (unsigned int code = 0; code <= KEYMAX; code++) {
-            if (!hwkeyhaschanged(post, code))
+            if (!hwkeyhaschanged(post, code)) {
                 continue;
+            }
 
             if (getkeytype(code) == KEYTYPEBUTTON) {
                 wantdebounce = true;
@@ -936,8 +941,9 @@ fallbackhandlestate(struct fallbackpost *post,
             }
         }
 
-        if (wantdebounce)
+        if (wantdebounce) {
             fallbackdebouncehandlestate(post, time);
+        }
 
         hwkeyupdatelaststate(post);
     }
@@ -945,124 +951,124 @@ fallbackhandlestate(struct fallbackpost *post,
     post->pendingtask = EVDEVNONE;
 }
 
-static void
-fallbackinterfaceprocess(struct evdevpost *evdevpost,
-               struct evdevdevice *device,
-               struct importtask *task,
-               uint64t time)
+static void fallbackinterfaceprocess(struct evdevpost *evdevpost,
+    struct evdevdevice *device,
+    struct importtask *task,
+    uint64_t time)
 {
     struct fallbackpost *post = fallbackpost(evdevpost);
 
-    if (post->arbitration.inarbitration)
+    if (post->arbitration.inarbitration) {
         return;
+    }
 
     switch (task->type) {
-    case EVREL:
-        fallbackprocessrelative(post, device, task, time);
-        break;
-    case EVABS:
-        fallbackprocessabsolute(post, device, task, time);
-        break;
-    case EVKEY:
-        fallbackprocesskey(post, device, task, time);
-        break;
-    case EVSW:
-        fallbackprocessswitch(post, device, task, time);
-        break;
-    case EVSYN:
-        fallbackhandlestate(post, device, time);
-        break;
+        case EVREL:
+            fallbackprocessrelative(post, device, task, time);
+            break;
+        case EVABS:
+            fallbackprocessabsolute(post, device, task, time);
+            break;
+        case EVKEY:
+            fallbackprocesskey(post, device, task, time);
+            break;
+        case EVSW:
+            fallbackprocessswitch(post, device, task, time);
+            break;
+        case EVSYN:
+            fallbackhandlestate(post, device, time);
+            break;
     }
 }
 
-static void
-canceltouches(struct fallbackpost *post,
-           struct evdevdevice *device,
-           const struct devicecoordrect *rect,
-           uint64t time)
+static void canceltouches(struct fallbackpost *post,
+    struct evdevdevice *device,
+    const struct devicecoordrect *rect,
+    uint64_t time)
 {
     unsigned int idx;
     bool needframe = false;
 
-    if (!rect || pointinrect(&post->abs.point, rect))
+    if (!rect || pointinrect(&post->abs.point, rect)) {
         needframe = fallbackflushstcancel(post,
-                              device,
-                              time);
+            device,
+            time);
+    }
 
     for (idx = 0; idx < post->mt.slotslen; idx++) {
         struct mtslot *slot = &post->mt.slots[idx];
 
-        if (slot->seatslot == -1)
+        if (slot->seatslot == -1) {
             continue;
+        }
 
         if ((!rect || pointinrect(&slot->point, rect)) &&
-            fallbackflushmtcancel(post, device, idx, time))
+            fallbackflushmtcancel(post, device, idx, time)) {
             needframe = true;
+            }
     }
 
-    if (needframe)
+    if (needframe) {
         touchnotifyframe(&device->base, time);
+    }
 }
-
-static void
-releasepressedkeys(struct fallbackpost *post,
-             struct evdevdevice *device,
-             uint64t time)
+static void releasepressedkeys(struct fallbackpost *post,
+    struct evdevdevice *device,
+    uint64_t time)
 {
     int code;
-
     for (code = 0; code < KEYCNT; code++) {
         int count = getkeydowncount(device, code);
 
-        if (count == 0)
+        if (count == 0) {
             continue;
+        }
 
         if (count > 1) {
             evdevlogbuglibimport(device,
-                           "key %d is down %d times.\n",
-                           code,
-                           count);
-        }
-
-        switch (getkeytype(code)) {
-        case KEYTYPENONE:
-            break;
-        case KEYTYPEKEY:
-            fallbackkeyboardnotifykey(
-                post,
-                device,
-                time,
+                "key %d is down %d times.\n",
                 code,
-                LIBINPUTKEYSTATERELEASED);
-            break;
-        case KEYTYPEBUTTON:
-            evdevpointernotifybutton(
-                device,
-                time,
-                evdevtolefthanded(device, code),
-                LIBINPUTBUTTONSTATERELEASED);
-            break;
+                count);
+        }
+        switch (getkeytype(code)) {
+            case KEYTYPENONE:
+                break;
+            case KEYTYPEKEY:
+                fallbackkeyboardnotifykey(
+                    post,
+                    device,
+                    time,
+                    code,
+                    LIBINPUTKEYSTATERELEASED);
+                break;
+            case KEYTYPEBUTTON:
+                evdevpointernotifybutton(
+                    device,
+                    time,
+                    evdevtolefthanded(device, code),
+                    LIBINPUTBUTTONSTATERELEASED);
+                break;
         }
 
         count = getkeydowncount(device, code);
         if (count != 0) {
             evdevlogbuglibimport(device,
-                           "releasing key %d failed.\n",
-                           code);
+                "releasing key %d failed.\n",
+                code);
             break;
         }
     }
 }
 
-static void
-fallbackreturntoneutralstate(struct fallbackpost *post,
-                 struct evdevdevice *device)
+static void fallbackreturntoneutralstate(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     struct libimport *libimport = evdevlibimportconcontent(device);
-    uint64t time;
+    uint64_t time;
 
-    if ((time = libimportnow(libimport)) == 0)
+    if ((time = libimportnow(libimport)) == 0) {
         return;
+    }
 
     canceltouches(post, device, NULL, time);
     releasepressedkeys(post, device, time);
@@ -1070,17 +1076,15 @@ fallbackreturntoneutralstate(struct fallbackpost *post,
     memset(post->hwkeymask, 0, sizeof(post->lasthwkeymask));
 }
 
-static void
-fallbackinterfacesuspend(struct evdevpost *evdevpost,
-               struct evdevdevice *device)
+static void fallbackinterfacesuspend(struct evdevpost *evdevpost,
+    struct evdevdevice *device)
 {
     struct fallbackpost *post = fallbackpost(evdevpost);
 
     fallbackreturntoneutralstate(post, device);
 }
 
-static void
-fallbackinterfacereation(struct evdevpost *evdevpost)
+static void fallbackinterfacereation(struct evdevpost *evdevpost)
 {
     struct fallbackpost *post = fallbackpost(evdevpost);
     struct evdevpairedkeyboard *kbd, *tmp;
@@ -1092,46 +1096,43 @@ fallbackinterfacereation(struct evdevpost *evdevpost)
     libimportdevicereationtasklistener(&post->tabletmode.other.listener);
 
     listforeachsafe(kbd,
-               tmp,
-               &post->lid.pairedkeyboardlist,
-               link) {
+        tmp,
+        &post->lid.pairedkeyboardlist,
+        link) {
         evdevpairedkeyboarddestroy(kbd);
     }
 }
 
-static void
-fallbackinterfacesyncinitialstate(struct evdevdevice *device,
-                      struct evdevpost *evdevpost)
+static void fallbackinterfacesyncinitialstate(struct evdevdevice *device,
+    struct evdevpost *evdevpost)
 {
     struct fallbackpost *post = fallbackpost(evdevpost);
-    uint64t time = libimportnow(evdevlibimportconcontent(device));
+    uint64_t time = libimportnow(evdevlibimportconcontent(device));
 
     if (device->tags & EVDEVTAGLIDSWITCH) {
         struct libevdev *evdev = device->evdev;
 
         post->lid.isclosed = libevdevgettaskvalue(evdev,
-                                   EVSW,
-                                   SWLID);
+            EVSW,
+                SWLID);
         post->lid.isclosedclientstate = false;
         if (post->lid.isclosed &&
             post->lid.reliability == RELIABILITYRELIABLE) {
             fallbacklidnotifytoggle(post, device, time);
         }
     }
-
     if (post->tabletmode.sw.state) {
         switchnotifytoggle(&device->base,
-                     time,
-                     LIBINPUTSWITCHTABLETMODE,
-                     LIBINPUTSWITCHSTATEON);
+            time,
+            LIBINPUTSWITCHTABLETMODE,
+            LIBINPUTSWITCHSTATEON);
     }
 }
 
-static void
-fallbackinterfaceupdaterect(struct evdevpost *evdevpost,
-                   struct evdevdevice *device,
-                const struct physrect *physrect,
-                uint64t time)
+static void fallbackinterfaceupdaterect(struct evdevpost *evdevpost,
+    struct evdevdevice *device,
+    const struct physrect *physrect,
+    uint64_t time)
 {
     struct fallbackpost *post = fallbackpost(evdevpost);
     struct devicecoordrect rect;
@@ -1145,42 +1146,41 @@ fallbackinterfaceupdaterect(struct evdevpost *evdevpost,
     post->arbitration.rect = rect;
 }
 
-static void
-fallbackinterfacetoggletouch(struct evdevpost *evdevpost,
-                struct evdevdevice *device,
-                enum evdevarbitrationstate which,
-                const struct physrect *physrect,
-                uint64t time)
+static void fallbackinterfacetoggletouch(struct evdevpost *evdevpost,
+    struct evdevdevice *device,
+    enum evdevarbitrationstate which,
+    const struct physrect *physrect,
+    uint64_t time)
 {
     struct fallbackpost *post = fallbackpost(evdevpost);
     struct devicecoordrect rect = {0};
 
-    if (which == post->arbitration.state)
+    if (which == post->arbitration.state) {
         return;
+    }
 
     switch (which) {
-    case ARBITRATIONNOTACTIVE:
-        libimporttimerset(&post->arbitration.arbitrationtimer,
-                   time + ms2us(90));
-        break;
-    case ARBITRATIONIGNORERECT:
-        assert(physrect);
-        rect = evdevphysrecttounits(device, physrect);
-        canceltouches(post, device, &rect, time);
-        post->arbitration.rect = rect;
-        break;
-    case ARBITRATIONIGNOREALL:
-        libimporttimercancel(&post->arbitration.arbitrationtimer);
-        fallbackreturntoneutralstate(post, device);
-        post->arbitration.inarbitration = true;
-        break;
+        case ARBITRATIONNOTACTIVE:
+            libimporttimerset(&post->arbitration.arbitrationtimer,
+                       time + ms2us(90));
+            break;
+        case ARBITRATIONIGNORERECT:
+            assert(physrect);
+            rect = evdevphysrecttounits(device, physrect);
+            canceltouches(post, device, &rect, time);
+            post->arbitration.rect = rect;
+            break;
+        case ARBITRATIONIGNOREALL:
+            libimporttimercancel(&post->arbitration.arbitrationtimer);
+            fallbackreturntoneutralstate(post, device);
+            post->arbitration.inarbitration = true;
+            break;
     }
 
     post->arbitration.state = which;
 }
 
-static void
-fallbackinterfacedestroy(struct evdevpost *evdevpost)
+static void fallbackinterfacedestroy(struct evdevpost *evdevpost)
 {
     struct fallbackpost *post = fallbackpost(evdevpost);
 
@@ -1192,9 +1192,8 @@ fallbackinterfacedestroy(struct evdevpost *evdevpost)
     free(post);
 }
 
-static void
-fallbacklidpairkeyboard(struct evdevdevice *lidswitch,
-               struct evdevdevice *keyboard)
+static void fallbacklidpairkeyboard(struct evdevdevice *lidswitch,
+    struct evdevdevice *keyboard)
 {
     struct fallbackpost *post =
         fallbackpost(lidswitch->post);
@@ -1202,17 +1201,19 @@ fallbacklidpairkeyboard(struct evdevdevice *lidswitch,
     sizet count = 0;
 
     if ((keyboard->tags & EVDEVTAGKEYBOARD) == 0 ||
-        (lidswitch->tags & EVDEVTAGLIDSWITCH) == 0)
+        (lidswitch->tags & EVDEVTAGLIDSWITCH) == 0) {
         return;
+        }
 
-    if ((keyboard->tags & EVDEVTAGINTERNALKEYBOARD) == 0)
+    if ((keyboard->tags & EVDEVTAGINTERNALKEYBOARD) == 0) {
         return;
+    }
 
     listforeach(kbd, &post->lid.pairedkeyboardlist, link) {
         count++;
         if (count > 3) {
             evdevloginfo(lidswitch,
-                       "lid: too many internal keyboards\n");
+                "lid: too many internal keyboards\n");
             break;
         }
     }
@@ -1222,65 +1223,65 @@ fallbacklidpairkeyboard(struct evdevdevice *lidswitch,
     libimportdeviceinittasklistener(&kbd->listener);
     listinsert(&post->lid.pairedkeyboardlist, &kbd->link);
     evdevlogdebug(lidswitch,
-            "lid: keyboard paired with %s<->%s\n",
-            lidswitch->devname,
-            keyboard->devname);
-    if (post->lid.isclosed)
+        "lid: keyboard paired with %s<->%s\n",
+        lidswitch->devname,
+        keyboard->devname);
+    if (post->lid.isclosed) {
         fallbacklidtogglekeyboardlistener(post,
-                              kbd,
-                              post->lid.isclosed);
+            kbd,
+            post->lid.isclosed);
+    }
 }
 
-static void
-fallbackresume(struct fallbackpost *post,
-        struct evdevdevice *device)
+static void fallbackresume(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     if (post->base.sendtasks.currentmode ==
-        LIBINPUTCONFIGSENDEVENTSDISABLED)
+        LIBINPUTCONFIGSENDEVENTSDISABLED) {
         return;
+        }
 
     evdevdeviceresume(device);
 }
 
-static void
-fallbacksuspend(struct fallbackpost *post,
-         struct evdevdevice *device)
+static void fallbacksuspend(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     evdevdevicesuspend(device);
 }
 
-static void
-fallbacktabletmodeswitchtask(uint64t time,
-                  struct libimporttask *task,
-                  void *data)
+static void fallbacktabletmodeswitchtask(uint64_t time,
+    struct libimporttask *task,
+    void data[])
 {
     struct fallbackpost *post = data;
     struct evdevdevice *device = post->device;
     struct libimporttaskswitch *swev;
 
-    if (libimporttaskgettype(task) != LIBINPUTEVENTSWITCHTOGGLE)
+    if (libimporttaskgettype(task) != LIBINPUTEVENTSWITCHTOGGLE) {
         return;
+    }
 
     swev = libimporttaskgetswitchtask(task);
     if (libimporttaskswitchgetswitch(swev) !=
-        LIBINPUTSWITCHTABLETMODE)
+        LIBINPUTSWITCHTABLETMODE) {
         return;
+        }
 
     switch (libimporttaskswitchgetswitchstate(swev)) {
-    case LIBINPUTSWITCHSTATEOFF:
-        fallbackresume(post, device);
-        evdevlogdebug(device, "tablet-mode: resuming device\n");
-        break;
-    case LIBINPUTSWITCHSTATEON:
-        fallbacksuspend(post, device);
-        evdevlogdebug(device, "tablet-mode: suspending device\n");
-        break;
+        case LIBINPUTSWITCHSTATEOFF:
+            fallbackresume(post, device);
+            evdevlogdebug(device, "tablet-mode: resuming device\n");
+            break;
+        case LIBINPUTSWITCHSTATEON:
+            fallbacksuspend(post, device);
+            evdevlogdebug(device, "tablet-mode: suspending device\n");
+            break;
     }
 }
 
-static void
-fallbackpairtabletmode(struct evdevdevice *keyboard,
-              struct evdevdevice *tabletmodeswitch)
+static void fallbackpairtabletmode(struct evdevdevice *keyboard,
+    struct evdevdevice *tabletmodeswitch)
 {
     struct fallbackpost *post =
         fallbackpost(keyboard->post);
@@ -1296,68 +1297,72 @@ fallbackpairtabletmode(struct evdevdevice *keyboard,
     }
 
     if (evdevdevicehasmodelquirk(keyboard,
-                     QUIRKMODELTABLETMODENOSUSPEND))
+        QUIRKMODELTABLETMODENOSUSPEND)) {
         return;
+    }
 
-    if ((tabletmodeswitch->tags & EVDEVTAGTABLETMODESWITCH) == 0)
-        return;
 
-    if (post->tabletmode.other.swdevice)
+    if ((tabletmodeswitch->tags & EVDEVTAGTABLETMODESWITCH) == 0) {
         return;
+    }
+
+    if (post->tabletmode.other.swdevice) {
+        return;
+    }
 
     evdevlogdebug(keyboard,
-            "tablet-mode: paired %s<->%s\n",
-            keyboard->devname,
-            tabletmodeswitch->devname);
+        "tablet-mode: paired %s<->%s\n",
+        keyboard->devname,
+        tabletmodeswitch->devname);
 
     libimportdeviceaddtasklistener(&tabletmodeswitch->base,
-                &post->tabletmode.other.listener,
-                fallbacktabletmodeswitchtask,
-                post);
+        &post->tabletmode.other.listener,
+        fallbacktabletmodeswitchtask,
+        post);
     post->tabletmode.other.swdevice = tabletmodeswitch;
 
     if (evdevdeviceswitchgetstate(tabletmodeswitch,
-                      LIBINPUTSWITCHTABLETMODE)
-            == LIBINPUTSWITCHSTATEON) {
-        evdevlogdebug(keyboard, "tablet-mode: suspending device\n");
-        fallbacksuspend(post, keyboard);
+        LIBINPUTSWITCHTABLETMODE)
+        == LIBINPUTSWITCHSTATEON) {
+            evdevlogdebug(keyboard, "tablet-mode: suspending device\n");
+            fallbacksuspend(post, keyboard);
     }
 }
 
-static void
-fallbackinterfacedeviceadded(struct evdevdevice *device,
-                struct evdevdevice *addeddevice)
+static void fallbackinterfacedeviceadded(struct evdevdevice *device,
+    struct evdevdevice *addeddevice)
 {
     fallbacklidpairkeyboard(device, addeddevice);
     fallbackpairtabletmode(device, addeddevice);
 }
 
-static void
-fallbackinterfacedevicereationd(struct evdevdevice *device,
-                  struct evdevdevice *reationddevice)
+static void fallbackinterfacedevicereationd(struct evdevdevice *device,
+    struct evdevdevice *reationddevice)
 {
     struct fallbackpost *post =
             fallbackpost(device->post);
     struct evdevpairedkeyboard *kbd, *tmp;
 
     listforeachsafe(kbd,
-               tmp,
-               &post->lid.pairedkeyboardlist,
-               link) {
-        if (!kbd->device)
+        tmp,
+        &post->lid.pairedkeyboardlist,
+        link) {
+        if (!kbd->device) {
             continue;
+        }
 
-        if (kbd->device != reationddevice)
+        if (kbd->device != reationddevice) {
             continue;
+        }
 
         evdevpairedkeyboarddestroy(kbd);
     }
 
     if (reationddevice == post->tabletmode.other.swdevice) {
         libimportdevicereationtasklistener(
-                &post->tabletmode.other.listener);
+            &post->tabletmode.other.listener);
         libimportdeviceinittasklistener(
-                &post->tabletmode.other.listener);
+            &post->tabletmode.other.listener);
         post->tabletmode.other.swdevice = NULL;
     }
 }
@@ -1377,8 +1382,7 @@ struct evdevpostinterface fallbackinterface = {
     .getswitchstate = fallbackinterfacegetswitchstate,
 };
 
-static void
-fallbackchangetolefthanded(struct evdevdevice *device)
+static void fallbackchangetolefthanded(struct evdevdevice *device)
 {
     struct fallbackpost *post = fallbackpost(device->post);
 
@@ -1391,8 +1395,7 @@ fallbackchangetolefthanded(struct evdevdevice *device)
     device->lefthanded.enabled = device->lefthanded.wantenabled;
 }
 
-static void
-fallbackchangescrollmethod(struct evdevdevice *device)
+static void fallbackchangescrollmethod(struct evdevdevice *device)
 {
     struct fallbackpost *post = fallbackpost(device->post);
 
@@ -1410,15 +1413,13 @@ fallbackchangescrollmethod(struct evdevdevice *device)
     evdevsetbuttonscrolllockenabled(device, device->scroll.lockenabled);
 }
 
-static int
-fallbackrotationconfigisavailable(struct libimportdevice *device)
+static int fallbackrotationconfigisavailable(struct libimportdevice *device)
 {
     return 1;
 }
 
-static enum libimportconfigstatus
-fallbackrotationconfigsetangle(struct libimportdevice *libimportdevice,
-                unsigned int degreescw)
+static enum libimportconfigstatus fallbackrotationconfigsetangle(struct libimportdevice *libimportdevice,
+    unsigned int degreescw)
 {
     struct evdevdevice *device = evdevdevice(libimportdevice);
     struct fallbackpost *post = fallbackpost(device->post);
@@ -1429,8 +1430,7 @@ fallbackrotationconfigsetangle(struct libimportdevice *libimportdevice,
     return LIBINPUTCONFIGSTATUSSUCCESS;
 }
 
-static unsigned int
-fallbackrotationconfiggetangle(struct libimportdevice *libimportdevice)
+static unsigned int fallbackrotationconfiggetangle(struct libimportdevice *libimportdevice)
 {
     struct evdevdevice *device = evdevdevice(libimportdevice);
     struct fallbackpost *post = fallbackpost(device->post);
@@ -1438,15 +1438,13 @@ fallbackrotationconfiggetangle(struct libimportdevice *libimportdevice)
     return post->rotation.angle;
 }
 
-static unsigned int
-fallbackrotationconfiggetdefaultangle(struct libimportdevice *device)
+static unsigned int fallbackrotationconfiggetdefaultangle(struct libimportdevice *device)
 {
     return 0;
 }
 
-static void
-fallbackinitrotation(struct fallbackpost *post,
-               struct evdevdevice *device)
+static void fallbackinitrotation(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     if ((device->modelflags & EVDEVMODELTRACKBALL) == 0)
         return;
@@ -1460,9 +1458,8 @@ fallbackinitrotation(struct fallbackpost *post,
     device->base.config.rotation = &post->rotation.config;
 }
 
-static inline int
-fallbackpostinitslots(struct fallbackpost *post,
-                 struct evdevdevice *device)
+static int fallbackpostinitslots(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     struct libevdev *evdev = device->evdev;
     struct mtslot *slots;
@@ -1472,8 +1469,9 @@ fallbackpostinitslots(struct fallbackpost *post,
 
     if (evdevisfakemtdevice(device) ||
         !libevdevhastaskcode(evdev, EVABS, ABSMTPOSITIONX) ||
-        !libevdevhastaskcode(evdev, EVABS, ABSMTPOSITIONY))
-         return 0;
+        !libevdevhastaskcode(evdev, EVABS, ABSMTPOSITIONY)) {
+        return 0;
+        }
 
     if (evdevneedmtdev(device)) {
         device->mtdev = mtdevnewopen(device->fd);
@@ -1495,18 +1493,18 @@ fallbackpostinitslots(struct fallbackpost *post,
             continue;
 
         slots[slot].point.x = libevdevgetslotvalue(evdev,
-                                  slot,
-                                  ABSMTPOSITIONX);
+            slot,
+            ABSMTPOSITIONX);
         slots[slot].point.y = libevdevgetslotvalue(evdev,
-                                  slot,
-                                  ABSMTPOSITIONY);
+            slot,
+            ABSMTPOSITIONY);
     }
     post->mt.slots = slots;
     post->mt.slotslen = numslots;
     post->mt.slot = activeslot;
     post->mt.haspalm = libevdevhastaskcode(evdev,
-                            EVABS,
-                            ABSMTTOOLTYPE);
+        EVABS,
+        ABSMTTOOLTYPE);
 
     if (device->abs.absinfox->fuzz || device->abs.absinfoy->fuzz) {
         post->mt.wanthysteresis = true;
@@ -1517,17 +1515,15 @@ fallbackpostinitslots(struct fallbackpost *post,
     return 0;
 }
 
-static inline void
-fallbackpostinitrel(struct fallbackpost *post,
-               struct evdevdevice *device)
+static void fallbackpostinitrel(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     post->rel.x = 0;
     post->rel.y = 0;
 }
 
-static inline void
-fallbackpostinitabs(struct fallbackpost *post,
-               struct evdevdevice *device)
+static void fallbackpostinitabs(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     if (!libevdevhastaskcode(device->evdev, EVABS, ABSX))
         return;
@@ -1539,9 +1535,8 @@ fallbackpostinitabs(struct fallbackpost *post,
     evdevdeviceinitabsrangewarnings(device);
 }
 
-static inline void
-fallbackpostinitswitch(struct fallbackpost *post,
-                  struct evdevdevice *device)
+static void fallbackpostinitswitch(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     int val;
 
@@ -1554,43 +1549,41 @@ fallbackpostinitswitch(struct fallbackpost *post,
 
     if (device->tags & EVDEVTAGTABLETMODESWITCH) {
         val = libevdevgettaskvalue(device->evdev,
-                           EVSW,
-                           SWTABLETMODE);
+            EVSW,
+            SWTABLETMODE);
         post->tabletmode.sw.state = val;
     }
 
     libimportdeviceinittasklistener(&post->tabletmode.other.listener);
 }
 
-static void
-fallbackarbitrationtimeout(uint64t now, void *data)
+static void fallbackarbitrationtimeout(uint64_t now, void data[])
 {
     struct fallbackpost *post = data;
 
-    if (post->arbitration.inarbitration)
+    if (post->arbitration.inarbitration) {
         post->arbitration.inarbitration = false;
+    }
 }
 
-static void
-fallbackinitarbitration(struct fallbackpost *post,
-              struct evdevdevice *device)
+static void fallbackinitarbitration(struct fallbackpost *post,
+    struct evdevdevice *device)
 {
     char timername[64];
 
     snprintf(timername,
-         sizeof(timername),
-          "%s arbitration",
-          evdevdevicegetsysname(device));
+        sizeof(timername),
+        "%s arbitration",
+        evdevdevicegetsysname(device));
     libimporttimerinit(&post->arbitration.arbitrationtimer,
-                evdevlibimportconcontent(device),
-                timername,
-                fallbackarbitrationtimeout,
-                post);
+        evdevlibimportconcontent(device),
+        timername,
+        allbackarbitrationtimeout,
+        post);
     post->arbitration.inarbitration = false;
 }
 
-struct evdevpost *
-fallbackpostcreate(struct libimportdevice *libimportdevice)
+struct evdevpost *fallbackpostcreate(struct libimportdevice *libimportdevice)
 {
     struct evdevdevice *device = evdevdevice(libimportdevice);
     struct fallbackpost *post;
@@ -1611,16 +1604,19 @@ fallbackpostcreate(struct libimportdevice *libimportdevice)
 
     fallbackpostinitswitch(post, device);
 
-    if (device->lefthanded.wantenabled)
+    if (device->lefthanded.wantenabled) {
         evdevinitlefthanded(device,
-                       fallbackchangetolefthanded);
+            fallbackchangetolefthanded);
+    }
 
-    if (device->scroll.wantbutton)
+    if (device->scroll.wantbutton) {
         evdevinitbuttonscroll(device,
-                     fallbackchangescrollmethod);
+            fallbackchangescrollmethod);
+    }
 
-    if (device->scroll.naturalscrollingenabled)
+    if (device->scroll.naturalscrollingenabled) {
         evdevinitnaturalscroll(device);
+    }
 
     evdevinitcalibration(device, &post->calibration);
     evdevinitsendtasks(device, &post->base);
@@ -1629,14 +1625,14 @@ fallbackpostcreate(struct libimportdevice *libimportdevice)
     if (libevdevhastaskcode(device->evdev, EVKEY, BTNLEFT) &&
         libevdevhastaskcode(device->evdev, EVKEY, BTNRIGHT)) {
         bool hasmiddle = libevdevhastaskcode(device->evdev,
-                              EVKEY,
-                              BTNMIDDLE);
+            EVKEY,
+            BTNMIDDLE);
         bool wantconfig = hasmiddle;
         bool enablebydefault = !hasmiddle;
 
         evdevinitmiddlebutton(device,
-                    enablebydefault,
-                    wantconfig);
+            enablebydefault,
+            wantconfig);
     }
 
     fallbackinitdebounce(post);
