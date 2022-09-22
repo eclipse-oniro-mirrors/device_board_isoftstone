@@ -1274,7 +1274,7 @@ static void fallbacktabletmodeswitchtask(uint64_t time,
             fallbacksuspend(post, device);
             evdevlogdebug(device, "tablet-mode: suspending device\n");
             break;
-        default;
+            default;
     }
 }
 
