@@ -98,6 +98,9 @@ bash build/prebuilts_download.sh
 
 3.  编译源码完成，请进行镜像烧录。
 
+## 下载uboot并解压
+[yangfan uboot下载]( http://www.swanlink.com.cn:82/archive/tools/yangfan_uboot.tar.gz )
+
 ## 烧录方法
 先将tools目录拷贝到windows下
 
@@ -106,8 +109,6 @@ bash build/prebuilts_download.sh
 
 ![驱动安装](./figures/DriverAssitant.png)
 
-### 安装烧录工具
-解压RKDevTool_Release.zip，双击运行RKDevTool.exe。
 
 ![烧录工具安装](./figures/FlashTool.png)
 
