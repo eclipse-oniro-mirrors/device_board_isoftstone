@@ -31,9 +31,9 @@
 #define NUM16 16
 #define NUM1000 1000
 #define NUM4096 4096
-#define MAXFDSOUT    28
-#define CLEN        (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
-#define LENGTHIOV   2
+#define MAXFDSOUT 28
+#define CLEN (CMSG_LEN(MAX_FDS_OUT * sizeof(int)))
+#define LENGTHIOV 2
 
 unsigned int isftconnectionpendinginput(struct isftconnection *connection)
 {
