@@ -14,132 +14,121 @@
 import("//build/ohos.gni")
 import("mqtt.gni")
 
-
 config("mqtt_config_c") {
-    include_dirs = [
-        "MQTTPacket/src",
-        "MQTTClient-C/src",
-        "MQTTClient-C/src/linux",
-        "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
-        "//third_party/paho_mqtt/MQTTClient-C/src",
-        "//base/hiviewdfx/hilog/interfaces/native/innerkits/include/hilog/",
-    ]
-    cflags = [
-      "-Wno-self-assign",
-      "-Wno-unused-label",
-      "-Wno-invalid-offsetof",
-      "-Wno-unused-parameter",
-      "-Wno-pessimizing-move",
-      "-Wno-unused-function",
-      "-Wno-unused-local-typedef",
-      "-Wno-header-hygiene",
-      "-Wno-ignored-qualifiers",
-      "-Wno-sign-compare",
-      "-Wno-unused-variable",
-      "-Wno-missing-field-initializers",
-      "-Wno-deprecated-copy",
-      "-Wno-undefined-bool-conversion",
-      "-Wno-unused-value",
-      "-Wno-shadow",
-      "-Wno-pedantic",
-      "-Wno-inconsistent-missing-override",
-      "-Wno-reorder-ctor",
-      "-Wno-unused-private-field",
-      "-Wno-sometimes-uninitialized",
-      "-Wno-delete-non-abstract-non-virtual-dtor",
-      "-Wno-unknown-pragmas",
-      "-Wno-format",
-      "-Wno-shift-op-parentheses",
-      "-Wno-unused-function",
-    ]
-    defines = [
-      "LINUX_SO",
-      "MQTT_SERVER",
-      "MQTT_CLIENT",
-    ]
+  include_dirs = [
+    "MQTTPacket/src",
+    "MQTTClient-C/src",
+    "MQTTClient-C/src/linux",
+    "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
+    "//third_party/paho_mqtt/MQTTClient-C/src",
+    "//base/hiviewdfx/hilog/interfaces/native/innerkits/include/hilog/",
+  ]
+  cflags = [
+    "-Wno-self-assign",
+    "-Wno-unused-label",
+    "-Wno-invalid-offsetof",
+    "-Wno-unused-parameter",
+    "-Wno-pessimizing-move",
+    "-Wno-unused-function",
+    "-Wno-unused-local-typedef",
+    "-Wno-header-hygiene",
+    "-Wno-ignored-qualifiers",
+    "-Wno-sign-compare",
+    "-Wno-unused-variable",
+    "-Wno-missing-field-initializers",
+    "-Wno-deprecated-copy",
+    "-Wno-undefined-bool-conversion",
+    "-Wno-unused-value",
+    "-Wno-shadow",
+    "-Wno-pedantic",
+    "-Wno-inconsistent-missing-override",
+    "-Wno-reorder-ctor",
+    "-Wno-unused-private-field",
+    "-Wno-sometimes-uninitialized",
+    "-Wno-delete-non-abstract-non-virtual-dtor",
+    "-Wno-unknown-pragmas",
+    "-Wno-format",
+    "-Wno-shift-op-parentheses",
+    "-Wno-unused-function",
+  ]
+  defines = [
+    "LINUX_SO",
+    "MQTT_SERVER",
+    "MQTT_CLIENT",
+  ]
 }
 
 config("mqtt_config_cxx") {
-    include_dirs = [
-        "MQTTPacket/src",
-        "MQTTClient/src/linux",
-        "MQTTClient/src/",
-        "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
-    ]
-    cflags_cc = [
-      "-Wno-self-assign",
-      "-Wno-unused-label",
-      "-Wno-invalid-offsetof",
-      "-Wno-unused-parameter",
-      "-Wno-pessimizing-move",
-      "-Wno-unused-function",
-      "-Wno-unused-local-typedef",
-      "-Wno-header-hygiene",
-      "-Wno-ignored-qualifiers",
-      "-Wno-sign-compare",
-      "-Wno-unused-variable",
-      "-Wno-missing-field-initializers",
-      "-Wno-deprecated-copy",
-      "-Wno-undefined-bool-conversion",
-      "-Wno-unused-value",
-      "-Wno-shadow",
-      "-Wno-pedantic",
-      "-Wno-inconsistent-missing-override",
-      "-Wno-reorder-ctor",
-      "-Wno-unused-private-field",
-      "-Wno-sometimes-uninitialized",
-      "-Wno-delete-non-abstract-non-virtual-dtor",
-      "-Wno-unknown-pragmas",
-      "-Wno-format",
-      "-Wno-shift-op-parentheses",
-      "-Wno-unused-function",
-    ]
-    defines = [
-      "LINUX_SO",
-      "MQTT_SERVER",
-      "MQTT_CLIENT",
-      "MQTT_TASK"
-    ]
+  include_dirs = [
+    "MQTTPacket/src",
+    "MQTTClient/src/linux",
+    "MQTTClient/src/",
+    "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
+  ]
+  cflags_cc = [
+    "-Wno-self-assign",
+    "-Wno-unused-label",
+    "-Wno-invalid-offsetof",
+    "-Wno-unused-parameter",
+    "-Wno-pessimizing-move",
+    "-Wno-unused-function",
+    "-Wno-unused-local-typedef",
+    "-Wno-header-hygiene",
+    "-Wno-ignored-qualifiers",
+    "-Wno-sign-compare",
+    "-Wno-unused-variable",
+    "-Wno-missing-field-initializers",
+    "-Wno-deprecated-copy",
+    "-Wno-undefined-bool-conversion",
+    "-Wno-unused-value",
+    "-Wno-shadow",
+    "-Wno-pedantic",
+    "-Wno-inconsistent-missing-override",
+    "-Wno-reorder-ctor",
+    "-Wno-unused-private-field",
+    "-Wno-sometimes-uninitialized",
+    "-Wno-delete-non-abstract-non-virtual-dtor",
+    "-Wno-unknown-pragmas",
+    "-Wno-format",
+    "-Wno-shift-op-parentheses",
+    "-Wno-unused-function",
+  ]
+  defines = [
+    "LINUX_SO",
+    "MQTT_SERVER",
+    "MQTT_CLIENT",
+    "MQTT_TASK",
+  ]
 }
 
 pahomqtt_sources = [
-"MQTTClient-C/src/linux/MQTTLinux.c",
-"MQTTClient-C/src/MQTTClient.c",
-"MQTTPacket/src/MQTTConnectClient.c",
-"MQTTPacket/src/MQTTConnectServer.c",
-"MQTTPacket/src/MQTTDeserializePublish.c",
-"MQTTPacket/src/MQTTFormat.c",
-"MQTTPacket/src/MQTTPacket.c",
-"MQTTPacket/src/MQTTSerializePublish.c",
-"MQTTPacket/src/MQTTSubscribeClient.c",
-"MQTTPacket/src/MQTTSubscribeServer.c",
-"MQTTPacket/src/MQTTUnsubscribeClient.c",
-"MQTTPacket/src/MQTTUnsubscribeServer.c",
+  "MQTTClient-C/src/MQTTClient.c",
+  "MQTTClient-C/src/linux/MQTTLinux.c",
+  "MQTTPacket/src/MQTTConnectClient.c",
+  "MQTTPacket/src/MQTTConnectServer.c",
+  "MQTTPacket/src/MQTTDeserializePublish.c",
+  "MQTTPacket/src/MQTTFormat.c",
+  "MQTTPacket/src/MQTTPacket.c",
+  "MQTTPacket/src/MQTTSerializePublish.c",
+  "MQTTPacket/src/MQTTSubscribeClient.c",
+  "MQTTPacket/src/MQTTSubscribeServer.c",
+  "MQTTPacket/src/MQTTUnsubscribeClient.c",
+  "MQTTPacket/src/MQTTUnsubscribeServer.c",
 ]
 
 ohos_shared_library("mqtt") {
-    sources = pahomqtt_sources
-    public_configs = [ ":mqtt_config_c" ]
-    deps = [
-      "//base/hiviewdfx/hilog/frameworks/native/hilog_ndk:hilog_ndk",
-    ]
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-  ]
-    relative_install_dir = "module"
-    subsystem_name = "${subsystem_name}"
-    part_name = "${part_name}"
+  sources = pahomqtt_sources
+  public_configs = [ ":mqtt_config_c" ]
+  deps = [ "//base/hiviewdfx/hilog/frameworks/native/hilog_ndk:hilog_ndk" ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  relative_install_dir = "module"
+  subsystem_name = "${subsystem_name}"
+  part_name = "${part_name}"
 }
 ohos_executable("${mqtt_exe_prefix}stdoutsub") {
-  sources = [
-    "MQTTClient/samples/linux/stdoutsub.cpp",
-    ]
-  configs = [
-    ":mqtt_config_cxx",
-    ]
-  deps = [
-    ":mqtt",
-   ]
+  sources = [ "MQTTClient/samples/linux/stdoutsub.cpp" ]
+  configs = [ ":mqtt_config_cxx" ]
+  deps = [ ":mqtt" ]
   install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
@@ -174,34 +163,22 @@ ohos_executable("${mqtt_exe_prefix}stdoutsub") {
 #   part_name = "${part_name}"
 # }
 
-
 ohos_executable("${mqtt_exe_prefix}test1") {
-  sources = [
-    "MQTTPacket/test/test1.c",
-    ]
-  configs = [
-    ":mqtt_config_c",
-    ]
-  deps = [
-    ":mqtt",
-   ]
+  sources = [ "MQTTPacket/test/test1.c" ]
+  configs = [ ":mqtt_config_c" ]
+  deps = [ ":mqtt" ]
   install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
 
-
 ohos_executable("${mqtt_exe_prefix}ping_nb") {
   sources = [
     "MQTTPacket/samples/ping_nb.c",
     "MQTTPacket/samples/transport.c",
-    ]
-  configs = [
-    ":mqtt_config_c",
-    ]
-  deps = [
-    ":mqtt",
-   ]
+  ]
+  configs = [ ":mqtt_config_c" ]
+  deps = [ ":mqtt" ]
   install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
@@ -211,13 +188,9 @@ ohos_executable("${mqtt_exe_prefix}pub0sub1_nb") {
   sources = [
     "MQTTPacket/samples/pub0sub1_nb.c",
     "MQTTPacket/samples/transport.c",
-    ]
-  configs = [
-    ":mqtt_config_c",
-    ]
-  deps = [
-    ":mqtt",
-   ]
+  ]
+  configs = [ ":mqtt_config_c" ]
+  deps = [ ":mqtt" ]
   install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
@@ -227,13 +200,9 @@ ohos_executable("${mqtt_exe_prefix}pub0sub1") {
   sources = [
     "MQTTPacket/samples/pub0sub1.c",
     "MQTTPacket/samples/transport.c",
-    ]
-  configs = [
-    ":mqtt_config_c",
-    ]
-  deps = [
-    ":mqtt",
-   ]
+  ]
+  configs = [ ":mqtt_config_c" ]
+  deps = [ ":mqtt" ]
   install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
@@ -244,12 +213,8 @@ ohos_executable("${mqtt_exe_prefix}ping") {
     "MQTTPacket/samples/ping.c",
     "MQTTPacket/samples/transport.c",
   ]
-  configs = [
-    ":mqtt_config_c",
-      ]
-  deps = [
-    ":mqtt",
-   ]
+  configs = [ ":mqtt_config_c" ]
+  deps = [ ":mqtt" ]
   install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
@@ -259,13 +224,9 @@ ohos_executable("${mqtt_exe_prefix}qos0pub") {
   sources = [
     "MQTTPacket/samples/qos0pub.c",
     "MQTTPacket/samples/transport.c",
-    ]
-  configs = [
-    ":mqtt_config_c",
-    ]
-  deps = [
-    ":mqtt",
-   ]
+  ]
+  configs = [ ":mqtt_config_c" ]
+  deps = [ ":mqtt" ]
   install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
