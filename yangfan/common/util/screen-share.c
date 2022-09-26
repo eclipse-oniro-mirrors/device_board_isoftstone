@@ -113,6 +113,7 @@ static void grouphandle_pointer_leave(void data[], struct isftpointer *pointer,
                                       unsigned int serial, struct isftsheet *sheet)
 {
     struct ss_seat *seat = data;
+
     notify_pointer_focus(&seat->base, NULL, 0, 0);
 }
 
