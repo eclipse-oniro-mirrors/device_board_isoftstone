@@ -17,7 +17,7 @@ import("//build/ohos/kernel/kernel.gni")
 ohos_prebuilt_etc("init.sun50iw9p1.cfg") {
   source = "init.sun50iw9p1.cfg"
   module_install_dir = "etc"
-  install_images = [ "vendor" ]
+  install_images = [ chipset_base_dir ]
   part_name = "allwinner_products"
   install_enable = true
 }
@@ -25,7 +25,7 @@ ohos_prebuilt_etc("init.sun50iw9p1.cfg") {
 ohos_prebuilt_etc("init.sun50iw9p1.usb.cfg") {
   source = "init.sun50iw9p1.usb.cfg"
   module_install_dir = "etc"
-  install_images = [ "vendor" ]
+  install_images = [ chipset_base_dir ]
   part_name = "allwinner_products"
   install_enable = true
 }

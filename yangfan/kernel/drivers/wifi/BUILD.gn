@@ -20,7 +20,7 @@ WIFI_BIN_DIR = "//device/board/isoftstone/yangfan/kernel/drivers/wifi/bin"
 
 ohos_prebuilt_etc("clm_bcm43752a2_ag.blob") {
   source = "$AP6XXX_ETC_DIR/clm_bcm43752a2_ag.blob"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -28,7 +28,7 @@ ohos_prebuilt_etc("clm_bcm43752a2_ag.blob") {
 
 ohos_prebuilt_etc("fw_bcm43752a2_ag_apsta.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43752a2_ag_apsta.bin"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -36,7 +36,7 @@ ohos_prebuilt_etc("fw_bcm43752a2_ag_apsta.bin") {
 
 ohos_prebuilt_etc("fw_bcm43752a2_ag.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43752a2_ag.bin"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -44,7 +44,7 @@ ohos_prebuilt_etc("fw_bcm43752a2_ag.bin") {
 
 ohos_prebuilt_etc("nvram_ap6275s.txt") {
   source = "$AP6XXX_ETC_DIR/nvram_ap6275s.txt"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -53,7 +53,7 @@ ohos_prebuilt_etc("nvram_ap6275s.txt") {
 ##43438 begin
 ohos_prebuilt_etc("fw_bcm43438a1.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43438a1.bin"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -61,7 +61,7 @@ ohos_prebuilt_etc("fw_bcm43438a1.bin") {
 
 ohos_prebuilt_etc("fw_cyw43438_apsta.bin") {
   source = "$AP6XXX_ETC_DIR/fw_cyw43438_apsta.bin"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -69,7 +69,7 @@ ohos_prebuilt_etc("fw_cyw43438_apsta.bin") {
 
 ohos_prebuilt_etc("fw_cyw43438_p2p.bin") {
   source = "$AP6XXX_ETC_DIR/fw_cyw43438_p2p.bin"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -77,7 +77,7 @@ ohos_prebuilt_etc("fw_cyw43438_p2p.bin") {
 
 ohos_prebuilt_etc("nvram_ap6212a.txt") {
   source = "$AP6XXX_ETC_DIR/nvram_ap6212a.txt"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
   part_name = "rockchip_products"
   install_enable = true
@@ -85,7 +85,7 @@ ohos_prebuilt_etc("nvram_ap6212a.txt") {
 
 ohos_prebuilt_etc("cywdhd.ko") {
   source = "$MODULES_DIR/cywdhd.ko"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "modules"
   part_name = "rockchip_products"
   install_enable = true
@@ -93,7 +93,7 @@ ohos_prebuilt_etc("cywdhd.ko") {
 
 ohos_prebuilt_etc("bcmdhd.ko") {
   source = "$MODULES_DIR/bcmdhd.ko"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   relative_install_dir = "modules"
   part_name = "rockchip_products"
   install_enable = true
