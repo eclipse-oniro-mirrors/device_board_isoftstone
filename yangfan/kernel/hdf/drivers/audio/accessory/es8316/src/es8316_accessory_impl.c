@@ -502,13 +502,13 @@ static int32_t Es8316FormatParse(enum AudioFormat format, uint16_t *bitWidth)
         return HDF_FAILURE;
     }
     switch (format) {
-        case AUDIO_FORMAT_PCM_16_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_16_BIT:
             *bitWidth = ES8316_I2S_SAMPLE_FORMAT_REG_VAL_16;
             break;
-        case AUDIO_FORMAT_PCM_24_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_24_BIT:
             *bitWidth = ES8316_I2S_SAMPLE_FORMAT_REG_VAL_24;
             break;
-        case AUDIO_FORMAT_PCM_32_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_32_BIT:
             *bitWidth = ES8316_I2S_SAMPLE_FORMAT_REG_VAL_32;
             break;
         default:

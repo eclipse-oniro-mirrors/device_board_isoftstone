@@ -656,7 +656,7 @@ static int sunxi_ahub_dai_hw_params(enum AudioStreamType streamType, enum AudioF
 
     /* set bits */
     switch (format) {
-        case AUDIO_FORMAT_PCM_16_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_16_BIT:
             /* apbifn bits */
             if (streamType == AUDIO_RENDER_STREAM) {
                 regmap_update_bits(regmap, SUNXI_AHUB_APBIF_TX_CTL(apb_num), 0x7 << APBIF_TX_WS, 0x3 << APBIF_TX_WS);
@@ -668,7 +668,7 @@ static int sunxi_ahub_dai_hw_params(enum AudioStreamType streamType, enum AudioF
             /* tdmn bits */
             regmap_update_bits(regmap, SUNXI_AHUB_I2S_FMT0(tdm_num), 0x7 << I2S_FMT0_SR, 0x3 << I2S_FMT0_SR);
             break;
-        case AUDIO_FORMAT_PCM_24_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_24_BIT:
             if (streamType == AUDIO_RENDER_STREAM) {
                 regmap_update_bits(regmap, SUNXI_AHUB_APBIF_TX_CTL(apb_num), 0x7 << APBIF_TX_WS, 0x5 << APBIF_TX_WS);
                 regmap_update_bits(regmap, SUNXI_AHUB_APBIF_TXFIFO_CTL(apb_num), 0x1 << APBIF_TX_TXIM, 0x1 << APBIF_TX_TXIM);
@@ -678,7 +678,7 @@ static int sunxi_ahub_dai_hw_params(enum AudioStreamType streamType, enum AudioF
             }
             regmap_update_bits(regmap, SUNXI_AHUB_I2S_FMT0(tdm_num), 0x7 << I2S_FMT0_SR, 0x5 << I2S_FMT0_SR);
             break;
-        case AUDIO_FORMAT_PCM_32_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_32_BIT:
             if (streamType == AUDIO_RENDER_STREAM) {
                 regmap_update_bits(regmap, SUNXI_AHUB_APBIF_TX_CTL(apb_num), 0x7 << APBIF_TX_WS, 0x7 << APBIF_TX_WS);
                 regmap_update_bits(regmap, SUNXI_AHUB_APBIF_TXFIFO_CTL(apb_num), 0x1 << APBIF_TX_TXIM, 0x1 << APBIF_TX_TXIM);
@@ -771,13 +771,13 @@ int32_t T507AhubImplHwParams(enum AudioStreamType streamType, enum AudioFormat f
     dai_fmt |= SND_SOC_DAIFMT_CBS_CFS;
 
     switch (format) {
-        case AUDIO_FORMAT_PCM_16_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_16_BIT:
             AUDIO_DRIVER_LOG_DEBUG(" format 16");
             break;
-        case AUDIO_FORMAT_PCM_24_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_24_BIT:
             AUDIO_DRIVER_LOG_DEBUG(" format 24");
             break;
-    case AUDIO_FORMAT_PCM_32_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_32_BIT:
             AUDIO_DRIVER_LOG_DEBUG(" format 32");
             break;
     default:
