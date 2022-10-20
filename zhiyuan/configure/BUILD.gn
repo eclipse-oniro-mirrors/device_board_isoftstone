@@ -30,14 +30,14 @@ ohos_prebuilt_etc("fstab.required") {
 ohos_prebuilt_etc("fstab.sun50iw9p1") {
   source = "${source_path}/fstab.sun50iw9p1"
   module_install_dir = "etc"
-  install_images = [ "vendor" ]
+  install_images = [ chipset_base_dir ]
   part_name = "allwinner_products"
 }
 
 ohos_prebuilt_etc("vb_config_user.ini") {
   source = "vendor/etc/vb_config_user.ini"
   module_install_dir = "./"
-  install_images = [ "vendor" ]
+  install_images = [ chipset_base_dir ]
   part_name = "allwinner_products"
 }
 

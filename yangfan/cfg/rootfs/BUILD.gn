@@ -31,7 +31,7 @@ ohos_prebuilt_etc("init.rk3399.usb.cfg") {
 ohos_prebuilt_etc("fstab.rk3399") {
   source = "fstab.rk3399"
   part_name = "rockchip_products"
-  install_images = [ vendor_base_dir ]
+  install_images = [ chipset_base_dir ]
   install_enable = true
 }
 
