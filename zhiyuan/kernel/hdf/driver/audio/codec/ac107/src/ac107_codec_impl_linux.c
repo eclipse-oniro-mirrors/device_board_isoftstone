@@ -705,10 +705,10 @@ static int ac107_hw_params(enum AudioStreamType streamType, enum AudioFormat for
 
     //AC107 set sample resorution
     switch (format) {
-        case AUDIO_FORMAT_PCM_8_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_8_BIT:
             sample_resolution = 8;
             break;
-        case AUDIO_FORMAT_PCM_16_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_16_BIT:
             sample_resolution = 16;
             break;
         /*
@@ -716,10 +716,10 @@ static int ac107_hw_params(enum AudioStreamType streamType, enum AudioFormat for
             sample_resolution = 20;
             break;
         */
-        case AUDIO_FORMAT_PCM_24_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_24_BIT:
             sample_resolution = 24;
             break;
-        case AUDIO_FORMAT_PCM_32_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_32_BIT:
             sample_resolution = 32;
             break;
         default:

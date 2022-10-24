@@ -346,12 +346,12 @@ int32_t T507CodecImplHwParams(enum AudioStreamType streamType, enum AudioFormat 
 
     /* set bits */
     switch (format) {
-        case AUDIO_FORMAT_PCM_16_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_16_BIT:
             regmap_update_bits(regmap, SUNXI_DAC_FIFO_CTL, 0x3 << DAC_FIFO_MODE, 0x3 << DAC_FIFO_MODE);
             regmap_update_bits(regmap, SUNXI_DAC_FIFO_CTL, 0x1 << TX_SAMPLE_BITS, 0x0 << TX_SAMPLE_BITS);
             AUDIO_DRIVER_LOG_DEBUG(" format 16");
             break;
-        case AUDIO_FORMAT_PCM_24_BIT:
+        case AUDIO_FORMAT_TYPE_PCM_24_BIT:
             regmap_update_bits(regmap, SUNXI_DAC_FIFO_CTL, 0x3 << DAC_FIFO_MODE, 0x0 << DAC_FIFO_MODE);
             regmap_update_bits(regmap, SUNXI_DAC_FIFO_CTL, 0x1 << TX_SAMPLE_BITS, 0x1 << TX_SAMPLE_BITS);
             AUDIO_DRIVER_LOG_DEBUG(" format 24");
