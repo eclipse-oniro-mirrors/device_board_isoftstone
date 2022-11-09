@@ -134,8 +134,8 @@ ohos_shared_library("camera_pipeline_core") {
   ]
 
   deps = [
-#    "$board_camera_path:config.c",
-#    "$board_camera_path:params.c",
+    #    "$board_camera_path:config.c",
+    #    "$board_camera_path:params.c",
     "$camera_path/buffer_manager:camera_buffer_manager",
     "$camera_path/device_manager:camera_device_manager",
     "$camera_path/metadata_manager:camera_metadata_manager",
