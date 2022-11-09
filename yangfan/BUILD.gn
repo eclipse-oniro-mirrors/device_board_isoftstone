@@ -11,6 +11,7 @@ group("rk3399_group") {
   deps = [
     "bootanimation:bootanimation",
     "cfg/rootfs:init_configs",
+    "kernel:kernel",
     "//device/soc/rockchip/rk3399/hardware:hardware_group",
   ]
 }

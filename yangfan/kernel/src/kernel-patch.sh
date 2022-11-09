@@ -21,8 +21,6 @@ patch_list=(
     arch.patch
     others.patch
     kernel.patch
-    scripts.patch
-    Documentation.patch
     sound.patch
     drivers.patch
     net.patch
@@ -36,7 +34,6 @@ delete_list=(
 )
 
 copy_list=(
-    arch/dts/*                              arch/arm64/boot/dts/rockchip/
     driv/char/*                             drivers/char/
     driv/clk/*                              drivers/clk/rockchip/
     driv/cpufreq/*                          drivers/cpufreq/
@@ -79,9 +76,6 @@ copy_list=(
     incl/uapi/linux/*                       include/uapi/linux/
     incl/uapi/misc/*                        include/uapi/misc/
     _net/*                                  net/rfkill/
-    scri/*                                  scripts/
-    soun/codecs/*                           sound/soc/codecs/
-    soun/rockchip/*                         sound/soc/rockchip/
 )
 
 function copy_kernel_files()
