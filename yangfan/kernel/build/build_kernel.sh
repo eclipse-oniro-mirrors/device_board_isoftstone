@@ -73,6 +73,11 @@ if [ "enable_ramdisk" != "${9}" ]; then
 	cp ${KERNEL_SRC_TMP_PATH}/boot_linux.img ${2}/boot_linux.img
 fi
 
+cd ${3}
+wget http://www.swanlink.com.cn:82/archive/tools/yangfan_uboot.tar.gz
+tar -zxvf yangfan_uboot.tar.gz
+cd -
+
 cp ${KERNEL_OBJ_TMP_PATH}/resource.img ${2}/resource.img
 cp ${3}/bootloader/parameter.txt ${2}/parameter.txt
 cp ${3}/bootloader/MiniLoaderAll.bin ${2}/MiniLoaderAll.bin
