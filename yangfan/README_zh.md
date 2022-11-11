@@ -98,13 +98,15 @@ bash build/prebuilts_download.sh
 
 3.  编译源码完成，请进行镜像烧录。
 
-## 下载uboot并解压
-[yangfan uboot下载]( http://www.swanlink.com.cn:82/archive/tools/yangfan_uboot.tar.gz )
-
 ## 烧录方法
-先将tools目录拷贝到windows下
-
 ### 安装驱动
+
+安装CH341SER.EXE、zadig-2.4.exe，安装成功后显示如下：
+
+![CH341SER安装](./figures/CH341SER.png)
+
+![zadig-2.7安装](./figures/zadig-2.7.png)
+
 解压DriverAssitant_v5.1.1.zip，然后运行DriverInstall.exe。
 
 ![驱动安装](./figures/DriverAssitant.png)
