@@ -122,6 +122,7 @@ ohos_shared_library("camera_pipeline_core") {
     "//device/soc/allwinner/t507/hardware/rga/include",
     "//third_party/libjpeg-turbo",
     "//third_party/libexif",
+    "//drivers/peripheral/camera/hal/metadata_manager/include",
 
     # hcs parser
     "//drivers/hdf_core/framework/include/osal",
@@ -137,6 +138,7 @@ ohos_shared_library("camera_pipeline_core") {
     "$board_camera_path:params.c",
     "$camera_path/buffer_manager:camera_buffer_manager",
     "$camera_path/device_manager:camera_device_manager",
+    "$camera_path/metadata_manager:camera_metadata_manager",
     "$hdf_uhdf_path/utils:libhdf_utils",
     "//device/soc/allwinner/t507/hardware/rga:librga",
     "//drivers/interface/camera/v1_0:libcamera_stub_1.0",
