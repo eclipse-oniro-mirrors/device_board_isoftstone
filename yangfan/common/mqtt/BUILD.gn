@@ -102,18 +102,18 @@ config("mqtt_config_cxx") {
 }
 
 pahomqtt_sources = [
-    "mqttclient_c/src/MQTTClient.c",
-    "mqttclient_c/src/linux/MQTTLinux.c",
-    "mqttpacket/src/MQTTConnectClient.c",
-    "mqttpacket/src/MQTTConnectServer.c",
-    "mqttpacket/src/MQTTDeserializePublish.c",
-    "mqttpacket/src/MQTTFormat.c",
-    "mqttpacket/src/MQTTPacket.c",
-    "mqttpacket/src/MQTTSerializePublish.c",
-    "mqttpacket/src/MQTTSubscribeClient.c",
-    "mqttpacket/src/MQTTSubscribeServer.c",
-    "mqttpacket/src/MQTTUnsubscribeClient.c",
-    "mqttpacket/src/MQTTUnsubscribeServer.c",
+  "mqttclient_c/src/MQTTClient.c",
+  "mqttclient_c/src/linux/MQTTLinux.c",
+  "mqttpacket/src/MQTTConnectClient.c",
+  "mqttpacket/src/MQTTConnectServer.c",
+  "mqttpacket/src/MQTTDeserializePublish.c",
+  "mqttpacket/src/MQTTFormat.c",
+  "mqttpacket/src/MQTTPacket.c",
+  "mqttpacket/src/MQTTSerializePublish.c",
+  "mqttpacket/src/MQTTSubscribeClient.c",
+  "mqttpacket/src/MQTTSubscribeServer.c",
+  "mqttpacket/src/MQTTUnsubscribeClient.c",
+  "mqttpacket/src/MQTTUnsubscribeServer.c",
 ]
 
 ohos_shared_library("mqtt") {
