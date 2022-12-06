@@ -1,3 +1,3 @@
-subsystem_name = "mqtt"
-part_name = "mqtt_components"
+subsystem_name = "rockchip_products"
+part_name = "rockchip_products"
 mqtt_exe_prefix = "mqtt_"

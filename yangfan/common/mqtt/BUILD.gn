@@ -16,11 +16,11 @@ import("mqtt.gni")
 
 config("mqtt_config_c") {
   include_dirs = [
-    "MQTTPacket/src",
-    "MQTTClient-C/src",
-    "MQTTClient-C/src/linux",
+    "mqttpacket/src",
+    "mqttclient_c/src",
+    "mqttclient_c/src/linux",
     "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
-    "//third_party/paho_mqtt/MQTTClient-C/src",
+    "//third_party/paho_mqtt/mqttclient_c/src",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include/hilog/",
   ]
   cflags = [
@@ -60,9 +60,9 @@ config("mqtt_config_c") {
 
 config("mqtt_config_cxx") {
   include_dirs = [
-    "MQTTPacket/src",
-    "MQTTClient/src/linux",
-    "MQTTClient/src/",
+    "mqttpacket/src",
+    "mqttclient/src/linux",
+    "mqttclient/src/",
     "//vendor/hisi/hi3861/hi3861/third_party/lwip_sack/include",
   ]
   cflags_cc = [
@@ -102,31 +102,31 @@ config("mqtt_config_cxx") {
 }
 
 pahomqtt_sources = [
-  "MQTTClient-C/src/MQTTClient.c",
-  "MQTTClient-C/src/linux/MQTTLinux.c",
-  "MQTTPacket/src/MQTTConnectClient.c",
-  "MQTTPacket/src/MQTTConnectServer.c",
-  "MQTTPacket/src/MQTTDeserializePublish.c",
-  "MQTTPacket/src/MQTTFormat.c",
-  "MQTTPacket/src/MQTTPacket.c",
-  "MQTTPacket/src/MQTTSerializePublish.c",
-  "MQTTPacket/src/MQTTSubscribeClient.c",
-  "MQTTPacket/src/MQTTSubscribeServer.c",
-  "MQTTPacket/src/MQTTUnsubscribeClient.c",
-  "MQTTPacket/src/MQTTUnsubscribeServer.c",
+    "mqttclient_c/src/MQTTClient.c",
+    "mqttclient_c/src/linux/MQTTLinux.c",
+    "mqttpacket/src/MQTTConnectClient.c",
+    "mqttpacket/src/MQTTConnectServer.c",
+    "mqttpacket/src/MQTTDeserializePublish.c",
+    "mqttpacket/src/MQTTFormat.c",
+    "mqttpacket/src/MQTTPacket.c",
+    "mqttpacket/src/MQTTSerializePublish.c",
+    "mqttpacket/src/MQTTSubscribeClient.c",
+    "mqttpacket/src/MQTTSubscribeServer.c",
+    "mqttpacket/src/MQTTUnsubscribeClient.c",
+    "mqttpacket/src/MQTTUnsubscribeServer.c",
 ]
 
 ohos_shared_library("mqtt") {
   sources = pahomqtt_sources
   public_configs = [ ":mqtt_config_c" ]
-  deps = [ "//base/hiviewdfx/hilog/frameworks/native/hilog_ndk:hilog_ndk" ]
+  deps = [ "//base/hiviewdfx/hilog/frameworks/hilog_ndk:hilog_ndk" ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   relative_install_dir = "module"
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
 ohos_executable("${mqtt_exe_prefix}stdoutsub") {
-  sources = [ "MQTTClient/samples/linux/stdoutsub.cpp" ]
+  sources = [ "mqttclient/samples/linux/stdoutsub.cpp" ]
   configs = [ ":mqtt_config_cxx" ]
   deps = [ ":mqtt" ]
   install_enable = true
@@ -136,7 +136,7 @@ ohos_executable("${mqtt_exe_prefix}stdoutsub") {
 
 # ohos_executable("${mqtt_exe_prefix}hello") {
 #   sources = [
-#     "MQTTClient/samples/linux/hello.cpp",
+#     "mqttclient/samples/linux/hello.cpp",
 #     ]
 #   configs = [
 #     ":mqtt_config_cxx",
@@ -150,7 +150,7 @@ ohos_executable("${mqtt_exe_prefix}stdoutsub") {
 # }
 # ohos_executable("${mqtt_exe_prefix}main") {
 #   sources = [
-#     "MQTTClient/samples/linux/main.cpp",
+#     "mqttclient/samples/linux/main.cpp",
 #     ]
 #   configs = [
 #     ":mqtt_config_cxx",
@@ -164,7 +164,7 @@ ohos_executable("${mqtt_exe_prefix}stdoutsub") {
 # }
 
 ohos_executable("${mqtt_exe_prefix}test1") {
-  sources = [ "MQTTPacket/test/test1.c" ]
+  sources = [ "mqttpacket/test/test1.c" ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
   install_enable = true
@@ -174,8 +174,8 @@ ohos_executable("${mqtt_exe_prefix}test1") {
 
 ohos_executable("${mqtt_exe_prefix}ping_nb") {
   sources = [
-    "MQTTPacket/samples/ping_nb.c",
-    "MQTTPacket/samples/transport.c",
+    "mqttpacket/samples/ping_nb.c",
+    "mqttpacket/samples/transport.c",
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
@@ -186,8 +186,8 @@ ohos_executable("${mqtt_exe_prefix}ping_nb") {
 
 ohos_executable("${mqtt_exe_prefix}pub0sub1_nb") {
   sources = [
-    "MQTTPacket/samples/pub0sub1_nb.c",
-    "MQTTPacket/samples/transport.c",
+    "mqttpacket/samples/pub0sub1_nb.c",
+    "mqttpacket/samples/transport.c",
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
@@ -198,8 +198,8 @@ ohos_executable("${mqtt_exe_prefix}pub0sub1_nb") {
 
 ohos_executable("${mqtt_exe_prefix}pub0sub1") {
   sources = [
-    "MQTTPacket/samples/pub0sub1.c",
-    "MQTTPacket/samples/transport.c",
+    "mqttpacket/samples/pub0sub1.c",
+    "mqttpacket/samples/transport.c",
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
@@ -210,8 +210,8 @@ ohos_executable("${mqtt_exe_prefix}pub0sub1") {
 
 ohos_executable("${mqtt_exe_prefix}ping") {
   sources = [
-    "MQTTPacket/samples/ping.c",
-    "MQTTPacket/samples/transport.c",
+    "mqttpacket/samples/ping.c",
+    "mqttpacket/samples/transport.c",
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
@@ -222,8 +222,8 @@ ohos_executable("${mqtt_exe_prefix}ping") {
 
 ohos_executable("${mqtt_exe_prefix}qos0pub") {
   sources = [
-    "MQTTPacket/samples/qos0pub.c",
-    "MQTTPacket/samples/transport.c",
+    "mqttpacket/samples/qos0pub.c",
+    "mqttpacket/samples/transport.c",
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]

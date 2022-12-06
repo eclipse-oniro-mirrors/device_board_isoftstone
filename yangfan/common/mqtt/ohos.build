@@ -1,0 +1,17 @@
+{
+  "subsystem": "rockchip_products",
+  "parts": {
+    "rockchip_products": {
+      "module_list": [
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt",
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt_test1",
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt_ping_nb",
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt_pub0sub1_nb",
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt_pub0sub1",
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt_ping",
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt_stdoutsub",
+          "//device/board/isoftstone/yangfan/common/mqtt:mqtt_qos0pub"
+      ]
+    }
+  }
+}
