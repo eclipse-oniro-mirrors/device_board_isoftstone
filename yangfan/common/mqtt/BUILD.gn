@@ -121,7 +121,6 @@ ohos_shared_library("mqtt") {
   public_configs = [ ":mqtt_config_c" ]
   deps = [ "//base/hiviewdfx/hilog/frameworks/hilog_ndk:hilog_ndk" ]
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-  relative_install_dir = "module"
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
@@ -129,7 +128,6 @@ ohos_executable("${mqtt_exe_prefix}stdoutsub") {
   sources = [ "mqttclient/samples/linux/stdoutsub.cpp" ]
   configs = [ ":mqtt_config_cxx" ]
   deps = [ ":mqtt" ]
-  install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
@@ -167,7 +165,6 @@ ohos_executable("${mqtt_exe_prefix}test1") {
   sources = [ "mqttpacket/test/test1.c" ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
-  install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
@@ -179,7 +176,6 @@ ohos_executable("${mqtt_exe_prefix}ping_nb") {
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
-  install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
@@ -191,7 +187,6 @@ ohos_executable("${mqtt_exe_prefix}pub0sub1_nb") {
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
-  install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
@@ -203,7 +198,6 @@ ohos_executable("${mqtt_exe_prefix}pub0sub1") {
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
-  install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
@@ -215,7 +209,6 @@ ohos_executable("${mqtt_exe_prefix}ping") {
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
-  install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
@@ -227,7 +220,6 @@ ohos_executable("${mqtt_exe_prefix}qos0pub") {
   ]
   configs = [ ":mqtt_config_c" ]
   deps = [ ":mqtt" ]
-  install_enable = true
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }

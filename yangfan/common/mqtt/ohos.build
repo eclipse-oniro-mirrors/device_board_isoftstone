@@ -1,7 +1,7 @@
 {
   "subsystem": "rockchip_products",
   "parts": {
-    "rockchip_products": {
+    "mqtt": {
       "module_list": [
           "//device/board/isoftstone/yangfan/common/mqtt:mqtt",
           "//device/board/isoftstone/yangfan/common/mqtt:mqtt_test1",
