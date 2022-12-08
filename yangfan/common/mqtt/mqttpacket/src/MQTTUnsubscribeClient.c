@@ -76,6 +76,7 @@ int MQTTSerialize_unsubscribe(unsigned char* buf, int buflen, unsigned char dup,
         writeMQTTString(&ptr, topicFilters[i]);
 
     rc = ptr - buf;
+    return rc;
 }
 /**
   * Deserializes the supplied (wire) buffer into unsuback data

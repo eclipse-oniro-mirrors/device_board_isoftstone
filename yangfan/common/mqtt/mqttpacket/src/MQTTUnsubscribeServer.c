@@ -62,6 +62,7 @@ int MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid, in
     }
 
     rc = 1;
+    return rc;
 }
 
 
@@ -93,4 +94,5 @@ int MQTTSerialize_unsuback(unsigned char* buf, int buflen, unsigned short packet
     writeInt(&ptr, packetid);
 
     rc = ptr - buf;
+    return rc;
 }

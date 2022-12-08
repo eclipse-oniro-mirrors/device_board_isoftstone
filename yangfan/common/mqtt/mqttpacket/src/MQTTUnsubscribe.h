@@ -28,7 +28,7 @@
 DLLExport int MQTTSerialize_unsubscribe(unsigned char* buf, int buflen, unsigned char dup, unsigned short packetid,
         int count, MQTTString topicFilters[]);
 
-DLLExport int MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid, int max_count, int* count, MQTTString topicFilters[],
+DLLExport int MQTTDeserialize_unsubscribe(unsigned char* dup, unsigned short* packetid, int maxcount, int* count, MQTTString topicFilters[],
         unsigned char* buf, int len);
 
 DLLExport int MQTTSerialize_unsuback(unsigned char* buf, int buflen, unsigned short packetid);
