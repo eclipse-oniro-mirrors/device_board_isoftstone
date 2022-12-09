@@ -972,14 +972,14 @@ static int sunxi_drm_platform_probe(struct platform_device *pdev)
 	}
 
 #ifdef CONFIG_DRM_FBDEV_EMULATION
-	if (sunxi_drv_prv.bootlogo.phy_addr) {
+	/*if (sunxi_drv_prv.bootlogo.phy_addr) {
 		ret = sunxi_drm_fbdev_copy_bootlogo(
 			sunxi_drv_prv.drm_dev, &sunxi_drv_prv.bootlogo);
 		if (ret < 0) {
 			DRM_ERROR("fbdev copy bootlogo failed\n");
 			goto drm_err;
 		}
-	}
+	}*/
 #endif
 
 	if (sunxi_drm_is_need_smooth_boot()) {

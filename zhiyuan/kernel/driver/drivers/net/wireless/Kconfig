@@ -4,6 +4,7 @@ menu "Wireless LAN"
 
 if WLAN
 
+source "$(BSP_TOP)drivers/net/wireless/bcmdhd/Kconfig"
 source "$(BSP_TOP)drivers/net/wireless/xr829/Kconfig"
 
 endif

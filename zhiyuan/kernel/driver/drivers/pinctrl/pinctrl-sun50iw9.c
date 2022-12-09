@@ -890,7 +890,7 @@ static const struct sunxi_desc_pin sun50iw9_pins[] = {
 	SUNXI_PIN(SUNXI_PINCTRL_PIN(I, 16),
 		  SUNXI_FUNCTION(0x0, "gpio_in"),
 		  SUNXI_FUNCTION(0x1, "gpio_out"),
-		  SUNXI_FUNCTION(0x2, "ephy_25m"),
+		  SUNXI_FUNCTION(0x2, "emac0"),
 		  SUNXI_FUNCTION(0x3, "uart4"),		/* CTS */
 		  SUNXI_FUNCTION(0x4, "ts0"),		/* D7 */
 		  SUNXI_FUNCTION(0x5, "x32kfout"),

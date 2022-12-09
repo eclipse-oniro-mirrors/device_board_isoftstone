@@ -65,6 +65,11 @@ size = 16384
     user_type    = 0x8000
 
 [partition]
+    name         = misc
+    size         = 131072
+    user_type    = 0x8000
+
+[partition]
     name         = userdata
     size         = 3145728
    downloadfile = "userdata.fex"

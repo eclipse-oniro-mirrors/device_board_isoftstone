@@ -23,6 +23,7 @@ obj-y += lradc/
 # obj-y += rtp/
 obj-y += usb/
 obj-y += iommu/
+obj-y += emac/
 obj-y += gmac/
 
 # Power Management

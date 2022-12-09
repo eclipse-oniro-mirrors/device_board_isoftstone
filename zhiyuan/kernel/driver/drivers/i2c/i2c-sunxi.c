@@ -264,7 +264,7 @@
 /* how many bytes be sent/received as data */
 #define DATA_BYTE_OFFSET 0
 #define DATA_BYTE	(0xffff << DATA_BYTE_OFFSET)
-/* how many bytes be sent as slave device reg address */
+/* how many btyes be sent as slave device reg address */
 #define ADDR_BYTE_OFFSET 16
 #define ADDR_BYTE	(0xff << ADDR_BYTE_OFFSET)
 

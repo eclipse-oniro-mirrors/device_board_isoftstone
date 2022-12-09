@@ -5,21 +5,22 @@ menu "Gmac Drivers"
 config AW_GMAC
 	tristate "Allwinner GMAC support"
 	depends on OF
+	select AW_GMAC_MDIO
 	select CRC32
-	select MII
-	select PHYLIB
 	help
 	  Support for Allwinner Gigabit ethernet driver.
 
 	  To compile this driver as a module, choose M here.  The module
 	  will be called sunxi-gmac.ko.
 
-config AW_EXT_PHY
-	bool "Use extern phy"
-	depends on AW_GMAC
-	default y
+config AW_GMAC_MDIO
+	tristate "Allwinner GMAC MDIO support"
+	select MDIO_BUS
+	select MDIO_DEVICE
+	select NETDEVICES
+	select PHYLIB
+	select MII
 	help
-	  Allwinnertech SOC support both internal & extern PHY, Say "Y" to
-	  use extern phy, Say "N" to use internal phy
+	  This driver supports the GMAC MDIO interface in the network
 
 endmenu

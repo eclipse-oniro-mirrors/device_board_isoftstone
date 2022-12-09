@@ -52,6 +52,7 @@
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/audio/.*" desc=" GPL, or the BSD license, at your option."/>
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/wifi/.*" desc=" GPL, or the BSD license, at your option."/>
                 <filteritem type="filename" name="*.fex|*dts" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/driver/drivers/.*" desc="no license heard"/>
 
 				</filefilter>
             <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">

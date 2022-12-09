@@ -32,7 +32,7 @@ int32_t T507AhubDeviceInit(struct AudioCard *audioCard, const struct DaiDevice *
     }
     data = dai->devData;
 
-    if (DaiSetConfigInfo(data) != HDF_SUCCESS) {
+    if (DaiSetConfigInfoOfControls(data) != HDF_SUCCESS) {
         AUDIO_DRIVER_LOG_ERR("set config info fail.");
         return HDF_FAILURE;
     }

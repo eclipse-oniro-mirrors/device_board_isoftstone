@@ -36,7 +36,8 @@ int32_t T507CodecDeviceInit(struct AudioCard *audioCard, const struct CodecDevic
         return HDF_ERR_INVALID_OBJECT;
     }
 
-    if (CodecSetCtlFunc(codec->devData, T507CodecImplGetCtrlOps, T507CodecImplSetCtrlOps) != HDF_SUCCESS) {
+    if (CodecSetCtlFunc(codec->devData, AUDIO_CONTROL_MIXER, T507CodecImplGetCtrlOps, T507CodecImplSetCtrlOps) !=
+        HDF_SUCCESS) {
         AUDIO_DRIVER_LOG_ERR("AudioCodecSetCtlFunc failed.");
         return HDF_FAILURE;
     }

@@ -3,8 +3,7 @@
     "parts": {
         "allwinner_products": {
             "module_list": [
-                "//device/board/seed/t507_pines:products_group",
-                "//device/board/isoftstone/zhiyuan:products_group"
+                "//device/board/isoftstone/${product_name}:products_group"
             ]
         }
     }

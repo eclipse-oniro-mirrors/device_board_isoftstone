@@ -24,6 +24,7 @@ source "$(BSP_TOP)drivers/lradc/Kconfig"
 # source "$(BSP_TOP)drivers/rtp/Kconfig"
 source "$(BSP_TOP)drivers/usb/Kconfig"
 source "$(BSP_TOP)drivers/iommu/Kconfig"
+source "$(BSP_TOP)drivers/emac/Kconfig"
 source "$(BSP_TOP)drivers/gmac/Kconfig"
 
 # Power Management

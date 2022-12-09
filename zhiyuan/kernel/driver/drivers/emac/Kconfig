@@ -1,0 +1,29 @@
+# SPDX-License-Identifier: GPL-2.0-only
+menu "Emac Drivers"
+	depends on AW_BSP
+
+config AW_EMAC
+	tristate "Allwinner EMAC support"
+	depends on OF
+	depends on AW_EMAC_MDIO
+	select CRC32
+	select MII
+	select PHYLIB
+	help
+	  Support for Allwinner Gigabit ethernet driver.
+
+	  To compile this driver as a module, choose M here.  The module
+	  will be called sunxi-emac.ko.
+
+config AW_EMAC_MDIO
+	bool "Allwinner EMAC mdio support"
+	depends on OF
+	select MDIO_BUS
+	select MDIO_DEVICE
+	select NETDEVICES
+	select PHYLIB
+	default y
+	help
+	  Support for Allwinner EMAC mdio driver
+
+endmenu

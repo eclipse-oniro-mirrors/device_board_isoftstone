@@ -20,23 +20,23 @@ export LICHEE_ARCH=${3}
 
 # root path
 export OHOS_ROOT_PATH=${4}
-export PRODUCT_COMPANY=seed
+export PRODUCT_COMPANY=isoftstone
 export SOC_COMPANY=allwinner
 export LICHEE_PLATFORM=linux
 export LICHEE_LINUX_DEV=bsp
 export IC_COMPANY=allwinner
 export LICHEE_KERN_SYSTEM=kernel_boot
 export LICHEE_FLASH=default
-export PRODUCT_NAME=t507_pines
+export PRODUCT_NAME=zhiyuan
 export DEVICE_NAME=${PRODUCT_NAME}
 # test_flag
 build_flag=${5}
 
 
 if [ "x$LICHEE_IC" == "xt507" ]; then
-	export LICHEE_BOARD=t507_pines
+	export LICHEE_BOARD=zhiyuan
 	export LICHEE_CHIP=sun50iw9p1
-	export LICHEE_KERN_DEFCONF=t507_linux-5.10_defconfig
+	export LICHEE_KERN_DEFCONF=t507_standard_defconfig
 fi
 
 
@@ -52,7 +52,7 @@ export OHOS_KERNEL_SRC_PATH=${OHOS_ROOT_PATH}/kernel/linux                    #k
 
 # vendor path
 export LICHEE_VENDOR_DIR=${OHOS_ROOT_PATH}/vendor
-export PRODUCT_PATH=vendor/${PRODUCT_COMPANY}/${PRODUCT_NAME}                 #vendor/seed/t507_pines
+export PRODUCT_PATH=vendor/${PRODUCT_COMPANY}/${PRODUCT_NAME}                 #vendor/isoftstone/zhiyuan
 
 # out path
 export LICHEE_OUT_DIR=${OHOS_ROOT_PATH}/out
@@ -69,18 +69,18 @@ export DEVICE_COMPANY_PATH=${OHOS_ROOT_PATH}/device/soc/${IC_COMPANY}         #d
 export DEVICE_CHIP_PATH=${DEVICE_COMPANY_PATH}/${LICHEE_IC}                   #device/soc/allwinner/t507
 
 # device board path
-export BOARD_COMPANY_PATH=${OHOS_ROOT_PATH}/device/board/${PRODUCT_COMPANY}   #device/board/seed
-export BOARD_PATH=${BOARD_COMPANY_PATH}/${PRODUCT_NAME}                       #device/board/seed/t507_pines
-export BOARD_KERNEL_PATH=${BOARD_PATH}/kernel                                 #device/board/seed/t507_pines/kernel
-export LICHEE_TOP_DIR=${BOARD_KERNEL_PATH}/build                              #device/board/seed/T507_pines/kernel/build
-export LICHEE_BUILD_DIR=${LICHEE_TOP_DIR}/scripts                             #device/board/seed/T507_pines/kernel/build/scripts
-export LICHEE_TOOLS_DIR=${LICHEE_TOP_DIR}/tools                               #device/board/seed/T507_pines/kernel/build/tools
-export LICHEE_BSP_DIR=${BOARD_KERNEL_PATH}/driver                             #device/board/seed/T507_pines/kernel/driver
+export BOARD_COMPANY_PATH=${OHOS_ROOT_PATH}/device/board/${PRODUCT_COMPANY}   #device/board/isoftstone
+export BOARD_PATH=${BOARD_COMPANY_PATH}/${PRODUCT_NAME}                       #device/board/isoftstone/zhiyuan
+export BOARD_KERNEL_PATH=${BOARD_PATH}/kernel                                 #device/board/isoftstone/zhiyuan/kernel
+export LICHEE_TOP_DIR=${BOARD_KERNEL_PATH}/build                              #device/board/isoftstone/zhiyuan/kernel/build
+export LICHEE_BUILD_DIR=${LICHEE_TOP_DIR}/scripts                             #device/board/isoftstone/zhiyuan/kernel/build/scripts
+export LICHEE_TOOLS_DIR=${LICHEE_TOP_DIR}/tools                               #device/board/isoftstone/zhiyuan/kernel/build/tools
+export LICHEE_BSP_DIR=${BOARD_KERNEL_PATH}/driver                             #device/board/isoftstone/zhiyuan/kernel/driver
 export LICHEE_SRC_KERN_DEFCONF=${DEVICE_CHIP_PATH}/patches/config/${LICHEE_KERN_DEFCONF}
-export LICHEE_LOADER_DIR=${BOARD_PATH}/loader                                 #device/board/seed/t507_pines/loader
-export LICHEE_CHIP_CONFIG_DIR=${LICHEE_LOADER_DIR}                   	      #device/board/seed/t507_pines/loader
-export LICHEE_BRANDY_OUT_DIR=${LICHEE_LOADER_DIR}/bin                         #device/board/seed/t507_pines/loader/bin
-export LICHEE_BOARD_CONFIG_DIR=${LICHEE_CHIP_CONFIG_DIR}/configs/${PRODUCT_NAME}  #device/board/seed/t507_pines/loader/configs/t507_pines
+export LICHEE_LOADER_DIR=${BOARD_PATH}/bootloader                             #device/board/isoftstone/zhiyuan/bootloader
+export LICHEE_CHIP_CONFIG_DIR=${LICHEE_LOADER_DIR}                   	      #device/board/isoftstone/zhiyuan/bootloader
+export LICHEE_BRANDY_OUT_DIR=${LICHEE_LOADER_DIR}/bin                         #device/board/isoftstone/zhiyuan/bootloader/bin
+export LICHEE_BOARD_CONFIG_DIR=${LICHEE_CHIP_CONFIG_DIR}/configs/${PRODUCT_NAME}  #device/board/isoftstone/zhiyuan/bootloader/configs/zhiyuan
 [ -d "${LICHEE_BSP_DIR}" ] && export BSP_TOP=${LICHEE_KERN_DIR}/bsp/
 
 
@@ -145,9 +145,9 @@ function load_kernel()
 }
 
 ln_list=(
-	$OHOS_ROOT_PATH/drivers/adapter/khdf/linux    drivers/hdf/khdf
-	$OHOS_ROOT_PATH/drivers/framework             drivers/hdf/framework
-	$OHOS_ROOT_PATH/drivers/framework/include     include/hdf
+	$OHOS_ROOT_PATH/drivers/hdf_core/adapter/khdf/linux    drivers/hdf/khdf
+	$OHOS_ROOT_PATH/drivers/hdf_core/framework             drivers/hdf/framework
+	$OHOS_ROOT_PATH/drivers/hdf_core/framework/include     include/hdf
 )
 
 cp_list=(
@@ -178,21 +178,26 @@ function add_patch_to_kernel()
 {
 	# get kernel patch path
 
-	local patch_path=${DEVICE_CHIP_PATH}/patches    # Todo
-	local kernel_patch=${patch_path}/kernel/${LICHEE_KERN_VER}/*.patch # all patch
-	local hdf_patch=${patch_path}/hdf/${LICHEE_KERN_VER}/*.patch                      # Todo
-	local kernel_config=${patch_path}/config/${LICHEE_KERN_DEFCONF} # Todo
+	# local patch_path=${OHOS_KERNEL_SRC_PATH}/patches/${LICHEE_KERN_VER}/zhiyuan_patch    # Todo
+	# local kernel_patch=${patch_path}/kernel.patch                  # kernel patch
+	# local hdf_patch=${patch_path}/hdf.patch                        # hdf patch
+	# local kernel_config=${OHOS_KERNEL_SRC_PATH}/config/${LICHEE_KERN_VER}/arch/arm64/configs/${LICHEE_KERN_DEFCONF} # Todo
+
+	local patch_path=${DEVICE_CHIP_PATH}/patches                                     # temp
+	local kernel_patch=${patch_path}/kernel/${LICHEE_KERN_VER}/kernel.patch          # temp
+	local hdf_patch=${patch_path}/hdf/${LICHEE_KERN_VER}/hdf.patch                   # temp
+	local kernel_config=${patch_path}/config/${LICHEE_KERN_DEFCONF}                  # temp
 
 	echo "apply allwinner patch to kernel"
 
 	cd ${LICHEE_KERN_DIR}   # enter kernel path
 
 	# add aw patch
-	if [ -d "$patch_path/kernel/${LICHEE_KERN_VER}" ] ; then
+	if [ -f "$kernel_patch" ] ; then
 		git reset --hard $tag_version
 		git am ${kernel_patch}
 	else
-		mk_error "not found kernel patch: $patch_path/kernel"
+		mk_error "not found kernel patch: $kernel_patch"
 		exit 1
 	fi
 
@@ -206,10 +211,10 @@ function add_patch_to_kernel()
 
 #---------------------------------------------------------------------------
 	# add hdf patch
-	if [ -d "$patch_path/hdf/${LICHEE_KERN_VER}" ] ; then
+	if [ -f "$hdf_patch" ] ; then
 		git apply ${hdf_patch}
 	else
-		mk_error "not found hdf patch: $patch_path/hdf"
+		mk_error "not found hdf patch: $hdf_patch"
 		exit 1
 	fi
 #---------------------------------------------------------------------------

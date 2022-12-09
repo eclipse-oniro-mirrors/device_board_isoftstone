@@ -1,3 +1,4 @@
 # fstab file.
 #<src>                                                  <mnt_point> <type>    <mnt_flags and options>                              <fs_mgr_flags>
-/dev/block/platform/soc@3000000/4022000.sdmmc/by-name/vendor             /vendor        ext4     ro,barrier=1  wait,required
+/dev/block/platform/soc@3000000/4022000.sdmmc/by-name/vendor              /vendor        ext4     ro,barrier=1  wait,required
+/dev/block/platform/soc@3000000/4022000.sdmmc/by-name/userdata               /data       f2fs     discard,noatime,nosuid,nodev,fscrypt=2:aes-256-cts:aes-256-xts  wait,check,fileencryption=software,quota

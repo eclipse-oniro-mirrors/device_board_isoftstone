@@ -11,7 +11,7 @@ menu "UART Drivers"
 config AW_UART
 	tristate "UART Support for Allwinner SoCs"
 	depends on AW_BSP
-	depends on SERIAL_CORE
+	select SERIAL_CORE
 	default y
 	help
 	  Enable the UART (Serial Ports) of the SoC
@@ -26,7 +26,7 @@ config AW_SERIAL_DMA
 
 config AW_SERIAL_CONSOLE
 	bool "Enable Console on UART"
-	depends on SERIAL_CORE_CONSOLE
+	select SERIAL_CORE_CONSOLE
 	depends on AW_UART
 	default AW_UART
 	help
