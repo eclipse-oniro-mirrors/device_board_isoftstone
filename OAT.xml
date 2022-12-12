@@ -32,6 +32,12 @@
                 <policyitem type="copyright" name="iSoftStone Open Source Organization ." path=".*" desc=""/>
                 <policyitem type="copyright" name="HiHope Open Source Organization ." path=".*" desc=""/>
                 <policyitem type="copyright" name="Copyright (c) 2014, 2017 IBM Corp." path=".*" desc=""/>
+                <policyitem type="copyright" name="InvalidCopyright" path=".*" desc=""/>
+                <policyitem type="copyright" name="Copyright (C) 2013 Allwinner." path=".*" desc=""/>
+                <policyitem type="copyright" name="Copyright (C) 2016 Allwinner." path=".*" desc=""/>
+                <policyitem type="copyright" name="Copyright (C) 2019 Allwinnertech Co.Ltd" path=".*" desc=""/>
+                <policyitem type="copyright" name="Copyright (c) 2020 frank@allwinnertech.com" path=".*" desc=""/>
+                <policyitem type="copyright" name="Copyright (C) 2022 Allwinnertech Co., Ltd." path=".*" desc=""/>
 	        </policy>
         </policylist>
         <filefilterlist>
@@ -52,6 +58,7 @@
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/audio/.*" desc=" GPL, or the BSD license, at your option."/>
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/wifi/.*" desc=" GPL, or the BSD license, at your option."/>
                 <filteritem type="filename" name="*.fex|*dts" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/driver/drivers/.*" desc="no license heard"/>
 
 				</filefilter>
             <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">

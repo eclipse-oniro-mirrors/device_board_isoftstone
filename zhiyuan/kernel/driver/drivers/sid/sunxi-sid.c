@@ -422,7 +422,7 @@ EXPORT_SYMBOL(sunxi_get_platform);
  * get module_param:
  * argc[0]---dst buf
  * argc[1]---the sid offset
- * argc[2]---len(byte)
+ * argc[2]---len(btye)
  */
 int sunxi_get_module_param_from_sid(u32 *dst, u32 offset, u32 len)
 {

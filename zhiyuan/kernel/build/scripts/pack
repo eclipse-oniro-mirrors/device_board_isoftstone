@@ -780,7 +780,8 @@ function showImageSize()
 {
 	echo '----------image is at----------'
 	echo -e '\033[0;31;1m'
-	echo "size:$5  ${LICHEE_OUT_DIR}/${IMG_NAME}"
+	echo -e "size:$5  ${LICHEE_OUT_DIR}/${IMG_NAME}"'\033[0m\033[0;30;1m'
+	date +%F' '%H:%M:%S
 	echo -e '\033[0m'
 }
 

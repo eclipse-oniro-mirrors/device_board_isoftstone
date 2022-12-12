@@ -282,7 +282,7 @@ struct sunxi_drm_gem_object *sunxi_drm_fb_get_gem_obj(struct drm_framebuffer *fb
 int sunxi_drm_fb_prepare_fb(struct drm_plane *plane,
 			  struct drm_plane_state *state)
 {
-	struct dma_buf *dma_buf;
+	/*struct dma_buf *dma_buf;
 	struct dma_fence *fence;
 
 	if ((plane->state->fb == state->fb) || !state->fb)
@@ -290,7 +290,7 @@ int sunxi_drm_fb_prepare_fb(struct drm_plane *plane,
 
 	dma_buf = sunxi_drm_fb_get_gem_obj(state->fb, 0)->base.dma_buf;
 	if (dma_buf)
-		drm_gem_fb_prepare_fb(plane, state);
+		drm_gem_fb_prepare_fb(plane, state);*/
 
 	return 0;
 }

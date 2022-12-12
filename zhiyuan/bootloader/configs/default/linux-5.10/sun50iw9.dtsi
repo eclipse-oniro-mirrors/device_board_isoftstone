@@ -39,7 +39,6 @@
 		sunxi-mmc2 = &sdc2;
 		tv0 = &tv0;
 		gmac0 = &gmac0;
-		gmac1 = &gmac1;
 		ac200 = &ac200;
 		nand0 = &nand0;
 		ve0 = &ve;
@@ -374,7 +373,7 @@
 				pinctrl-1 = <&csi1_pins_b>;
 				device_id = <1>;
 				iommus = <&mmu_aw 4 1>;
-				status = "okay";
+				status = "disabled";
 			};
 			mipi0:mipi@660c000 {
 				compatible = "allwinner,sunxi-mipi";
@@ -2000,39 +1999,33 @@
 			status = "disabled";
 		};
 
-		gmac0: eth@5020000 {
+		mdio0: mdio0@5020048 {
+			compatible = "allwinner,sunxi-mdio";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			reg = <0x0 0x05020048 0x0 0x8>;
+			status = "okay";
+			gmac0_phy0: ethernet-phy@1 {
+				/* RTL8211F (0x001cc916) */
+				reg = <1>;
+				max-speed = <1000>;  /* Max speed capability */
+				reset-gpios = <&pio PI 6 GPIO_ACTIVE_LOW>;
+				/* PHY datasheet rst time */
+				reset-assert-us = <10000>;
+				reset-deassert-us = <150000>;
+			};
+		};
+
+		gmac0: gmac0@5020000 {
 			compatible = "allwinner,sunxi-gmac";
 			reg = <0x0 0x05020000 0x0 0x10000>,
 			      <0x0 0x03000030 0x0 0x4>;
 			interrupts = <GIC_SPI 14 IRQ_TYPE_LEVEL_HIGH>;
 			interrupt-names = "gmacirq";
 			clocks = <&ccu CLK_BUS_EMAC0>, <&ccu CLK_EMAC_25M>;
-			clock-names = "gmac", "ephy";
+			clock-names = "gmac", "phy25m";
 			resets = <&ccu RST_BUS_EMAC0>;
-			device_type = "gmac0";
-			phy-mode;
-			phy-rst;
-			gmac-power0;
-			gmac-power1;
-			gmac-power2;
-			status = "disabled";
-		};
-
-		gmac1: eth@5030000 {
-			compatible = "allwinner,sunxi-gmac";
-			reg = <0x0 0x05030000 0x0 0x10000>,
-			      <0x0 0x03000034 0x0 0x4>;
-			interrupts = <GIC_SPI 15 IRQ_TYPE_LEVEL_HIGH>;
-			interrupt-names = "gmacirq";
-			clocks = <&ccu CLK_BUS_EMAC1>;
-			clock-names = "gmac";
-			resets = <&ccu RST_BUS_EMAC1>;
-			device_type = "gmac1";
-			phy-mode;
-			phy-rst;
-			gmac-power0;
-			gmac-power1;
-			gmac-power2;
+			phy-handle = <&gmac0_phy0>;
 			status = "disabled";
 		};
 
