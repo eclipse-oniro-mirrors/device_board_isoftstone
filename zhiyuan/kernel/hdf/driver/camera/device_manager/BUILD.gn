@@ -1,4 +1,4 @@
-# Copyright (C) iSoftStone Device Co., Ltd. 2022. All rights reserved.
+# Copyright (C) iSoftStone Device Co., Ltd. 2022 - 2023. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -70,7 +70,6 @@ ohos_shared_library("camera_device_manager") {
     "//commonlibrary/c_utils/base/include",
     "//drivers/framework/include/utils",
     "//drivers/adapter/uhdf2/osal/include",
-    "//drivers/peripheral/camera/interfaces/metadata/include",
     "//drivers/hdf_core/framework/include/utils",
 
     "//drivers/hdf_core/adapter/uhdf2/osal/include",
@@ -83,7 +82,6 @@ ohos_shared_library("camera_device_manager") {
   external_deps = [ "c_utils:utils" ]
   deps = [
     "$camera_path/adapter/platform/v4l2/src/driver_adapter:camera_v4l2_adapter",
-    "//drivers/peripheral/camera/interfaces/metadata:metadata",
   ]
 
   if (is_standard_system) {
@@ -91,7 +89,7 @@ ohos_shared_library("camera_device_manager") {
   } else {
     external_deps += [ "hilog:libhilog" ]
   }
-
+  external_deps += [ "drivers_interface_camera:metadata" ]
   public_configs = [ ":device_manager_config" ]
   install_images = [ chipset_base_dir ]
   subsystem_name = "hdf"

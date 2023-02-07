@@ -1,4 +1,4 @@
-# Copyright (C) iSoftStone Device Co., Ltd. 2022. All rights reserved.
+# Copyright (C) iSoftStone Device Co., Ltd. 2022 - 2023. All rights reserved.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -116,7 +116,6 @@ ohos_shared_library("camera_pipeline_core") {
     "//drivers/peripheral/camera/hal/adapter/platform/v4l2/src/driver_adapter/include/",
     "//foundation/communication/ipc/ipc/native/src/core/include",
     "//commonlibrary/c_utils/base/include",
-    "//drivers/peripheral/camera/interfaces/metadata/include",
     "src/node",
     "$camera_device_name_path/camera/src/pipeline_core/node",
     "//device/soc/allwinner/t507/hardware/rga/include",
@@ -143,7 +142,6 @@ ohos_shared_library("camera_pipeline_core") {
     "//device/soc/allwinner/t507/hardware/rga:librga",
     "//drivers/interface/camera/v1_0:libcamera_stub_1.0",
     "//drivers/peripheral/camera/hal/utils:camera_utils",
-    "//drivers/peripheral/camera/interfaces/metadata:metadata",
     "//third_party/libjpeg-turbo:turbojpeg_static",
   ]
 
@@ -153,6 +151,7 @@ ohos_shared_library("camera_pipeline_core") {
     external_deps = [ "hilog:libhilog" ]
   }
   external_deps += [
+    "drivers_interface_camera:metadata",
     "graphic_chipsetsdk:surface",
     "ipc:ipc_single",
   ]
