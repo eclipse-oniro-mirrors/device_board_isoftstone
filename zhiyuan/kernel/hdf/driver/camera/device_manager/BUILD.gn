@@ -68,18 +68,12 @@ ohos_shared_library("camera_device_manager") {
     "$camera_path/adapter/platform/v4l2/src/device_manager/include",
     "$camera_path/adapter/platform/v4l2/src/driver_adapter/include/",
     "//commonlibrary/c_utils/base/include",
-    "//drivers/framework/include/utils",
-    "//drivers/adapter/uhdf2/osal/include",
-    "//drivers/hdf_core/framework/include/utils",
-
-    "//drivers/hdf_core/adapter/uhdf2/osal/include",
-    "//drivers/hdf_core/adapter/uhdf/posix/include",
-    "//drivers/hdf_core/adapter/khdf/linux/osal/include",
-    "//drivers/hdf_core/adapter/khdf/liteos_m/osal/include",
-    "//drivers/hdf_core/adapter/khdf/liteos/osal/include",
   ]
 
-  external_deps = [ "c_utils:utils" ]
+  external_deps = [
+    "c_utils:utils",
+    "hdf_core:libhdf_utils",
+  ]
   deps = [
     "$camera_path/adapter/platform/v4l2/src/driver_adapter:camera_v4l2_adapter",
   ]

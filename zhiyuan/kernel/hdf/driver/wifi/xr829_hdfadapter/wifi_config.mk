@@ -36,6 +36,10 @@ HDF_FRAMEWORKS_INC := \
     -Iinclude/hdf \
     -Iinclude/hdf/osal \
     -Iinclude/hdf/utils \
+    -Idrivers/hdf/inner_api/osal/shared \
+    -Idrivers/hdf/inner_api/host/shared \
+    -Idrivers/hdf/inner_api/utils \
+    -Idrivers/hdf/inner_api/core \
     -Idrivers/hdf/framework/include/ethernet\
     -Idrivers/hdf/framework/include/net\
     -Idrivers/hdf/framework/model/network/common/netdevice\
