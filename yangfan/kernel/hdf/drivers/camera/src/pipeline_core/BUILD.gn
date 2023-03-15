@@ -123,12 +123,7 @@ ohos_shared_library("camera_pipeline_core") {
     "//drivers/peripheral/camera/hal/metadata_manager/include",
 
     # hcs parser
-    "//drivers/hdf_core/framework/include/osal",
-    "//drivers/hdf_core/framework/include/utils",
-    "//drivers/hdf_core/adapter/uhdf2/osal/include",
     "//system/core/include/cutils",
-    "//drivers/hdf_core/framework/utils/include",
-    "//drivers/hdf_core/adapter/uhdf2/osal/include",
     "//foundation/graphic/utils/interfaces/kits",
   ]
 
@@ -147,7 +142,10 @@ ohos_shared_library("camera_pipeline_core") {
   ]
 
   if (is_standard_system) {
-    external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+    external_deps = [
+      "hdf_core:libhdf_utils",
+      "hiviewdfx_hilog_native:libhilog",
+    ]
   } else {
     external_deps = [ "hilog:libhilog" ]
   }
