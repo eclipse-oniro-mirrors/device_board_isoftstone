@@ -284,7 +284,7 @@ void RKCodecNode::Yuv422ToRGBA8888(std::shared_ptr<IBuffer>& buffer)
     }
 
     void* temp_dst = malloc(temp_dst_size);
-    if (temp_dst_size == NULL) {
+    if (!temp_dst_size) {
         CAMERA_LOGI("RKCodecNode::Yuv422ToRGBA8888 malloc buffer == nullptr");
         return;
     }
@@ -327,7 +327,7 @@ void RKCodecNode::Yuv422ToJpeg(std::shared_ptr<IBuffer>& buffer)
     }
 
     void* temp_dst = malloc(temp_dst_size);
-    if (temp_dst_size == NULL) {
+    if (!temp_dst_size) {
         CAMERA_LOGI("RKCodecNode::Yuv422ToJpeg malloc buffer == nullptr");
         return;
     }
