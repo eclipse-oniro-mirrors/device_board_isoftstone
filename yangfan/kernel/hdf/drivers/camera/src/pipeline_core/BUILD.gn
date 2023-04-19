@@ -124,7 +124,7 @@ ohos_shared_library("camera_pipeline_core") {
 
     # hcs parser
     "//system/core/include/cutils",
-    "//foundation/graphic/utils/interfaces/kits",
+    "//foundation/graphic/graphic_utils_lite/interfaces/kits",
   ]
 
   deps = [
