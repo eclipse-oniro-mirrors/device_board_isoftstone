@@ -52,13 +52,13 @@ private:
     int findStartCode(unsigned char *data, size_t dataSz);
     void SerchIFps(unsigned char* buf, size_t bufSize, std::shared_ptr<IBuffer>& buffer);
 
-	void Yuv422ToRGBA8888(std::shared_ptr<IBuffer>& buffer);
+    void Yuv422ToRGBA8888(std::shared_ptr<IBuffer>& buffer);
     void Yuv422ToJpeg(std::shared_ptr<IBuffer>& buffer);
     void Yuv420ToH264(std::shared_ptr<IBuffer>& buffer);
 
-	void xYUV422ToRGBA(uint8_t * yuv422, uint8_t * rgba, int width, int height);
-	void xYUV422ToRGB(uint8_t * yuv422, uint8_t * rgba, int width, int height);  
-	void xRGBAToRGB(uint8_t * rgba, uint8_t * rgb, int width, int height);  
+    void xYUV422ToRGBA(uint8_t* yuv422, uint8_t* rgba, int width, int height);
+    void xYUV422ToRGB(uint8_t* yuv422, uint8_t* rgb, int width, int height);
+    void xRGBAToRGB(uint8_t* rgba, uint8_t* rgb, int width, int height);
 
     static uint32_t                       previewWidth_;
     static uint32_t                       previewHeight_;
