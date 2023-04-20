@@ -148,6 +148,8 @@ ln_list=(
 	$OHOS_ROOT_PATH/drivers/hdf_core/adapter/khdf/linux    drivers/hdf/khdf
 	$OHOS_ROOT_PATH/drivers/hdf_core/framework             drivers/hdf/framework
 	$OHOS_ROOT_PATH/drivers/hdf_core/framework/include     include/hdf
+	$OHOS_ROOT_PATH/drivers/hdf_core/interfaces/inner_api  drivers/hdf/inner_api
+	$OHOS_ROOT_PATH/drivers/hdf_core/framework/include     include/hdf
 )
 
 cp_list=(
