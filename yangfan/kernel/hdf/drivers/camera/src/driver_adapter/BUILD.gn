@@ -1,6 +1,6 @@
 # Copyright (c) Huawei Technologies Co., Ltd. 2021. All rights reserved.
 
-import("//drivers/peripheral/camera/hal/camera.gni")
+import("//drivers/peripheral/camera/camera.gni")
 
 if (defined(ohos_lite)) {
   copy("driver_adapter") {
