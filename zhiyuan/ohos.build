@@ -3,7 +3,9 @@
     "parts": {
         "allwinner_products": {
             "module_list": [
-                "//device/board/isoftstone/${product_name}:products_group"
+                "//device/board/isoftstone/${product_name}:products_group",
+                "//device/board/isoftstone/${product_name}/kernel/hdf/driver/camera:chipset_build",
+                "//device/board/isoftstone/${product_name}/kernel/hdf/driver/camera:camera_host_vdi_impl_1.0"
             ]
         }
     }

@@ -11,9 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
+import("//device/board/${product_company}/${device_name}/device.gni")
 import("//drivers/hdf_core/adapter/uhdf2/uhdf.gni")
 import("//drivers/peripheral/camera/camera.gni")
-import("../../camera.gni")
+import("../camera.gni")
 
 config("pipe_config") {
   visibility = [ ":*" ]
@@ -46,7 +47,7 @@ config("pipe_config") {
 
 ohos_shared_library("camera_pipeline_core") {
   sources = [
-    "$camera_device_name_path/camera/src/pipeline_core/node/rk_codec_node.cpp",
+    "$camera_device_name_path/camera/pipeline_core/src/node/rk_codec_node.cpp",
     "$camera_path/adapter/platform/v4l2/src/pipeline_core/nodes/uvc_node/uvc_node.cpp",
     "$camera_path/adapter/platform/v4l2/src/pipeline_core/nodes/v4l2_source_node/v4l2_source_node.cpp",
     "$camera_path/pipeline_core/host_stream/src/host_stream_impl.cpp",
@@ -110,13 +111,13 @@ ohos_shared_library("camera_pipeline_core") {
     "$camera_path/interfaces/hdi",
     "$camera_path/utils/event",
     "$camera_path/adapter/platform/v4l2/src/device_manager/include",
-    "$camera_device_name_path/camera/include/device_manager",
+    "$camera_device_name_path/camera/device_manager/include",
     "$camera_path/adapter/platform/v4l2/src/pipeline_core/nodes/v4l2_source_node",
     "$camera_path/adapter/platform/v4l2/src/pipeline_core/nodes/uvc_node",
     "$camera_path/adapter/platform/v4l2/src/driver_adapter/include/",
     "//foundation/communication/ipc/ipc/native/src/core/include",
     "//commonlibrary/c_utils/base/include",
-    "$camera_device_name_path/camera/src/pipeline_core/node",
+    "$camera_device_name_path/camera/pipeline_core/src/node",
     "//device/soc/rockchip/rk3399/hardware/rga/include",
     "//device/soc/rockchip/rk3399/hardware/mpp/include",
     "//third_party/libjpeg-turbo",
@@ -128,9 +129,9 @@ ohos_shared_library("camera_pipeline_core") {
   ]
 
   deps = [
+    "$board_camera_path/device_manager:camera_device_manager",
+    "$board_camera_path/metadata_manager:camera_metadata_manager",
     "$camera_path/buffer_manager:camera_buffer_manager",
-    "$camera_path/device_manager:camera_device_manager",
-    "$camera_path/metadata_manager:camera_metadata_manager",
     "//device/soc/rockchip/rk3399/hardware/mpp:libmpp",
     "//device/soc/rockchip/rk3399/hardware/rga:librga",
     "//drivers/interface/camera/v1_0:libcamera_stub_1.0",
@@ -151,8 +152,8 @@ ohos_shared_library("camera_pipeline_core") {
   }
   external_deps += [ "drivers_interface_camera:metadata" ]
   public_configs = [ ":pipe_config" ]
-  subsystem_name = "hdf"
-  part_name = "camera_device_driver"
+  subsystem_name = "rockchip_products"
+  part_name = "rockchip_products"
 }
 
 config("example_config") {
@@ -166,7 +167,7 @@ config("example_config") {
 }
 
 ohos_shared_library("camera_ipp_algo_example") {
-  sources = [ "$camera_device_name_path/camera/src/pipeline_core/ipp_algo_example/ipp_algo_example.c" ]
+  sources = [ "$camera_device_name_path/camera/pipeline_core/src/ipp_algo_example/ipp_algo_example.c" ]
 
   include_dirs = [
     "$camera_path/pipeline_core/ipp/include",
@@ -174,6 +175,6 @@ ohos_shared_library("camera_ipp_algo_example") {
   ]
   external_deps = [ "c_utils:utils" ]
   public_configs = [ ":example_config" ]
-  subsystem_name = "hdf"
-  part_name = "camera_device_driver"
+  subsystem_name = "rockchip_products"
+  part_name = "rockchip_products"
 }

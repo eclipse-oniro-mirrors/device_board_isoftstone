@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import("//build/ohos.gni")
+import("//device/board/${product_company}/${device_name}/device.gni")
 import("//drivers/peripheral/camera/camera.gni")
 
 config("device_manager_config") {
@@ -74,9 +75,7 @@ ohos_shared_library("camera_device_manager") {
     "c_utils:utils",
     "hdf_core:libhdf_utils",
   ]
-  deps = [
-    "$camera_path/adapter/platform/v4l2/src/driver_adapter:camera_v4l2_adapter",
-  ]
+  deps = [ "$board_camera_path/driver_adapter:camera_v4l2_adapter" ]
 
   if (is_standard_system) {
     external_deps += [ "hiviewdfx_hilog_native:libhilog" ]
@@ -86,6 +85,6 @@ ohos_shared_library("camera_device_manager") {
   external_deps += [ "drivers_interface_camera:metadata" ]
   public_configs = [ ":device_manager_config" ]
   install_images = [ chipset_base_dir ]
-  subsystem_name = "hdf"
-  part_name = "camera_device_driver"
+  subsystem_name = "rockchip_products"
+  part_name = "rockchip_products"
 }
