@@ -260,8 +260,8 @@ ohos_static_library("camera_host_vdi_impl_1.0_static") {
       "hdf_core:libhdf_ipc_adapter",
       "hdf_core:libhdf_utils",
       "hdf_core:libhdi",
-      "hitrace:hitrace_meter",
       "hilog:libhilog",
+      "hitrace:hitrace_meter",
       "ipc:ipc_single",
     ]
     if (use_hitrace) {
