@@ -120,7 +120,7 @@ ohos_shared_library("mqtt") {
   sources = pahomqtt_sources
   public_configs = [ ":mqtt_config_c" ]
   deps = [ "//base/hiviewdfx/hilog/frameworks/hilog_ndk:hilog_ndk" ]
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [ "hilog:libhilog" ]
   subsystem_name = "${subsystem_name}"
   part_name = "${part_name}"
 }
