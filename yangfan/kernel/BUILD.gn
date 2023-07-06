@@ -31,6 +31,8 @@ action("kernel") {
     device_company,
     device_name,
     product_company,
+    build_variant,
+    device_type,
   ]
   if (enable_ramdisk) {
     args += [ "enable_ramdisk" ]
