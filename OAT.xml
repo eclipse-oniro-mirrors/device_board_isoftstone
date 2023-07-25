@@ -38,16 +38,6 @@
                 <policyitem type="copyright" name="Copyright (C) 2019 Allwinnertech Co.Ltd" path=".*" desc=""/>
                 <policyitem type="copyright" name="Copyright (c) 2020 frank@allwinnertech.com" path=".*" desc=""/>
                 <policyitem type="copyright" name="Copyright (C) 2022 Allwinnertech Co., Ltd." path=".*" desc=""/>
-				
-				<policyitem type="copyright" name="Copyright (C) 2020 frank@allwinnertech.com" path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright (C) 2020 huangzhenwei@allwinnertech.com" path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright (C) 2020 wuyan@allwinnertech.com" path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright (C) 2022 VYAGOO TECHNOLOGY Co., Ltd. All rights reserved." path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright (c) 2020 Yangtao Li <frank@allwinnertech.com>" path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright (C) 2014 Allwinnertech Co., Ltd.|Copyright (C) 2015 Yang Feng" path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright 2012 Maxime Ripard" path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright (c)" path=".*" desc=""/>
-				<policyitem type="copyright" name="Copyright (C) 2020 lvda@allwinnertech.com" path=".*" desc=""/>
 	        </policy>
         </policylist>
         <filefilterlist>
@@ -69,13 +59,13 @@
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/wifi/.*" desc=" GPL, or the BSD license, at your option."/>
                 <filteritem type="filename" name="*.fex|*dts" desc="no license heard"/>
                 <filteritem type="filepath" name="zhiyuan/kernel/driver/drivers/.*" desc="no license heard"/>
-				
-				<filteritem type="filepath" name="zhiyuan/configure/vendor/etc/linux-5.10/fstab.sun50iw9p1" desc="no license heard"/>
-				<filteritem type="filepath" name="zhiyuan/bootloader/configs/default/linux-5.10/S50module" desc="no license heard"/>
-				<filteritem type="filepath" name="zhiyuan/kernel/driver/ramfs/e_build.sh" desc="no license heard"/>
-				<filteritem type="filepath" name="zhiyuan/bootloader/configs/default/linux-5.10/rp-lcd-rgb-7-1024-600.dtsi" desc="no license heard"/>
-				<filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/driver_adapter/BUILD.gn" desc="no license heard"/>
-				<filteritem type="filepath" name="zhiyuan/configure/vendor/etc/linux-5.10/fstab.required" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/build/tools/.*" desc="binary file "/>
+                <filteritem type="filepath" name="EULA" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/configure/vendor/etc/linux-5.10/.*" desc="cfg files"/>
+                <filteritem type="filepath" name="zhiyuan/bootloader/.*" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/driver_adapter/libs/.*" desc="no license heard"/>
+                <filteritem type="filepath" name="zhiyuan/kernel/driver/.*" desc="thirdparty file "/>
+                <filteritem type="filepath" name="zhiyuan/kernel/build/pack.sh" desc="no license heard"/>
 
 				</filefilter>
             <filefilter name="defaultPolicyFilter" desc="Filters for compatibility，license header policies">
@@ -87,7 +77,7 @@
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/device_manager/BUILD.gn" desc="no copyriht heard"/>
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/driver_adapter/BUILD.gn" desc="no copyriht heard"/>
                 <filteritem type="filepath" name="zhiyuan/kernel/hdf/driver/camera/src/pipeline_core/BUILD.gn" desc="no copyriht heard"/>
-                <filteritem type="filename" name="*.fex|*dts" desc="no copyriht heard"/>				 
+                <filteritem type="filename" name="*.fex|*dts" desc="no copyriht heard"/>
             </filefilter>
             <filefilter name="binaryFileTypePolicyFilter" desc="Filters for binary file policies">
                 <filteritem type="filename" name="*.so|*.bin|*.bir|*.fex|*.bmp|*.sft|*.png|*.hap|*.o" desc="png bmp file"/>
