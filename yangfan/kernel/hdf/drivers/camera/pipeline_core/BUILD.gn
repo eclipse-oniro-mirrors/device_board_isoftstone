@@ -140,7 +140,7 @@ ohos_shared_library("camera_pipeline_core") {
 
     # hcs parser
     "$hdf_uhdf_path/utils:libhdf_utils",
-    "//foundation/graphic/graphic_2d:libsurface",
+    "//foundation/graphic/graphic_surface:surface",
   ]
 
   if (is_standard_system) {
