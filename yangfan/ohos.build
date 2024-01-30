@@ -1,7 +1,7 @@
 {
-    "subsystem": "rockchip_products",
+    "subsystem": "device_yangfan",
     "parts": {
-        "rockchip_products": {
+        "device_yangfan": {
             "module_list": [
                 "//device/board/isoftstone/${product_name}:rk3399_group",
                 "//vendor/isoftstone/${product_name}/bluetooth:libbt_vendor",

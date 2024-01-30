@@ -8,7 +8,7 @@ import("//build/ohos.gni")
 
 ohos_prebuilt_etc("init.rk3399.cfg") {
   source = "init.rk3399.cfg"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_images = [ chipset_base_dir ]
   install_enable = true
 }
@@ -18,19 +18,19 @@ ohos_prebuilt_executable("weston.cfg") {
   source = "weston.cfg"
   module_install_dir = "etc/init"
   install_images = [ chipset_base_dir ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 ohos_prebuilt_etc("init.rk3399.usb.cfg") {
   source = "init.rk3399.usb.cfg"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_images = [ chipset_base_dir ]
   install_enable = true
 }
 
 ohos_prebuilt_etc("fstab.rk3399") {
   source = "fstab.rk3399"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_images = [ chipset_base_dir ]
   install_enable = true
 }
@@ -47,7 +47,7 @@ if (enable_ramdisk) {
 } else {
   ohos_prebuilt_etc("fstab.required") {
     source = "fstab.required"
-    part_name = "rockchip_products"
+    part_name = "device_yangfan"
     install_images = [ "system" ]
     install_enable = true
   }

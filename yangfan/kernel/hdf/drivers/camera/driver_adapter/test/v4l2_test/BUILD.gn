@@ -54,6 +54,6 @@ ohos_executable("v4l2_main") {
 
   public_configs = [ ":v4l2_maintest" ]
   install_images = [ chipset_base_dir ]
-  subsystem_name = "rockchip_products"
-  part_name = "rockchip_products"
+  subsystem_name = "device_yangfan"
+  part_name = "device_yangfan"
 }

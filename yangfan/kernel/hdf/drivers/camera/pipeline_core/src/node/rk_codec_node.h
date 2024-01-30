@@ -38,7 +38,7 @@ extern "C" {
 namespace OHOS::Camera {
 class RKCodecNode : public NodeBase {
 public:
-    RKCodecNode(const std::string& name, const std::string& type);
+    RKCodecNode(const std::string& name, const std::string& type, const std::string& cameraId);
     ~RKCodecNode() override;
     RetCode Start(const int32_t streamId) override;
     RetCode Stop(const int32_t streamId) override;
