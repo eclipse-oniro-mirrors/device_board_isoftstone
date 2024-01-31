@@ -22,7 +22,7 @@ ohos_prebuilt_etc("clm_bcm43752a2_ag.blob") {
   source = "$AP6XXX_ETC_DIR/clm_bcm43752a2_ag.blob"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -30,7 +30,7 @@ ohos_prebuilt_etc("fw_bcm43752a2_ag_apsta.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43752a2_ag_apsta.bin"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -38,7 +38,7 @@ ohos_prebuilt_etc("fw_bcm43752a2_ag.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43752a2_ag.bin"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -46,7 +46,7 @@ ohos_prebuilt_etc("nvram_ap6275s.txt") {
   source = "$AP6XXX_ETC_DIR/nvram_ap6275s.txt"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -55,7 +55,7 @@ ohos_prebuilt_etc("fw_bcm43438a1.bin") {
   source = "$AP6XXX_ETC_DIR/fw_bcm43438a1.bin"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -63,7 +63,7 @@ ohos_prebuilt_etc("fw_cyw43438_apsta.bin") {
   source = "$AP6XXX_ETC_DIR/fw_cyw43438_apsta.bin"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -71,7 +71,7 @@ ohos_prebuilt_etc("fw_cyw43438_p2p.bin") {
   source = "$AP6XXX_ETC_DIR/fw_cyw43438_p2p.bin"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -79,7 +79,7 @@ ohos_prebuilt_etc("nvram_ap6212a.txt") {
   source = "$AP6XXX_ETC_DIR/nvram_ap6212a.txt"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "firmware"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -87,7 +87,7 @@ ohos_prebuilt_etc("cywdhd.ko") {
   source = "$MODULES_DIR/cywdhd.ko"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "modules"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -95,7 +95,7 @@ ohos_prebuilt_etc("bcmdhd.ko") {
   source = "$MODULES_DIR/bcmdhd.ko"
   install_images = [ chipset_base_dir ]
   relative_install_dir = "modules"
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -104,14 +104,14 @@ ohos_prebuilt_etc("bcmdhd.ko") {
 ohos_prebuilt_etc("resolv.conf") {
   source = "$DNS_CONFIG_DIR/etc/resolv.conf"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
 ohos_prebuilt_etc("hostapd.conf") {
   source = "$DNS_CONFIG_DIR/etc/hostapd.conf"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
   install_enable = true
 }
 
@@ -120,7 +120,7 @@ ohos_prebuilt_executable("wpa_cli") {
   source = "$WIFI_BIN_DIR/wpa_cli"
   module_install_dir = "bin"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 ohos_prebuilt_executable("wpa_supplicant") {
@@ -128,7 +128,7 @@ ohos_prebuilt_executable("wpa_supplicant") {
   source = "$WIFI_BIN_DIR/wpa_supplicant"
   module_install_dir = "bin"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 ohos_prebuilt_executable("hostapd") {
@@ -136,7 +136,7 @@ ohos_prebuilt_executable("hostapd") {
   source = "$WIFI_BIN_DIR/hostapd"
   module_install_dir = "bin"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 ohos_prebuilt_executable("hostapd_cli") {
@@ -144,28 +144,28 @@ ohos_prebuilt_executable("hostapd_cli") {
   source = "$WIFI_BIN_DIR/hostapd_cli"
   module_install_dir = "bin"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 ohos_prebuilt_shared_library("libwpa.z.so") {
   source = "$WIFI_LIB_DIR/libwpa.z.so"
   module_install_dir = "lib"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 ohos_prebuilt_shared_library("libwpa_client.z.so") {
   source = "$WIFI_LIB_DIR/libwpa_client.z.so"
   module_install_dir = "lib"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 ohos_prebuilt_shared_library("libnl_share.z.so") {
   source = "$WIFI_LIB_DIR/libnl_share.z.so"
   module_install_dir = "lib"
   install_images = [ "system" ]
-  part_name = "rockchip_products"
+  part_name = "device_yangfan"
 }
 
 group("ap6xxx") {

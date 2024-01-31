@@ -18,9 +18,9 @@ namespace OHOS::Camera {
 uint32_t RKCodecNode::previewWidth_ = 0;
 uint32_t RKCodecNode::previewHeight_ = 0;
 
-RKCodecNode::RKCodecNode(const std::string& name, const std::string& type) : NodeBase(name, type)
+RKCodecNode::RKCodecNode(const std::string& name, const std::string& type, const std::string& cameraId) : NodeBase(name, type, cameraId)
 {
-    CAMERA_LOGV("%{public}s enter, type(%{public}s)\n", name_.c_str(), type_.c_str());
+    CAMERA_LOGV("%{public}s enter, type(%{public}s, cameraId(%{public}s)\n", name_.c_str(), type_.c_str(), cameraId_.c_str());
 }
 
 RKCodecNode::~RKCodecNode()

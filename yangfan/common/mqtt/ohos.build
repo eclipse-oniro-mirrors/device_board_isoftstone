@@ -1,5 +1,5 @@
 {
-  "subsystem": "rockchip_products",
+  "subsystem": "device_yangfan",
   "parts": {
     "mqtt": {
       "module_list": [

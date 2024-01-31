@@ -85,6 +85,6 @@ ohos_shared_library("camera_device_manager") {
   }
   external_deps += [ "drivers_interface_camera:metadata" ]
   public_configs = [ ":device_manager_config" ]
-  subsystem_name = "rockchip_products"
-  part_name = "rockchip_products"
+  subsystem_name = "device_yangfan"
+  part_name = "device_yangfan"
 }

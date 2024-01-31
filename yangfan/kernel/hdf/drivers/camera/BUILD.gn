@@ -27,8 +27,8 @@ ohos_prebuilt_etc("camera_host_config.hcb") {
   hcs_outputs = get_target_outputs(":build_camera_host_config")
   source = hcs_outputs[0]
   relative_install_dir = "hdfconfig"
-  subsystem_name = "rockchip_products"
-  part_name = "rockchip_products"
+  subsystem_name = "device_yangfan"
+  part_name = "device_yangfan"
 }
 
 hc_gen_c("generate_source") {
@@ -87,8 +87,8 @@ ohos_prebuilt_etc("ipp_algo_config.hcb") {
   hcs_outputs = get_target_outputs(":build_ipp_algo_config")
   source = hcs_outputs[0]
   relative_install_dir = "hdfconfig"
-  subsystem_name = "rockchip_products"
-  part_name = "rockchip_products"
+  subsystem_name = "device_yangfan"
+  part_name = "device_yangfan"
 }
 
 config("example_config") {
@@ -228,8 +228,8 @@ ohos_shared_library("camera_host_vdi_impl_1.0") {
   ]
   public_configs = [ ":camhdi_impl_config" ]
   install_images = [ chipset_base_dir ]
-  subsystem_name = "rockchip_products"
-  part_name = "rockchip_products"
+  subsystem_name = "device_yangfan"
+  part_name = "device_yangfan"
 }
 
 ohos_static_library("camera_host_vdi_impl_1.0_static") {
@@ -278,8 +278,8 @@ ohos_static_library("camera_host_vdi_impl_1.0_static") {
   ]
 
   public_configs = [ ":camhdi_impl_config" ]
-  subsystem_name = "rockchip_products"
-  part_name = "rockchip_products"
+  subsystem_name = "device_yangfan"
+  part_name = "device_yangfan"
 }
 
 group("camera_board_test") {

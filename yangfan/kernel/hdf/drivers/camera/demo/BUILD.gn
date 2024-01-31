@@ -99,6 +99,6 @@ ohos_executable("ohos_camera_demo") {
   public_configs = [ ":ohos_camera_demo_config" ]
   install_enable = false
   install_images = [ chipset_base_dir ]
-  subsystem_name = "rockchip_products"
-  part_name = "rockchip_products"
+  subsystem_name = "device_yangfan"
+  part_name = "device_yangfan"
 }
